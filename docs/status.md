@@ -1,0 +1,47 @@
+# Status and limits
+
+Version 0.2. This page says what has been run and what has not, so that nobody takes a feature for
+more than it is.
+
+## What has been run
+
+- **73 tests** on the built-in example with stub agents (no model call, no GPU). They cover the brief,
+  every strategy, islands, the crossover kinds, steering during a run, changing the strategy, harness
+  and search space midway, changing the run length, stopping and continuing, the study file, and one
+  regression test for each defect that an independent review of the code reproduced.
+- **A run on a real Slurm cluster** of the example: seven CPU jobs, each its own job.
+
+## What has not been run
+
+- **A real agent.** The prompts have not been read by a model, and the `anthropic_api` and
+  `claude_code` backends have not been called from this version.
+- **A real training task.** Nothing has been trained on a GPU through this version.
+- **Whether any strategy searches better than another.** The strategies are known to work as code.
+- On Slurm: GPU jobs, a preempted job being requeued, the QoS list, a time limit being hit.
+- Continuing a run from a checkpoint after the run length is raised.
+
+## Known limits
+
+- **No limit on what an agent is sent.** With large blocks, several parents and a leaderboard, the
+  context, and its cost, can grow large.
+- **The results are re-read every turn.** Fine at hundreds of runs; slow at thousands.
+- **Working copies and checkpoints are never removed**, and the whole of `base/` is copied per run.
+- **A job that hits its time limit is started again**, up to `compute.infrastructure_retries` times,
+  from its checkpoint if the adapter keeps one and from scratch otherwise.
+- **A design stopped at the screen keeps its part-way score** on the leaderboard beside full-length ones.
+- **`objective.constraints`, `space.forbidden` and `space.must_keep` are text for the agents**, not
+  rules; only `space.forbidden_terms` and the open blocks are enforced by code.
+- **Distance between designs is measured on the code**, not on what the trained models do.
+- **One noise figure, given by you.** The loop does not measure it.
+
+## Not built
+
+- A cheap proxy tier with a promotion ladder (many short runs, the best promoted to longer ones). This
+  is what a search of thousands of evaluations needs.
+- Selection on two objectives at once (a trade-off front).
+- Weight inheritance from a parent.
+- Repair of a design that crashed.
+- A strategist that reviews the search at intervals and proposes changes to it. The coordinator agent
+  chooses one slot at a time and cannot change the schedule or retire a lineage.
+- A file of a cluster's own rules.
+- Running the CAMEO kit's check on the study file.

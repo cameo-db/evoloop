@@ -1,0 +1,23 @@
+site_name: evoloop
+site_description: Evolutionary search over marked code blocks, with language-model agents writing the designs
+repo_url: https://github.com/cameo-db/evoloop
+theme:
+  name: readthedocs
+nav:
+  - Overview: index.md
+  - First run: quickstart.md
+  - Setting up a search: setting-up.md
+  - How a search works: how-it-works.md
+  - Steering a run: steering.md
+  - Auditing the agents: auditing.md
+  - The project's code: project-contract.md
+  - Records and the study file: records.md
+  - Reference:
+      - Menu of choices and presets: menu.md
+      - Fields of the brief: fields.md
+      - Commands: commands.md
+  - Status and limits: status.md
+markdown_extensions:
+  - tables
+  - toc:
+      permalink: true

@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "evoloop"
+version = "0.2.0"
+description = "Evolutionary search over marked code blocks, with language-model agents writing the designs: strategy, harness, schedule and search space chosen per run and changeable while it runs"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+dependencies = ["pyyaml"]
+
+[project.optional-dependencies]
+anthropic = ["anthropic"]
+test = ["pytest", "numpy"]
+
+[project.scripts]
+evoloop = "evoloop.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["evoloop*"]
+
+[tool.setuptools.package-data]
+evoloop = ["examples/**/*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
