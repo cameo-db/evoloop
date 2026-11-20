@@ -34,6 +34,8 @@ class GenericStub:
                 (context.get("request") or {}).get("number_of_proposals") or 1))])
         if role == "analyst":
             return dict(base, lessons=[], questions=[])
+        if role == "strategist":
+            return dict(base, decisions=[{"action": "stay", "args": {}, "reason": "stub", "expects": {"gain": 0.0, "within": 10}}])
         if role == "coordinator":
             return dict(base, choice=int(context.get("code_would_choose") or 0))
         if role == "assessor":

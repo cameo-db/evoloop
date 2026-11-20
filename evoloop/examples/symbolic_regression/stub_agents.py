@@ -68,6 +68,8 @@ def proposal(context, index):
     family = None
     if mode in ("new", "novel"):
         name, family, code = FORMS[STATE["forms"] % len(FORMS)]
+        if STATE["forms"] >= len(FORMS):   # the list has been used once: each later round varies the form by a term
+            code, name = add_term(code, n), "%s, varied" % name
         STATE["forms"] += 1
         blocks["model"] = code
         change = "a new form: %s" % name
@@ -101,6 +103,19 @@ def respond(role, context):
                                                        "default": "yes"}] if len(results) > 3 else [])
     if role == "coordinator":
         return dict(base, choice=int(context.get("code_would_choose") or 0))
+    if role == "strategist":
+        facts = context.get("facts") or {}
+        if (facts.get("designs_since_the_best_rose") or 0) >= 6:
+            shares = dict(facts["schedule"]["shares_of_this_phase"])
+            moved = min(0.1, shares["local"])
+            shares.update(local=round(shares["local"] - moved, 4), new=round(shares["new"] + moved, 4))
+            return dict(base, decisions=[
+                {"action": "shares", "args": shares, "reason": "no gain for a stretch: more new designs",
+                 "expects": {"gain": 1.0, "within": 10}},
+                {"action": "force", "args": {"mode": "cross", "count": 2}, "reason": "crossover is untried lately",
+                 "expects": {"gain": 0.5, "within": 10}}])
+        return dict(base, decisions=[{"action": "stay", "args": {}, "reason": "the search is still gaining",
+                                      "expects": {"gain": 1.0, "within": 10}}])
     if role == "assessor":
         return dict(base, assessment="Stub review of %s: no judgment was made." % context.get("role"), strengths=[],
                     weaknesses=[], suggestions=[{"change": "none (stub)", "figure": "none"}])

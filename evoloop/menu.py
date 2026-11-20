@@ -75,6 +75,32 @@ COORDINATOR = {
     "agent": "An agent picks each slot from options code prepares; what the schedule alone would have picked is "
              "recorded beside every choice.",
 }
+STRATEGIST_MODES = {
+    "off": "No strategist. The schedule runs as set unless you change it.",
+    "advise": "The strategist meets and decides, and every decision waits for your yes or no.",
+    "act": "Small decisions are applied at once and recorded; large ones wait for your yes or no.",
+}
+STRATEGIST_ACTIONS = {
+    "stay": "Change nothing. Often the right decision.",
+    "shares": "The shares of new designs, crossover and local moves for the rest of this phase. New designs never "
+              "below `strategist.min_new_share`; a share moved by more than `strategist.max_share_shift` waits for you.",
+    "novelty": "The novelty dial, and the novel share of new designs.",
+    "local_mix": "The shares of the local moves: edit, settings, ablation.",
+    "crossover_kinds": "Which kinds of crossover are used.",
+    "force": "The next few slots (at most `strategist.force_max`) go to one mode, and if named to one kind of "
+             "crossover or local move.",
+    "retire": "Take a lineage out of the active set. Never the one that holds the best design.",
+    "revive": "Bring a retired or benched lineage back into the active set.",
+    "direction": "A standing note to the writers, such as where new designs should look. At most three stand at once.",
+    "strategy": "Change the evolution strategy. Waits for you by default (`strategist.ask_first`).",
+    "question": "Ask you something. The run does not wait for the answer.",
+}
+SPEND_POLICIES = {
+    "pace": "When the agents' cost per design puts the run on course to pass `budget.model_dollars`, the run is made "
+            "cheaper one step at a time: one proposal fewer per slot; slots chosen by code; the analyst half as often; "
+            "the strategist half as often; reviews at the end only; settings moves drawn by code.",
+    "none": "Nothing is adjusted. The cap still stops agent calls when it is reached.",
+}
 REVIEWS = {
     "none": "No reviews; the scorecard only.", "end": "One review, when the run ends.",
     "halfway": "At 50% of the budget and at the end.", "thirds": "At 33%, 67% and the end.",
@@ -126,6 +152,14 @@ FIELDS: Dict[str, str] = {
     "harness.level": "How much oversight runs beside the writer. See the harness levels.",
     "harness.coordinator": "Who picks each slot: code or an agent.",
     "harness.analyst_every": "Finished runs between two analyses.",
+    "strategist.mode": "Whether an agent reviews the search as a whole and may change its course. See the strategist.",
+    "strategist.every": "Scored designs between two meetings of the strategist.",
+    "strategist.plateau": "Designs with no rise in the best score after which the strategist meets at once.",
+    "strategist.horizon": "Designs after a decision at which what followed it is scored.",
+    "strategist.min_new_share": "The least share of new designs the strategist may set: exploration is protected.",
+    "strategist.max_share_shift": "The largest move of a share the strategist may make without your yes.",
+    "strategist.force_max": "The most slots one `force` decision may order.",
+    "strategist.ask_first": "The actions that always wait for your yes, whatever the mode.",
     "evaluation.allowance": "The length of one training run, in the project's own unit. Passed to every job.",
     "evaluation.allowance_unit": "The name of that unit (steps, epochs, seconds), for the records.",
     "evaluation.seed": "The seed of every design's first fit.",
@@ -147,6 +181,8 @@ FIELDS: Dict[str, str] = {
     "budget.model_calls": "The most agent calls, as a second cap.",
     "budget.wall_clock_hours": "After this long the search starts nothing more and ends when its jobs do.",
     "budget.max_uncounted_failures": "Failed or invalid designs that are not charged; beyond it each is charged.",
+    "budget.spend_policy": "pace (make the run cheaper when it is heading past the spend cap) or none.",
+    "budget.reserve_share": "The last part of the spend cap, kept for writing designs.",
     "baseline.mode": "train (fitted inside the search), import (a finished fit) or skip.",
     "baseline.import_from": "With import: the folder holding the fit's result.json.",
     "compute.gpus": "How many training jobs run at once.",
@@ -199,6 +235,12 @@ SECTIONS: List[Tuple[str, str, str, Dict[str, str], str]] = [
     ("spaces", "Search spaces", "space.preset", SPACES, ""),
     ("harness", "Harness levels", "harness.level", HARNESS, ""),
     ("coordinator", "Coordinator", "harness.coordinator", COORDINATOR, ""),
+    ("strategist", "The strategist", "strategist.mode", STRATEGIST_MODES, ""),
+    ("strategist-actions", "What the strategist may do", "strategist.ask_first", STRATEGIST_ACTIONS,
+     "Every decision is a ledger entry with the gain it expects, scored `strategist.horizon` designs later."),
+    ("spend", "Spend policies", "budget.spend_policy", SPEND_POLICIES,
+     "The last `budget.reserve_share` of the cap is kept for writing designs: the analyst, the strategist, the "
+     "reviews and the coordinator agent stop when it is reached."),
     ("reviews", "Review schedules", "audit.reviews", REVIEWS, "Or a list of shares of the budget, such as [0.1, 0.4, 0.8]."),
 ]
 TOPICS = [s[0] for s in SECTIONS] + ["guidance", "defaults", "fields", "all"]
@@ -301,7 +343,10 @@ def missing() -> List[str]:
                                  ("local move", form.LOCAL_MOVES, LOCAL_MOVES), ("mode", form.MODES, MODES),
                                  ("run type", tuple(form.RUN_TYPES), RUN_TYPES), ("space", form.SPACES, SPACES),
                                  ("harness", form.HARNESS, HARNESS), ("review", tuple(form.REVIEW_PRESETS), REVIEWS),
-                                 ("coordinator", form.CHOICES["harness.coordinator"], COORDINATOR)):
+                                 ("coordinator", form.CHOICES["harness.coordinator"], COORDINATOR),
+                                 ("strategist mode", form.CHOICES["strategist.mode"], STRATEGIST_MODES),
+                                 ("strategist action", form.STRATEGIST_ACTIONS, STRATEGIST_ACTIONS),
+                                 ("spend policy", form.CHOICES["budget.spend_policy"], SPEND_POLICIES)):
         out += ["%s %s" % (name, option) for option in known if option not in entries]
         out += ["%s %s (not an option)" % (name, option) for option in entries if option not in known]
     paths = form.flatten(form.DEFAULTS)

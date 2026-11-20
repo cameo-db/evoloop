@@ -285,6 +285,12 @@ def cmd_stop(args: Any) -> int:
     return 0
 
 
+def cmd_answer(args: Any) -> int:
+    request(args, {"kind": args.command, "id": args.id})
+    out("requested: %s %s" % (args.command, args.id))
+    return 0
+
+
 def cmd_review(args: Any) -> int:
     request(args, {"kind": "review", "roles": args.roles or "all"})
     out("requested: a review of the agents now")
@@ -393,6 +399,10 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--yes", action="store_true")
     p = add("stop", cmd_stop, "stop the search once running jobs finish, or stop one run", named=True, by=True)
     p.add_argument("--run")
+    for name, words in (("approve", "say yes to a decision of the strategist that waits for you"),
+                        ("decline", "say no to a decision of the strategist that waits for you")):
+        p = add(name, cmd_answer, words, named=True, by=True)
+        p.add_argument("--id", required=True, help="the decision, e.g. S14")
     p = add("review", cmd_review, "have the assessor review the agents now", named=True, by=True)
     p.add_argument("--roles", nargs="*")
     return parser

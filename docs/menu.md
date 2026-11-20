@@ -23,6 +23,7 @@ A run type is a bundle of settings. Anything you set yourself in the brief wins 
 
 ```
 harness.level = "full"
+strategist.mode = "act"
 strategy.mechanism = "lineage"
 ```
 
@@ -34,6 +35,7 @@ population.lineages = 3
 schedule.novel_share = 0.0
 schedule.phases = [{"until": 1.0, "new": 0.1, "cross": 0.2, "local": 0.7}]
 space.preset = "template"
+strategist.mode = "act"
 strategy.mechanism = "lineage"
 ```
 
@@ -42,6 +44,7 @@ strategy.mechanism = "lineage"
 ```
 harness.level = "standard"
 schedule.phases = [{"until": 1.0, "new": 0.75, "cross": 0.1, "local": 0.15}]
+strategist.mode = "act"
 strategy.mechanism = "archive"
 ```
 
@@ -149,6 +152,47 @@ Set with `harness.coordinator`.
 |---|---|
 | `code` | The schedule picks the kind of slot and the strategy picks the parents. |
 | `agent` | An agent picks each slot from options code prepares; what the schedule alone would have picked is recorded beside every choice. |
+
+## The strategist
+
+Set with `strategist.mode`.
+
+| Option | What it does |
+|---|---|
+| `off` | No strategist. The schedule runs as set unless you change it. |
+| `advise` | The strategist meets and decides, and every decision waits for your yes or no. |
+| `act` | Small decisions are applied at once and recorded; large ones wait for your yes or no. |
+
+## What the strategist may do
+
+Set with `strategist.ask_first`.
+
+| Option | What it does |
+|---|---|
+| `stay` | Change nothing. Often the right decision. |
+| `shares` | The shares of new designs, crossover and local moves for the rest of this phase. New designs never below `strategist.min_new_share`; a share moved by more than `strategist.max_share_shift` waits for you. |
+| `novelty` | The novelty dial, and the novel share of new designs. |
+| `local_mix` | The shares of the local moves: edit, settings, ablation. |
+| `crossover_kinds` | Which kinds of crossover are used. |
+| `force` | The next few slots (at most `strategist.force_max`) go to one mode, and if named to one kind of crossover or local move. |
+| `retire` | Take a lineage out of the active set. Never the one that holds the best design. |
+| `revive` | Bring a retired or benched lineage back into the active set. |
+| `direction` | A standing note to the writers, such as where new designs should look. At most three stand at once. |
+| `strategy` | Change the evolution strategy. Waits for you by default (`strategist.ask_first`). |
+| `question` | Ask you something. The run does not wait for the answer. |
+
+Every decision is a ledger entry with the gain it expects, scored `strategist.horizon` designs later.
+
+## Spend policies
+
+Set with `budget.spend_policy`.
+
+| Option | What it does |
+|---|---|
+| `pace` | When the agents' cost per design puts the run on course to pass `budget.model_dollars`, the run is made cheaper one step at a time: one proposal fewer per slot; slots chosen by code; the analyst half as often; the strategist half as often; reviews at the end only; settings moves drawn by code. |
+| `none` | Nothing is adjusted. The cap still stops agent calls when it is reached. |
+
+The last `budget.reserve_share` of the cap is kept for writing designs: the analyst, the strategist, the reviews and the coordinator agent stop when it is reached.
 
 ## Review schedules
 

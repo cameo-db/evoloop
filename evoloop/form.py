@@ -29,6 +29,8 @@ CROSS_KINDS = ("block_swap", "graft", "hybrid")
 LOCAL_MOVES = ("edit", "settings", "ablation")
 HARNESS = ("minimal", "standard", "full")
 SPACES = ("settings_only", "module", "template", "open_architecture", "architecture_and_recipe", "custom")
+STRATEGIST_ACTIONS = ("stay", "shares", "novelty", "local_mix", "crossover_kinds", "force", "retire", "revive", "direction",
+                      "strategy", "question")
 REVIEW_PRESETS = {"none": [], "end": [1.0], "halfway": [0.5, 1.0], "thirds": [0.33, 0.67, 1.0],
                   "quarterly": [0.25, 0.5, 0.75, 1.0], "on_demand": []}
 
@@ -49,12 +51,14 @@ DEFAULTS: Dict[str, Any] = {
     "crossover": {"kinds": ["block_swap", "graft", "hybrid"]},
     "variation": {"proposals_per_slot": 2, "step_adaptation": True, "settings_by": "agent"},
     "harness": {"level": "full", "coordinator": "code", "analyst_every": 8},
+    "strategist": {"mode": "off", "every": 15, "plateau": 12, "horizon": 15, "min_new_share": 0.10,
+                   "max_share_shift": 0.15, "force_max": 5, "ask_first": ["strategy"]},
     "evaluation": {"allowance": None, "allowance_unit": "steps", "seed": 0, "noise": None, "screen_fraction": 0.5,
                    "screen_keep": 0.5, "screen_min_pool": 4, "recheck_every": 0, "speciality_metrics": {},
                    "schedule_depends_on_length": True, "keep_checkpoints": False, "on_length_change": "auto",
                    "leaders_refit": 4, "test_set": "held_out", "quick_check": None},
     "budget": {"evaluations": None, "model_dollars": None, "model_calls": None, "wall_clock_hours": None,
-               "max_uncounted_failures": 10},
+               "max_uncounted_failures": 10, "spend_policy": "pace", "reserve_share": 0.15},
     "baseline": {"mode": None, "import_from": None},
     "compute": {"gpus": None, "scheduler": "local", "partition": None, "qos": None, "gpu_type": None,
                 "gpus_per_job": 1, "cpus_per_job": 4, "mem_gb": 32, "time_limit": "2-00:00:00", "setup": [],
@@ -96,10 +100,11 @@ CHOICES = {"objective.direction": ("maximize", "minimize"), "strategy.mechanism"
            "harness.coordinator": ("code", "agent"), "space.preset": SPACES, "baseline.mode": ("train", "import", "skip"),
            "compute.scheduler": ("local", "slurm"), "agents.backend": ("stub", "anthropic_api", "claude_code"),
            "evaluation.on_length_change": ("auto", "continue", "rerun", "compare_anyway"),
-           "variation.settings_by": ("agent", "sampler")}
+           "variation.settings_by": ("agent", "sampler"), "strategist.mode": ("off", "advise", "act"),
+           "budget.spend_policy": ("none", "pace")}
 
 # What may change while a run is going. A change applies to the next design; jobs already started are untouched.
-LIVE = ("schedule.", "population.", "crossover.", "variation.", "harness.", "strategy.", "space.", "audit.", "budget.",
+LIVE = ("schedule.", "strategist.", "population.", "crossover.", "variation.", "harness.", "strategy.", "space.", "audit.", "budget.",
         "compute.max_running", "compute.time_limit", "compute.qos", "compute.partition", "compute.gpus", "compute.max_waiting",
         "evaluation.screen_", "evaluation.recheck_every", "evaluation.speciality_metrics", "evaluation.on_length_change",
         "evaluation.leaders_refit", "agents.models", "agents.default_model", "report.", "run.")
@@ -109,13 +114,14 @@ NEW_PERIOD = ("evaluation.allowance", "evaluation.seed", "data.fraction")
 FROZEN_WHY = "it defines the problem (the objective, the data, the scoring); start a new run to change it"
 
 RUN_TYPES: Dict[str, Dict[str, Any]] = {
-    "explore_then_exploit": {"strategy": {"mechanism": "lineage"}, "harness": {"level": "full"}},
+    "explore_then_exploit": {"strategy": {"mechanism": "lineage"}, "harness": {"level": "full"},
+                             "strategist": {"mode": "act"}},
     "refine": {
-        "strategy": {"mechanism": "lineage"}, "harness": {"level": "full"},
+        "strategy": {"mechanism": "lineage"}, "harness": {"level": "full"}, "strategist": {"mode": "act"},
         "schedule": {"phases": [{"until": 1.0, "new": 0.10, "cross": 0.20, "local": 0.70}], "novel_share": 0.0},
         "population": {"lineages": 3}, "space": {"preset": "template"}},
     "survey": {
-        "strategy": {"mechanism": "archive"}, "harness": {"level": "standard"},
+        "strategy": {"mechanism": "archive"}, "harness": {"level": "standard"}, "strategist": {"mode": "act"},
         "schedule": {"phases": [{"until": 1.0, "new": 0.75, "cross": 0.10, "local": 0.15}]}},
     "discovery": {
         "strategy": {"mechanism": "archive"}, "harness": {"level": "minimal"},
@@ -269,6 +275,9 @@ def resolve(brief: Dict[str, Any], ledger: Optional[List[Dict[str, Any]]] = None
     settings["_period"] = period
     settings["_guidance"] = label
     settings["notes"] = [e for e in (ledger or []) if e.get("kind") == "note" and e.get("status", "active") == "active"]
+    # Lineages the strategist (or the person) retired or revived: the last word on each stands.
+    settings["_lineages"] = {e["lineage"]: e["to"] for e in (ledger or [])
+                             if e.get("kind") == "lineage" and e.get("status", "applied") == "applied"}
     return settings, sources
 
 
@@ -322,6 +331,14 @@ def check_value(path: str, value: Any) -> Optional[str]:
         return "%s must be a whole number, 0 or more" % path
     if path == "evaluation.screen_keep" and not (number and 0 < value <= 1):
         return "evaluation.screen_keep must be above 0 and at most 1"
+    if path == "strategist.ask_first" and set(value) - set(STRATEGIST_ACTIONS):
+        return "strategist.ask_first must be a list from: %s" % ", ".join(STRATEGIST_ACTIONS)
+    if path in ("strategist.min_new_share", "strategist.max_share_shift", "budget.reserve_share") \
+            and not (number and 0 <= value <= 1):
+        return "%s must be a number from 0 to 1" % path
+    if path in ("strategist.every", "strategist.plateau", "strategist.horizon", "strategist.force_max") \
+            and not (number and float(value).is_integer() and value >= 1):
+        return "%s must be a whole number, 1 or more" % path
     if path in ("schedule.novel_share", "schedule.novelty", "schedule.adaptive", "schedule.founder_credit", "population.quota",
                 "population.specialist_rate", "evaluation.screen_fraction", "evaluation.screen_keep"):
         if isinstance(value, bool) or not isinstance(value, (int, float)) or not 0 <= value <= 1:

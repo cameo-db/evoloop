@@ -49,7 +49,18 @@ def state(view: View, settings: Dict[str, Any]) -> Dict[str, Dict[str, Any]]:
             lin["state"] = "retired"
         else:
             lin["state"] = "contender"
-    contenders = sorted((l for l in lineages.values() if l["state"] == "contender"), key=lambda l: -l["best"])
+    # What the strategist or the person said about a lineage stands over the rules: one set aside is retired
+    # whatever its record; one brought back competes again with its count of moves without a gain wiped.
+    for lid, to in (settings.get("_lineages") or {}).items():
+        lin = lineages.get(lid)
+        if lin is None or lin["best"] is None:
+            continue
+        if to == "retired":
+            lin["state"] = "retired"
+        elif to == "revived" and lin["state"] in ("retired", "contender"):
+            lin["state"], lin["flat"], lin["revived"] = "contender", 0, True
+    contenders = sorted((l for l in lineages.values() if l["state"] == "contender"),
+                        key=lambda l: (not l.get("revived"), -l["best"]))   # one brought back gets its place
     for index, lin in enumerate(contenders):
         lin["state"] = "active" if index < int(pop["lineages"]) else "bench"
     return lineages
@@ -72,7 +83,7 @@ class Lineage:
         making = settings.get("_designing") or []      # designs being written now, not yet in the results
         busy = {d.get("lineage") for d in making}
         trials = [l for l in scored if l["state"] == "trial" and not l["flying"] and l["id"] not in busy]
-        if mode in ("local", "cross") and trials:
+        if mode in ("local", "cross") and trials and not settings.get("_forced"):
             # A lineage in trial is owed its runs before anything else is compared with it.
             lin = max(trials, key=lambda l: l["best"])
             return {"mode": "local", "purpose": "trial", "lineage": lin["id"], "parents": [lin["best_candidate"]],

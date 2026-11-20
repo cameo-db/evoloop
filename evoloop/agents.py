@@ -9,6 +9,7 @@ steering notes it was shown, what it answered, what it cost.
     analyst      reads results                        writes lessons, and questions for the person
     coordinator  reads the options code offers        writes the choice of the next slot (optional)
     assessor     reads one role's record              writes a review of that role, for the person
+    strategist   reads the facts of the whole search   writes decisions from a bounded menu, into the ledger
     translator   reads the person's words             writes proposed ledger entries, for the person to confirm"""
 from __future__ import annotations
 
@@ -111,7 +112,29 @@ value the person did not ask for. Nothing you return is applied until the person
 Output: {"reasoning": "...", "note": "...", "changes": [{"key": "schedule.novelty", "value": 0.6, "from": \
 "..."}], "notes": [{"text": "...", "roles": ["writer"]}], "not_covered": []}"""
 
-ROLES = {"writer": WRITER, "analyst": ANALYST, "coordinator": COORDINATOR, "assessor": ASSESSOR, "translator": TRANSLATOR}
+STRATEGIST = """## Your role: strategist
+
+You look at the search as a whole, at intervals and whenever it stops gaining, and decide whether it should go on \
+as it is. Code gives you the facts: how long since the best score rose, what each mode, move and kind of crossover \
+has returned, the population, how varied the recent designs are, the budget left, the agents' spend, and your own \
+earlier decisions with what followed them. `menu` lists the actions you may take and their bounds.
+
+Return up to two decisions. `stay` is a decision, and often the right one: a strategy changed every few designs \
+never gets a fair test. Change something when the facts show the search is stuck or lopsided: no gain for a long \
+stretch, a mode that keeps returning nothing while it holds a large share, crossover of one kind failing while \
+another is untried, every recent design of one family. Exploration is part of your brief: do not let the search \
+collapse onto the leader while budget remains, and say so when it has.
+
+For each decision give `action`, `args` as the menu describes, `reason` (what in the facts decided it), and \
+`expects`: `gain` in noise floors that you expect the best score to rise over the next `within` designs because of \
+this. Your expectations are scored against what follows. Small changes are applied at once; large ones wait for \
+the person's yes, and the menu says which are which.
+
+Output: {"reasoning": "...", "note": "...", "followed_notes": [], "decisions": [{"action": "shares", "args": \
+{"new": 0.5, "cross": 0.2, "local": 0.3}, "reason": "...", "expects": {"gain": 1.0, "within": 15}}]}"""
+
+ROLES = {"writer": WRITER, "analyst": ANALYST, "coordinator": COORDINATOR, "assessor": ASSESSOR, "translator": TRANSLATOR,
+         "strategist": STRATEGIST}
 
 PROPOSAL = {"type": "object", "required": ["blocks"], "properties": {"blocks": {"type": "object"}}}
 SCHEMAS: Dict[str, Dict[str, Any]] = {
@@ -120,6 +143,7 @@ SCHEMAS: Dict[str, Dict[str, Any]] = {
     "analyst": {"type": "object", "required": ["lessons"], "properties": {"lessons": {"type": "array"}}},
     "coordinator": {"type": "object", "required": ["choice"], "properties": {"choice": {"type": "integer"}}},
     "assessor": {"type": "object", "required": ["assessment"], "properties": {"assessment": {"type": "string"}}},
+    "strategist": {"type": "object", "required": ["decisions"], "properties": {"decisions": {"type": "array"}}},
     "translator": {"type": "object", "required": ["changes", "notes"],
                    "properties": {"changes": {"type": "array"}, "notes": {"type": "array"}}},
 }

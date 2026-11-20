@@ -5,7 +5,7 @@ more than it is.
 
 ## What has been run
 
-- **73 tests** on the built-in example with stub agents (no model call, no GPU). They cover the brief,
+- **83 tests** on the built-in example with stub agents (no model call, no GPU). They cover the brief,
   every strategy, islands, the crossover kinds, steering during a run, changing the strategy, harness
   and search space midway, changing the run length, stopping and continuing, the study file, and one
   regression test for each defect that an independent review of the code reproduced.
@@ -13,6 +13,9 @@ more than it is.
 
 ## What has not been run
 
+- **The strategist with a real agent.** Its bounds, its record and the commands to approve or decline are
+  tested with a stub that follows a fixed rule. Whether a real model decides well is not known.
+- **The spend governor against real prices.** It is tested with a backend that charges a fixed sum per call.
 - **A real agent.** The prompts have not been read by a model, and the `anthropic_api` and
   `claude_code` backends have not been called from this version.
 - **A real training task.** Nothing has been trained on a GPU through this version.
@@ -41,7 +44,5 @@ more than it is.
 - Selection on two objectives at once (a trade-off front).
 - Weight inheritance from a parent.
 - Repair of a design that crashed.
-- A strategist that reviews the search at intervals and proposes changes to it. The coordinator agent
-  chooses one slot at a time and cannot change the schedule or retire a lineage.
 - A file of a cluster's own rules.
 - Running the CAMEO kit's check on the study file.

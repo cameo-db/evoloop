@@ -123,6 +123,9 @@ class Designer:
                 return dict(request, move=None, refuse="no block is open in this search")
             done = sum(counts.values())
             pick = max(options, key=lambda m: float(mix.get(m, 0)) * (done + 1) - counts[m])
+            feasible_all = [m for m in feasible if feasible[m]]
+            if request.get("force_kind") in feasible_all:
+                pick = request["force_kind"]   # the strategist ordered this kind of move
             request["move"] = LOCAL_NAMES[pick]
         elif mode == "cross":
             request["move"] = cross
@@ -145,6 +148,8 @@ class Designer:
         options = [k for k in kinds if feasible[k]]
         if not options:
             return None   # only the kinds the person listed are used
+        if request.get("force_kind") in options:
+            return request["force_kind"]   # the strategist ordered this kind
         counts = {k: sum(1 for r in view.search_runs() if r["history"].get("move") == k) for k in options}
         return min(options, key=lambda k: (counts[k], options.index(k)))
 
@@ -356,6 +361,7 @@ class Designer:
                    "hypothesis": proposal.get("hypothesis"), "predicted_effect": proposal.get("predicted_effect"),
                    "change_summary": proposal.get("change_summary"), "parts_from": proposal.get("parts_from"),
                    "forecast": forecast, "why_this_slot": request.get("why"), "step": request.get("step"),
+                   "forced_by": request.get("forced_by"),
                    "call": request.get("call"), "distance": distance, "proposals_weighed": len(request.get("proposals") or []),
                    "not_chosen": [{"name": p.get("name"), "worth": round(w, 3)} for w, p, _, _, _ in judged[1:]] + reasons}
         run = {"id": "R%d" % (len(view.runs) + 1), "candidate": candidate, "key": keys["candidate"], "model": model,

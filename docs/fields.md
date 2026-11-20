@@ -93,6 +93,19 @@ Fields marked **asked** are asked whenever they are empty; the others are never 
 | `harness.coordinator` | `"code"` | yes | Who picks each slot: code or an agent. |
 | `harness.analyst_every` | `8` | yes | Finished runs between two analyses. |
 
+## strategist
+
+| Field | Default | Changes in a run | What it is |
+|---|---|---|---|
+| `strategist.mode` | `"off"` | yes | Whether an agent reviews the search as a whole and may change its course. See the strategist. |
+| `strategist.every` | `15` | yes | Scored designs between two meetings of the strategist. |
+| `strategist.plateau` | `12` | yes | Designs with no rise in the best score after which the strategist meets at once. |
+| `strategist.horizon` | `15` | yes | Designs after a decision at which what followed it is scored. |
+| `strategist.min_new_share` | `0.1` | yes | The least share of new designs the strategist may set: exploration is protected. |
+| `strategist.max_share_shift` | `0.15` | yes | The largest move of a share the strategist may make without your yes. |
+| `strategist.force_max` | `5` | yes | The most slots one `force` decision may order. |
+| `strategist.ask_first` | `["strategy"]` | yes | The actions that always wait for your yes, whatever the mode. |
+
 ## evaluation
 
 | Field | Default | Changes in a run | What it is |
@@ -122,6 +135,8 @@ Fields marked **asked** are asked whenever they are empty; the others are never 
 | `budget.model_calls` | `null` | yes | The most agent calls, as a second cap. |
 | `budget.wall_clock_hours` | `null` | yes | After this long the search starts nothing more and ends when its jobs do. |
 | `budget.max_uncounted_failures` | `10` | yes | Failed or invalid designs that are not charged; beyond it each is charged. |
+| `budget.spend_policy` | `"pace"` | yes | pace (make the run cheaper when it is heading past the spend cap) or none. |
+| `budget.reserve_share` | `0.15` | yes | The last part of the spend cap, kept for writing designs. |
 
 ## baseline
 

@@ -1,11 +1,12 @@
 """What a person reads about a run: `status.json` while it goes, `report.md` when asked or at the end."""
 from __future__ import annotations
 
+import json
 import os
 import time
 from typing import Any, Dict, List, Optional
 
-from . import audit, form, schedule, strategies
+from . import audit, form, schedule, strategies, strategist
 from .store import ENDED, View, write_json
 
 
@@ -45,6 +46,10 @@ def snapshot(controller: Any, view: View, reason: Optional[str] = None) -> Dict[
         "agents": {"dollars": round(controller.agents.dollars, 4), "calls": controller.agents.count,
                    "cap_dollars": settings["budget"]["model_dollars"], "blocked": controller.blocked or controller.agents.available() or controller.agent_block,
                    "calls_without_a_cost": controller.agents.unpriced},
+        "spend": strategist.spending(controller.store, controller.agents, view, settings),
+        "decisions_waiting": [e["id"] for e in controller.store.merged_list("ledger")
+                              if e.get("kind") == "decision" and e.get("status") == "proposed"],
+        "forced_slots": controller.state.get("forced") or [],
         "open_questions": [q for q in controller.store.read("questions") if q.get("status") == "open"][-5:],
         "notes_in_force": [{"id": n["id"], "text": n["text"]} for n in settings.get("notes") or []],
     }
@@ -100,7 +105,26 @@ def lines(controller: Any, view: View, reason: Optional[str] = None) -> List[str
     if controller.agents.unpriced:
         out += ["", "WARNING: %d agent calls came back with no cost; the spend figure above leaves them out." %
                 controller.agents.unpriced]
-    ledger = [e for e in store.merged_list("ledger") if e.get("kind") in ("init", "set", "note", "stop", "period", "withdraw", "review")]
+    ledger = [e for e in store.merged_list("ledger") if e.get("kind") in ("init", "set", "note", "stop", "period", "withdraw", "review",
+                                                                           "lineage", "approve", "decline")]
+    decisions = [e for e in store.merged_list("ledger") if e.get("kind") == "decision"]
+    if decisions:
+        out += ["", "## The strategist", "",
+                "Each decision with what it expected and what followed over the next designs (the rise in the best "
+                "score, in noise floors). What followed is not proof of what the decision caused.", ""]
+        out += table([{"id": e["id"], "at": e.get("at_evaluations"), "action": e.get("action"),
+                       "args": json.dumps(e.get("args"), default=str)[:70], "status": e.get("status"),
+                       "expected gain": (e.get("expects") or {}).get("gain"),
+                       "gain that followed": (e.get("outcome") or {}).get("gain"),
+                       "why": (e.get("why") or e.get("reason") or "")[:90]} for e in decisions])
+        waiting = [e["id"] for e in decisions if e.get("status") == "proposed"]
+        if waiting:
+            out += ["", "Waiting for your yes or no (`evoloop approve` or `evoloop decline` with `--id`): " + ", ".join(waiting) + "."]
+    money = snap["spend"]
+    if money.get("projected") is not None:
+        out += ["", "## Agent spend", "", "$%.2f so far, $%.3f per design; at that rate the run ends at about $%.2f%s." % (
+            money["dollars"], money["per_design"], money["projected"],
+            " against a cap of $%.2f" % float(money["cap"]) if money.get("cap") is not None else "")]
     out += ["", "## Steering ledger", ""]
     for e in ledger:
         what = {"init": "started as %s, %s strategy, %s harness" % (e.get("run_type"), e.get("strategy"), e.get("harness")),
@@ -109,7 +133,11 @@ def lines(controller: Any, view: View, reason: Optional[str] = None) -> List[str
                                               " [withdrawn]" if e.get("status") == "withdrawn" else ""),
                 "stop": "stop %s" % (e.get("run") or "(drain)"), "withdraw": "withdrew %s" % e.get("target"),
                 "period": "period %s began; leaders %s %s" % (e.get("period"), e.get("leaders"), e.get("how")),
-                "review": "review asked for"}[e["kind"]]
+                "review": "review asked for",
+                "lineage": "lineage %s %s" % (e.get("lineage"), e.get("to")),
+                "approve": "approved %s" % e.get("target"), "decline": "declined %s" % e.get("target")}[e["kind"]]
+        if e.get("decision"):
+            what += " [decision %s]" % e["decision"]
         if e.get("status") == "refused":
             what += " (REFUSED: %s)" % e.get("why")
         if e.get("also_changed"):   # a change of the budget or the run type moves the settings that follow from it

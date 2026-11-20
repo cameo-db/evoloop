@@ -17,7 +17,7 @@ import signal
 import time
 from typing import Any, Dict, List, Optional, Tuple
 
-from . import audit, form, jobs, report, schedule, space, strategies, study
+from . import audit, form, jobs, report, schedule, space, strategies, strategist, study
 from .agents import AgentError, Agents, AgentsUnavailable
 from .design import Designer
 from .store import ENDED, SCORED, Store, View, read_json, write_json
@@ -59,6 +59,9 @@ class Controller:
         self.state.setdefault("rechecked", 0)
         self.state.setdefault("period", 0)
         self.state.setdefault("screen", {})
+        self.state.setdefault("forced", [])
+        self.state.setdefault("met_at", 0)
+        self.state.setdefault("governed_at", 0)
 
     # --- starting --------------------------------------------------------------------------------
     def begin(self) -> None:
@@ -171,6 +174,8 @@ class Controller:
             else:
                 self.draining = True
                 self.ledger({"kind": "stop", "drain": True, "by": who, "reason": why, "status": "applied"})
+        elif kind in ("approve", "decline"):
+            self.answer(str(request.get("id")), kind == "approve", who, why)
         elif kind == "review":
             self.state["review_now"] = request.get("roles") or "all"
             self.ledger({"kind": "review", "by": who, "reason": why, "roles": request.get("roles") or "all", "status": "applied"})
@@ -385,8 +390,16 @@ class Controller:
             # opened together do not go to the same lineage and parent.
             settings = dict(self.settings, _designing=[making for _, _, making in self.designing])
             mode = schedule.next_mode(view, settings, planned)
+            # Slots the strategist ordered come first, when their mode is possible now.
+            forced = self.state["forced"]
+            while forced and not schedule.available(view, settings).get(forced[0]["mode"]):
+                forced.pop(0)
+            if forced:
+                mode = forced[0]["mode"]
+                settings = dict(settings, _forced=True)   # an ordered slot is not turned into a trial run
             options = None
-            if settings["harness"]["coordinator"] == "agent":
+            if settings["harness"]["coordinator"] == "agent" and not forced \
+                    and not strategist.reserve_reached(self.agents, settings):
                 can = schedule.available(view, settings)
                 want = schedule.shares(view, settings)
                 modes = [m for m in form.MODES if can[m] and want[m] > 0] or [mode]
@@ -396,6 +409,11 @@ class Controller:
                 request = options[modes.index(mode)] if mode in modes else options[0]
             else:
                 request = strategy.choose(view, mode, settings, self.rng)
+            if forced:
+                request["forced_by"], request["force_kind"] = forced[0].get("decision"), forced[0].get("kind")
+                forced[0]["left"] -= 1
+                if forced[0]["left"] <= 0:
+                    forced.pop(0)
             future = self.pool.submit(self.write, request, options, view, settings)
             self.designing.append((future, request["mode"], {k: request.get(k) for k in (
                 "mode", "lineage", "parents", "island", "purpose")}))
@@ -468,7 +486,8 @@ class Controller:
                     done = False
                 if not done:   # the call failed: those results are shown again at the next analysis
                     self.state["analysed"] = min(int(self.state["analysed"]), since)
-        self.side = [item for item in self.side if not item[1].done()]
+        # A finished meeting of the strategist stays until its decisions are taken up, further down.
+        self.side = [item for item in self.side if not item[1].done() or item[0] == "strategist"]
         scored = [r for r in view.runs.values() if r["performance"].get("status") in SCORED]
         designs = [r for r in scored if r.get("purpose", "search") in ("search", "trial", "baseline")]
         budget = float(self.settings["budget"]["evaluations"] or 0)
@@ -497,6 +516,7 @@ class Controller:
                          else "fitted again"})
             self.state["period"] = period
             write_json(os.path.join(self.run_dir, "controller.json"), self.state)   # so a restart does not queue them twice
+        self.strategy_turn(view, room)
         level = self.settings["harness"]["level"]
         # The leader is partly the luckiest fit. The full harness fits it again on a new seed every 20 designs
         # unless `evaluation.recheck_every` says otherwise; a re-check is charged like any run.
@@ -510,7 +530,8 @@ class Controller:
         every = int(self.settings["harness"]["analyst_every"] or 0)
         seen = [r for r in view.ended() if r["performance"].get("status") != "not_run"]
         if level != "minimal" and every > 0 and len(seen) - int(self.state["analysed"]) >= every \
-                and not any(item[0] == "analyst" for item in self.side) and not self.agents.available():
+                and not any(item[0] == "analyst" for item in self.side) and not self.agents.available() \
+                and not strategist.reserve_reached(self.agents, self.settings):
             since = int(self.state["analysed"])
             self.state["analysed"] = len(seen)
             self.side.append(("analyst", self.pool.submit(audit.analyse, self.store, self.agents, self.designer, view,
@@ -524,8 +545,108 @@ class Controller:
         if asked:
             self.review(view, "asked for by the person", asked if isinstance(asked, list) else None)
 
+    # --- the strategist and the spend governor ---------------------------------------------------
+    def strategy_turn(self, view: View, room: bool) -> None:
+        s = self.settings["strategist"]
+        # Decisions of a meeting that has ended are checked and applied here, on the controller's own thread.
+        for kind, future, _ in self.side:
+            if kind == "strategist" and future.done():
+                try:
+                    decisions = future.result()
+                except Exception as exc:   # a fault in a meeting is on the record, never silent
+                    decisions = []
+                    self.ledger({"kind": "decision", "by": strategist.BY, "action": None, "status": "refused",
+                                 "why": "the meeting failed: %s: %s" % (type(exc).__name__, exc)})
+                for decision in decisions:
+                    self.decide(decision, view)
+                    view = self.view()
+        self.side = [item for item in self.side if not (item[0] == "strategist" and item[1].done())]
+        # Earlier decisions are scored once enough designs have followed them.
+        for entry in self.store.merged_list("ledger"):
+            if entry.get("kind") == "decision" and entry.get("status") in ("applied", "approved") and not entry.get("outcome"):
+                outcome = strategist.score(view, entry, int(s["horizon"]))
+                if outcome:
+                    self.store.append("ledger", {"id": entry["id"], "outcome": outcome})
+        scored = len(strategist.designs(view))
+        # The spend governor: when the run is heading past the cap, one step cheaper, at most every ten designs.
+        if scored - int(self.state["governed_at"]) >= 10:
+            step = strategist.govern(self.agents, view, self.settings, self.store)
+            if step:
+                self.state["governed_at"] = scored
+                self.ledger({"kind": "set", "key": step["key"], "value": step["value"], "old": form.get(self.settings, step["key"]),
+                             "by": strategist.GOVERNOR, "reason": step["reason"], "status": "applied"})
+                self.refresh()
+        if s["mode"] == "off" or not room or self.draining or any(item[0] == "strategist" for item in self.side) \
+                or self.agents.available() or strategist.reserve_reached(self.agents, self.settings):
+            return
+        since = scored - int(self.state["met_at"])
+        stuck = strategist.since_gain(view)
+        why = None
+        if since >= int(s["every"]):
+            why = "%d designs since the last meeting" % since
+        elif stuck >= int(s["plateau"]) and since >= max(3, int(s["plateau"]) // 2):
+            why = "no rise in the best score for %d designs" % stuck
+        if why and scored >= 3:
+            self.state["met_at"] = scored
+            self.side.append(("strategist", self.pool.submit(strategist.meet, self.store, self.agents, view,
+                                                             dict(self.settings), why), 0))
+
+    def decide(self, decision: Dict[str, Any], view: View) -> None:
+        """One decision of the strategist: refused, applied, or held for the person. Always on the record."""
+        fault, effects, wait = strategist.work_out(decision, view, self.settings, self.store.merged_list("ledger"))
+        best = view.best()
+        entry = {"kind": "decision", "by": strategist.BY, "action": decision.get("action"), "args": decision.get("args"),
+                 "reason": str(decision.get("reason") or "")[:600], "expects": decision.get("expects")
+                 if isinstance(decision.get("expects"), dict) else None, "call": decision.get("call"),
+                 "best_before": view.display(best["value"]) if best else None, "effects": effects}
+        if fault:
+            self.ledger(dict(entry, status="refused", why=fault))
+        elif wait:
+            self.ledger(dict(entry, status="proposed", why=wait))
+        else:
+            entry = self.ledger(dict(entry, status="applied"))
+            self.enact(entry["id"], effects)
+
+    def enact(self, decision_id: str, effects: Dict[str, Any]) -> None:
+        for key, value in (effects.get("sets") or {}).items():
+            self.ledger({"kind": "set", "key": key, "value": value, "old": form.get(self.settings, key), "by": strategist.BY,
+                         "decision": decision_id, "status": "applied"})
+            self.refresh()
+        if effects.get("force"):
+            self.state["forced"].append(dict(effects["force"], decision=decision_id))
+        if effects.get("lineage"):
+            self.ledger(dict(effects["lineage"], kind="lineage", by=strategist.BY, decision=decision_id, status="applied"))
+        if effects.get("note"):
+            standing = [e for e in self.store.merged_list("ledger") if e.get("kind") == "note" and e.get("by") == strategist.BY
+                        and e.get("status") == "active"]
+            for old in standing[:max(0, len(standing) - 2)]:   # at most three of its notes stand at once
+                self.store.append("ledger", {"id": old["id"], "status": "withdrawn", "withdrawn_by": strategist.BY})
+            self.ledger({"kind": "note", "text": effects["note"], "roles": ["writer"], "by": strategist.BY,
+                         "decision": decision_id, "status": "active"})
+        if effects.get("question"):
+            self.store.append("questions", dict(effects["question"], id="Q%d" % (len(self.store.read("questions")) + 1),
+                                                status="open", **{"from": strategist.BY}))
+        self.refresh()
+
+    def answer(self, decision_id: str, yes: bool, who: Any, why: Any) -> None:
+        """The person's yes or no to a decision that was held for them."""
+        held = [e for e in self.store.merged_list("ledger") if e.get("id") == decision_id and e.get("kind") == "decision"]
+        if not held or held[0].get("status") != "proposed":
+            self.ledger({"kind": "approve" if yes else "decline", "target": decision_id, "by": who, "status": "refused",
+                         "why": "no decision with that id is waiting"})
+            return
+        self.store.append("ledger", {"id": decision_id, "status": "approved" if yes else "declined", "answered_by": who,
+                                     "answer_reason": why, "t_answered": time.time()})
+        if yes:
+            # Scored from now, not from when it was proposed.
+            best = self.view().best()
+            self.store.append("ledger", {"id": decision_id, "t": time.time(),
+                                         "best_before": self.view().display(best["value"]) if best else None})
+            self.enact(decision_id, held[0].get("effects") or {})
+        self.ledger({"kind": "approve" if yes else "decline", "target": decision_id, "by": who, "reason": why, "status": "applied"})
+
     def review(self, view: View, why: str, roles: Any = None) -> None:
-        if self.agents.available():
+        if self.agents.available() or strategist.reserve_reached(self.agents, self.settings):
             return
         self.side.append(("review", self.pool.submit(audit.review, self.store, self.agents, view, self.settings, why, roles), 0))
 

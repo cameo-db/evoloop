@@ -14,7 +14,7 @@ the person asking, which is recorded in the ledger, and an optional `--reason`.
 | `evoloop brief <dir> --answer FIELD=VALUE` | records an answer (repeatable; the value is read as YAML) |
 | `evoloop brief <dir> --confirm NAME` | records the person's agreement; refused while a required field is empty |
 | `evoloop plan <dir>` | every setting, grouped by where it came from, and the warnings |
-| `evoloop menu [topic]` | every choice a run can make, the presets, and every field; topics: `run-types`, `strategies`, `modes`, `crossover`, `moves`, `spaces`, `harness`, `coordinator`, `reviews`, `guidance`, `defaults`, `fields` |
+| `evoloop menu [topic]` | every choice a run can make, the presets, and every field; topics: `run-types`, `strategies`, `modes`, `crossover`, `moves`, `spaces`, `harness`, `coordinator`, `strategist`, `strategist-actions`, `spend`, `reviews`, `guidance`, `defaults`, `fields` |
 | `evoloop guide [N]` | the guidance for a budget of N evaluations |
 
 ## Running
@@ -37,6 +37,8 @@ the person asking, which is recorded in the ledger, and an optional `--reason`.
 | `evoloop stop <dir> --name N --by NAME` | starts nothing more; the run ends when its jobs do |
 | `evoloop stop <dir> --name N --run R12 --by NAME` | stops one run |
 | `evoloop review <dir> --name N [--roles R...] --by NAME` | has the assessor review the agents now |
+| `evoloop approve <dir> --name N --id S14 --by NAME` | says yes to a decision of the strategist that waits for you |
+| `evoloop decline <dir> --name N --id S14 --by NAME` | says no to it |
 
 `evoloop set` refuses at once a setting that cannot change in a run, or a value of the wrong kind. A
 request that passes that check and cannot be carried out when the controller reads it is recorded in
