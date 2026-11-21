@@ -49,7 +49,8 @@ Three things hold everywhere:
   whatever a role returns is checked by code and written to those records.
 - **A strategy keeps no state.** Its population is worked out from the results each time, which is why
   the strategy can be changed in the middle of a run.
-- **Nothing is filled in by guessing.** A required field that is empty becomes a question, and a run
+- **A guess is only ever a suggestion.** The tool and an agent propose answers with their reasons; you see
+  every one and can change it. A required field with no answer stays a question, and a run
   does not start until you have confirmed the brief by name.
 
 ## Where to go next

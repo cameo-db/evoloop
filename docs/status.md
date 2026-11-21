@@ -5,7 +5,7 @@ more than it is.
 
 ## What has been run
 
-- **127 tests** on the built-in example with stub agents (no model call, no GPU). They cover the brief,
+- **134 tests** on the built-in example with stub agents (no model call, no GPU). They cover the brief,
   every strategy, islands, the crossover kinds, steering during a run, changing the strategy, harness
   and search space midway, changing the run length, stopping and continuing, the study file, and one
   regression test for each defect that two independent reviews of the code reproduced.

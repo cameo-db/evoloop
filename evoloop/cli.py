@@ -146,6 +146,46 @@ def cmd_brief(args: Any) -> int:
         save = False
     if save:
         form.save_brief(folder, brief)
+    from . import interview
+    if args.importing:
+        answers = read_json(args.importing)
+        if not isinstance(answers, dict):
+            with open(args.importing, encoding="utf-8") as handle:
+                answers = yaml.safe_load(handle)
+        if not isinstance(answers, dict):
+            raise SystemExit("%s does not hold a mapping of answers" % args.importing)
+        done, refused = interview.merge(brief, answers)
+        form.save_brief(folder, brief)
+        out("recorded: %s" % (", ".join(done) or "nothing"))
+        for item in refused:
+            out("not accepted: %s" % item)
+    if args.suggest:
+        for field, value in parse_pairs(args.suggest).items():
+            fault = interview.suggest(brief, field, value, args.because or "the agent judged it likely", by="an agent")
+            if fault:
+                raise SystemExit(fault)
+        form.save_brief(folder, brief)
+    if args.infer or args.next:
+        made = interview.infer(folder, brief)
+        form.save_brief(folder, brief)
+        if args.infer:
+            out("suggested: %s" % (", ".join("%s=%s" % kv for kv in made.items()) or "nothing new"))
+    if args.keep:
+        for field in args.keep:
+            fault = interview.record(brief, field, interview.KEEP)
+            if fault:
+                raise SystemExit(fault)
+        form.save_brief(folder, brief)
+    if args.next:
+        now = interview.state(brief)
+        q = now["next"]
+        out(json.dumps({"done": now["done"], "total": now["total"], "sections": now["sections"],
+                        "question": None if q is None else {k: q[k] for k in (
+                            "field", "number", "of", "section", "title", "question", "why", "kind", "choices", "default", "suggested",
+                            "default_from", "required") if k in q},
+                        "how_to_answer": "evoloop brief DIR --answer FIELD=VALUE, or --keep FIELD to leave the default; then --next again"
+                        if q else "all done: evoloop plan DIR, then evoloop brief DIR --confirm NAME"}, indent=1, default=str))
+        return 0
     if args.confirm:
         try:
             form.confirm(folder, args.confirm)
@@ -167,6 +207,37 @@ def cmd_brief(args: Any) -> int:
     if not any(a["required"] for a in asks) and not faults:
         out("nothing left to ask. Read `evoloop plan %s`, then confirm with `evoloop brief %s --confirm NAME`." % (args.dir, args.dir)
             if not form.confirmed(brief) else "the brief is complete and confirmed by %s." % brief["status"]["confirmed_by"])
+    return 0
+
+
+def cmd_setup(args: Any) -> int:
+    """The questions one at a time in the terminal."""
+    from . import interview
+    folder = os.path.abspath(args.dir)
+    try:
+        brief = form.load_brief(folder)
+        interview.infer(folder, brief)
+        form.save_brief(folder, brief)
+        interview.run(folder, input, out)
+    except (EOFError, KeyboardInterrupt):
+        out("\nStopped. What you answered is saved; run `evoloop setup` again to go on.")
+    return 0
+
+
+def cmd_form(args: Any) -> int:
+    """The questions as a self-contained HTML form."""
+    from . import formpage, interview
+    folder = os.path.abspath(args.dir)
+    path = args.out or os.path.join(folder, "setup_form.html")
+    seeded = form.load_brief(folder)
+    interview.infer(folder, seeded)
+    form.save_brief(folder, seeded)
+    with open(path, "w", encoding="utf-8") as handle:
+        handle.write(formpage.fragment(form.load_brief(folder), download=False) if args.fragment
+                     else formpage.document(form.load_brief(folder)))
+    out("wrote %s" % path)
+    out("Open it in a browser (copy it to your own machine if this is a server), answer, save the answers file it gives "
+        "you as answers.json, then: evoloop brief %s --import answers.json" % args.dir)
     return 0
 
 
@@ -420,6 +491,16 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--all", action="store_true", help="every field, not only the required ones")
     p.add_argument("--answer", action="append", metavar="FIELD=VALUE")
     p.add_argument("--confirm", metavar="NAME")
+    p.add_argument("--next", action="store_true", help="the next question as JSON, with its choices and where it stands in the list")
+    p.add_argument("--keep", action="append", metavar="FIELD", help="leave a question as shown: accept its suggestion, or its default")
+    p.add_argument("--suggest", action="append", metavar="FIELD=VALUE", help="propose an answer for the person to accept or change")
+    p.add_argument("--because", metavar="WHY", help="the reason for the suggestions given with --suggest")
+    p.add_argument("--infer", action="store_true", help="suggest answers from this machine, the folder and the answers so far")
+    p.add_argument("--import", dest="importing", metavar="FILE", help="read answers from a file (the HTML form's, or any mapping of fields)")
+    add("setup", cmd_setup, "answer the questions one at a time in the terminal")
+    p = add("form", cmd_form, "write the questions as a self-contained HTML form")
+    p.add_argument("--out", metavar="FILE")
+    p.add_argument("--fragment", action="store_true", help=argparse.SUPPRESS)
     add("plan", cmd_plan, "the settings the brief leads to, each with where it came from")
     p = add("estimate", cmd_estimate, "what the agents will cost, at each level of autonomy; with --name, from a run's own calls")
     p.add_argument("--name", default=None, help="a run: project its remaining cost from what its calls have cost")

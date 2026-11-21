@@ -55,33 +55,59 @@ Agents see it, the open blocks and the visible results, and nothing else of your
 
 ## 3. Fill in the brief
 
-By hand in `brief.yaml`, or by question and answer:
+One list of questions, and four ways to answer it. All of them ask the same questions in the same
+order, by section, and say where you are: "question 6 of 17, Budget".
+
+| Way | Command | For |
+|---|---|---|
+| In the terminal | `evoloop setup mysearch` | one question at a time; numbered choices; Enter accepts what is shown; `b` goes back; `q` saves and stops |
+| In a browser | `evoloop form mysearch` | writes `setup_form.html`, a self-contained page with no server; it ends with an answers file |
+| In a chat with an agent | `evoloop brief mysearch --next` | the next question as JSON; the agent asks it, one at a time, with its choices |
+| By hand | edit `brief.yaml` | every field is in [Fields of the brief](fields.md) |
+
+**The form.** Open `setup_form.html` in any browser; if the search folder is on a server, copy the file
+to your own machine first. It shows one section at a time with a count of what is done, and the last
+step gives you an answers file. Save that as `answers.json` in the search folder and run
 
 ```
-evoloop brief mysearch                  # what is still to ask
-evoloop brief mysearch --questions      # the same as JSON, for an agent to ask the person
-evoloop brief mysearch --answer budget.evaluations=100 --answer run.type=explore_then_exploit
+evoloop brief mysearch --import answers.json
 ```
 
-Ten fields are always asked when empty:
+Nothing is sent anywhere by the page; a draft is kept only in that browser.
+
+**Suggestions.** You are not asked cold. Before the questions, the tool proposes a best guess where it
+has evidence, each with its reason, and shows it preselected:
+
+- from the machine: Slurm or not, how many GPUs, which agent login is present;
+- from the folder: what the marked code allows to change, a direction of the score stated in `task.md`;
+- from your answers so far: the kind of search for the size of the budget, a spend cap from the estimate.
+
+An agent helping you does the same from what it has read (`evoloop brief mysearch --suggest
+FIELD=VALUE --because "..."`). A suggestion is never an answer by itself: it becomes one when you leave
+it or pick it, and you can always choose something else. Nothing is suggested where there is no
+evidence (the goal, the length of a run, the noise of the score); those are asked plainly.
+
+**What is asked.** About sixteen questions; fewer when some do not apply (the model is not asked for
+with the stub, the Slurm partition not on one machine). Ten have no default and need an answer:
 
 | Field | Question |
 |---|---|
 | `objective.goal` | What is being improved, and why? |
 | `objective.direction` | Is a higher score better, or a lower one? |
-| `run.type` | What kind of search? |
 | `budget.evaluations` | How many models may be trained in all? |
+| `run.type` | What kind of search? |
 | `evaluation.allowance` | How long is one training run? |
 | `evaluation.noise` | How much does the score differ between two fits of the same model? |
 | `baseline.mode` | Train the baseline, import a finished fit, or skip it? |
 | `compute.gpus` | How many models may train at once? |
 | `agents.backend` | Which agent backend? |
-| `budget.model_dollars` | What is the most the agents may cost? |
+| `budget.model_dollars` | What is the most the agents may cost? (not asked with the stub) |
 
-Every other field takes its value from the first of these that gives one:
+The others (what may change, agentic or harnessed, the model, the effort, the reviews) have defaults
+you can leave. Every other field of the brief takes its value from the first of these that gives one:
 
 1. the brief (what you set)
-2. the run type
+2. the level of autonomy, then the run type
 3. the guidance for the size of the budget
 4. the default
 

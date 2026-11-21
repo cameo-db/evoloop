@@ -315,6 +315,8 @@ def questions(brief: Dict[str, Any], everything: bool = False) -> List[Dict[str,
     stated = given(brief)
     out = []
     for path, (question, why) in REQUIRED.items():
+        if path == "budget.model_dollars" and stated.get("agents.backend") == "stub":
+            continue   # the stub makes no model call: there is nothing to cap
         if path not in stated:
             out.append({"field": path, "question": question, "why": why, "required": True,
                         "choices": list(CHOICES.get(path) or (RUN_TYPES if path == "run.type" else []))})
@@ -546,8 +548,8 @@ BLANK = {
     "budget": {"evaluations": None, "model_dollars": None, "wall_clock_hours": None},
     "evaluation": {"allowance": None, "allowance_unit": "steps", "noise": None, "quick_check": None},
     "baseline": {"mode": None},
-    "compute": {"gpus": None, "scheduler": "local", "partition": None, "qos": None, "setup": []},
-    "agents": {"backend": None, "default_model": "claude-opus-5-5", "effort": "medium", "efforts": {"writer": "high"}, "models": {}},
+    "compute": {"gpus": None},
+    "agents": {"backend": None},
     "space": {"forbidden": [], "must_keep": []},
     "data": {"name": None, "accession": None, "preprocessing": None, "splits": None},
     "depositor": {"name": None, "orcid": None, "lab": None, "institution": None},

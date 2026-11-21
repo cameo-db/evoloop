@@ -41,9 +41,10 @@ evoloop init mysearch --source path/to/project   # brief.yaml, task.md, base/, a
 
 1. **Mark the code** in `base/`: `# EVOLVE-BLOCK-START name=trunk kind=structure role=trunk` ... `# EVOLVE-BLOCK-END`.
 2. **Write `task.md` and `adapter/run.py`** (how one design is trained; it writes `result.json`).
-3. **Fill in `brief.yaml`** by hand, or let `evoloop brief mysearch` ask. Ten fields are always asked
-   when empty; every other field takes its value from the run type, then the guidance for the size of
-   the budget, then the default. Nothing is filled in by guessing.
+3. **Answer the questions**: `evoloop setup mysearch` in the terminal, `evoloop form mysearch` for a form in a
+   browser, or an agent in a chat. Each shows its best guess where it has one and where you are in the list.
+   Fields you leave take their value from the run type, then the guidance for the size of
+   the budget, then the default. A guess is only ever a suggestion: you see it and can change it.
 4. **Read `evoloop plan mysearch`, then confirm** with `evoloop brief mysearch --confirm "Your Name"`.
 5. **Run**: `evoloop run mysearch --name r1`.
 

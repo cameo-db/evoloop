@@ -9,6 +9,13 @@ the person asking, which is recorded in the ledger, and an optional `--reason`.
 |---|---|
 | `evoloop init <dir> [--source PATH]` | makes a search folder; with `--source`, copies the code to `base/` |
 | `evoloop example <dir>` | copies the built-in example to a new folder |
+| `evoloop setup <dir>` | asks the questions one at a time in the terminal, with suggestions and a count of where you are |
+| `evoloop form <dir> [--out FILE]` | writes the questions as a self-contained HTML form (`setup_form.html`) |
+| `evoloop brief <dir> --import FILE` | reads the answers file the form gives, or any mapping of fields |
+| `evoloop brief <dir> --next` | the next question as JSON, for an agent to ask one at a time |
+| `evoloop brief <dir> --keep FIELD` | leaves a question as shown: accepts its suggestion, or its default |
+| `evoloop brief <dir> --infer` | suggests answers from the machine, the folder and the answers so far |
+| `evoloop brief <dir> --suggest FIELD=VALUE --because WHY` | proposes an answer for the person to accept or change |
 | `evoloop brief <dir>` | lists what the brief still lacks |
 | `evoloop brief <dir> --questions [--all]` | the same as JSON, for an agent to ask the person; `--all` for every field |
 | `evoloop brief <dir> --answer FIELD=VALUE` | records an answer (repeatable; the value is read as YAML) |

@@ -120,7 +120,8 @@ def test_steering_during_a_run(tmp_path):
     note = [e for e in ledger if e["kind"] == "note"][0]
     reason = controller.run(max_seconds=240)
     assert reason.startswith("the budget")
-    later = [c for c in controller.store.read("calls")[calls_before:] if c["role"] == "writer"]
+    # Calls that were already under way when the note arrived finish afterwards without it; every call started later has it.
+    later = [c for c in controller.store.read("calls")[calls_before:] if c["role"] == "writer"][controller.capacity():]
     assert later and all(note["id"] in c["notes_shown"] for c in later)     # every later writer call read the note
     assert all(note["id"] in c["output"]["followed_notes"] for c in later if "output" in c)
     card = audit.scorecard(controller.store, controller.view())
