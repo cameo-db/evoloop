@@ -126,6 +126,7 @@ Fields marked **asked** are asked whenever they are empty; the others are never 
 | `evaluation.leaders_refit` | `4` | yes | When a new period begins: how many lineages' leaders are fitted again. |
 | `evaluation.test_set` | `"held_out"` | no | `held_out` when test scores are kept from the search. Recorded in the study file. |
 | `evaluation.quick_check` | `null` | no | A command that tests a design in seconds. A design that fails it is not trained. |
+| `evaluation.variables` | `{}` | yes, and a new period begins | Environment variables passed to every job, e.g. {PATIENCE: 5}: the adapter's own knobs. A change begins a new period. |
 
 ## budget
 
@@ -136,6 +137,7 @@ Fields marked **asked** are asked whenever they are empty; the others are never 
 | `budget.model_calls` | `null` | yes | The most agent calls, as a second cap. |
 | `budget.wall_clock_hours` | `null` | yes | After this long the search starts nothing more and ends when its jobs do. |
 | `budget.max_uncounted_failures` | `10` | yes | Failed or invalid designs that are not charged; beyond it each is charged. |
+| `budget.max_uncounted_rejections` | `50` | yes | Designs rejected for a limit that are not charged; beyond it each is charged. |
 | `budget.spend_policy` | `"pace"` | yes | pace (make the run cheaper when it is heading past the spend cap) or none. |
 | `budget.reserve_share` | `0.15` | yes | The last part of the spend cap, kept for writing designs. |
 
@@ -189,7 +191,7 @@ Fields marked **asked** are asked whenever they are empty; the others are never 
 | `agents.effort` | `"medium"` | yes | How hard the model reasons, for every role: low, medium, high, xhigh, max, or model_default. |
 | `agents.efforts` | `{"writer": "high"}` | yes | An effort per role, over `agents.effort`: {writer: high, analyst: low}. |
 | `agents.fallbacks` | `"default"` | yes | default: where the model supports it, a request it declines is answered by another model in the same call. off: it is lost. |
-| `agents.max_tokens` | `16000` | no | The longest reply (anthropic_api only). |
+| `agents.max_tokens` | `64000` | no | The longest reply (anthropic_api only). |
 | `agents.call_timeout_seconds` | `900` | no | How long one call may take. |
 | `agents.max_concurrent_calls` | `4` | no | How many calls run side by side. |
 | `agents.max_retries` | `2` | no | Retries of a call that failed for a passing reason; a refusal for the account's limit is never retried. |
@@ -227,4 +229,11 @@ Fields marked **asked** are asked whenever they are empty; the others are never 
 
 | Field | Default | Changes in a run | What it is |
 |---|---|---|---|
-| `report.columns` | `[]` | yes | Further leaderboard columns: valid.<metric> or test.<metric>. |
+| `report.columns` | `[]` | yes | Further leaderboard columns: valid.<metric>, test.<metric>, speed, best_epoch, epochs_run. |
+| `report.top` | `15` | yes | How many designs the leaderboard shows; the baseline and reference rows are always shown. |
+
+## limits
+
+| Field | Default | Changes in a run | What it is |
+|---|---|---|---|
+| `limits` | `{}` | yes | Hard limits on a design, enforced by code: {metric: {max: x}} or {min: x}, on any figure a result reports, `parameters` or `examples_per_s`. |

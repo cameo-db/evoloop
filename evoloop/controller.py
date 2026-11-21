@@ -50,6 +50,8 @@ class Controller:
         self.agent_block: Optional[str] = None      # no agent call can be made
         self.submit_failures = 0
         self.retry_after = 0.0
+        self.code_changed: Optional[str] = None     # the frozen code is not what the run started with
+        self.code_checked = 0.0
         self.draining = False
         self.stop_now = False
         self.started = time.time()
@@ -94,11 +96,32 @@ class Controller:
             else:
                 self.queue(run)
 
-    def check_frozen(self) -> None:
-        now = space.frozen_hash(os.path.join(self.folder, "base"), os.path.join(self.folder, "adapter"))
-        if self.info.get("frozen") and now != self.info["frozen"]:
-            raise RuntimeError("the frozen code of this run has changed since it started (base/ or adapter/). "
-                               "Scores before and after would not be comparable; start a new run, or restore the files.")
+    def frozen_now(self) -> str:
+        return space.frozen_hash(os.path.join(self.folder, "base"), os.path.join(self.folder, "adapter"))
+
+    def frozen_fault(self) -> Optional[str]:
+        """Why nothing new may start: the frozen code (everything outside the marked blocks, and the adapter)
+        is not what this run started with. Jobs already running are left alone. The person either restores the
+        files or records the change with `evoloop rehash`, saying whether it moves scores."""
+        self.code_checked = time.time()
+        if self.info.get("frozen") and self.frozen_now() != self.info["frozen"]:
+            return ("the frozen code (base/ outside the marked blocks, or adapter/) has changed since this run started. "
+                    "Restore it, or record the change: evoloop rehash DIR --name %s --by NAME --reason WHY "
+                    "(add --moves-scores if scores before and after are not comparable)" % self.name)
+        return None
+
+    def rehash(self, who: Any, why: Any, moves_scores: bool) -> None:
+        """The person's word that a change to the frozen code is meant: recorded with what changed, and the run goes on."""
+        old, new = self.info.get("frozen"), self.frozen_now()
+        if old == new:
+            self.ledger({"kind": "rehash", "by": who, "reason": why, "status": "refused", "why": "the frozen code has not changed"})
+            return
+        self.info["frozen"] = new
+        write_json(os.path.join(self.run_dir, "run.json"), self.info)
+        self.ledger({"kind": "rehash", "by": who, "reason": why, "status": "applied", "old": old, "new": new,
+                     "new_period": bool(moves_scores)})
+        self.code_changed = None
+        self.refresh()
 
     # --- the stores ------------------------------------------------------------------------------
     def view(self) -> View:
@@ -178,6 +201,18 @@ class Controller:
             self.answer(str(request.get("id")), kind == "approve", who, why)
         elif kind == "lineage":
             self.set_lineage(str(request.get("lineage")), str(request.get("to")), who, why)
+        elif kind == "rehash":
+            self.rehash(who, why, bool(request.get("moves_scores")))
+        elif kind == "force":
+            self.order(request, who, why)
+        elif kind == "import":
+            self.import_designs(request, who, why)
+        elif kind == "reference":
+            row = {k: request.get(k) for k in ("label", "score", "valid", "test", "parameters", "note", "source")}
+            if not row["label"] or not isinstance(row["score"], (int, float)):
+                raise ValueError("a reference row needs a label and a score")
+            self.store.append("references", dict(row, id="X%d" % (len(self.store.read("references")) + 1), by=who))
+            self.ledger({"kind": "reference", "label": row["label"], "score": row["score"], "by": who, "reason": why, "status": "applied"})
         elif kind == "review":
             self.state["review_now"] = request.get("roles") or "all"
             self.ledger({"kind": "review", "by": who, "reason": why, "roles": request.get("roles") or "all", "status": "applied"})
@@ -213,7 +248,7 @@ class Controller:
             self.blocked = "a job could not be submitted: %s" % str(exc)[:200]
             return
         self.submit_failures, self.blocked = 0, None
-        self.update(run["id"], job=job, allowance=float(run.get("allowance") or self.settings["evaluation"]["allowance"]),
+        self.update(run["id"], job=job, variables=dict(self.settings["evaluation"].get("variables") or {}), allowance=float(run.get("allowance") or self.settings["evaluation"]["allowance"]),
                     performance={"status": "queued"})
 
     def stop_run(self, run_id: str, who: Any, why: Any) -> None:
@@ -249,6 +284,7 @@ class Controller:
                 if status != "running":
                     self.update(run["id"], performance={"status": "running"}, running_since=time.time())
                 self.screen(run, view)
+                self.watch_limits(run)
                 if stopped and time.time() - stopped["t"] > 300:
                     self.backend.cancel(run)
                 continue
@@ -275,7 +311,14 @@ class Controller:
         ok = isinstance(result, dict) and result.get("valid") and isinstance(score, (int, float)) and score == score \
             and abs(score) != float("inf")
         since = run.get("running_since") or (run.get("job") or {}).get("started")
-        if ok:
+        figures = self.measures(result)
+        # Outside a limit (seen on a progress line, in the result, or said by the adapter): rejected, not broken.
+        rejected = run.get("rejecting") or (self.over_limit(figures) if ok else None) or (
+            str(result.get("rejected")) if isinstance(result, dict) and not result.get("valid") and result.get("rejected") else None)
+        if rejected:
+            perf.update(status="invalid", rejected=True, reason="rejected: %s" % rejected, valid=figures,
+                        parameters=figures.get("parameters"))
+        elif ok:
             cut = run.get("screened") or run.get("stopped_by")
             perf.update(status="stopped_early" if cut else "done", score=float(score),
                         valid={k: v for k, v in diag.items() if k != "hidden" and isinstance(v, (int, float)) and not isinstance(v, bool)},
@@ -342,22 +385,114 @@ class Controller:
         return min(cap, int(compute["max_running"])) if compute.get("max_running") else cap
 
     def spent(self, view: View) -> float:
-        """Evaluations charged: every scored run, and runs that failed or failed the quick check beyond the
-        allowance of uncounted ones, so that a search whose designs all break still comes to an end."""
-        unscored = sum(1 for r in view.runs.values() if r["performance"].get("status") in ("failed", "invalid")
-                       and r.get("purpose", "search") in ("search", "trial"))
-        return view.charged() + max(0, unscored - int(self.settings["budget"]["max_uncounted_failures"]))
+        """Evaluations charged: every scored run; runs that failed or failed the quick check beyond the allowance
+        of uncounted ones; and designs rejected for a limit beyond theirs. So a search whose designs all break,
+        or all break a limit, still comes to an end."""
+        mine = [r for r in view.runs.values() if r.get("purpose", "search") in ("search", "trial")]
+        rejected = sum(1 for r in mine if r["performance"].get("rejected"))
+        unscored = sum(1 for r in mine if r["performance"].get("status") in ("failed", "invalid")
+                       and not r["performance"].get("rejected"))
+        budget = self.settings["budget"]
+        return view.charged() + max(0, unscored - int(budget["max_uncounted_failures"])) \
+            + max(0, rejected - int(budget["max_uncounted_rejections"]))
 
     def unscored_streak(self, view: View) -> int:
-        """How many of the most recent designs in a row ended without a score."""
+        """How many of the most recent designs in a row ended without a score because they broke. A design
+        rejected for a limit did not break: it neither adds to the streak nor ends it."""
         streak = 0
         for run in sorted(view.ended(), key=lambda r: r.get("ended", 0), reverse=True):
-            if run.get("purpose", "search") not in ("search", "trial"):
+            if run.get("purpose", "search") not in ("search", "trial") or run["performance"].get("rejected"):
                 continue
             if run["performance"].get("status") not in ("failed", "invalid"):
                 break
             streak += 1
         return streak
+
+    # --- limits ----------------------------------------------------------------------------------
+    @staticmethod
+    def measures(result: Any) -> Dict[str, float]:
+        """The figures of a result that a limit can name: its visible diagnostics, `parameters`, and
+        `examples_per_s` from its inference speed."""
+        if not isinstance(result, dict):
+            return {}
+        diag = result.get("diagnostics") if isinstance(result.get("diagnostics"), dict) else {}
+        out = {k: v for k, v in diag.items() if k != "hidden" and isinstance(v, (int, float)) and not isinstance(v, bool)}
+        if isinstance(result.get("parameters"), (int, float)):
+            out["parameters"] = result["parameters"]
+        speed = result.get("inference_speed")
+        if isinstance(speed, dict) and isinstance(speed.get("examples_per_s"), (int, float)):
+            out["examples_per_s"] = speed["examples_per_s"]
+        return out
+
+    def over_limit(self, figures: Dict[str, Any]) -> Optional[str]:
+        for metric, bound in (self.settings.get("limits") or {}).items():
+            value = figures.get(metric)
+            if not isinstance(value, (int, float)) or isinstance(value, bool):
+                continue
+            if "max" in bound and value > bound["max"]:
+                return "%s is %g, above the limit of %g" % (metric, value, bound["max"])
+            if "min" in bound and value < bound["min"]:
+                return "%s is %g, below the limit of %g" % (metric, value, bound["min"])
+        return None
+
+    def watch_limits(self, run: Dict[str, Any]) -> None:
+        """A run whose progress lines already show it outside a limit is stopped there, not trained to the end."""
+        if not self.settings.get("limits") or run.get("rejecting"):
+            return
+        rows = jobs.read_progress(self.out_dir(run), every=True)
+        fault = self.over_limit(rows[-1]) if rows else None
+        if fault:
+            jobs.tell(self.out_dir(run), "stop")
+            self.update(run["id"], rejecting=fault)
+
+    # --- what the person orders --------------------------------------------------------------------
+    def order(self, request: Dict[str, Any], who: Any, why: Any) -> None:
+        """The person's order for the next slots: a mode, optionally a kind of crossover or local move, and
+        optionally an instruction the writers of those slots must follow. Honoured exactly, ahead of the schedule."""
+        mode, kind, count = request.get("mode"), request.get("move"), request.get("count", 1)
+        allowed = {"cross": form.CROSS_KINDS, "local": form.LOCAL_MOVES}.get(mode, ())
+        if mode not in form.MODES or (kind is not None and kind not in allowed) or not isinstance(count, int) or not 1 <= count <= 50:
+            raise ValueError("an order needs a mode (%s), a kind that goes with it if any, and a count from 1 to 50" % ", ".join(form.MODES))
+        entry = self.ledger({"kind": "force", "mode": mode, "move": kind, "count": count, "instruction": request.get("instruction"),
+                             "by": who, "reason": why, "status": "applied"})
+        self.state["forced"].insert(0, {"mode": mode, "kind": kind, "left": count, "decision": entry["id"], "by_person": True,
+                                        "instruction": request.get("instruction")})
+        write_json(os.path.join(self.run_dir, "controller.json"), self.state)
+
+    def import_designs(self, request: Dict[str, Any], who: Any, why: Any) -> None:
+        """Designs from an earlier run, fitted here as designs of this run. Their old scores are not carried over
+        (the earlier run may have trained differently); they are kept as a note of where each came from."""
+        source = os.path.abspath(str(request.get("source")))
+        theirs = Store(source)
+        runs = theirs.merged("runs")
+        if not runs:
+            raise ValueError("%s holds no runs" % source)
+        old = View(runs, theirs.merged("models"), theirs.merged("recipes"), self.settings["objective"]["direction"],
+                   self.settings["evaluation"]["noise"] or 0.0, period=max(int(r.get("period", 0)) for r in runs.values()))
+        wanted = request.get("candidates") or [c["id"] for c in old.scored()[:int(request.get("top") or 3)]]
+        done, refused = [], []
+        for cand in wanted:
+            blocks = read_json(os.path.join(source, "candidates", str(cand), "blocks.json"))
+            if not isinstance(blocks, dict) or cand not in old.cands:
+                refused.append("%s: not a design of that run" % cand)
+                continue
+            view = self.view()
+            score = old.display(old.cands[cand]["value"])
+            origin = "%s of %s" % (cand, os.path.basename(source))
+            ask = {"mode": "new", "move": "imported", "parents": [], "purpose": "import", "why": "imported: %s" % origin,
+                   "allowed": {n: b["kind"] for n, b in self.designer.table.items()},
+                   "source": space.full(self.designer.table, {}),
+                   "proposals": [{"name": origin, "family": old.cands[cand]["family"], "hypothesis": "It did well in an earlier run.",
+                                  "change_summary": "imported from %s (its score there: %s)" % (origin, score), "blocks": blocks}]}
+            run, fault = self.designer.commit(ask, view, self.settings)
+            if run is None:
+                refused.append("%s: %s" % (cand, fault))
+                continue
+            run["history"].update(mode=None, imported_from={"run": source, "candidate": cand, "score_there": score})
+            self.queue(run)
+            done.append("%s as %s" % (cand, run["candidate"]))
+        self.ledger({"kind": "import", "source": source, "imported": done, "refused": refused, "by": who, "reason": why,
+                     "status": "applied" if done else "refused", "why": None if done else "; ".join(refused) or "nothing to import"})
 
     def passed(self, view: View) -> bool:
         threshold = self.settings["objective"].get("success_threshold")
@@ -365,6 +500,10 @@ class Controller:
         return threshold is not None and best is not None and best["value"] >= view.sign * float(threshold)
 
     def start(self, view: View) -> None:
+        if time.time() - self.code_checked > 60:   # the frozen code is looked at again every minute
+            self.code_changed = self.frozen_fault()
+        if self.code_changed:
+            return
         if self.blocked and self.submit_failures < 3 and time.time() >= self.retry_after:
             self.blocked = None   # try the submission again
         in_flight = view.in_flight()
@@ -398,7 +537,7 @@ class Controller:
                 gone = forced.pop(0)   # it cannot be done now: given up, on the record
                 self.store.append("ledger", {"id": gone.get("decision"), "force_given_up":
                                              "%d slot(s) of mode %s could not be filled" % (gone["left"], gone["mode"])})
-            if forced and forced[0]["mode"] not in ("new", "novel"):
+            if forced and forced[0]["mode"] not in ("new", "novel") and not forced[0].get("by_person"):
                 # Ordered slots do not starve exploration: they wait while new designs are below their floor.
                 recent = [r["history"].get("mode") for r in view.search_runs()][-19:] + planned
                 fresh = sum(1 for m in recent if m in ("new", "novel"))
@@ -421,6 +560,7 @@ class Controller:
                 request = strategy.choose(view, mode, settings, self.rng)
             if forced:
                 request["forced_by"], request["force_kind"] = forced[0].get("decision"), forced[0].get("kind")
+                request["instruction"] = forced[0].get("instruction")
                 forced[0]["left"] -= 1
                 if forced[0]["left"] <= 0:
                     forced.pop(0)
@@ -571,11 +711,13 @@ class Controller:
                 view = self.view()
         self.side = [item for item in self.side if not (item[0] == "strategist" and item[1].done())]
         scored = strategist.designs_ever(view)
-        if s["mode"] == "off" and self.state["forced"]:
-            # Switched off: the slots it had ordered are given up, and the record says so.
-            for order in self.state["forced"]:
+        theirs = [o for o in self.state["forced"] if not o.get("by_person")]
+        if s["mode"] == "off" and theirs:
+            # Switched off: the slots the strategist had ordered are given up, and the record says so. Slots the
+            # person ordered stand.
+            for order in theirs:
                 self.store.append("ledger", {"id": order.get("decision"), "force_given_up": "the strategist was switched off"})
-            self.state["forced"] = []
+            self.state["forced"] = [o for o in self.state["forced"] if o.get("by_person")]
         for entry in self.store.merged_list("ledger"):
             if entry.get("kind") != "decision":
                 continue
@@ -729,7 +871,7 @@ class Controller:
     def finished(self, view: View) -> Optional[str]:
         started = [r for r in view.in_flight() if r.get("job")]
         # A run recorded but never started does not keep a draining or blocked search alive: it starts when the run goes on.
-        idle = not started and not self.designing and (not self.pending or self.draining or bool(self.blocked))
+        idle = not started and not self.designing and (not self.pending or self.draining or bool(self.blocked) or bool(self.code_changed))
         budget = float(self.settings["budget"]["evaluations"] or 0)
         if self.stop_now:
             return "interrupted"
@@ -741,6 +883,8 @@ class Controller:
         if self.draining:
             return "stopped by the person" if any(e.get("kind") == "stop" and e.get("drain") for e in self.store.read("ledger")) \
                 else "the wall-clock limit was reached"
+        if self.code_changed:
+            return "paused: %s" % self.code_changed
         if self.passed(view):
             return "the success threshold was passed"
         if self.spent(view) >= budget:
@@ -770,8 +914,10 @@ class Controller:
 
     def run(self, max_seconds: Optional[float] = None) -> str:
         self.begin()
-        self.check_frozen()
         self.blocked, self.agent_block, self.submit_failures, self.refused = None, None, 0, 0
+        self.read_inbox()      # a rehash asked for while the run was stopped is taken before the code is checked
+        self.refresh()
+        self.code_changed = self.frozen_fault()
         previous = {}
         for sig in (signal.SIGTERM, signal.SIGINT):
             try:

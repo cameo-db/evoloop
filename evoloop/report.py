@@ -10,19 +10,37 @@ from . import audit, form, schedule, strategies, strategist
 from .store import ENDED, View, write_json
 
 
-def leaderboard(view: View, limit: int = 15, columns: Optional[List[str]] = None) -> List[Dict[str, Any]]:
+def leaderboard(view: View, limit: int = 15, columns: Optional[List[str]] = None,
+                references: Optional[List[Dict[str, Any]]] = None) -> List[Dict[str, Any]]:
+    """The best designs by validation score, with the baseline always shown, and the reference rows the person
+    added (other models to compare with: never part of the search, and marked as such). `columns` names further
+    figures: valid.<metric>, test.<metric>, speed, best_epoch, epochs_run."""
     rows = []
-    for cand in view.scored()[:limit]:
+    ranked = view.scored()
+    shown = ranked[:limit] + [c for c in ranked[limit:] if view.run_of(c["id"]).get("purpose") == "baseline"]
+    for cand in shown:
         run = view.run_of(cand["id"])
         perf = run["performance"]
-        row = {"candidate": cand["id"], "lineage": cand["lineage"], "family": cand["family"],
-               "score": view.display(cand["value"]), "runs": len(cand["values"]), "move": run["history"].get("move"),
-               "parameters": perf.get("parameters"), "minutes": perf.get("training_minutes")}
-        for column in columns or []:   # the brief's own columns: valid.<metric> or test.<metric>
+        row = {"kind": "baseline" if run.get("purpose") == "baseline" else "design", "model": cand["id"], "lineage": cand["lineage"],
+               "family": cand["family"], "score": view.display(cand["value"]), "fits": len(cand["values"])}
+        for column in columns or []:
             part, _, name = column.partition(".")
-            row[column] = (perf.get(part) or {}).get(name) if part in ("valid", "test") else perf.get(column)
+            if part in ("valid", "test"):
+                row[column] = (perf.get(part) or {}).get(name)
+            elif column == "speed":
+                row[column] = (perf.get("inference_speed") or {}).get("examples_per_s") if isinstance(perf.get("inference_speed"), dict) else None
+            else:
+                row[column] = perf.get(column)
+        row.update(parameters=perf.get("parameters"), minutes=perf.get("training_minutes"))
         rows.append(row)
-    return rows
+    for ref in references or []:
+        row = {"kind": "reference", "model": ref.get("label"), "lineage": None, "family": ref.get("note"), "score": ref.get("score"), "fits": None}
+        for column in columns or []:
+            part, _, name = column.partition(".")
+            row[column] = (ref.get(part) or {}).get(name) if part in ("valid", "test") else None
+        row.update(parameters=ref.get("parameters"), minutes=None)
+        rows.append(row)
+    return sorted(rows, key=lambda r: -view.sign * float(r["score"]) if isinstance(r.get("score"), (int, float)) else float("inf"))
 
 
 def snapshot(controller: Any, view: View, reason: Optional[str] = None) -> Dict[str, Any]:
@@ -82,7 +100,8 @@ def lines(controller: Any, view: View, reason: Optional[str] = None) -> List[str
         controller.agents.count))
     if snap["best"]:
         out.append("Best: %s (%s), score %.6g." % (snap["best"]["candidate"], snap["best"]["family"], snap["best"]["score"]))
-    out += ["", "## Leaderboard (validation)", ""] + table(leaderboard(view, 15, settings["report"]["columns"]))
+    out += ["", "## Leaderboard (validation)", ""] + table(leaderboard(view, int(settings["report"]["top"]), settings["report"]["columns"],
+                                                                         store.read("references")))
     out += ["", "## Population (%s)" % settings["strategy"]["mechanism"], ""]
     population = strategies.make(settings).population(view, settings)
     out += table([{k: v for k, v in row.items() if not isinstance(v, (list, dict)) or k in ("parents", "cell")}
@@ -106,7 +125,7 @@ def lines(controller: Any, view: View, reason: Optional[str] = None) -> List[str
         out += ["", "WARNING: %d agent calls came back with no cost; the spend figure above leaves them out." %
                 controller.agents.unpriced]
     ledger = [e for e in store.merged_list("ledger") if e.get("kind") in ("init", "set", "note", "stop", "period", "withdraw", "review",
-                                                                           "lineage", "approve", "decline")]
+                                                                           "lineage", "approve", "decline", "rehash", "force", "import", "reference")]
     decisions = [e for e in store.merged_list("ledger") if e.get("kind") == "decision"]
     if decisions:
         out += ["", "## The strategist", "",
@@ -141,6 +160,11 @@ def lines(controller: Any, view: View, reason: Optional[str] = None) -> List[str
                 "stop": "stop %s" % (e.get("run") or "(drain)"), "withdraw": "withdrew %s" % e.get("target"),
                 "period": "period %s began; leaders %s %s" % (e.get("period"), e.get("leaders"), e.get("how")),
                 "review": "review asked for",
+                "rehash": "the frozen code was changed on purpose%s" % ("; scores before and after are not compared" if e.get("new_period") else ""),
+                "force": "ordered the next %s slot(s): %s%s%s" % (e.get("count"), e.get("mode"), " (%s)" % e["move"] if e.get("move") else "",
+                                                                 "; instruction: %s" % e["instruction"] if e.get("instruction") else ""),
+                "import": "imported %s from %s" % (", ".join(e.get("imported") or []) or "nothing", e.get("source")),
+                "reference": "reference row %s (score %s)" % (e.get("label"), e.get("score")),
                 "lineage": "lineage %s %s" % (e.get("lineage"), e.get("to")),
                 "approve": "approved %s" % e.get("target"), "decline": "declined %s" % e.get("target")}[e["kind"]]
         if e.get("decision"):

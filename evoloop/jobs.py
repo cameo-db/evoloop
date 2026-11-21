@@ -34,6 +34,8 @@ def environment(run: Dict[str, Any], out_dir: str, checkpoint_dir: str, settings
     env = {"EVO_OUT_DIR": out_dir, "EVO_SEED": str(run["seed"]), "EVO_CHECKPOINT_DIR": checkpoint_dir,
            "EVO_ALLOWANCE": str(run.get("allowance") or settings["evaluation"]["allowance"]),
            "EVO_RUN_ID": run["id"], "EVO_DATA_FRACTION": str(settings["data"]["fraction"]), "EVO_CPUS": str(settings["compute"]["cpus_per_job"]), "PYTHONUNBUFFERED": "1"}
+    for name, value in (settings["evaluation"].get("variables") or {}).items():   # the adapter's own knobs, as the person set them
+        env[str(name)] = str(value)
     if run.get("continue_from"):
         env["EVO_CONTINUE_FROM"] = run["continue_from"]
     return env
@@ -222,7 +224,8 @@ def make(settings: Dict[str, Any]) -> Any:
     return Slurm() if settings["compute"]["scheduler"] == "slurm" else Local()
 
 
-def read_progress(out_dir: str) -> List[Dict[str, Any]]:
+def read_progress(out_dir: str, every: bool = False) -> List[Dict[str, Any]]:
+    """The progress lines of a run. By default only those that carry a score; with `every`, cost-only lines too."""
     rows = []
     try:
         with open(os.path.join(out_dir, "progress.jsonl"), "r", encoding="utf-8") as handle:
@@ -231,7 +234,7 @@ def read_progress(out_dir: str) -> List[Dict[str, Any]]:
                     row = json.loads(line)
                 except ValueError:
                     continue
-                if isinstance(row, dict) and isinstance(row.get("metric"), (int, float)) and "step" in row:
+                if isinstance(row, dict) and (every or (isinstance(row.get("metric"), (int, float)) and "step" in row)):
                     rows.append(row)
     except OSError:
         pass

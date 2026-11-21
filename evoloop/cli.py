@@ -12,6 +12,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import shlex
 import shutil
 import sys
 import time
@@ -332,7 +333,75 @@ def cmd_status(args: Any) -> int:
     snap = read_json(os.path.join(run_dir(args), "status.json"))
     if snap is None:
         raise SystemExit("the run has written no status yet")
-    out(json.dumps(snap, indent=1, default=str))
+    if args.json:
+        out(json.dumps(snap, indent=1, default=str))
+        return 0
+    budget, agents, runs = snap["budget"], snap["agents"], snap["runs"]
+    out("Run %s: %s  (as of %s)" % (snap["run"], snap.get("ended") or "going", snap["updated"]))
+    out("  Models: %s of %s spent (%d%%). Training now: %d. Waiting for a slot: %d. Being written: %d." % (
+        budget["spent"], budget["evaluations"], round(100 * budget["fraction"]), runs.get("running", 0),
+        runs.get("queued", 0) + runs.get("designed", 0), snap["designing"]))
+    best = snap.get("best")
+    out("  Best: %s" % ("%s (%s), score %s" % (best["candidate"], best["family"], format(best["score"], ".6g")) if best else "none yet"))
+    out("  Ended without a score: %d failed, %d invalid or rejected, %d refused before running." % (
+        runs.get("failed", 0), runs.get("invalid", 0), runs.get("not_run", 0)))
+    spend = snap.get("spend") or {}
+    line = "  Agents: $%.2f over %d calls" % (agents["dollars"], agents["calls"])
+    if agents.get("cap_dollars") is not None:
+        line += " of a cap of $%.2f" % float(agents["cap_dollars"])
+    if spend.get("projected") is not None:
+        line += "; heading for about $%.2f" % spend["projected"]
+    out(line + ".")
+    kind = snap["strategy"]
+    out("  Search: %s, %s strategy, %s harness. Mix now: %s." % (kind["run_type"], kind["mechanism"], kind["harness"], ", ".join(
+        "%s %d%%" % (m, round(100 * s)) for m, s in snap["shares_now"].items() if s > 0)))
+    if agents.get("blocked"):
+        out("  HELD UP: %s" % agents["blocked"])
+    if snap.get("decisions_waiting"):
+        out("  Waiting for your yes or no: %s (see `evoloop report`)." % ", ".join(snap["decisions_waiting"]))
+    for q in snap.get("open_questions") or []:
+        out("  Question for you: %s (default: %s)" % (q.get("question"), q.get("default")))
+    for note in snap.get("notes_in_force") or []:
+        out("  Note in force (%s): %s" % (note["id"], note["text"]))
+    return 0
+
+
+def cmd_show(args: Any) -> int:
+    """One run: where it came from, what its design changed against its parent, how it ended."""
+    controller = offline(args)
+    controller.refresh()
+    controller.pool.shutdown(wait=False)
+    view = controller.view()
+    run = view.runs.get(args.run) or (view.run_of(args.run) if args.run in view.cands else None)
+    if run is None:
+        raise SystemExit("no run or design %s in %s" % (args.run, args.name))
+    h, perf = run["history"], run["performance"]
+    out("%s  design %s  model %s  recipe %s  lineage %s" % (run["id"], run.get("candidate"), run.get("model"), run.get("recipe"), h.get("lineage")))
+    out("  Came from: %s%s%s" % (h.get("move"), " of %s" % h["parent"] if h.get("parent") else "",
+                               " with %s" % h["second_parent"]["run"] if h.get("second_parent") else ""))
+    out("  Why this slot: %s" % h.get("why_this_slot"))
+    for key in ("hypothesis", "predicted_effect", "change_summary"):
+        if h.get(key):
+            out("  %s: %s" % (key.replace("_", " ").capitalize(), h[key]))
+    if h.get("forecast"):
+        out("  Forecast: %+.2f noise floors, %d%% likely to beat its reference" % (h["forecast"]["gain"], round(100 * h["forecast"]["probability_better"])))
+    out("  Ended: %s%s" % (perf.get("status"), ", score %s" % format(perf["score"], ".6g") if isinstance(perf.get("score"), (int, float)) else ""))
+    if perf.get("reason"):
+        out("  Reason: %s" % perf["reason"])
+    for part in ("valid", "test"):
+        if perf.get(part):
+            out("  %s: %s" % (part.capitalize(), ", ".join("%s %s" % (k, format(v, ".5g") if isinstance(v, float) else v) for k, v in perf[part].items())))
+    if run.get("variables"):
+        out("  Job variables: %s" % run["variables"])
+    if run.get("candidate"):
+        mine = controller.designer.blocks(run["candidate"])
+        parent = view.runs.get(h.get("parent") or "")
+        theirs = controller.designer.blocks(parent["candidate"]) if parent and parent.get("candidate") else space.full(controller.designer.table, {})
+        text = space.diff(theirs, mine, limit=20000)
+        out("\n  What it changed against %s:" % (parent["id"] if parent else "the base code"))
+        out(text if text else "  (nothing)")
+    if perf.get("log"):
+        out("\n  End of its log:\n%s" % perf["log"])
     return 0
 
 
@@ -390,6 +459,110 @@ def cmd_withdraw(args: Any) -> int:
 def cmd_stop(args: Any) -> int:
     request(args, {"kind": "stop", "run": args.run})
     out("requested: stop %s" % (args.run or "the search once the running jobs finish"))
+    return 0
+
+
+def cmd_rehash(args: Any) -> int:
+    request(args, {"kind": "rehash", "moves_scores": bool(args.moves_scores)})
+    out("requested: the change to base/ or adapter/ is recorded as meant%s. The run goes on at its next turn, or when it is "
+        "started again." % ("; a new period begins" if args.moves_scores else ""))
+    return 0
+
+
+def cmd_force(args: Any) -> int:
+    request(args, {"kind": "force", "mode": args.mode, "count": args.count, "instruction": args.instruction,
+                   "move": args.kind})
+    out("requested: the next %d slot(s) go to %s%s" % (args.count, args.mode, " (%s)" % args.kind if args.kind else ""))
+    return 0
+
+
+def cmd_import(args: Any) -> int:
+    source = os.path.abspath(args.source)
+    if not os.path.isfile(os.path.join(source, "runs.jsonl")):
+        raise SystemExit("%s is not a run folder (give the path that holds runs.jsonl, e.g. DIR/runs/NAME)" % source)
+    request(args, {"kind": "import", "source": source, "candidates": args.designs or None, "top": args.top})
+    out("requested: %s of %s, to be fitted in this run" % (", ".join(args.designs) if args.designs else "the top %d" % args.top, source))
+    return 0
+
+
+def cmd_reference(args: Any) -> int:
+    """A row on the leaderboard for a model that is not part of the search: a published baseline, an earlier run's best."""
+    rows = []
+    if args.source:
+        source = os.path.abspath(args.source)
+        theirs = Store(source)
+        brief = (read_json(os.path.join(source, "run.json"), {}) or {}).get("brief") or {}
+        old = View.load(theirs, form.resolve(brief, theirs.merged_list("ledger"))[0])
+        for cand in old.scored()[:args.top]:
+            perf = old.run_of(cand["id"])["performance"]
+            rows.append({"label": "%s %s" % (os.path.basename(source), cand["id"]), "score": old.display(cand["value"]),
+                         "valid": perf.get("valid"), "test": perf.get("test"), "parameters": perf.get("parameters"),
+                         "note": cand["family"], "source": source})
+    else:
+        if not args.label or args.score is None:
+            raise SystemExit("give --label and --score, or --from-run PATH")
+        figures = parse_pairs(args.metric or [])
+        rows.append({"label": args.label, "score": args.score, "note": args.note, "parameters": figures.pop("parameters", None),
+                     "valid": {k[6:]: v for k, v in figures.items() if k.startswith("valid.")},
+                     "test": {k[5:]: v for k, v in figures.items() if k.startswith("test.")}})
+    for row in rows:
+        time.sleep(0.002)
+        request(args, dict(row, kind="reference"))
+    out("requested: %d reference row(s): %s" % (len(rows), ", ".join(r["label"] for r in rows)))
+    return 0
+
+
+def cmd_leaderboard(args: Any) -> int:
+    from . import report
+    controller = offline(args)
+    controller.refresh()
+    controller.pool.shutdown(wait=False)
+    settings = controller.settings
+    rows = report.leaderboard(controller.view(), args.top or int(settings["report"]["top"]),
+                              args.columns or settings["report"]["columns"], controller.store.read("references"))
+    out("\n".join(report.table(rows)))
+    return 0
+
+
+CONTROLLER = '''#!/bin/bash
+#SBATCH --job-name=evoloop_{name}
+#SBATCH --output={log}
+#SBATCH --open-mode=append
+#SBATCH --requeue
+#SBATCH --cpus-per-task=2
+#SBATCH --mem=4G
+#SBATCH --time={time}
+#SBATCH --signal=B:USR1@180
+{extra}
+# The controller of the search {name}. It is light: it follows the training jobs, which are jobs of their own and
+# go on whatever happens to this one. Shortly before its time limit Slurm signals it; it then stops cleanly and
+# puts itself back in the queue, and when it starts again it finds its jobs by their ids. It requeues itself
+# only then, never after ending by itself (budget spent, paused, stalled) and never after a crash.
+{setup}
+requeue() {{
+  kill -TERM "$child" 2>/dev/null; wait "$child"
+  echo "[controller] time limit near: requeueing"; scontrol requeue "$SLURM_JOB_ID"
+}}
+trap requeue USR1
+{python} -m evoloop run {dir} --name {name} &
+child=$!
+wait "$child"
+'''
+
+
+def cmd_controller(args: Any) -> int:
+    """A Slurm job script that runs the search and requeues itself at its time limit."""
+    folder = os.path.abspath(args.dir)
+    path = args.out or os.path.join(folder, "run_controller_%s.sbatch" % args.name)
+    extra = ["#SBATCH --partition=%s" % args.partition] if args.partition else []
+    extra += ["#SBATCH --qos=%s" % args.qos] if args.qos else []
+    text = CONTROLLER.format(name=args.name, log=os.path.join(folder, "controller_%s.log" % args.name), time=args.time,
+                             extra="\n".join(extra), setup="\n".join(args.setup or []), python=args.python or sys.executable,
+                             dir=shlex.quote(folder))
+    with open(path, "w", encoding="utf-8") as handle:
+        handle.write(text)
+    out("wrote %s" % path)
+    out("Start the search with: sbatch %s" % path)
     return 0
 
 
@@ -511,7 +684,20 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--markdown", action="store_true", help="as a page of the documentation (topics: all, fields)")
     p = add("run", cmd_run, "start a run, or continue a stopped one", named=True)
     p.add_argument("--max-seconds", type=float, default=None)
-    add("status", cmd_status, "the run's status", named=True)
+    p = add("status", cmd_status, "where the run stands, in a few lines", named=True)
+    p.add_argument("--json", action="store_true", help="everything, as JSON")
+    p = add("leaderboard", cmd_leaderboard, "the best designs, the baseline and the reference rows", named=True)
+    p.add_argument("--top", type=int)
+    p.add_argument("--columns", nargs="*", metavar="COLUMN", help="valid.<metric>, test.<metric>, speed, best_epoch, epochs_run")
+    p = add("show", cmd_show, "one run in full: where it came from, what changed, how it ended", named=True)
+    p.add_argument("run", metavar="RUN", help="a run id (R12) or a design id (C9)")
+    p = add("controller", cmd_controller, "write a Slurm job script that runs the search and requeues itself", named=True)
+    p.add_argument("--partition")
+    p.add_argument("--qos")
+    p.add_argument("--time", default="1-00:00:00")
+    p.add_argument("--python")
+    p.add_argument("--setup", action="append", metavar="LINE", help="a shell line to run first, e.g. activating an environment")
+    p.add_argument("--out", metavar="FILE")
     add("report", cmd_report, "the run's report", named=True)
     add("study", cmd_study, "write the run as a study file (CAMEO format 0.4)", named=True)
     p = add("set", cmd_set, "change settings of a run", named=True, by=True)
@@ -527,6 +713,24 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--yes", action="store_true")
     p = add("stop", cmd_stop, "stop the search once running jobs finish, or stop one run", named=True, by=True)
     p.add_argument("--run")
+    p = add("rehash", cmd_rehash, "record that a change to base/ or adapter/ during a run is meant", named=True, by=True)
+    p.add_argument("--moves-scores", action="store_true", help="scores before and after are not comparable: begin a new period")
+    p = add("force", cmd_force, "order the next slots yourself: a mode, a kind, an instruction", named=True, by=True)
+    p.add_argument("--mode", required=True, choices=list(form.MODES))
+    p.add_argument("--kind", choices=list(form.CROSS_KINDS + form.LOCAL_MOVES))
+    p.add_argument("--count", type=int, default=1)
+    p.add_argument("--instruction", help="what the writers of those slots must do")
+    p = add("import", cmd_import, "bring designs from an earlier run into this one, to be fitted here", named=True, by=True)
+    p.add_argument("--from-run", dest="source", required=True, metavar="PATH", help="the earlier run's folder (DIR/runs/NAME)")
+    p.add_argument("--top", type=int, default=3)
+    p.add_argument("--designs", nargs="*", metavar="ID", help="these designs (C12 ...) in place of the top ones")
+    p = add("reference", cmd_reference, "add a model to compare with to the leaderboard", named=True, by=True)
+    p.add_argument("--label")
+    p.add_argument("--score", type=float)
+    p.add_argument("--metric", action="append", metavar="NAME=VALUE", help="valid.<metric>, test.<metric> or parameters")
+    p.add_argument("--note")
+    p.add_argument("--from-run", dest="source", metavar="PATH", help="take the top designs of an earlier run as reference rows")
+    p.add_argument("--top", type=int, default=3)
     p = add("lineage", cmd_lineage, "set a lineage aside, or bring one back (lineage strategy)", named=True, by=True)
     p.add_argument("--retire", metavar="ID")
     p.add_argument("--revive", metavar="ID")

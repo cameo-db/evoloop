@@ -51,6 +51,9 @@ Build from them or against them; do not return a variant of the leader.
 - mode `local`, move `ablation`: remove one component from the parent and change nothing else.
 - mode `cross`, move `graft`: you are shown `gene`, the change that gained most in the donor's history. Apply that \
 one change to the first parent and change nothing else.
+- `ordered_by_the_person`, when present in the request, is an instruction from the person for this slot: follow it.
+- `limits_enforced_by_code`, when present, are hard limits on a design (its size, its speed): one outside them is \
+  rejected without a score, so size your design to them. `recent` shows designs that were rejected and why.
 - mode `cross`, move `hybrid`: write one design from the two parents and say in `parts_from` which parts came \
 from each.
 

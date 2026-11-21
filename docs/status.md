@@ -5,11 +5,13 @@ more than it is.
 
 ## What has been run
 
-- **134 tests** on the built-in example with stub agents (no model call, no GPU). They cover the brief,
+- **141 tests** on the built-in example with stub agents (no model call, no GPU). They cover the brief,
   every strategy, islands, the crossover kinds, steering during a run, changing the strategy, harness
   and search space midway, changing the run length, stopping and continuing, the study file, and one
   regression test for each defect that two independent reviews of the code reproduced.
 - **A run on a real Slurm cluster** of the example: seven CPU jobs, each its own job.
+- **The controller job script on a real Slurm cluster**: with a four-minute limit it stopped cleanly at the
+  signal, put itself back in the queue twice, and went on with the search each time it restarted.
 
 ## What has not been run
 
@@ -40,6 +42,15 @@ more than it is.
 - **One noise figure, given by you.** The loop does not measure it.
 
 ## Not built
+
+Things people running searches have needed that are not here yet:
+
+- A rule that stops a run falling clearly behind the baseline's own curve. Only new designs are screened, once.
+- Moving a waiting job to a better QoS when room appears there; jobs are placed once, at submission.
+- Scoring the test set in separate, low-priority jobs. The adapter reports test results itself.
+- Refitting the top N designs at the end (on the full data, or on more seeds) and ensembling them. A change of
+  `data.fraction` refits the leader of each lineage, which is close but not the same.
+- Choosing the GPU type per design.
 
 - A cheap proxy tier with a promotion ladder (many short runs, the best promoted to longer ones). This
   is what a search of thousands of evaluations needs.

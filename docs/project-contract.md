@@ -23,6 +23,7 @@ absolute path from the adapter.
 | `EVO_RESTART_COUNT` | 0 on the first start; above 0 when the run was started again after the machine ended it |
 | `EVO_CONTINUE_FROM` | set when the run is to continue an earlier run's checkpoint (after the run length was raised) |
 | `EVO_RUN_ID`, `EVO_CPUS` | the run's id; the processors it may use |
+| your own | every name in `evaluation.variables`, as you set it |
 
 Variables whose names look like credentials (KEY, TOKEN, SECRET, PASSWORD) are removed from the job's
 environment, because designs are model-written code.
@@ -46,6 +47,7 @@ environment, because designs are model-written code.
 | Field | Needed | Meaning |
 |---|---|---|
 | `valid`, `score` | yes | whether the run produced a score, and the number the search optimises (on validation data) |
+| `rejected` | no | with `valid: false`, the reason the adapter rejected the design (too slow, too large); it is then not a failure |
 | `diagnostics` | no | numbers here are shown to the agents and can be leaderboard columns |
 | `diagnostics.hidden` | no | test-set results: stored and written to the study file, never shown to an agent |
 | `parameters` | no | trainable parameter count; also used for the archive's size bin |
@@ -83,6 +85,18 @@ its job id.
 - Each start of a job is recorded in `starts.jsonl` with its node and GPU.
 
 The controller itself is light and can run as a small CPU job.
+
+### The controller as a job
+
+```
+evoloop controller mysearch --name r1 --partition cpu --time 1-00:00:00 --setup "source ~/envs/x/bin/activate"
+sbatch mysearch/run_controller_r1.sbatch
+```
+
+writes a job script that runs the search. Shortly before its time limit Slurm signals it; the controller
+stops cleanly, puts itself back in the queue, and finds its training jobs again by their ids when it
+restarts. It requeues itself only at the time limit: not after the search has ended, paused or stalled,
+and not after a crash.
 
 ## What the agents see
 

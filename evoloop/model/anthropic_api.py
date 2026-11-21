@@ -26,8 +26,11 @@ class AnthropicBackend:
         beta, kwargs = request(model, effort, getattr(self.cfg.model, "fallbacks", "off"), int(self.cfg.model.max_tokens),
                                system, user)
         try:
-            create = self.client.beta.messages.create if beta else self.client.messages.create
-            response = create(**kwargs)
+            messages = self.client.beta.messages if beta else self.client.messages
+            # Streamed, so that a long reply (several full designs, with the model's reasoning) is not cut off by a
+            # request timeout; the whole message is collected before it is used.
+            with messages.stream(**kwargs) as stream:
+                response = stream.get_final_message()
         except anthropic.RateLimitError as exc:
             raise TransientError("rate limited: %s" % exc)
         except anthropic.APIStatusError as exc:

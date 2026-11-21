@@ -209,11 +209,13 @@ FIELDS: Dict[str, str] = {
     "evaluation.leaders_refit": "When a new period begins: how many lineages' leaders are fitted again.",
     "evaluation.test_set": "`held_out` when test scores are kept from the search. Recorded in the study file.",
     "evaluation.quick_check": "A command that tests a design in seconds. A design that fails it is not trained.",
+    "evaluation.variables": "Environment variables passed to every job, e.g. {PATIENCE: 5}: the adapter's own knobs. A change begins a new period.",
     "budget.evaluations": "How many models may be trained in all.",
     "budget.model_dollars": "The most the agents may cost. No call is made once it is reached.",
     "budget.model_calls": "The most agent calls, as a second cap.",
     "budget.wall_clock_hours": "After this long the search starts nothing more and ends when its jobs do.",
     "budget.max_uncounted_failures": "Failed or invalid designs that are not charged; beyond it each is charged.",
+    "budget.max_uncounted_rejections": "Designs rejected for a limit that are not charged; beyond it each is charged.",
     "budget.spend_policy": "pace (make the run cheaper when it is heading past the spend cap) or none.",
     "budget.reserve_share": "The last part of the spend cap, kept for writing designs.",
     "baseline.mode": "train (fitted inside the search), import (a finished fit) or skip.",
@@ -259,7 +261,9 @@ FIELDS: Dict[str, str] = {
     "depositor.name": "Who deposits the study.", "depositor.orcid": "Their ORCID.",
     "depositor.lab": "Their lab.", "depositor.institution": "Their institution.",
     "license": "The licence of the study file.",
-    "report.columns": "Further leaderboard columns: valid.<metric> or test.<metric>.",
+    "report.columns": "Further leaderboard columns: valid.<metric>, test.<metric>, speed, best_epoch, epochs_run.",
+    "report.top": "How many designs the leaderboard shows; the baseline and reference rows are always shown.",
+    "limits": "Hard limits on a design, enforced by code: {metric: {max: x}} or {min: x}, on any figure a result reports, `parameters` or `examples_per_s`.",
 }
 
 SECTIONS: List[Tuple[str, str, str, Dict[str, str], str]] = [

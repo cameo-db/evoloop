@@ -30,7 +30,10 @@ the person asking, which is recorded in the ledger, and an optional `--reason`.
 | Command | Does |
 |---|---|
 | `evoloop run <dir> --name N` | starts a run, or continues one that stopped |
-| `evoloop status <dir> --name N` | the run's status |
+| `evoloop status <dir> --name N [--json]` | where the run stands, in a few lines |
+| `evoloop leaderboard <dir> --name N [--top 15] [--columns ...]` | the best designs, the baseline and the reference rows |
+| `evoloop show <dir> --name N R37` | one run in full: where it came from, what it changed, how it ended |
+| `evoloop controller <dir> --name N [--partition P] [--qos Q] [--time T] [--setup LINE]` | writes a Slurm job script that runs the search and requeues itself at its time limit |
 | `evoloop report <dir> --name N` | the run's report, from its records as they are now |
 | `evoloop study <dir> --name N` | writes `study.json` and says which star it is on course for |
 
@@ -48,6 +51,10 @@ the person asking, which is recorded in the ledger, and an optional `--reason`.
 | `evoloop approve <dir> --name N --id S14 --by NAME` | says yes to a decision of the strategist that waits for you |
 | `evoloop decline <dir> --name N --id S14 --by NAME` | says no to it |
 | `evoloop lineage <dir> --name N --retire L4 --by NAME` | sets a lineage aside; `--revive L4` brings one back (lineage strategy) |
+| `evoloop rehash <dir> --name N --by NAME --reason WHY [--moves-scores]` | records that a change to `base/` or `adapter/` during a run is meant |
+| `evoloop force <dir> --name N --mode M [--kind K] [--count 3] [--instruction "..."] --by NAME` | orders the next slots yourself |
+| `evoloop import <dir> --name N --from-run PATH [--top 3 | --designs C12 ...] --by NAME` | brings designs from an earlier run in, to be fitted here |
+| `evoloop reference <dir> --name N --label L --score S [--metric test.x=v] --by NAME` | adds a model to compare with to the leaderboard; `--from-run PATH` takes an earlier run's best |
 
 `evoloop set` refuses at once a setting that cannot change in a run, or a value of the wrong kind. A
 request that passes that check and cannot be carried out when the controller reads it is recorded in

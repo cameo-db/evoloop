@@ -83,10 +83,21 @@ def test_a_call_is_priced_by_the_model_that_answered(monkeypatch):
         def __init__(self, name, answer):
             self.name, self.answer = name, answer
 
-        def create(self, **kwargs):
+        def stream(self, **kwargs):          # the reply is streamed and collected
             sent[self.name] = kwargs
-            return self.answer
-    cfg = types.SimpleNamespace(model=types.SimpleNamespace(max_tokens=16000, prices={}, fallbacks="default", call_timeout_seconds=60),
+            answer = self.answer
+
+            class Stream:
+                def __enter__(self):
+                    return self
+
+                def __exit__(self, *exc):
+                    return False
+
+                def get_final_message(self):
+                    return answer
+            return Stream()
+    cfg = types.SimpleNamespace(model=types.SimpleNamespace(max_tokens=64000, prices={}, fallbacks="default", call_timeout_seconds=60),
                                 model_for=lambda role: "claude-opus-5-5", effort_for=lambda role: "high")
     client = types.SimpleNamespace(messages=Endpoint("plain", reply("claude-opus-5-5")),
                                    beta=types.SimpleNamespace(messages=Endpoint("beta", reply("claude-opus-4-8"))))

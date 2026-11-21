@@ -56,9 +56,12 @@ DEFAULTS: Dict[str, Any] = {
     "evaluation": {"allowance": None, "allowance_unit": "steps", "seed": 0, "noise": None, "screen_fraction": 0.5,
                    "screen_keep": 0.5, "screen_min_pool": 4, "recheck_every": 0, "speciality_metrics": {},
                    "schedule_depends_on_length": True, "keep_checkpoints": False, "on_length_change": "auto",
-                   "leaders_refit": 4, "test_set": "held_out", "quick_check": None},
+                   "leaders_refit": 4, "test_set": "held_out", "quick_check": None,
+                   # Passed to every job as environment variables, e.g. {PATIENCE: 5, MIN_GAIN: 0.001}: what the adapter reads
+                   # beside the run length. A change begins a new period, like a change of the run length.
+                   "variables": {}},
     "budget": {"evaluations": None, "model_dollars": None, "model_calls": None, "wall_clock_hours": None,
-               "max_uncounted_failures": 10, "spend_policy": "pace", "reserve_share": 0.15},
+               "max_uncounted_failures": 10, "max_uncounted_rejections": 50, "spend_policy": "pace", "reserve_share": 0.15},
     "baseline": {"mode": None, "import_from": None},
     "compute": {"gpus": None, "scheduler": "local", "partition": None, "qos": None, "gpu_type": None,
                 "gpus_per_job": 1, "cpus_per_job": 4, "mem_gb": 32, "time_limit": "2-00:00:00", "setup": [],
@@ -66,13 +69,16 @@ DEFAULTS: Dict[str, Any] = {
     "run_command": "python adapter/run.py",
     "audit": {"reviews": "halfway", "review_roles": "all"},
     "agents": {"backend": None, "stub_module": None, "default_model": "claude-opus-5-5", "models": {}, "effort": "medium",
-               "efforts": {"writer": "high"}, "fallbacks": "default", "max_tokens": 16000,
+               "efforts": {"writer": "high"}, "fallbacks": "default", "max_tokens": 64000,
                "call_timeout_seconds": 900, "max_concurrent_calls": 4, "max_retries": 2, "prices": {}},
     "data": {"name": None, "accession": None, "input": None, "output": None, "examples": None,
              "preprocessing": None, "splits": None, "fraction": 1.0},
     "depositor": {"name": None, "orcid": None, "lab": None, "institution": None},
     "license": "MIT",
-    "report": {"columns": []},
+    "report": {"columns": [], "top": 15},
+    # Enforced by code on every result and on progress lines: {metric: {max: x}} or {metric: {min: x}}. A design
+    # outside a limit is rejected: it has no score, is not charged, and is shown to the writers with the reason.
+    "limits": {},
 }
 
 # Asked whenever empty. Everything else takes its value from the run type, the budget guidance or the default,
@@ -106,14 +112,14 @@ CHOICES = {"objective.direction": ("maximize", "minimize"), "strategy.mechanism"
            "agents.effort": ("low", "medium", "high", "xhigh", "max", "model_default"), "agents.fallbacks": ("default", "off")}
 
 # What may change while a run is going. A change applies to the next design; jobs already started are untouched.
-LIVE = ("schedule.", "strategist.", "population.", "crossover.", "variation.", "harness.", "strategy.", "space.", "audit.", "budget.",
+LIVE = ("schedule.", "limits", "strategist.", "population.", "crossover.", "variation.", "harness.", "strategy.", "space.", "audit.", "budget.",
         "compute.max_running", "compute.time_limit", "compute.qos", "compute.partition", "compute.gpus", "compute.max_waiting",
         "evaluation.screen_", "evaluation.recheck_every", "evaluation.speciality_metrics", "evaluation.on_length_change",
         "evaluation.leaders_refit", "agents.models", "agents.default_model", "agents.effort", "agents.efforts", "agents.fallbacks", "agents.prices",
         "report.", "run.")
 # These change what a score means. They may change too, and then a new period begins: the leaders are fitted again
 # (or continued) under the new setting and earlier scores stop deciding selection.
-NEW_PERIOD = ("evaluation.allowance", "evaluation.seed", "data.fraction")
+NEW_PERIOD = ("evaluation.allowance", "evaluation.seed", "data.fraction", "evaluation.variables")
 FROZEN_WHY = "it defines the problem (the objective, the data, the scoring); start a new run to change it"
 
 RUN_TYPES: Dict[str, Dict[str, Any]] = {
@@ -187,7 +193,7 @@ def flatten(tree: Dict[str, Any], prefix: str = "") -> Dict[str, Any]:
 
 
 # Mappings that are one value, not a group of fields.
-ATOMIC = ("space.roles", "schedule.local_mix", "evaluation.speciality_metrics", "agents.models", "agents.prices", "agents.efforts",
+ATOMIC = ("space.roles", "schedule.local_mix", "evaluation.speciality_metrics", "agents.models", "agents.prices", "agents.efforts", "evaluation.variables", "limits",
           "data.examples", "data.splits")
 
 
@@ -295,12 +301,12 @@ def resolve(brief: Dict[str, Any], ledger: Optional[List[Dict[str, Any]]] = None
     for path, value in stated.items():
         put(settings, path, copy.deepcopy(value))
         sources[path] = "brief"
-    period = 0
     for entry in changes:
         put(settings, entry["key"], copy.deepcopy(entry["value"]))
         sources[entry["key"]] = "changed by %s (%s)" % (entry.get("by") or "?", entry.get("id") or "ledger")
-        if entry.get("new_period"):
-            period += 1
+    # A period begins with any applied entry that changes what a score means: a setting (the run length, the
+    # job variables) or a change to the frozen code that the person said moves scores.
+    period = sum(1 for e in (ledger or []) if e.get("new_period") and e.get("status", "applied") == "applied")
     settings["_period"] = period
     settings["_guidance"] = label
     settings["notes"] = [e for e in (ledger or []) if e.get("kind") == "note" and e.get("status", "active") == "active"]
@@ -362,6 +368,19 @@ def check_value(path: str, value: Any) -> Optional[str]:
         return "%s must be a whole number, 0 or more" % path
     if path == "evaluation.screen_keep" and not (number and 0 < value <= 1):
         return "evaluation.screen_keep must be above 0 and at most 1"
+    if path == "evaluation.variables" and value not in EMPTY:
+        import re as _re
+        if not isinstance(value, dict) or not all(isinstance(k, str) and _re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", k)
+                                                  and not k.startswith("EVO_") and isinstance(v, (int, float, str, bool))
+                                                  for k, v in value.items()):
+            return ("evaluation.variables must map names (letters, digits, underscores; not starting EVO_) to numbers, "
+                    "text or true/false")
+    if path == "limits" and value not in EMPTY:
+        ok = isinstance(value, dict) and all(
+            isinstance(m, str) and isinstance(b, dict) and b and set(b) <= {"max", "min"}
+            and all(isinstance(x, (int, float)) and not isinstance(x, bool) for x in b.values()) for m, b in value.items())
+        if not ok:
+            return "limits must map a metric to {max: x}, {min: x} or both, e.g. {parameters: {max: 20000000}}"
     if path == "agents.efforts" and value not in EMPTY and (not isinstance(value, dict) or not all(
             isinstance(r, str) and v in CHOICES["agents.effort"] for r, v in value.items())):
         return "agents.efforts must map a role to one of: %s" % ", ".join(CHOICES["agents.effort"])

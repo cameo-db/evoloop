@@ -205,6 +205,7 @@ class Designer:
                           "constraints": settings["objective"]["constraints"]},
             "request": {"mode": request["mode"], "move": move, "instruction": instruction,
                         "step": request.get("step"), "why_this_slot": request.get("why"),
+                        "ordered_by_the_person": request.get("instruction"),
                         "number_of_proposals": int(settings["variation"]["proposals_per_slot"])
                         if request.get("purpose") != "trial" else 1},
             "blocks_you_may_change": {n: {"kind": k, "role": self.table[n]["role"]} for n, k in allowed.items()},
@@ -212,6 +213,7 @@ class Designer:
                 ["Keep the overall shape of the model as in the baseline: change parts within it, do not replace it "
                  "with a different kind of model."] if settings["space"]["preset"] == "template" else []),
             "forbidden": settings["space"]["forbidden"],
+            "limits_enforced_by_code": settings.get("limits") or None,
             "being_written_now": [{"mode": d.get("mode"), "lineage": d.get("lineage"), "parents": d.get("parents")}
                                   for d in settings.get("_designing") or []],
             "parents": [dict(self.summary(view, p), blocks=shown(self.blocks(p))) for p in parents],

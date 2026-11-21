@@ -94,6 +94,97 @@ evoloop stop mysearch --name r1 --run R12 --by "Your Name"   # stop one run
 A stopped run is continued with `evoloop run mysearch --name r1`. To give an ended run more budget,
 `evoloop set ... budget.evaluations=N` and continue it.
 
+## The adapter's own knobs
+
+`evaluation.variables` is passed to every job as environment variables. Use it for what your adapter
+reads beside the run length: the patience of its early stopping, a minimum gain, a batch size.
+
+```
+evoloop set mysearch --name r1 'evaluation.variables={"PATIENCE": 10, "MIN_GAIN": 0.001}' --by "Your Name"
+```
+
+Like the run length, these change what a score means, so a change begins a new period: the leaders are
+fitted again under the new values and earlier scores stop deciding selection. Every run records the
+values it ran with.
+
+## Fixing the adapter or the frozen code during a run
+
+Everything outside the marked blocks, and `adapter/`, is frozen: a run checks it at every start and once
+a minute. If it has changed, nothing new is started (jobs already training go on) and the run comes to
+rest as paused, saying so. Either restore the files, or record that the change is meant:
+
+```
+evoloop rehash mysearch --name r1 --by "Your Name" --reason "the stop rule read the wrong column"
+evoloop rehash mysearch --name r1 --by "Your Name" --reason "new loss scaling" --moves-scores
+```
+
+With `--moves-scores` a new period begins, because scores before and after the change are not
+comparable. Without it you are saying the change moves no score (a logging fix, a crash fix). The
+ledger keeps who said so, why, and the two hashes.
+
+## Limits
+
+`limits` are enforced by code on every design: on any figure the adapter reports, on `parameters`, and
+on `examples_per_s` from its inference speed.
+
+```
+evoloop set mysearch --name r1 'limits={"parameters": {"max": 20000000}, "examples_per_s": {"min": 500}}' --by "Your Name"
+```
+
+- A design outside a limit is **rejected**: it gets no score and is not charged, up to
+  `budget.max_uncounted_rejections` (50); it is not a failure and does not count toward a stall.
+- A run whose progress lines already show it outside a limit is stopped there, not trained to the end.
+  Put the figure in the first progress line and a design that is too big or too slow costs seconds.
+- The adapter can reject too: a result with `"valid": false, "rejected": "the reason"` is treated the
+  same way.
+- The writers are shown the limits, and each rejected design with its reason.
+
+## Ordering slots yourself
+
+```
+evoloop force mysearch --name r1 --mode cross --kind graft --count 3 --by "Your Name"
+evoloop force mysearch --name r1 --mode new --count 2 --by "Your Name" \
+    --instruction "FiLM after the norm in every conv block, tanh-scaled, replacing the norm's affine."
+```
+
+The next slots go where you say, ahead of the schedule, and the writers of those slots are given your
+instruction as an order for that slot. Unlike a note, it is not standing advice: it applies to those
+slots and no others.
+
+## Designs from an earlier run, and models to compare with
+
+```
+evoloop import mysearch --name r2 --from-run mysearch/runs/r1 --top 5 --by "Your Name"
+evoloop import mysearch --name r2 --from-run mysearch/runs/r1 --designs C12 C40 --by "Your Name"
+```
+
+The designs are fitted in this run as designs of its own, and can then be built on. Their scores in the
+earlier run are not carried over, since that run may have trained differently; each import keeps a note
+of where it came from and what it scored there. A design whose blocks do not fit this run's code is
+refused, with the reason.
+
+A model that is not part of the search (a published baseline, an earlier run's best as it scored then)
+goes on the leaderboard as a reference row:
+
+```
+evoloop reference mysearch --name r2 --label "published model" --score 0.493 --metric test.profile_r=0.61 --by "Your Name"
+evoloop reference mysearch --name r2 --from-run mysearch/runs/r1 --top 3 --by "Your Name"
+```
+
+Reference rows are shown and marked as such; they take no part in selection.
+
+## Watching a run
+
+```
+evoloop status mysearch --name r1          # a few lines: budget, best, what is held up, what waits for you
+evoloop leaderboard mysearch --name r1     # the best designs, the baseline, the reference rows
+evoloop show mysearch --name r1 R37        # one run: where it came from, what it changed, how it ended
+evoloop report mysearch --name r1          # everything
+```
+
+`report.columns` sets the leaderboard's further columns (`valid.<metric>`, `test.<metric>`, `speed`,
+`best_epoch`, `epochs_run`) and `report.top` how many designs it shows.
+
 ## A steered run
 
 A run that was steered is not a clean test of one fixed strategy. The report lists every entry of the
