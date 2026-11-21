@@ -1,4 +1,5 @@
 site_name: evoloop
+site_url: https://evoloop.readthedocs.io/en/latest/
 site_description: Evolutionary search over marked code blocks, with language-model agents writing the designs
 repo_url: https://github.com/cameo-db/evoloop
 theme:

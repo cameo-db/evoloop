@@ -1,5 +1,9 @@
 # evoloop
 
+[![Documentation](https://readthedocs.org/projects/evoloop/badge/?version=latest)](https://evoloop.readthedocs.io/en/latest/)
+
+**Documentation: <https://evoloop.readthedocs.io>**
+
 Evolutionary search over marked blocks of a project's code. Language-model agents write the designs;
 code does the selection, the schedule, the budget, the checks and the records.
 
@@ -63,7 +67,7 @@ the old value and the new one.
 
 ## Documentation
 
-The pages in [`docs/`](docs/index.md), built by Read the Docs:
+The full documentation is at <https://evoloop.readthedocs.io>. The same pages are in [`docs/`](docs/index.md):
 
 - [Overview](docs/index.md) and [first run](docs/quickstart.md)
 - [Setting up a search](docs/setting-up.md)
