@@ -16,8 +16,7 @@ budget:
   evaluations: 100
 ```
 
-!!! note "A starting point"
-    These settings are a reasoned starting point. They have not been measured against alternatives; see [Status and limits](../status.md). The numbers in the example (the budget, any limits or ranges) are placeholders for yours.
+The budget, and any limits or ranges, are placeholders: put in your own.
 
 ## Why this set-up
 
@@ -27,20 +26,20 @@ The skill sets these for you (anything you set in the brief wins):
 
 | Setting | Value |
 |---|---|
-| [`report.columns`](../fields.md) | `[speed]` |
-| [`space.preset`](../fields.md) | `architecture_and_recipe` |
-| [`variation.approach_seeds`](../fields.md) | `['Change how the student is trained before changing the student: the loss against the teacher, the weight between teacher and measured targets, the augmentations the teacher labels.', 'Give the student inputs the measured data does not contain (perturbed, shuffled, synthetic) and let the teacher label them.', 'Match the student''s capacity to the gap: if it underfits the teacher, widen or deepen; if it matches the teacher on training inputs and not on held-out ones, regularize or add teacher-labelled data.', Train longer at a lower learning rate before concluding a student is too small.]` |
-| [`variation.approaches`](../fields.md) | `fixed` |
+| [`report.columns`](../fields.md#report-columns) | `[speed]` |
+| [`space.preset`](../fields.md#space-preset) | `architecture_and_recipe` |
+| [`variation.approach_seeds`](../fields.md#variation-approach_seeds) | `['Change how the student is trained before changing the student: the loss against the teacher, the weight between teacher and measured targets, the augmentations the teacher labels.', 'Give the student inputs the measured data does not contain (perturbed, shuffled, synthetic) and let the teacher label them.', 'Match the student''s capacity to the gap: if it underfits the teacher, widen or deepen; if it matches the teacher on training inputs and not on held-out ones, regularize or add teacher-labelled data.', Train longer at a lower learning rate before concluding a student is too small.]` |
+| [`variation.approaches`](../fields.md#variation-approaches) | `fixed` |
 
 ## What your evaluator must report
 
 - the training script must produce the teacher's outputs (or read stored ones) and train the student against them; the loss and augmentation blocks should be marked as open recipe blocks
 - to rank on speed or size, report `parameters` and `inference_speed.examples_per_s` in result.json; then `strategy.mechanism: pareto` or `limits` can use them
 - if the teacher is an ensemble, add a reference row for the ensemble and one for its best single member
-- **A reference row on the leaderboard for:** teacher (`evoloop reference`).
-- **A reference row on the leaderboard for:** from scratch (`evoloop reference`).
+- Add a row to the leaderboard for teacher, to compare against (`evoloop reference`).
+- Add a row to the leaderboard for from scratch, to compare against (`evoloop reference`).
 
-How the adapter reports these: [The project's code](../project-contract.md).
+[Write the evaluator](../evaluator.md) shows how to report these; [Evaluator interface](../project-contract.md) is the reference.
 
 ## Choose something else when
 
@@ -55,7 +54,7 @@ It combines well with [`model-size-frontier`](model-size-frontier.md), [`model-e
 
 Compare the best student with two reference rows: the teacher (how much was lost) and the student trained from scratch (how much the teacher added). A student that only matches its from-scratch twin has not been distilled. Check the size or speed column against what you needed.
 
-Where to look: `evoloop leaderboard`, `evoloop show`, and the report ([Records and the study file](../records.md)). To change course while it runs: [Steering a run](../steering.md).
+Where to look: `evoloop leaderboard`, `evoloop show`, and the report ([Files of a run](../records.md)). To change course while it runs: [Watch and steer a run](../steering.md).
 
 ## What the agents are told
 
@@ -71,7 +70,7 @@ Where to look: `evoloop leaderboard`, `evoloop show`, and the report ([Records a
     - teacher-labelled augmentation: the teacher can label any input, so the student can train on perturbed and
       synthetic inputs far beyond the measured set. Aggressive augmentations that would be wrong against measured
       targets are right against the teacher's labels. Treat this as the default, not an extra.
-    - optimisation: students often want a longer schedule and less regularization than the teacher had, because
+    - optimization: students often want a longer schedule and less regularization than the teacher had, because
       the teacher's targets are smoother than the data.
     - starting point: a student that starts from an already trained model of its own kind learns faster than one
       from random weights.

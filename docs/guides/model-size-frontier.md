@@ -20,8 +20,7 @@ limits:
     max: 50000000
 ```
 
-!!! note "A starting point"
-    These settings are a reasoned starting point. They have not been measured against alternatives; see [Status and limits](../status.md). The numbers in the example (the budget, any limits or ranges) are placeholders for yours.
+The budget, and any limits or ranges, are placeholders: put in your own.
 
 ## Why this set-up
 
@@ -31,20 +30,20 @@ The skill sets these for you (anything you set in the brief wins):
 
 | Setting | Value |
 |---|---|
-| [`report.columns`](../fields.md) | `[speed]` |
-| [`schedule.novelty`](../fields.md) | `0.6` |
-| [`schedule.phases`](../fields.md) | `[{cross: 0.15, local: 0.35, new: 0.5, until: 0.5}, {cross: 0.25, local: 0.55, new: 0.2, until: 1.0}]` |
-| [`strategy.descriptors`](../fields.md) | `[size]` |
-| [`strategy.mechanism`](../fields.md) | `archive` |
+| [`report.columns`](../fields.md#report-columns) | `[speed]` |
+| [`schedule.novelty`](../fields.md#schedule-novelty) | `0.6` |
+| [`schedule.phases`](../fields.md#schedule-phases) | `[{cross: 0.15, local: 0.35, new: 0.5, until: 0.5}, {cross: 0.25, local: 0.55, new: 0.2, until: 1.0}]` |
+| [`strategy.descriptors`](../fields.md#strategy-descriptors) | `[size]` |
+| [`strategy.mechanism`](../fields.md#strategy-mechanism) | `archive` |
 
 ## What your evaluator must report
 
 - report `parameters` in result.json for every design; the bands are made from it
 - to band by speed instead, report `inference_speed.examples_per_s` and set strategy.descriptors to the name of that metric under diagnostics
 - set `limits` for the smallest and largest size worth having, so that designs outside the range are not trained
-- **Required in every result:** `parameters`. A search that never sees it is told so in the report.
+- Every result must report `parameters`. If none does, the report says so.
 
-How the adapter reports these: [The project's code](../project-contract.md).
+[Write the evaluator](../evaluator.md) shows how to report these; [Evaluator interface](../project-contract.md) is the reference.
 
 ## Choose something else when
 
@@ -59,7 +58,7 @@ It combines well with [`model-distillation`](model-distillation.md) (`run.skill:
 
 Read the population table band by band: each row is the best design of one size band. Plot score against size to see where a fourfold increase stops paying. Bands with one or two designs are not yet explored; treat their best as provisional.
 
-Where to look: `evoloop leaderboard`, `evoloop show`, and the report ([Records and the study file](../records.md)). To change course while it runs: [Steering a run](../steering.md).
+Where to look: `evoloop leaderboard`, `evoloop show`, and the report ([Files of a run](../records.md)). To change course while it runs: [Watch and steer a run](../steering.md).
 
 ## What the agents are told
 

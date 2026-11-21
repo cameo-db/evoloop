@@ -16,8 +16,7 @@ budget:
   evaluations: 80
 ```
 
-!!! note "A starting point"
-    These settings are a reasoned starting point. They have not been measured against alternatives; see [Status and limits](../status.md). The numbers in the example (the budget, any limits or ranges) are placeholders for yours.
+The budget, and any limits or ranges, are placeholders: put in your own.
 
 ## Why this set-up
 
@@ -27,10 +26,10 @@ The skill sets these for you (anything you set in the brief wins):
 
 | Setting | Value |
 |---|---|
-| [`schedule.local_mix`](../fields.md) | `{ablation: 0.3, edit: 0.45, settings: 0.25}` |
-| [`schedule.novelty`](../fields.md) | `0.2` |
-| [`space.must_keep`](../fields.md) | `['Every learned parameter keeps a stated meaning (a motif, an interaction, a rate, an affinity, a concentration). Do not add a component whose parameters cannot be read this way, such as a dense network between the interpretable parts and the output.', 'Keep the constraints that make the parts readable: signs, non-negativity, normalisation, saturation, conservation, units.']` |
-| [`space.preset`](../fields.md) | `template` |
+| [`schedule.local_mix`](../fields.md#schedule-local_mix) | `{ablation: 0.3, edit: 0.45, settings: 0.25}` |
+| [`schedule.novelty`](../fields.md#schedule-novelty) | `0.2` |
+| [`space.must_keep`](../fields.md#space-must_keep) | `['Every learned parameter keeps a stated meaning (a motif, an interaction, a rate, an affinity, a concentration). Do not add a component whose parameters cannot be read this way, such as a dense network between the interpretable parts and the output.', 'Keep the constraints that make the parts readable: signs, non-negativity, normalisation, saturation, conservation, units.']` |
+| [`space.preset`](../fields.md#space-preset) | `template` |
 
 ## What your evaluator must report
 
@@ -38,7 +37,7 @@ The skill sets these for you (anything you set in the brief wins):
 - report `signature` (where the errors fall) so that designs with the same failure are told apart from ones that fail differently
 - mark as open only the blocks that define the interpretable parts and their combination; leave the data handling and the evaluation frozen
 
-How the adapter reports these: [The project's code](../project-contract.md).
+[Write the evaluator](../evaluator.md) shows how to report these; [Evaluator interface](../project-contract.md) is the reference.
 
 ## Choose something else when
 
@@ -50,7 +49,7 @@ How the adapter reports these: [The project's code](../project-contract.md).
 
 A higher score is only half the result. For the best designs, read `evoloop show` to see what changed and what the writer said it stands for, and check the fitted parameters yourself. The rule that parameters keep a meaning is an instruction to the writers, not a check in code.
 
-Where to look: `evoloop leaderboard`, `evoloop show`, and the report ([Records and the study file](../records.md)). To change course while it runs: [Steering a run](../steering.md).
+Where to look: `evoloop leaderboard`, `evoloop show`, and the report ([Files of a run](../records.md)). To change course while it runs: [Watch and steer a run](../steering.md).
 
 ## What the agents are told
 
@@ -69,7 +68,7 @@ Where to look: `evoloop leaderboard`, `evoloop show`, and the report ([Records a
       shows it); more, only when the errors point to a missing mechanism;
     - constraints and priors that keep the parts identifiable: sparsity on interactions, non-negativity,
       regularisation toward known values, a fixed scale so that two parameters cannot trade off against each other;
-    - initialisation and optimisation, which matter more here than in a free network: constrained models have
+    - initialisation and optimization, which matter more here than in a free network: constrained models have
       poor local optima, so a better start or a staged fit (parts first, interactions after) can be the whole gain.
     In `hypothesis`, name the mechanism the change stands for and what it should make true of the fitted
     parameters, not only of the score. Prefer the simpler of two designs that score within the noise floor.
@@ -91,7 +90,7 @@ Where to look: `evoloop leaderboard`, `evoloop show`, and the report ([Records a
 | errors of every design fall on the same examples | a mechanism is missing: add the term those examples call for, with a stated meaning |
 | a design gains by loosening a constraint (sign, non-negativity, a fixed scale) | do not keep it: the parameters are no longer identifiable, so the gain is not a readable one |
 
-Early in the budget: Find out which parts are doing work, with ablations, and get the optimisation reliable across seeds.
+Early in the budget: Find out which parts are doing work, with ablations, and get the optimization reliable across seeds.
 
 Late in the budget: Change the form of the terms that matter, one at a time, and prefer the simpler design at equal score.
 

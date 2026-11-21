@@ -158,7 +158,7 @@ FIELDS: Dict[str, str] = {
     "objective.success_threshold": "A score at which the search stops designing and ends.",
     "run.type": "The named bundle of settings to start from. See the run types.",
     "run.description": "Your own description of the search. Kept as the first note the agents read.",
-    "run.skill": "What kind of optimisation this is: a built-in skill (see the skills) or the path of a skill folder of your own. It sets what suits the task and gives the agents guidance for it; independent of the run type.",
+    "run.skill": "What kind of optimization this is: a built-in skill (see the skills) or the path of a skill folder of your own. It sets what suits the task and gives the agents guidance for it; independent of the run type.",
     "space.preset": "Which marked blocks are open. See the search spaces.",
     "space.modules": "With preset `module`: the roles or block names that are open.",
     "space.roles": "Per role (or block name): open, settings or fixed. Overrides the preset for that role.",
@@ -302,7 +302,7 @@ SKILLS_NOTE = ("A skill says what kind of problem the search is; the run type sa
 
 SECTIONS: List[Tuple[str, str, str, Dict[str, str], str]] = [
     ("run-types", "Run types", "run.type", RUN_TYPES, ""),
-    ("skills", "Skills: the kind of optimisation", "run.skill", SKILLS, SKILLS_NOTE),
+    ("skills", "Skills: the kind of optimization", "run.skill", SKILLS, SKILLS_NOTE),
     ("autonomy", "Autonomy: agentic first, or strongly harnessed", "harness.autonomy", AUTONOMY, AUTONOMY_NOTE),
     ("models", "Models", "agents.default_model", MODELS, MODELS_NOTE),
     ("effort", "Effort", "agents.effort", EFFORT, EFFORT_NOTE),
@@ -374,8 +374,8 @@ def cell(words: str) -> str:
 
 
 def menu_markdown() -> str:
-    out = ["# Menu", "",
-           "Every choice a run can make. This page is written from the code (`evoloop menu --markdown`), so it "
+    out = ["# Options and presets", "",
+           "Every option a search can be given, and what each preset sets. Written from the code (`evoloop menu --markdown`), so it "
            "lists exactly what the brief accepts.", ""]
     for key, title, field, entries, note in SECTIONS:
         out += ["## %s" % title, "", "Set with `%s`." % field, "", "| Option | What it does |", "|---|---|"]
@@ -398,22 +398,44 @@ def menu_markdown() -> str:
     return "\n".join(out).rstrip() + "\n"
 
 
+# Where each group of fields is explained.
+CONCEPT = {"schedule": "schedule.md", "strategy": "parents.md", "population": "parents.md#lineage", "crossover": "moves.md#crossover",
+           "variation": "moves.md", "harness": "agents.md", "strategist": "strategist.md", "evaluation": "comparable.md",
+           "budget": "cost.md", "compute": "servers.md", "agents": "models.md", "space": "setting-up.md#1-mark-what-may-change",
+           "limits": "early-stopping.md#limits-not-training-what-you-could-never-use", "run": "which-search.md",
+           "data": "study.md", "depositor": "study.md", "audit": "auditing.md", "report": "steering.md#watching"}
+
+
+def anchor(path: str) -> str:
+    """The id of a field on the fields page: `schedule.novelty` is `fields.md#schedule-novelty`."""
+    return path.replace(".", "-")
+
+
 def fields_markdown() -> str:
-    out = ["# Fields of the brief", "",
-           "Every field of `brief.yaml`, its default, and whether it can change while a run is going. This page is "
-           "written from the code (`evoloop menu fields --markdown`).", "",
-           "A value comes from the first of: a change made during the run, the brief, the run type, the guidance "
-           "for the size of the budget, the default. `evoloop plan` shows which, for every field.", "",
-           "Fields marked **asked** are asked whenever they are empty; the others are never asked unless you run "
-           "`evoloop brief --all`.", ""]
+    out = ["# Brief fields", "",
+           "Every field of `brief.yaml`: its default, the values it accepts, and whether it can change while a search "
+           "is running. This page is written from the code (`evoloop menu fields --markdown`).", "",
+           "A field you leave empty takes its value from the first of these that has one: a change made during the "
+           "search, the brief, the skill, the level of autonomy, the run type, the guidance for the size of the "
+           "budget, the default. `evoloop plan` shows which, for every field.", "",
+           "Fields marked **asked** have no default and are asked during set-up. In the third column, *yes* means the "
+           "field can be changed during a search; *yes, and a new period begins* that changing it also starts a new comparison period "
+           "([why](comparable.md#changing-what-a-score-means)), and *no* that it is fixed once a search starts.", "",
+           "Jump to: " + " · ".join("[%s](#%s)" % (g, g) for g in dict.fromkeys(p.split(".")[0] for p in form.flatten(form.DEFAULTS)))]
     group = None
     for path, default in form.flatten(form.DEFAULTS).items():
         head = path.split(".")[0]
         if head != group:
             group = head
-            out += ["", "## %s" % head, "", "| Field | Default | Changes in a run | What it is |", "|---|---|---|---|"]
+            out += ["", "## %s" % head, ""]
+            if head in CONCEPT:
+                out += ["Explained in [%s](%s)." % (CONCEPT[head].split("#")[0].replace(".md", "").replace("-", " "), CONCEPT[head]), ""]
+            out += ["| Field | Default | Changes in a search | What it is |", "|---|---|---|---|"]
         asked = " **asked**" if path in form.REQUIRED else ""
-        out.append("| `%s`%s | `%s` | %s | %s |" % (path, asked, cell(show(default)), when(path), cell(FIELDS.get(path, ""))))
+        choices = form.CHOICES.get(path)
+        accepts = " Accepts: %s." % ", ".join("`%s`" % c for c in choices) if choices else ""
+        out.append('| <a id="%s"></a>`%s`%s | `%s` | %s | %s%s |' % (anchor(path), path, asked, cell(show(default)), when(path),
+                                                                 cell(FIELDS.get(path, "")), accepts))
     return "\n".join(out).rstrip() + "\n"
 
 

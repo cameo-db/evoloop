@@ -1,4 +1,4 @@
-"""A tree-structured Parzen estimator for settings moves: Bayesian optimisation with no agent call.
+"""A tree-structured Parzen estimator for settings moves: Bayesian optimization with no agent call.
 
 The settings tried so far are split into the best quarter and the rest. For each setting, one density
 is laid over the values of the good ones and one over the others; candidates are drawn from the good

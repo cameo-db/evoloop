@@ -1,6 +1,6 @@
-# Menu
+# Options and presets
 
-Every choice a run can make. This page is written from the code (`evoloop menu --markdown`), so it lists exactly what the brief accepts.
+Every option a search can be given, and what each preset sets. Written from the code (`evoloop menu --markdown`), so it lists exactly what the brief accepts.
 
 ## Run types
 
@@ -75,7 +75,7 @@ strategy.mechanism = "greedy"
 
 Sets nothing itself.
 
-## Skills: the kind of optimisation
+## Skills: the kind of optimization
 
 Set with `run.skill`.
 

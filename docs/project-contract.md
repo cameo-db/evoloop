@@ -1,4 +1,4 @@
-# The project's code
+# Evaluator interface
 
 This is the contract between the loop and the code it runs.
 
@@ -9,7 +9,7 @@ Each training run gets its own working copy: `base/` with the design's blocks sp
 there. `base/` itself is never modified.
 
 The whole of `base/` is copied for every run. Keep data and weights out of it: point to them by
-absolute path from the adapter.
+absolute path from the evaluator.
 
 ## Variables the job is given
 
@@ -48,8 +48,8 @@ environment, because designs are model-written code.
 
 | Field | Needed | Meaning |
 |---|---|---|
-| `valid`, `score` | yes | whether the run produced a score, and the number the search optimises (on validation data) |
-| `rejected` | no | with `valid: false`, the reason the adapter rejected the design (too slow, too large); it is then not a failure |
+| `valid`, `score` | yes | whether the run produced a score, and the number the search optimizes (on validation data) |
+| `rejected` | no | with `valid: false`, the reason the evaluator rejected the design (too slow, too large); it is then not a failure |
 | `diagnostics` | no | numbers here are shown to the agents and can be leaderboard columns |
 | `diagnostics.hidden` | no | test-set results: stored and written to the study file, never shown to an agent |
 | `parameters` | no | trainable parameter count; used for the archive's size bin, for `limits`, and as the second figure of the `pareto` strategy |
@@ -62,12 +62,16 @@ environment, because designs are model-written code.
 A figure named in `limits` must be in the final result: a result without it is rejected and the run pauses
 ([Limits](steering.md#limits)).
 
-**Progress and stopping.** To let weak new designs be stopped part way, append lines to
+## Progress and stopping
+
+To let weak designs be stopped part way, append lines to
 `progress.jsonl` as training goes, `{"step": n, "metric": x}`, with `step` in the unit of the
 allowance and `metric` the score or a faithful running estimate of it. At each report, read
 `control.json`; if it says `{"action": "stop"}`, finish promptly and still write the result.
 
-**Exit codes.** Exit 75 says the machine failed, not the model: the run is started again, uncharged, at
+## Exit codes
+
+Exit 75 says the machine failed, not the model: the run is started again, uncharged, at
 most `compute.infrastructure_retries` times. A run that ends with no `result.json` is recorded as
 failed, with the end of its log.
 
@@ -79,7 +83,7 @@ is recorded as failed with that reason.
 
 With `evaluation.inherit_weights: true` (and `evaluation.keep_checkpoints: true`), the job of a design
 that has a parent is given `EVO_PARENT_CHECKPOINT_DIR`: the folder where the parent's run kept its
-checkpoint. What to do with it is the adapter's business: typically, load every tensor whose name and
+checkpoint. What to do with it is the evaluator's business: typically, load every tensor whose name and
 shape match the child's model and initialise the rest as usual. A child that changes little then
 trains from where its parent stopped.
 
@@ -87,7 +91,7 @@ trains from where its parent stopped.
   design trained from scratch at the same length. The loop does not correct for this. Refit the
   designs you mean to report from scratch.
 - Changing the setting during a run begins a new period, like a change of the run length.
-- A new design, and the first parent's missing folder, get no variable: the adapter must handle its
+- A new design, and the first parent's missing folder, get no variable: the evaluator must handle its
   absence.
 
 ## The quick check

@@ -1,4 +1,4 @@
-"""Skills: what kind of optimisation a search is.
+"""Skills: what kind of optimization a search is.
 
 A run type says how to search (the strategy, the schedule). A skill says what the problem is: what may
 change, what is measured, what the agents should know about this kind of task, and what the adapter and
@@ -346,8 +346,8 @@ def library_markdown() -> str:
     out = ["# Skill library", "",
            "Every skill that comes with evoloop. This page is written from the skill files themselves "
            "(`evoloop skills --markdown`). Each is a template: a search copies the ones it names into its own "
-           "`skills/` folder, and that copy is yours to edit. [Skills](skills.md) explains how they work and how "
-           "to write one.", ""]
+           "`skills/` folder, and that copy is yours to edit. [Edit or write a skill](skills.md) explains how, and "
+           "[Skill file format](skill-format.md) is the reference for the file.", ""]
     domains: List[str] = []
     for row in rows:
         if row["domain"] not in domains:
@@ -365,14 +365,12 @@ def library_markdown() -> str:
             out += ["| | |", "|---|---|", "| Tags | %s |" % (", ".join(row["tags"]) or "none"),
                     "| Sets | %s |" % (", ".join("`%s`" % s for s in row["sets"]) or "nothing: guidance only"),
                     "| Guidance for | %s |" % (", ".join(sorted(one.get("guidance") or {})) or "no role"),
-                    "| Diagnoses | %d |" % len(one.get("diagnose") or []),
-                    "| Needs from the adapter | %s |" % ("; ".join(row["needs"]["adapter"]) or "nothing special").replace("|", "\\|"),
+                    "| Diagnoses | %d, in the guide |" % len(one.get("diagnose") or []),
+                    "| Needs from the evaluator | %s |" % ("; ".join(row["needs"]["adapter"]) or "nothing special").replace("|", "\\|"),
                     "| Goes well with | %s |" % (", ".join("`%s`" % c for c in row["combines"]) or "any"),
                     "| Not with | %s |" % (", ".join("`%s`" % c for c in row["conflicts"]) or "none"), ""]
-            if one.get("diagnose"):
-                out += ["| If the results show | Then |", "|---|---|"]
-                out += ["| %s | %s |" % (d["see"].replace("|", "\\|"), d["do"].replace("|", "\\|")) for d in one["diagnose"]]
-                out.append("")
+            out += ["[The guide for this goal](guides/%s.md) has the starting brief, the advice the agents are given and the "
+                    "diagnoses in full." % row["name"], ""]
     return "\n".join(out).rstrip() + "\n"
 
 
@@ -397,7 +395,7 @@ def _brief(tree: Dict[str, Any], indent: int = 0) -> str:
 
 
 def guide_markdown(name: str) -> str:
-    """One optimisation goal as a practical page: where to start, why, what the evaluator must report, when to
+    """One optimization goal as a practical page: where to start, why, what the evaluator must report, when to
     choose something else, and how to read the result. Written from the skill's own file."""
     from . import form
     one = load(name)[0]
@@ -411,14 +409,12 @@ def guide_markdown(name: str) -> str:
            one["summary"], "", "## Start here", "",
            "Put this in `brief.yaml` (or give the same answers to `evoloop setup`), then read `evoloop plan` before you confirm.", "",
            "```yaml", _brief(brief).rstrip(), "```", "",
-           "!!! note \"A starting point\"", "    These settings are a reasoned starting point. They have not been measured against "
-           "alternatives; see [Status and limits](../status.md). The numbers in the example (the budget, any limits or "
-           "ranges) are placeholders for yours.", ""]
+           "The budget, and any limits or ranges, are placeholders: put in your own.", ""]
     out += ["## Why this set-up", "", one["why"], ""]
     sets = form.flatten(one["settings"])
     if sets:
         out += ["The skill sets these for you (anything you set in the brief wins):", "", "| Setting | Value |", "|---|---|"]
-        out += ["| [`%s`](../fields.md) | `%s` |" % (path, _cell(yaml.safe_dump(value, default_flow_style=True).strip().replace("\n...", "")))
+        out += ["| [`%s`](../fields.md#%s) | `%s` |" % (path, path.replace(".", "-"), _cell(yaml.safe_dump(value, default_flow_style=True).strip().replace("\n...", "")))
                 for path, value in sorted(sets.items())]
         out.append("")
     else:
@@ -428,11 +424,11 @@ def guide_markdown(name: str) -> str:
     needs = one["needs"]
     if needs["adapter"] or needs["figures"] or needs["references"]:
         out += ["- %s" % n for n in needs["adapter"]]
-        out += ["- **Required in every result:** `%s`. A search that never sees it is told so in the report." % f for f in needs["figures"]]
-        out += ["- **A reference row on the leaderboard for:** %s (`evoloop reference`)." % r for r in needs["references"]]
+        out += ["- Every result must report `%s`. If none does, the report says so." % f for f in needs["figures"]]
+        out += ["- Add a row to the leaderboard for %s, to compare against (`evoloop reference`)." % r for r in needs["references"]]
     else:
-        out += ["Nothing beyond the score."]
-    out += ["", "How the adapter reports these: [The project's code](../project-contract.md).", ""]
+        out += ["Only the score. Nothing else is required."]
+    out += ["", "[Write the evaluator](../evaluator.md) shows how to report these; [Evaluator interface](../project-contract.md) is the reference.", ""]
     if one["instead"] or one["conflicts"]:
         out += ["## Choose something else when", "", "| If | Use |", "|---|---|"]
         for row in one["instead"]:
@@ -445,7 +441,7 @@ def guide_markdown(name: str) -> str:
             ", ".join("[`%s`](%s.md)" % (n, n) for n in one["combines"]), one["name"]), ""]
     out += ["## Reading the result", "", one["reading"], "",
             "Where to look: `evoloop leaderboard`, `evoloop show`, and the report "
-            "([Records and the study file](../records.md)). To change course while it runs: [Steering a run](../steering.md).", ""]
+            "([Files of a run](../records.md)). To change course while it runs: [Watch and steer a run](../steering.md).", ""]
     out += ["## What the agents are told", ""]
     for role in ("all", "writer", "analyst", "strategist"):
         if one["guidance"].get(role):
@@ -463,41 +459,9 @@ def guide_markdown(name: str) -> str:
     return "\n".join(out).rstrip() + "\n"
 
 
-def guides_index_markdown() -> str:
-    rows = [load(n)[0] for n in names()]
-    out = ["# What do you want to optimize?", "",
-           "Each goal below is a different search, with its own page: a starting configuration, why it fits, what "
-           "your evaluator must report, when to choose another, and how to read the result.", "",
-           "Each guide is a skill from the [skill library](../skill-library.md): an editable file of settings and "
-           "guidance. The library is extensible: your search gets its own copy of each skill to change, skills can "
-           "be combined, and you can [write your own](../skills.md#writing-your-own).", ""]
-    labels = {"model": "A model", "settings": "Numbers only", "algorithm": "An algorithm", "bioinformatics": "A bioinformatics method",
-              "pipeline": "A data pipeline"}
-    seen: List[str] = []
-    for row in rows:
-        if row["domain"] in seen:
-            continue
-        seen.append(row["domain"])
-        out += ["## %s" % labels.get(row["domain"], row["domain"].capitalize()), "", "| I want to | Guide | In one line |", "|---|---|---|"]
-        out += ["| %s | [`%s`](%s.md) | %s |" % (r["goal"], r["name"], r["name"], _cell(r["objective"])) for r in rows if r["domain"] == row["domain"]]
-        out.append("")
-    out += ["## Telling similar goals apart", "",
-            "| You have | You want | Use |", "|---|---|---|",
-            "| a good model | its learning rate, weight decay or widths set better | [`settings-tuning`](settings-tuning.md) |",
-            "| a good model | to change how it trains: the loss, the optimizer, augmentation | [`model-training-recipe`](model-training-recipe.md) |",
-            "| a good model | one smaller or faster replacement | [`model-efficiency`](model-efficiency.md) |",
-            "| a good model | the best model at each of several sizes | [`model-size-frontier`](model-size-frontier.md) |",
-            "| a strong model or ensemble | a small model that keeps its accuracy | [`model-distillation`](model-distillation.md) |",
-            "| a task and a baseline | the best score you can get | [`model-performance`](model-performance.md) |",
-            "| correct code that is slow | the same output, sooner | [`algorithm-runtime`](algorithm-runtime.md) or [`data-pipeline`](data-pipeline.md) |", "",
-            "Goals can be combined ([Skills](../skills.md#combining-skills)), and none of these starting points has been "
-            "measured against the others yet ([Status and limits](../status.md)).", ""]
-    return "\n".join(out).rstrip() + "\n"
-
-
 def write_guides(folder: str) -> List[str]:
     os.makedirs(folder, exist_ok=True)
-    pages = {"index.md": guides_index_markdown()}
+    pages: Dict[str, str] = {}
     pages.update({"%s.md" % name: guide_markdown(name) for name in names()})
     for page, text in pages.items():
         with open(os.path.join(folder, page), "w", encoding="utf-8") as handle:

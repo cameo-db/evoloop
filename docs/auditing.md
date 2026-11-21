@@ -1,4 +1,4 @@
-# Auditing the agents
+# Audit the agents
 
 The agents can be reviewed like a consulting group: what each one said, whether it was right, what it
 cost. There are three levels.

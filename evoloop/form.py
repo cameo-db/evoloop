@@ -341,7 +341,7 @@ def resolve(brief: Dict[str, Any], ledger: Optional[List[Dict[str, Any]]] = None
             autonomy = entry["value"]
     if autonomy in AUTONOMY:
         lay(AUTONOMY[autonomy], "autonomy %s" % autonomy)
-    # The skill (what kind of optimisation this is) is laid over the run type and the level of autonomy (how to
+    # The skill (what kind of optimization this is) is laid over the run type and the level of autonomy (how to
     # search, and how much the agents decide): where they set the same thing, the skill knows the problem, so a
     # skill that searches without agents stays without agents. A skill of the person's own is found under `folder`.
     from . import skill as skills
@@ -619,13 +619,13 @@ def confirmed(brief: Dict[str, Any]) -> bool:
 
 
 def at_a_glance(settings: Dict[str, Any]) -> List[str]:
-    """What this search will actually do, in a few lines: what is optimised, who writes the designs, which agent
+    """What this search will actually do, in a few lines: what is optimized, who writes the designs, which agent
     roles run, how designs are selected and stopped, and what a later choice changed in an earlier one."""
     from . import estimate
     from . import site as sites
     out = []
     skill = settings.get("_skill")
-    out.append("  Optimising:      %s%s" % (settings["run"]["type"] or "no run type yet",
+    out.append("  Optimizing:      %s%s" % (settings["run"]["type"] or "no run type yet",
                                           ", skill %s" % skill["name"] if skill else ", no skill"))
     calls = estimate.calls(settings) if settings["budget"]["evaluations"] else {}
     by = settings["variation"]["settings_by"]

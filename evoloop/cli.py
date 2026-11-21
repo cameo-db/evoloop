@@ -48,7 +48,7 @@ allowance = float(os.environ["EVO_ALLOWANCE"])
 
 result = {
     "valid": False,                      # True when the run produced a score
-    "score": None,                       # the number the search optimises (validation)
+    "score": None,                       # the number the search optimizes (validation)
     "diagnostics": {                     # numbers here are shown to the agents...
         "hidden": {},                    # ...except this part: put test-set results here
     },
@@ -850,7 +850,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--dir", default=None, help="a search folder, to see the site file that search would use")
     p.add_argument("--detect", action="store_true", help="draft a site file from what this machine reports (queries only)")
     p.add_argument("--write", metavar="PATH", help="with --detect: write the draft to PATH")
-    p = add("skills", cmd_skills, "the kinds of optimisation a search can be set up for")
+    p = add("skills", cmd_skills, "the kinds of optimization a search can be set up for")
     p.add_argument("skill", nargs="?", help="a built-in skill or the path of a skill folder; leave out for the list")
     p.add_argument("--copy", metavar="DIR", help="write the skill out as a folder to edit")
     p.add_argument("--search", metavar="WORDS", help="skills whose name, tags or purpose hold these words")

@@ -33,7 +33,7 @@ guidance:
       shows it); more, only when the errors point to a missing mechanism;
     - constraints and priors that keep the parts identifiable: sparsity on interactions, non-negativity,
       regularisation toward known values, a fixed scale so that two parameters cannot trade off against each other;
-    - initialisation and optimisation, which matter more here than in a free network: constrained models have
+    - initialisation and optimization, which matter more here than in a free network: constrained models have
       poor local optima, so a better start or a staged fit (parts first, interactions after) can be the whole gain.
     In `hypothesis`, name the mechanism the change stands for and what it should make true of the fitted
     parameters, not only of the score. Prefer the simpler of two designs that score within the noise floor.
@@ -56,7 +56,7 @@ diagnose:
   - see: "a design gains by loosening a constraint (sign, non-negativity, a fixed scale)"
     do: "do not keep it: the parameters are no longer identifiable, so the gain is not a readable one"
 stages:
-  early: "Find out which parts are doing work, with ablations, and get the optimisation reliable across seeds."
+  early: "Find out which parts are doing work, with ablations, and get the optimization reliable across seeds."
   late: "Change the form of the terms that matter, one at a time, and prefer the simpler design at equal score."
 needs:
   adapter:

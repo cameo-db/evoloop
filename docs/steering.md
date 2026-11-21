@@ -1,8 +1,47 @@
-# Steering a run
+# Watch and steer a run
 
-Nothing needs a restart. A steering command leaves a request in the run's folder; the controller reads
-it on its next turn, checks it, and records it in the ledger as applied or refused, with your name, the
-old value and the new one. The same commands work on a run that is going and on one that has stopped.
+A search does not need a restart to change. Every command below leaves a request in the run's folder;
+the search reads it within a few seconds, checks it, and records it as applied or refused, with your
+name. The same commands work on a search that has stopped.
+
+## I want to…
+
+| I want to | Command |
+|---|---|
+| see where it stands | `evoloop status mysearch --name r1` |
+| see the best designs so far | `evoloop leaderboard mysearch --name r1` |
+| look at one design | `evoloop show mysearch C12 --name r1` |
+| read everything | `evoloop report mysearch --name r1` |
+| give it more budget | `evoloop set mysearch --name r1 budget.evaluations=300 --by "Me"` |
+| explore more, or less | `evoloop set mysearch --name r1 schedule.novelty=0.6 --by "Me"` |
+| train longer | `evoloop set mysearch --name r1 evaluation.allowance=50 --by "Me"` ([starts a new period](#changing-the-length-of-a-run)) |
+| tell the agents something | `evoloop note mysearch --name r1 "No attention layers." --by "Me"` |
+| say it in my own words | `evoloop steer mysearch --name r1 "more novelty, keep models small" --by "Me"` |
+| order the next few moves | `evoloop force mysearch --name r1 --mode cross --count 3 --by "Me"` |
+| cap model size | `evoloop set mysearch --name r1 'limits={"parameters": {"max": 20000000}}' --by "Me"` |
+| bring in designs from an earlier search | `evoloop import mysearch --name r2 --from-run mysearch/runs/r1 --top 5 --by "Me"` |
+| add a published model to the leaderboard | `evoloop reference mysearch --name r1 --label "paper" --score 0.49 --by "Me"` |
+| answer something the strategist proposed | `evoloop approve mysearch --name r1 --id S14 --by "Me"` ([Working with the strategist](strategist.md)) |
+| talk to the agent running it | `evoloop chat mysearch --name r1 --by "Me"` |
+| stop one design | `evoloop stop mysearch --name r1 --run R12 --by "Me"` |
+| stop the search | `evoloop stop mysearch --name r1 --by "Me"` |
+| continue a stopped search | `evoloop run mysearch --name r1` |
+
+The sections below explain each.
+
+## Watching
+
+```
+evoloop status mysearch --name r1          # a few lines: budget, best, what is held up, what waits for you
+evoloop leaderboard mysearch --name r1     # the best designs, the baseline, the reference rows
+evoloop show mysearch C12 --name r1        # one design: where it came from, what it changed, how it ended
+evoloop report mysearch --name r1          # everything
+```
+
+On the leaderboard, `state` says how a score was reached: `full` for a complete training run, or
+`stopped at 10%` for a design stopped early, which is listed last and not ranked. `length` is the
+training length. `report.columns` adds columns (`valid.<metric>`, `test.<metric>`, `speed`,
+`best_epoch`, `epochs_run`).
 
 ## Changing settings
 
@@ -27,11 +66,11 @@ What can change:
 | the model behind a role | `agents.models`, `agents.default_model` |
 | the run type | `run.type` |
 
-[Fields of the brief](fields.md) says for every field whether it can change.
+[Brief fields](fields.md) says for every field whether it can change.
 
 **What cannot change** is what defines the problem (the objective, the direction of the score, the
 dataset's identity, the frozen code) and a few settings fixed when a run starts (the agent backend, the
-scheduler, the run command, the noise floor, the quick check). [Fields of the brief](fields.md) marks each. Such a
+scheduler, the run command, the noise floor, the quick check). [Brief fields](fields.md) marks each. Such a
 request is refused with the reason, and the run goes on.
 
 **A change that moves other settings.** Changing `budget.evaluations` across a boundary of the
@@ -43,19 +82,19 @@ setting that moved with it.
 `evaluation.allowance` (and `evaluation.seed`, `data.fraction`) change what a score means: a model
 trained for 50 epochs is not comparable with one trained for 30. So a new **period** begins:
 
-- The best design of each of the `evaluation.leaders_refit` leading lineages is fitted under the new
+- The best design of each of the `evaluation.leaders_refit` leading lineages is trained under the new
   setting. These are the references for the new period.
 - Earlier scores stay in the record and still feed the agents' lessons. They no longer decide
   selection.
 
-Whether a reference is fitted again or continued from its checkpoint is set by
+Whether a reference is trained again or continued from its checkpoint is set by
 `evaluation.on_length_change`:
 
 | Value | What happens |
 |---|---|
-| `auto` | continued when `evaluation.schedule_depends_on_length` is false and `evaluation.keep_checkpoints` is true; otherwise fitted again |
-| `continue` | continued from the checkpoint (the adapter gets `EVO_CONTINUE_FROM`) |
-| `rerun` | fitted again from scratch |
+| `auto` | continued when `evaluation.schedule_depends_on_length` is false and `evaluation.keep_checkpoints` is true; otherwise trained again |
+| `continue` | continued from the checkpoint (the evaluator gets `EVO_CONTINUE_FROM`) |
+| `rerun` | trained again from scratch |
 | `compare_anyway` | no new period: old and new scores are compared as they are |
 
 Continuing is only right when the learning-rate schedule does not depend on the length of the run. A
@@ -96,9 +135,9 @@ evoloop stop mysearch --name r1 --run R12 --by "Your Name"   # stop one run
 A stopped run is continued with `evoloop run mysearch --name r1`. To give an ended run more budget,
 `evoloop set ... budget.evaluations=N` and continue it.
 
-## The adapter's own knobs
+## The evaluator's own knobs
 
-`evaluation.variables` is passed to every job as environment variables. Use it for what your adapter
+`evaluation.variables` is passed to every job as environment variables. Use it for what your evaluator
 reads beside the run length: the patience of its early stopping, a minimum gain, a batch size.
 
 ```
@@ -106,10 +145,10 @@ evoloop set mysearch --name r1 'evaluation.variables={"PATIENCE": 10, "MIN_GAIN"
 ```
 
 Like the run length, these change what a score means, so a change begins a new period: the leaders are
-fitted again under the new values and earlier scores stop deciding selection. Every run records the
+trained again under the new values and earlier scores stop deciding selection. Every run records the
 values it ran with.
 
-## Fixing the adapter or the frozen code during a run
+## Fixing the evaluator or the frozen code during a run
 
 Everything outside the marked blocks, and `adapter/`, is frozen: a run checks it at every start and once
 a minute. If it has changed, nothing new is started (jobs already training go on) and the run comes to
@@ -126,7 +165,7 @@ ledger keeps who said so, why, and the two hashes.
 
 ## Limits
 
-`limits` are enforced by code on every design: on any figure the adapter reports, on `parameters`, and
+`limits` are enforced by code on every design: on any figure the evaluator reports, on `parameters`, and
 on `examples_per_s` from its inference speed.
 
 ```
@@ -134,14 +173,14 @@ evoloop set mysearch --name r1 'limits={"parameters": {"max": 20000000}, "exampl
 ```
 
 - **A limit must be measurable.** If a result does not report a figure that a limit names, the design is rejected
-  and the run comes to rest as paused, saying which figure is missing. Make the adapter report it, or remove the
+  and the run pauses, saying which figure is missing. Make the evaluator report it, or remove the
   limit, and continue the run. A limit is never skipped because its figure is absent. (Progress lines may lack
   it: only the final result must carry it.)
 - A design outside a limit is **rejected**: it gets no score and is not charged, up to
   `budget.max_uncounted_rejections` (50); it is not a failure and does not count toward a stall.
 - A run whose progress lines already show it outside a limit is stopped there, not trained to the end.
   Put the figure in the first progress line and a design that is too big or too slow costs seconds.
-- The adapter can reject too: a result with `"valid": false, "rejected": "the reason"` is treated the
+- The evaluator can reject too: a result with `"valid": false, "rejected": "the reason"` is treated the
   same way.
 - The writers are shown the limits, and each rejected design with its reason.
 
@@ -164,7 +203,7 @@ evoloop import mysearch --name r2 --from-run mysearch/runs/r1 --top 5 --by "Your
 evoloop import mysearch --name r2 --from-run mysearch/runs/r1 --designs C12 C40 --by "Your Name"
 ```
 
-The designs are fitted in this run as designs of its own, and can then be built on. Their scores in the
+The designs are trained in this run as designs of its own, and can then be built on. Their scores in the
 earlier run are not carried over, since that run may have trained differently; each import keeps a note
 of where it came from and what it scored there. A design whose blocks do not fit this run's code is
 refused, with the reason.
@@ -178,18 +217,6 @@ evoloop reference mysearch --name r2 --from-run mysearch/runs/r1 --top 3 --by "Y
 ```
 
 Reference rows are shown and marked as such; they take no part in selection.
-
-## Watching a run
-
-```
-evoloop status mysearch --name r1          # a few lines: budget, best, what is held up, what waits for you
-evoloop leaderboard mysearch --name r1     # the best designs, the baseline, the reference rows
-evoloop show mysearch --name r1 R37        # one run: where it came from, what it changed, how it ended
-evoloop report mysearch --name r1          # everything
-```
-
-`report.columns` sets the leaderboard's further columns (`valid.<metric>`, `test.<metric>`, `speed`,
-`best_epoch`, `epochs_run`) and `report.top` how many designs it shows.
 
 ## A steered run
 

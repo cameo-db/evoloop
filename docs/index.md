@@ -9,21 +9,20 @@ hide:
 
 # Optimize the parts of your code you choose.
 
-Mark the code that may change and supply a scoring function. Agents propose code edits, or a built-in
-optimizer tunes fixed settings. evoloop evaluates the variants within your budget, and records every
-decision so you can steer the search while it runs.
+Mark the code that may change and supply a script that scores one version. Agents propose new versions,
+or a built-in optimizer tunes the numbers. evoloop tries them within your budget and keeps a record of
+every decision, so you can steer the search while it runs.
 
-[Run the CPU demo](quickstart.md){ .md-button .md-button--primary }
-[Use my own project](setting-up.md){ .md-button }
-[Set it up with an agent](#you-make-five-decisions-an-agent-can-do-the-rest){ .md-button }
+[Run the demo](quickstart.md){ .md-button .md-button--primary }
+[Set up your own search](setting-up.md){ .md-button }
 
-The demo runs locally with scripted proposals: no API key, no GPU, under a minute.
+The demo runs on a laptop in half a minute: no API key, no GPU.
 { .evo-fine }
 
 </div>
 <div class="evo-hero-figure" markdown>
 
-**A toy model search** · a small classifier on two spirals, 40 models, each trained once on a CPU
+**The demo: a toy model search.** 40 small classifiers, each trained once.
 { .evo-caption }
 
 <div class="evo-chart">
@@ -145,167 +144,118 @@ The demo runs locally with scripted proposals: no API key, no GPU, under a minut
 </svg>
 </div>
 
-Each point is a model that was really trained; the line is the best so far. The proposals are scripted here, so
-this shows how a search proceeds, not what an agent would find.
-[Reproduce it](quickstart.md)
+Each point is a model that was really trained. The proposals are scripted here, so this shows how a
+search proceeds, not what an agent would find.
 { .evo-fine }
 
 </div>
 </div>
 
-## You make five decisions; an agent can do the rest
+!!! note "Where this stands"
+    evoloop passes its tests on two built-in examples with scripted proposals. It has not yet been run
+    with a real language model on a real training task, and its settings have not been compared against
+    each other. [Status and limits](status.md) lists exactly what has been run.
 
-evoloop has many settings, and you are not meant to work through them. It is built to be set up **with
-a coding agent**: open the repository in Claude Code (or another agent that can read files and run
-commands) and say *"set up an evoloop search for my project"*. The agent follows
-[AGENTS.md](https://github.com/cameo-db/evoloop/blob/main/AGENTS.md): it reads your code, marks the
-blocks, writes the evaluator, proposes an answer to each question with its reason, and asks you only
-what it cannot work out. Everything it proposes is shown to you before anything runs.
+## What you give it, and what it does
 
-What is yours to decide:
+You mark what may change. Everything else in your project is frozen.
 
-| Decision | Why it cannot be defaulted |
-|---|---|
-| **What to optimize** | A better score, a smaller model, tuned settings and a faster algorithm are different searches. [Pick a goal](guides/index.md) |
-| **What may change** | The search only touches the blocks you allow. Everything else is frozen |
-| **How a design is scored** | The search optimizes exactly this number. You also say how much it varies between two runs of the same design |
-| **How much to spend** | Evaluations (your compute) and agent dollars. Both are caps the search cannot exceed |
-| **Hard limits**, if any | A largest size or slowest speed you would accept. Enforced by code |
+```python
+# EVOLVE-BLOCK-START name=model kind=structure role=network
+HIDDEN = []            # no hidden layer: a linear classifier
+ACTIVATION = "tanh"
 
-Everything else has a default chosen from those answers and the size of your budget, is shown in the
-plan with where it came from, and can be changed while the search runs. Skip it until a result gives
-you a reason to change it. Running on a cluster? [Describe the machine once](servers.md).
+def features(x):
+    return x
+# EVOLVE-BLOCK-END
+```
 
-## How a search runs
+You supply a script that trains one version and writes its score. Then the search proposes versions of
+the block, such as this one from the demo, and runs your script on each:
 
-<div class="grid cards" markdown>
+```python
+HIDDEN = [12, 8]
+ACTIVATION = "tanh"
 
--   **1. Define the experiment**
+def features(x):
+    r = np.sqrt((x ** 2).sum(1))
+    return np.stack([x[:, 0], x[:, 1], np.sin(6.0 * r), np.cos(6.0 * r)], axis=1)
+```
 
-    ---
+That one scored 0.97 where the original scored 0.50. In between, the search decides what to try next:
 
-    Mark the blocks that may change, tell evoloop how to score one design, and read the plan before
-    anything runs.
+```mermaid
+flowchart LR
+    Slot["A job is free"] --> Schedule["What kind of move?<br>new · crossover · local"]
+    Schedule --> Strategy["Which parents?"]
+    Strategy --> Writer["Write it<br>an agent, or code"]
+    Writer --> Checks{"Check it"}
+    Checks -- ok --> Job["Run and score it"]
+    Checks -- refused --> Writer
+    Job --> Records[("Record")]
+    Records --> Slot
+```
 
-    [Use my own project](setting-up.md)
+An agent only ever returns text. Python chooses what is tried next, enforces the budget and your limits,
+and refuses any design that touches code outside the marked blocks.
+[One step of a search](how-it-works.md) follows a single design through this loop.
 
--   **2. Run and steer**
-
-    ---
-
-    The search proposes and evaluates changes, one job per design. Adjust its direction as results
-    arrive; every change is recorded.
-
-    [Steering a run](steering.md)
-
--   **3. Compare the designs**
-
-    ---
-
-    Open the leaderboard, inspect the selected design's code and history, and save the study as JSON for
-    the CAMEO database.
-
-    [What a run leaves behind](records.md)
-
-</div>
-
-## What do you want to optimize?
-
-Each goal is a different search. Its guide gives a starting configuration, why it fits, what your
-evaluator must report, and how to read the result.
+## Three ways in
 
 <div class="grid cards" markdown>
 
--   [**Tune hyperparameters**](guides/settings-tuning.md)
+-   **Try it**
 
-    Numbers only, by a Bayesian estimator. No agent calls.
+    ---
 
--   [**Improve a model's score**](guides/model-performance.md)
+    Run the demo, read its leaderboard, and steer a second run while it goes.
 
-    The architecture is open; one number to raise.
+    [Run the demo](quickstart.md)
 
--   [**Train a fixed architecture better**](guides/model-training-recipe.md)
+-   **Use it on your project**
 
-    The loss, optimizer, schedule and augmentation.
+    ---
 
--   [**Find a smaller or faster model**](guides/model-efficiency.md)
+    Decide which search fits your goal, then set it up, by hand or with a coding agent.
 
-    One cheaper model at about the same score.
-
--   [**Find the best model at several sizes**](guides/model-size-frontier.md)
-
-    A whole trade-off curve to choose from.
-
--   [**Distil a student from a teacher**](guides/model-distillation.md)
-
-    A small model that keeps a large one's accuracy.
-
--   [**Make an algorithm or pipeline faster**](guides/algorithm-runtime.md)
-
-    The same output, in less time or memory.
-
--   [**All optimization guides**](guides/index.md)
-
-    Ensembles, fine-tuning, interpretable models, bioinformatics methods.
-
-</div>
-
-## The skill library
-
-Each goal above is a **skill**: one file that holds the settings that suit the task, guidance for the
-agents, "if the results show this, do that" diagnoses, and what your evaluator must report. evoloop
-comes with a library of twelve, and the library is meant to grow.
-
-| Domain | Skill | For |
-|---|---|---|
-| Models | [`model-performance`](guides/model-performance.md) | the best score, nothing else weighed |
-| | [`model-distillation`](guides/model-distillation.md) | a smaller or faster student that matches a teacher |
-| | [`model-efficiency`](guides/model-efficiency.md) | the same score at a lower cost in parameters or time |
-| | [`model-size-frontier`](guides/model-size-frontier.md) | the best model at every size or speed across a broad range |
-| | [`model-training-recipe`](guides/model-training-recipe.md) | a better score from the same architecture, by training it better |
-| | [`model-ensemble-members`](guides/model-ensemble-members.md) | strong models whose errors do not coincide |
-| | [`model-finetuning`](guides/model-finetuning.md) | the best score starting from a pretrained model |
-| | [`model-mechanistic`](guides/model-mechanistic.md) | an interpretable or biophysical model, improved without losing its meaning |
-| Settings | [`settings-tuning`](guides/settings-tuning.md) | the best settings of fixed code, with no agent calls |
-| Algorithms | [`algorithm-runtime`](guides/algorithm-runtime.md) | the same results in less time or memory |
-| Bioinformatics | [`bioinformatics-algorithm`](guides/bioinformatics-algorithm.md) | better accuracy against a truth set |
-| Pipelines | [`data-pipeline`](guides/data-pipeline.md) | the same output in less time, memory or cost |
-
-**It is extensible.**
-
-- **Edit one.** Your search gets its own copy of every skill it uses, in `mysearch/skills/`. Change the
-  guidance, add a diagnosis from your own experience; the library's original is untouched.
-- **Combine them.** `run.skill: [model-distillation, model-size-frontier]` gives a family of students.
-- **Write your own.** Copy the nearest one with `evoloop skills NAME --copy DIR`, rename it, and point
-  `run.skill` at it.
-- **Add it to the library.** A skill is a folder with one file; a pull request adds it for everyone.
-
-`evoloop skills` lists the library and `evoloop skills --search WORDS` searches it.
-[How skills work](skills.md) · [Every skill in full](skill-library.md)
-
-## Keep and share the result
-
-Every search ends with a `study.json`: every model, training recipe and run in one file, in the format of
-[CAMEO](https://cameo-db.github.io), a public database of models, how they were trained, and how they
-performed. [How to save the study as JSON and deposit it](records.md#saving-the-study-as-json-and-depositing-it-in-cameo).
-
-## What it has been shown to do
-
-evoloop passes its tests on its two built-in examples with scripted proposals, and has run one of them on a Slurm
-cluster. It has **not** yet been run with a real model on a real training task, and no comparison of
-its search settings has been made. The guides give reasoned starting points, not measured ones.
-[Status and limits](status.md) says exactly what has been run.
-
-<div class="grid cards" markdown>
+    [Which search should I run?](which-search.md) · [Set up your search](setting-up.md)
 
 -   **Understand it**
 
-    [How a search works](how-it-works.md) · [How each choice changes the search](choices.md) ·
-    [How it compares with established methods](compared.md)
+    ---
 
--   **Look something up**
+    How designs are chosen, written and compared, with figures you can change.
 
-    [Commands](commands.md) · [Fields of the brief](fields.md) · [The evaluator contract](project-contract.md) ·
-    [Skill library](skill-library.md)
+    [One step of a search](how-it-works.md) · [Who becomes a parent](parents.md)
 
 </div>
+
+## You make five decisions; an agent can do the rest
+
+evoloop has many settings, and you are not meant to work through them. It is built to be set up with a
+coding agent. Open the repository in Claude Code, or another agent that can read files and run commands,
+and say "set up an evoloop search for my project". The agent marks the blocks, writes the scoring
+script, proposes an answer to each question with its reason, and asks you only what it cannot work out.
+Nothing runs until you have read the plan and confirmed it.
+
+What is yours to decide:
+
+1. **What to optimize.** A better score, a smaller model, tuned settings and a faster algorithm are
+   different searches. [Which search should I run?](which-search.md)
+2. **What may change.** The search only touches the blocks you mark.
+3. **How a design is scored**, and how much that score varies between two runs of the same design.
+4. **How much to spend**, in training runs and in agent dollars. Both are caps.
+5. **Hard limits**, if you have any: the largest or slowest model you would accept.
+
+Everything else has a default that follows from those answers, and can be changed while the search
+runs.
+
+## Find your way around
+
+| | |
+|---|---|
+| **Start** | [Run the demo](quickstart.md) · [Set up your search](setting-up.md) · [Write the evaluator](evaluator.md) · [Measure your noise](noise.md) · [Run on a cluster](servers.md) |
+| **Choose a search** | [Which search should I run?](which-search.md) · the twelve goal guides · [Edit or write a skill](skills.md) |
+| **Concepts** | [One step of a search](how-it-works.md) · [What gets tried next](schedule.md) · [Who becomes a parent](parents.md) · [Edits, crossover and settings moves](moves.md) · [Cheaper evaluations](early-stopping.md) · [When two scores can be compared](comparable.md) · [The agents](agents.md) · [Compared with FunSearch and AlphaEvolve](compared.md) |
+| **Run and steer** | [Watch and steer a run](steering.md) · [Budget and cost](cost.md) · [Working with the strategist](strategist.md) · [Audit the agents](auditing.md) · [Save and deposit the study](study.md) |
+| **Reference** | [Commands](commands.md) · [Brief fields](fields.md) · [Options and presets](menu.md) · [Evaluator interface](project-contract.md) · [Skill file format](skill-format.md) · [Files of a run](records.md) · [Skill library](skill-library.md) · [Models and prices](models.md) · [Glossary](glossary.md) · [Status and limits](status.md) |

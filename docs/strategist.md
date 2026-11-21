@@ -1,18 +1,9 @@
-# The strategist and the budget
+# Working with the strategist
 
-Two things watch a run as a whole. The **strategist** is an agent that decides whether the search
-should change course. The **spend governor** is code that keeps the agents' cost inside your cap.
-
-## Why a strategist
-
-The schedule follows the shares you set, whatever the results say. If thirty new designs in a row go
-nowhere it keeps asking for new designs; if crossover of one kind keeps failing it keeps trying that
-kind. The adaptive schedule reacts to past returns, but with a few dozen runs that signal is weak, and
-anything driven by past returns tends to settle on what already works.
-
-The strategist divides the work: **code detects and reports, the agent decides, code checks the
-decision.** It can see why something is failing, which a count cannot; and it is bounded, because an
-agent given a free hand over a search has a poor record.
+The strategist is an agent that reviews a search as a whole and may change its course, within bounds you
+set. This page covers what it may do, how to answer what it proposes, and how to talk to it.
+[The agents](agents.md#why-have-a-strategist) explains why it exists; [Budget and cost](cost.md) covers the
+spend cap.
 
 ## When it meets
 
@@ -195,49 +186,3 @@ with `strategist.mode: off` on the same budget.
 The model it uses is `agents.models.strategist`, or `agents.default_model`. All of these can be changed
 during a run.
 
-## The budget
-
-A run has two budgets, and both can be changed while it goes.
-
-| Budget | Setting | When it runs out |
-|---|---|---|
-| training runs | `budget.evaluations` | the search ends |
-| agent cost | `budget.model_dollars`, and `budget.model_calls` as a second cap | no further agent call is made; the run ends as paused, and goes on when you raise the cap |
-
-Cost is whatever the backend reports for each call. The report and `status.json` show the spend so far,
-the cost per design, and the figure the run is heading for.
-
-The cost per design is dollars per design *written*, whether it was scored, failed, refused or is still
-training, taken over the last twenty designs once there are that many, so that it follows a change
-that made the run cheaper. The projection adds that rate for the designs still to be written.
-
-### The spend governor
-
-With `budget.spend_policy: pace` (the default) and a dollar cap set, code checks every ten scored
-designs whether the run is heading past the cap. If it is, it takes one step to make the run cheaper,
-and records it in the ledger with the figures:
-
-1. one proposal fewer per slot (`variation.proposals_per_slot`), down to one
-2. slots chosen by code, not by a coordinator agent
-3. the analyst half as often
-4. the strategist half as often
-5. reviews at the end only
-6. settings moves drawn by code, not written by an agent
-
-It only makes the run cheaper. If you raise the cap and want proposals back, set them yourself.
-`budget.spend_policy: none` switches it off; the cap still stops the calls.
-
-### The reserve
-
-With the `pace` policy, the last `budget.reserve_share` of the cap (0.15) is kept for writing designs.
-When it is reached, the analyst, the strategist, the scheduled reviews and the coordinator agent stop,
-so that what is left buys designs. A review you ask for yourself with `evoloop review` is still made.
-With `budget.spend_policy: none` there is no reserve.
-
-### What the cap cannot see
-
-- A backend that reports no cost. For `anthropic_api`, give `agents.prices` for each model in use; the
-  plan warns when one is missing, and a capped run pauses after three calls with no cost.
-- Subscription limits. A call refused for the account's limit pauses every agent call until the limit
-  resets; it is not retried in a loop and not charged.
-- GPU time. That is `budget.evaluations` and `budget.wall_clock_hours`.

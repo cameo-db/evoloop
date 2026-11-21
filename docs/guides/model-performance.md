@@ -16,8 +16,7 @@ budget:
   evaluations: 100
 ```
 
-!!! note "A starting point"
-    These settings are a reasoned starting point. They have not been measured against alternatives; see [Status and limits](../status.md). The numbers in the example (the budget, any limits or ranges) are placeholders for yours.
+The budget, and any limits or ranges, are placeholders: put in your own.
 
 ## Why this set-up
 
@@ -27,9 +26,9 @@ The skill sets nothing itself: the run type and the defaults decide the search, 
 
 ## What your evaluator must report
 
-Nothing beyond the score.
+Only the score. Nothing else is required.
 
-How the adapter reports these: [The project's code](../project-contract.md).
+[Write the evaluator](../evaluator.md) shows how to report these; [Evaluator interface](../project-contract.md) is the reference.
 
 ## Choose something else when
 
@@ -45,7 +44,7 @@ It combines well with [`model-training-recipe`](model-training-recipe.md) (`run.
 
 Read the leaderboard for the best design and its family, then "What each mode returned" to see whether new designs or local work produced the gains. A leader with a single fit is a candidate, not a result: fit it again on new seeds, and on the held-out set, before reporting it.
 
-Where to look: `evoloop leaderboard`, `evoloop show`, and the report ([Records and the study file](../records.md)). To change course while it runs: [Steering a run](../steering.md).
+Where to look: `evoloop leaderboard`, `evoloop show`, and the report ([Files of a run](../records.md)). To change course while it runs: [Watch and steer a run](../steering.md).
 
 ## What the agents are told
 
@@ -58,7 +57,7 @@ Where to look: `evoloop leaderboard`, `evoloop show`, and the report ([Records a
     different kind of change:
     - capacity: it cannot fit the training data. More width, depth, or a mechanism it lacks (a longer range, a
       different pooling, an interaction between parts).
-    - optimisation: it could fit but trains slowly or unstably. Normalisation, skip connections, initialisation,
+    - optimization: it could fit but trains slowly or unstably. Normalisation, skip connections, initialisation,
       the learning-rate schedule, the batch size.
     - generalisation: it fits training data and not validation data. Regularisation, augmentation, less capacity,
       weight sharing, an inductive bias that matches the data.
@@ -68,7 +67,7 @@ Where to look: `evoloop leaderboard`, `evoloop show`, and the report ([Records a
 
 ??? note "The analyst"
     Say which kinds of change are still paying and which have stopped. Separate gains that repeat across lineages
-    from single results within the noise. Name the limit (capacity, optimisation, generalisation) the leader seems
+    from single results within the noise. Name the limit (capacity, optimization, generalisation) the leader seems
     to be at, with the runs that show it.
 
 ??? note "The strategist"
@@ -77,7 +76,7 @@ Where to look: `evoloop leaderboard`, `evoloop show`, and the report ([Records a
 
 | If the results show | Then |
 |---|---|
-| training and validation scores are both poor and still improving at the end of the run | the run is too short or the optimisation is slow: fix the schedule or normalisation before judging the architecture |
+| training and validation scores are both poor and still improving at the end of the run | the run is too short or the optimization is slow: fix the schedule or normalisation before judging the architecture |
 | training score is good, validation score is clearly worse | regularize, augment, or reduce capacity; do not add capacity |
 | both scores stop improving early and stay poor | the model lacks capacity or a mechanism: widen, deepen, or add the missing range or interaction |
 | the same design gives very different scores on a re-check | the gain is within the noise: treat it as no gain, and prefer changes that reduce variance |

@@ -18,8 +18,7 @@ objective:
   direction: minimize
 ```
 
-!!! note "A starting point"
-    These settings are a reasoned starting point. They have not been measured against alternatives; see [Status and limits](../status.md). The numbers in the example (the budget, any limits or ranges) are placeholders for yours.
+The budget, and any limits or ranges, are placeholders: put in your own.
 
 ## Why this set-up
 
@@ -29,9 +28,9 @@ The skill sets these for you (anything you set in the brief wins):
 
 | Setting | Value |
 |---|---|
-| [`evaluation.screen_keep`](../fields.md) | `1.0` |
-| [`schedule.local_mix`](../fields.md) | `{ablation: 0.15, edit: 0.75, settings: 0.1}` |
-| [`schedule.novelty`](../fields.md) | `0.3` |
+| [`evaluation.screen_keep`](../fields.md#evaluation-screen_keep) | `1.0` |
+| [`schedule.local_mix`](../fields.md#schedule-local_mix) | `{ablation: 0.15, edit: 0.75, settings: 0.1}` |
+| [`schedule.novelty`](../fields.md#schedule-novelty) | `0.3` |
 
 ## What your evaluator must report
 
@@ -39,9 +38,9 @@ The skill sets these for you (anything you set in the brief wins):
 - time the run several times on a quiet machine with a fixed number of threads, and report the median as the score with objective.direction minimize; set evaluation.noise from the spread of repeats
 - keep a second set of inputs the search never sees, and report its timing under diagnostics.hidden
 - report peak memory under diagnostics if it matters, and bound it with `limits`
-- **A reference row on the leaderboard for:** the original code (`evoloop reference`).
+- Add a row to the leaderboard for the original code, to compare against (`evoloop reference`).
 
-How the adapter reports these: [The project's code](../project-contract.md).
+[Write the evaluator](../evaluator.md) shows how to report these; [Evaluator interface](../project-contract.md) is the reference.
 
 ## Choose something else when
 
@@ -56,7 +55,7 @@ It combines well with [`data-pipeline`](data-pipeline.md), [`bioinformatics-algo
 
 Read the best design's time against the reference row for the original code, and count the designs rejected for a wrong output. Then run the winner on the inputs the search never saw: a gain that does not hold there was fitted to the benchmark.
 
-Where to look: `evoloop leaderboard`, `evoloop show`, and the report ([Records and the study file](../records.md)). To change course while it runs: [Steering a run](../steering.md).
+Where to look: `evoloop leaderboard`, `evoloop show`, and the report ([Files of a run](../records.md)). To change course while it runs: [Watch and steer a run](../steering.md).
 
 ## What the agents are told
 

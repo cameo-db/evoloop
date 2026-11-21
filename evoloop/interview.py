@@ -21,7 +21,7 @@ from . import form, menu
 from .model import catalog
 
 KEEP = "__keep__"       # the answer "leave it at the default"
-# Words in a goal that point to a kind of optimisation, most specific first.
+# Words in a goal that point to a kind of optimization, most specific first.
 SKILL_HINTS = [("model-distillation", r"distil\w*|student|teacher"),
                ("model-ensemble-members", r"ensembl\w*"),
                ("model-size-frontier", r"pareto|trade-?offs?|frontier|range of sizes|across sizes|family of models|at each size"),
@@ -57,8 +57,8 @@ QUESTIONS: List[Dict[str, Any]] = [
      "question": "What kind of search do you want?",
      "why": "It sets the strategy, the schedule, the harness and the search space unless you set them yourself.",
      "choices": _choices(menu.RUN_TYPES)},
-    {"field": "run.skill", "section": "Search", "title": "Kind of optimisation", "kind": "choice",
-     "question": "What kind of optimisation is this? (To combine skills, give their names separated by commas.)",
+    {"field": "run.skill", "section": "Search", "title": "Kind of optimization", "kind": "choice",
+     "question": "What kind of optimization is this? (To combine skills, give their names separated by commas.)",
      "why": "It sets what suits the task (what is open, how designs are selected) and gives the agents guidance for it. "
             "Independent of the kind of search.",
      "choices": _choices(menu.SKILLS), "other": True},
@@ -370,14 +370,14 @@ def infer(folder: str, brief: Dict[str, Any]) -> Dict[str, Any]:
         except OSError:
             pass
     goal = str(stated.get("objective.goal") or "").lower()
-    if goal:      # the kind of optimisation, from the words of the goal
+    if goal:      # the kind of optimization, from the words of the goal
         for name, words in SKILL_HINTS:
             said = re.search(words, goal)
             if said:
                 found["run.skill"] = (name, "the goal says \"%s\"" % said.group(0))
                 break
         else:
-            found["run.skill"] = ("model-performance", "the goal names no other kind of optimisation than a better score")
+            found["run.skill"] = ("model-performance", "the goal names no other kind of optimization than a better score")
     if stated.get("run.type") == "settings_only":
         found["run.skill"] = ("settings-tuning", "a search over settings alone: the estimator in code makes the moves, at no agent cost")
     budget = stated.get("budget.evaluations")

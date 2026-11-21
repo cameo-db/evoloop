@@ -25,6 +25,27 @@ evoloop report demo --name first
     The package named `evoloop` on PyPI is a different project. Install from this repository, as above.
     NumPy is needed by the example's own training code; evoloop itself needs only PyYAML.
 
+## What the commands did
+
+`evoloop plan demo` printed what the search was about to do. It begins:
+
+```
+At a glance
+  Optimizing:      explore_then_exploit, no skill
+  Designs:         written by an agent; settings moves by an agent
+  Agents:          the stub backend (scripted, no cost); roles: writer (about 44 calls), analyst (about 5 calls), ...
+  Selection:       lineage
+  Runs on:         this machine, 3 at once
+  Early stopping:  none
+  Budget:          40 evaluations of 300 steps; agents capped at $0
+```
+
+`evoloop brief demo --confirm "Your Name"` recorded that you agreed to that plan. A search will not start
+without it, and the name goes into the search's records. With real agents this is the step where you
+agree to the spend.
+
+`evoloop run demo --name first` ran the search and gave it the name `first`.
+
 ## What success looks like
 
 `evoloop run` returns when the budget of 40 evaluations is spent:
@@ -164,6 +185,10 @@ Then `evoloop leaderboard demo --name first` shows the designs, best first (the 
 </svg>
 </div>
 
+Reading the columns: `model` is the design (`C32`); `lineage` is its line of descent (`L9`: the ninth
+family started); `family` is the label its writer gave that kind of design; `state` says whether it trained
+to the end; `length` is the training length, here in steps; `fits` is how many times it was trained.
+
 The starting design is a linear classifier, which cannot separate spirals: it scores 0.50, chance. Forty
 models later the selected design scores 0.97 on validation data and 0.96 on the held-out test set,
 which the search never sees. About four labels in a hundred are wrong on purpose, so nothing can score
@@ -247,7 +272,7 @@ The run's folder is `demo/runs/first/`.
 | `runs.jsonl`, `models.jsonl`, `recipes.jsonl` | every training run, architecture and recipe |
 | `ledger.jsonl` | every change to the run and every note, with who made it |
 | `calls.jsonl`, `replies/` | every agent call: what it was shown, what it answered, what it cost |
-| `study.json` | the run as one JSON file in the CAMEO entry format ([saving and depositing it](records.md#saving-the-study-as-json-and-depositing-it-in-cameo)) |
+| `study.json` | the run as one JSON file in the CAMEO entry format ([saving and depositing it](study.md)) |
 
 ## Try steering it
 
@@ -264,14 +289,15 @@ evoloop status demo --name second
 
 The report's *Steering ledger* section shows each entry with the number of evaluations at which it was
 applied. Shortening the fits changes what a score means, so the second change starts a new comparison
-period: the leaders are fitted again at the new length, and earlier scores stop deciding selection.
+period: the leaders are trained again at the new length, and earlier scores stop deciding selection.
 
-The example's models train in a fraction of a second, so a run may end before a request arrives. A
+Each design here trains in a fraction of a second, so the search may finish before your command arrives. If it
+does, the request waits: run `evoloop run demo --name second` again and it is applied then. A
 request made to a run that has ended waits, and is applied when the run is continued with the same
 `evoloop run` command.
 
 ## Next
 
 - [Use your own project](setting-up.md): mark the code, write the evaluator, answer the questions.
-- [What do you want to optimize?](guides/index.md): a starting configuration for each goal.
+- [What do you want to optimize?](which-search.md): a starting configuration for each goal.
 - Before spending on real agents, dry-run your project with `agents.backend: stub`.

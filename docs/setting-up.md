@@ -1,50 +1,45 @@
-# Setting up a search
+# Set up your search
+
+Five steps take a project to a running search. A coding agent can do most of them with you; the steps
+are the same either way, and this page is also how to check what an agent did.
 
 ```mermaid
 flowchart LR
-    A["<b>1. Mark the code</b><br>what may change"] --> B["<b>2. Write the evaluator</b><br>how one design is scored"]
-    B --> C["<b>3. Answer the questions</b><br>goal, run type, budget"]
-    C --> D["<b>4. Read the plan</b><br>what will run, warnings, cost"]
-    D --> E{"<b>5. Confirm</b><br>by name"}
-    E --> F["<b>6. Run</b>"]
-    F --> G["<b>7. Read the results</b>"]
-    F -. "steer, chat, stop" .-> F
+    A["<b>1</b> Mark what<br>may change"] --> B["<b>2</b> Write the<br>evaluator"]
+    B --> C["<b>3</b> Answer the<br>questions"]
+    C --> D["<b>4</b> Read the plan,<br>confirm"]
+    D --> E["<b>5</b> Dry-run,<br>then run"]
 ```
 
-## With an agent, or by hand
+## With an agent
 
-You do not have to do the steps below yourself. evoloop is built to be set up **with a coding agent**: open the
-repository in Claude Code (or another agent that can read files and run commands), point it at your project, and
-ask it to set up a search. It follows [AGENTS.md](https://github.com/cameo-db/evoloop/blob/main/AGENTS.md): it marks
-the blocks, writes the evaluator, proposes an answer to each question with its reason, and asks you only what it
-cannot work out. You confirm the plan by name before anything runs.
+Open the evoloop repository in Claude Code, or another agent that can read files and run commands, point
+it at your project, and ask it to set up a search. It follows
+[AGENTS.md](https://github.com/cameo-db/evoloop/blob/main/AGENTS.md): it proposes which code to mark,
+writes the evaluator, suggests an answer to each question with its reason, and asks you only what it
+cannot work out.
 
-Five decisions are yours, whoever does the typing: **what to optimize**, **what may change**, **how a design is
-scored** (and how noisy that score is), **how much to spend**, and any **hard limits**. Everything else has a default
-that follows from those; leave it alone until a result gives you a reason. This page is the same procedure written
-out, for doing it by hand or for checking what the agent did.
+Five decisions are yours whoever does the typing: what to optimize, what may change, how a design is
+scored and how noisy that score is, how much to spend, and any hard limits. The rest have defaults.
 
-Not sure which kind of search you need? Start from [what you want to optimize](guides/index.md): each
-goal has a starting configuration you can paste into the brief.
+## Before you start
 
 ```
 evoloop init mysearch --source path/to/project
 ```
 
-makes a search folder:
+copies your project into a search folder. Your original is never touched.
 
-| In the folder | What it is |
+| In `mysearch/` | What it is |
 |---|---|
-| `brief.yaml` | the form that sets up the search |
+| `base/` | the copy of your code, where you mark what may change |
+| `adapter/run.py` | the evaluator: trains one design and writes its score |
 | `task.md` | what the agents are told about the problem |
-| `base/` | a snapshot of your code, where you mark what may change |
-| `adapter/run.py` | how one design is trained and scored |
+| `brief.yaml` | the answers that set up the search |
 
-Your original code is never touched: the search works on the snapshot.
+## 1. Mark what may change
 
-## 1. Mark the code
-
-In `base/`, put comment lines around what may change, and say what part of the system each block is:
+In `base/`, put a pair of comment lines around each part that may change:
 
 ```python
 # EVOLVE-BLOCK-START name=trunk kind=structure role=trunk
@@ -57,159 +52,119 @@ PARAMS = {"lr": 3e-4, "batch_size": 128}
 # EVOLVE-BLOCK-END
 ```
 
-- `kind=structure` is code an agent rewrites.
-- `kind=params` is exactly one assignment of a dict of numbers, booleans or strings.
-- `role` is your own word for the part: `stem`, `trunk`, `heads`, `loss`, `optimizer`,
-  `augmentation`. It defaults to `model` for structure and `settings` for params.
+A `structure` block is code an agent rewrites. A `params` block is one dictionary of settings, which
+code can also change. The `role` is your own word for the part: `trunk`, `head`, `loss`, `optimizer`,
+`augmentation`.
 
-Mark the code once. The brief then says which roles are open in a given run (`space.preset`,
-`space.roles`), so one marked-up project serves a settings search, a search over one module, and an
-open architecture search. Blocks whose role is in `space.recipe_roles` make up the training recipe;
-the other structure blocks make up the model.
+Mark generously, once. The brief then says which roles are open in a given search, so the same
+marked-up project serves a search over settings only, over one module, or over the whole architecture.
+Marking the trunk and the head as separate blocks also lets a crossover combine the trunk of one design
+with the head of another.
 
-Several blocks by role are worth the trouble: the `block_swap` crossover can then move the trunk of one
-design onto the heads of another without an agent.
+Everything outside the markers is frozen. evoloop checks it on every start and will not continue if it
+changed.
 
-Everything outside the markers is frozen and checked by hash. A run refuses to go on if `base/` or
-`adapter/` changed after it started.
+## 2. Write the evaluator
 
-## 2. Write `task.md` and the adapter
+`adapter/run.py` trains one design and writes `result.json` with its score. `evoloop init` writes a
+template; [Write the evaluator](evaluator.md) has a complete example and how to test it by hand.
 
-`task.md` says what the problem is, what each block is for, and what a good solution looks like.
-Agents see it, the open blocks and the visible results, and nothing else of your code.
+Then write `task.md`: a page telling the agents what the problem is, what the data looks like, what the
+score means, and anything you already know works or does not. They read it on every call and see
+nothing else of your project except the marked blocks.
 
-`adapter/run.py` trains one design and writes its result. See [The project's code](project-contract.md).
-
-## 3. Fill in the brief
-
-One list of questions, and four ways to answer it. All of them ask the same questions in the same
-order, by section, and say where you are: "question 6 of 17, Budget".
-
-| Way | Command | For |
-|---|---|---|
-| In the terminal | `evoloop setup mysearch` | one question at a time; numbered choices; Enter accepts what is shown; `b` goes back; `q` saves and stops |
-| In a browser | `evoloop form mysearch` | writes `setup_form.html`, a self-contained page with no server; it ends with an answers file |
-| In a chat with an agent | `evoloop brief mysearch --next` | the next question as JSON; the agent asks it, one at a time, with its choices |
-| By hand | edit `brief.yaml` | every field is in [Fields of the brief](fields.md) |
-
-**The form.** Open `setup_form.html` in any browser; if the search folder is on a server, copy the file
-to your own machine first. It shows one section at a time with a count of what is done, and the last
-step gives you an answers file. Save that as `answers.json` and give its path:
+## 3. Answer the questions
 
 ```
-evoloop brief mysearch --import mysearch/answers.json
+evoloop setup mysearch
 ```
 
-Nothing is sent anywhere by the page; a draft is kept only in that browser.
+asks one question at a time, with choices, a suggested answer where there is evidence for one, and where
+you are in the list. Up to twenty questions; most have a default you can accept with Enter. Ten have no
+default and must be answered:
 
-**Suggestions.** You are not asked cold. Before the questions, the tool proposes a best guess where it
-has evidence, each with its reason, and shows it preselected:
-
-- from the machine: Slurm or not, how many GPUs, which agent login is present;
-- from the folder: what the marked code allows to change, a direction of the score stated in `task.md`;
-- from your answers so far: the kind of search for the size of the budget, a spend cap from the estimate.
-
-An agent helping you does the same from what it has read (`evoloop brief mysearch --suggest
-FIELD=VALUE --because "..."`). A suggestion is never an answer by itself: it becomes one when you leave
-it or pick it, and you can always choose something else. Nothing is suggested where there is no
-evidence (the goal, the length of a run, the noise of the score); those are asked plainly.
-
-**What is asked.** Up to twenty questions; 14 to 19 usually apply (the model is not asked for
-with the stub, the Slurm partition not on one machine). Ten have no default and need an answer:
-
-| Field | Question |
+| Question | What to know |
 |---|---|
-| `objective.goal` | What is being improved, and why? |
-| `objective.direction` | Is a higher score better, or a lower one? |
-| `budget.evaluations` | How many models may be trained in all? |
-| `run.type` | What kind of search? |
-| `evaluation.allowance` | How long is one training run? |
-| `evaluation.noise` | How much does the score differ between two fits of the same model? |
-| `baseline.mode` | Train the baseline, import a finished fit, or skip it? |
-| `compute.gpus` | How many models may train at once? |
-| `agents.backend` | Which agent backend? |
-| `budget.model_dollars` | What is the most the agents may cost? (not asked with the stub) |
+| What is being improved, and why? | one or two sentences; every agent reads them |
+| Is a higher score better, or a lower one? | |
+| What kind of search? | [Which search should I run?](which-search.md) |
+| How many designs may be trained in all? | the budget, in evaluations |
+| How long is one training run? | in your evaluator's own unit: epochs, steps |
+| How much does the score vary between two runs of the same design? | [Measure your noise](noise.md) |
+| Train the baseline, import its score, or skip it? | training it inside the search is the usual choice |
+| How many designs may train at once? | |
+| Which agent backend? | the Anthropic API, Claude Code, or scripted proposals for a dry run |
+| What is the most the agents may cost? | a cap, in dollars |
 
-The others (what may change, agentic or harnessed, the model, the effort, the reviews) have defaults
-you can leave. Every other field of the brief takes its value from the first of these that gives one:
+There are other ways to answer the same questions. `evoloop form mysearch` writes a self-contained web
+page to fill in; save the answers file it gives you and run `evoloop brief mysearch --import
+PATH/TO/answers.json`. Or edit `brief.yaml` directly: [Brief fields](fields.md) lists every field.
 
-1. your changes during the run
-2. the brief (what you set)
-3. the skill
-4. the level of autonomy
-5. the run type
-6. the guidance for the size of the budget
-7. the default
-
-[Fields of the brief](fields.md) lists them all. `evoloop menu` prints the choices and the presets.
-
-With `run.type: custom`, describe the search in `run.description`; where you set nothing, the guidance
-and the defaults apply, and your description is kept as the first note the agents read.
-**The kind of optimisation.** Beside the kind of search, setup asks what kind of problem this is (`run.skill`):
-raising a score, distilling a student, tuning settings, making a model or an algorithm smaller or faster, or improving an
-interpretable model. It suggests one from the words of your goal, and you can combine several. When you confirm,
-the skills you chose are copied into the search's `skills/` folder, where you can edit them. See [Skills](skills.md)
-and the [skill library](skill-library.md).
-
-
-## 4. Read the plan and confirm
+## 4. Read the plan, then confirm
 
 ```
 evoloop plan mysearch
 ```
 
-The plan leads with what the search will actually do, so that a preset cannot quietly change it (abridged here):
+The plan opens with what the search will actually do. For example:
 
 ```
 At a glance
-  Optimising:      settings_only, skill settings-tuning
-  Designs:         settings only; every move is made by a Bayesian estimator in code (tpe; no agent call)
-  Agents:          none: this search calls no agent
-  Selection:       greedy
+  Optimizing:      explore_then_exploit, skill model-performance
+  Designs:         written by an agent; settings moves by an agent
+  Agents:          writer (about 109 calls), analyst (about 13 calls), strategist (about 10 calls)
+  Model:           claude-opus-5-5, effort medium
+  Selection:       lineage
+  Runs on:         Slurm, one job per design, partition gpu, 8 at once (site file: our-cluster)
   Early stopping:  new designs screened at 50%, the best 50% go on
-  Budget:          60 evaluations of 10 steps; agents capped at $20
-  Kept:            variation.settings_by stays 'tpe' as the skill settings-tuning sets it; the autonomy guided asks for 'agent'
+  Budget:          100 evaluations of 30 epochs; agents capped at $40
 ```
 
-- **Designs** and **Agents** say who writes the designs and which agent roles will be called, with about how
-  many calls each.
-- **Kept** and **Changed** lines say where one of your choices overrode another: a skill's setting that a level
-  of autonomy asked to change (the skill's stands), or one you set yourself (yours stands).
-- Then come the warnings about choices that work against each other, the estimate of what the agents will cost,
-  and every setting grouped by where its value came from. A warning never stops a run.
+Then come warnings about choices that work against each other, an estimate of what the agents will
+cost, and every setting with where its value came from. Read the first block and the warnings; the long
+list is for looking things up.
 
+When it says what you want:
 
 ```
 evoloop brief mysearch --confirm "Your Name"
 ```
 
-records your agreement and a digest of what you agreed to. A run does not start on a brief that was
-changed after it was confirmed.
-
-## Guidance by size of budget
-
-`evoloop guide 100` prints it for one size; the [menu](menu.md#budget-guidance) has the whole table.
-
-| | about 30 | about 100 | about 300 | 1,000 or more |
-|---|---|---|---|---|
-| Suggested strategy | greedy | lineage | lineage | archive |
-| Lineages kept | 3 | 6 | 10 | (cells) |
-| Runs per new lineage | 1 | 2 | 2 | 2 |
-| Crossover kinds | graft | graft, hybrid | all three | all three |
-| Novel share of new designs | 0 | 0.15 | 0.33 | 0.33 |
-| Proposals per slot | 4 | 3 | 2 | 1 |
-| Reviews | end | halfway | quarterly | on demand |
-
-A named run type keeps its own strategy; when the guidance suggests another, the plan says so. These
-are rules of thumb, not measurements.
+Nothing runs before this. Your name and a digest of what you agreed to are recorded, and a brief that
+is edited afterwards has to be confirmed again.
 
 ## 5. Dry-run, then run
 
-Set `agents.backend: stub` and run a few models first: it shows that the adapter, the markers and the
-job settings work before any agent is paid. Then:
+First prove the plumbing with scripted proposals and a tiny budget, which costs nothing:
+
+```
+evoloop brief mysearch --answer agents.backend=stub --answer budget.evaluations=4 --confirm "Your Name"
+evoloop run mysearch --name dry
+```
+
+If four designs train and a report appears, set the real backend and budget, confirm again, and run:
 
 ```
 evoloop run mysearch --name r1
 ```
 
-The same command continues a run that was stopped.
+On a cluster, each design is its own job, and the search itself can run as a small job too.
+[Run on a cluster](servers.md) covers describing your machine once so that every search uses it.
+
+## Where a setting gets its value
+
+You answer a few questions and evoloop fills in the rest, from the first of these that has a value:
+
+1. a change you made while the search was running;
+2. the brief;
+3. the skill;
+4. the level of autonomy;
+5. the run type;
+6. the guidance for the size of your budget;
+7. the default.
+
+`evoloop plan` shows which of these each value came from.
+
+## Next
+
+[Watch and steer a run](steering.md) once it is going.

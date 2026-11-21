@@ -1,4 +1,4 @@
-# How it compares with established methods
+# Compared with FunSearch and AlphaEvolve
 
 evoloop is put together from mechanisms that others introduced and tested. This page says which, how
 each appears here, and where evoloop differs or falls short. Every mechanism below is an option; the
@@ -63,35 +63,25 @@ flowchart LR
 | NEAT | new species protected while young | `strategy.mechanism: lineage` | families of designs, not genomes; the default |
 | Successive halving, ASHA | weak runs stopped by rank | `evaluation.ladder` | within one job, charged by the share of the run used |
 | TPE (Optuna, Hyperopt) | Bayesian choice of settings | `variation.settings_by: tpe` | a small implementation; each setting modelled alone |
-| Network morphism, weight sharing | a child starts from its parent's weights | `evaluation.inherit_weights` | the adapter decides what to load |
+| Network morphism, weight sharing | a child starts from its parent's weights | `evaluation.inherit_weights` | the evaluator decides what to load |
 
 ## What evoloop adds
 
-These are not in the methods above, and are the reason for the package.
+Four things are not in the methods above.
 
-- **Steering without a restart.** Most settings that do not define the problem can be changed while a
-  search runs, through a ledger that records who changed what and when. A strategy keeps no state, so
-  even the strategy can change. See [Steering a run](steering.md).
-- **Changes that alter what a score means.** Lengthening the training run, changing the data fraction or
-  the adapter starts a new *period*: the leaders are fitted again and earlier scores stop deciding
-  selection, so old and new scores are never compared as if they were alike.
-- **Noise treated as a fact.** You give the noise floor; a difference below it is no difference in
-  selection, in the trade-off front, in a lesson's status, and in what counts as a gain. The leader can
-  be fitted again on a new seed at intervals.
-- **Explicit exploration and exploitation.** The schedule sets the shares of new designs, crossover and
-  local moves by phase of the budget, kept by counting, and a strategist agent may shift them within
-  bounds you set. See [the strategist](strategist.md).
-- **Skills.** What kind of optimisation a search is (a better score, a distilled student, tuned
-  settings, a smaller model, an interpretable model) is chosen apart from how to search. See
-  [Skills](skills.md).
-- **An agent you can talk to, or none.** The course of a search is run by code, deterministically, or by
-  an agent that answers you and acts within the same bounds.
-- **An audit of the agents.** Every call is recorded with what the agent was shown, what it forecast and
-  what happened; a scorecard and reviews say whether each role is earning its cost.
-- **A budget in two currencies.** Evaluations and model dollars are both capped, with the plan's
-  estimate of the agents' cost shown before you confirm.
-- **A study file.** A finished search is written out in the CAMEO entry format, with every model, recipe
-  and run, so it can be deposited and compared.
+You can change a search while it runs. Most settings can be changed without a restart, each change is
+recorded with who made it, and because a strategy keeps no state, even the strategy can change
+([Watch and steer a run](steering.md)).
+
+Scores are only compared when they mean the same thing. You state how noisy your score is, and a
+difference below that counts as none. Lengthening training starts a new comparison period, so old and
+new scores are never ranked together ([When two scores can be compared](comparable.md)).
+
+What kind of problem a search is, is chosen apart from how to search. A skill carries the settings and
+the advice for one kind of goal, and can be edited ([Which search should I run?](which-search.md)).
+
+The agents are audited. Every call is recorded with what the agent forecast and what happened, and a
+scorecard says whether each role earns its cost ([Audit the agents](auditing.md)).
 
 ## Where it falls short of them
 

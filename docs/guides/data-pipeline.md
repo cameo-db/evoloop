@@ -18,20 +18,19 @@ objective:
   direction: minimize
 ```
 
-!!! note "A starting point"
-    These settings are a reasoned starting point. They have not been measured against alternatives; see [Status and limits](../status.md). The numbers in the example (the budget, any limits or ranges) are placeholders for yours.
+The budget, and any limits or ranges, are placeholders: put in your own.
 
 ## Why this set-up
 
-In a pipeline the cost is usually in moving data, so the writers are told to do less and move data fewer times before optimising computation. The output is compared with a reference, and a design whose output differs is rejected.
+In a pipeline the cost is usually in moving data, so the writers are told to do less and move data fewer times before optimizing computation. The output is compared with a reference, and a design whose output differs is rejected.
 
 The skill sets these for you (anything you set in the brief wins):
 
 | Setting | Value |
 |---|---|
-| [`evaluation.screen_keep`](../fields.md) | `1.0` |
-| [`schedule.local_mix`](../fields.md) | `{ablation: 0.1, edit: 0.7, settings: 0.2}` |
-| [`schedule.novelty`](../fields.md) | `0.3` |
+| [`evaluation.screen_keep`](../fields.md#evaluation-screen_keep) | `1.0` |
+| [`schedule.local_mix`](../fields.md#schedule-local_mix) | `{ablation: 0.1, edit: 0.7, settings: 0.2}` |
+| [`schedule.novelty`](../fields.md#schedule-novelty) | `0.3` |
 
 ## What your evaluator must report
 
@@ -39,9 +38,9 @@ The skill sets these for you (anything you set in the brief wins):
 - report the cost as the score with objective.direction minimize: wall time as a median of repeats, or a figure that combines time and memory if both matter
 - report time per step and peak memory under diagnostics, so that the agents can see where the cost is
 - use sample data large enough that input and output costs resemble the real run, and keep a second sample the search never sees under diagnostics.hidden
-- **A reference row on the leaderboard for:** the original pipeline (`evoloop reference`).
+- Add a row to the leaderboard for the original pipeline, to compare against (`evoloop reference`).
 
-How the adapter reports these: [The project's code](../project-contract.md).
+[Write the evaluator](../evaluator.md) shows how to report these; [Evaluator interface](../project-contract.md) is the reference.
 
 ## Choose something else when
 
@@ -55,7 +54,7 @@ It combines well with [`algorithm-runtime`](algorithm-runtime.md) (`run.skill: [
 
 Read the best design's cost against the reference row, and the time per step it reports: that shows where the cost went. Check how the gain grows with input size before relying on it at full scale.
 
-Where to look: `evoloop leaderboard`, `evoloop show`, and the report ([Records and the study file](../records.md)). To change course while it runs: [Steering a run](../steering.md).
+Where to look: `evoloop leaderboard`, `evoloop show`, and the report ([Files of a run](../records.md)). To change course while it runs: [Watch and steer a run](../steering.md).
 
 ## What the agents are told
 

@@ -1,6 +1,6 @@
 # Skill library
 
-Every skill that comes with evoloop. This page is written from the skill files themselves (`evoloop skills --markdown`). Each is a template: a search copies the ones it names into its own `skills/` folder, and that copy is yours to edit. [Skills](skills.md) explains how they work and how to write one.
+Every skill that comes with evoloop. This page is written from the skill files themselves (`evoloop skills --markdown`). Each is a template: a search copies the ones it names into its own `skills/` folder, and that copy is yours to edit. [Edit or write a skill](skills.md) explains how, and [Skill file format](skill-format.md) is the reference for the file.
 
 | Skill | Domain | For |
 |---|---|---|
@@ -30,18 +30,12 @@ Every skill that comes with evoloop. This page is written from the skill files t
 | Tags | accuracy, performance, architecture, general |
 | Sets | nothing: guidance only |
 | Guidance for | all, analyst, strategist, writer |
-| Diagnoses | 5 |
-| Needs from the adapter | nothing special |
+| Diagnoses | 5, in the guide |
+| Needs from the evaluator | nothing special |
 | Goes well with | `model-training-recipe` |
 | Not with | `settings-tuning` |
 
-| If the results show | Then |
-|---|---|
-| training and validation scores are both poor and still improving at the end of the run | the run is too short or the optimisation is slow: fix the schedule or normalisation before judging the architecture |
-| training score is good, validation score is clearly worse | regularize, augment, or reduce capacity; do not add capacity |
-| both scores stop improving early and stay poor | the model lacks capacity or a mechanism: widen, deepen, or add the missing range or interaction |
-| the same design gives very different scores on a re-check | the gain is within the noise: treat it as no gain, and prefer changes that reduce variance |
-| many designs fail the quick check or crash | the changes are too large for the frozen code around them: make smaller edits and keep shapes compatible |
+[The guide for this goal](guides/model-performance.md) has the starting brief, the advice the agents are given and the diagnoses in full.
 
 ### model-distillation
 
@@ -54,18 +48,12 @@ Every skill that comes with evoloop. This page is written from the skill files t
 | Tags | distillation, student, teacher, compression, ensemble, augmentation |
 | Sets | `report.columns`, `space.preset`, `variation.approach_seeds`, `variation.approaches` |
 | Guidance for | all, analyst, strategist, writer |
-| Diagnoses | 5 |
-| Needs from the adapter | the training script must produce the teacher's outputs (or read stored ones) and train the student against them; the loss and augmentation blocks should be marked as open recipe blocks; to rank on speed or size, report `parameters` and `inference_speed.examples_per_s` in result.json; then `strategy.mechanism: pareto` or `limits` can use them; if the teacher is an ensemble, add a reference row for the ensemble and one for its best single member |
+| Diagnoses | 5, in the guide |
+| Needs from the evaluator | the training script must produce the teacher's outputs (or read stored ones) and train the student against them; the loss and augmentation blocks should be marked as open recipe blocks; to rank on speed or size, report `parameters` and `inference_speed.examples_per_s` in result.json; then `strategy.mechanism: pareto` or `limits` can use them; if the teacher is an ensemble, add a reference row for the ensemble and one for its best single member |
 | Goes well with | `model-size-frontier`, `model-efficiency` |
 | Not with | `settings-tuning` |
 
-| If the results show | Then |
-|---|---|
-| the student does not fit the teacher's outputs even on training inputs | the student is too small or trains too briefly: train longer first, then widen or deepen |
-| the student fits the teacher on training inputs but not on held-out ones | add teacher-labelled augmented or synthetic inputs, or regularize; do not enlarge the student |
-| the student matches the same student trained from scratch on measured targets | the teacher is adding nothing: raise the weight of the teacher's targets, or check that the teacher's outputs are used at all |
-| the student beats the teacher on validation data | check for leakage between the teacher's training data and the validation set before believing it |
-| stronger augmentation lowers the score | check that the augmented inputs are labelled by the teacher and not paired with the measured targets |
+[The guide for this goal](guides/model-distillation.md) has the starting brief, the advice the agents are given and the diagnoses in full.
 
 ### model-efficiency
 
@@ -78,17 +66,12 @@ Every skill that comes with evoloop. This page is written from the skill files t
 | Tags | efficiency, compression, pruning, size, speed, pareto, ablation |
 | Sets | `report.columns`, `schedule.local_mix`, `strategy.mechanism`, `strategy.second_direction`, `strategy.second_metric` |
 | Guidance for | all, analyst, strategist, writer |
-| Diagnoses | 4 |
-| Needs from the adapter | report `parameters` in result.json (and `inference_speed.examples_per_s` to rank on speed: then set strategy.second_metric to examples_per_s and strategy.second_direction to maximize); set `limits` for the largest size or lowest speed you accept, and put those figures in the first progress line so that a design outside them costs seconds; add a reference row for the model you are trying to shrink |
+| Diagnoses | 4, in the guide |
+| Needs from the evaluator | report `parameters` in result.json (and `inference_speed.examples_per_s` to rank on speed: then set strategy.second_metric to examples_per_s and strategy.second_direction to maximize); set `limits` for the largest size or lowest speed you accept, and put those figures in the first progress line so that a design outside them costs seconds; add a reference row for the model you are trying to shrink |
 | Goes well with | `model-distillation` |
 | Not with | `settings-tuning`, `model-size-frontier` |
 
-| If the results show | Then |
-|---|---|
-| an ablation costs less than the noise floor | the component is dead weight: keep it out, and try removing its neighbours |
-| parameter count fell but speed did not | the time is not where the parameters are: cut resolution, sequence length or depth instead of width |
-| every reduction costs score, however small | the model is already tight: change the kind of layer (separable, bottleneck, shared weights) instead of shrinking the same ones |
-| a much smaller design scores the same as the reference | the reference was over-sized for the data: keep going down until the score moves |
+[The guide for this goal](guides/model-efficiency.md) has the starting brief, the advice the agents are given and the diagnoses in full.
 
 ### model-ensemble-members
 
@@ -101,17 +84,12 @@ Every skill that comes with evoloop. This page is written from the skill files t
 | Tags | ensemble, diversity, behaviour, errors, averaging, teacher |
 | Sets | `schedule.novelty`, `schedule.novelty_measure`, `schedule.phases`, `strategy.descriptors`, `strategy.mechanism` |
 | Guidance for | all, analyst, strategist, writer |
-| Diagnoses | 4 |
-| Needs from the adapter | report `signature` in result.json: a list of numbers saying where the model's errors fall (per class, per range of the target, or per held-out example); the groups are made from it; after the search, score the average of the best design of each group yourself; evoloop does not train or score ensembles |
+| Diagnoses | 4, in the guide |
+| Needs from the evaluator | report `signature` in result.json: a list of numbers saying where the model's errors fall (per class, per range of the target, or per held-out example); the groups are made from it; after the search, score the average of the best design of each group yourself; evoloop does not train or score ensembles |
 | Goes well with | `model-distillation` |
 | Not with | `settings-tuning`, `model-efficiency` |
 
-| If the results show | Then |
-|---|---|
-| new designs keep falling in the same behaviour group as the leader | the changes are too small to change behaviour: change the inductive bias or the view of the data |
-| a design is in a group of its own but scores far below the others | improve it within its lineage before discarding it; a member too weak drags an average down |
-| all designs fail on the same examples | those examples may be mislabelled or outside what the data can teach: no member will fix them |
-| there are many groups with one design each | the similarity threshold is too strict for this task's noise: lower strategy.behaviour_similarity |
+[The guide for this goal](guides/model-ensemble-members.md) has the starting brief, the advice the agents are given and the diagnoses in full.
 
 ### model-finetuning
 
@@ -124,17 +102,12 @@ Every skill that comes with evoloop. This page is written from the skill files t
 | Tags | finetuning, pretrained, transfer, adapters, foundation model, freezing |
 | Sets | `schedule.local_mix`, `schedule.novelty` |
 | Guidance for | all, analyst, strategist, writer |
-| Diagnoses | 4 |
-| Needs from the adapter | load the pretrained weights from a fixed path outside base/ (weights are not copied per design); mark as open the head, the choice of what is frozen, and the optimizer settings; leave the backbone's definition closed; add a reference row for the frozen backbone with a linear head |
+| Diagnoses | 4, in the guide |
+| Needs from the evaluator | load the pretrained weights from a fixed path outside base/ (weights are not copied per design); mark as open the head, the choice of what is frozen, and the optimizer settings; leave the backbone's definition closed; add a reference row for the frozen backbone with a linear head |
 | Goes well with | `model-training-recipe` |
 | Not with | `settings-tuning` |
 
-| If the results show | Then |
-|---|---|
-| the score falls below the frozen-backbone baseline when layers are unfrozen | the pretrained weights are being destroyed: lower the backbone's learning rate, add warm-up, or unfreeze fewer layers |
-| the training score climbs and the validation score peaks in the first epochs | it is overfitting: train fewer parameters (adapters, last layers), regularize, or stop earlier |
-| nothing beats the linear head on the frozen backbone | read from an earlier layer or change the pooling before unfreezing anything |
-| results differ widely between seeds | the dataset is small for the number of trained parameters: train fewer, and average seeds before comparing |
+[The guide for this goal](guides/model-finetuning.md) has the starting brief, the advice the agents are given and the diagnoses in full.
 
 ### model-mechanistic
 
@@ -147,18 +120,12 @@ Every skill that comes with evoloop. This page is written from the skill files t
 | Tags | interpretable, mechanistic, biophysical, motifs, interactions, constraints |
 | Sets | `schedule.local_mix`, `schedule.novelty`, `space.must_keep`, `space.preset` |
 | Guidance for | all, analyst, strategist, writer |
-| Diagnoses | 5 |
-| Needs from the adapter | optional, and worth doing: report a figure of how well the parts match what is known (the share of filters matching known motifs, recovered interactions, parameters within physical ranges) under diagnostics; it can then be a leaderboard column, a speciality metric, or the second figure of the pareto strategy; report `signature` (where the errors fall) so that designs with the same failure are told apart from ones that fail differently; mark as open only the blocks that define the interpretable parts and their combination; leave the data handling and the evaluation frozen |
+| Diagnoses | 5, in the guide |
+| Needs from the evaluator | optional, and worth doing: report a figure of how well the parts match what is known (the share of filters matching known motifs, recovered interactions, parameters within physical ranges) under diagnostics; it can then be a leaderboard column, a speciality metric, or the second figure of the pareto strategy; report `signature` (where the errors fall) so that designs with the same failure are told apart from ones that fail differently; mark as open only the blocks that define the interpretable parts and their combination; leave the data handling and the evaluation frozen |
 | Goes well with | any |
 | Not with | `settings-tuning` |
 
-| If the results show | Then |
-|---|---|
-| two parts have learned the same thing | remove one, or add a term that makes them compete or differ |
-| a part has learned nothing (its parameters stay near their start, or removing it costs nothing) | remove it, or change its initialisation if the mechanism is known to matter |
-| the score depends strongly on the seed | the fit has poor local optima: improve the initialisation or fit in stages before changing the model |
-| errors of every design fall on the same examples | a mechanism is missing: add the term those examples call for, with a stated meaning |
-| a design gains by loosening a constraint (sign, non-negativity, a fixed scale) | do not keep it: the parameters are no longer identifiable, so the gain is not a readable one |
+[The guide for this goal](guides/model-mechanistic.md) has the starting brief, the advice the agents are given and the diagnoses in full.
 
 ### model-size-frontier
 
@@ -171,17 +138,12 @@ Every skill that comes with evoloop. This page is written from the skill files t
 | Tags | pareto, frontier, trade-off, size, speed, family, scaling, coverage |
 | Sets | `report.columns`, `schedule.novelty`, `schedule.phases`, `strategy.descriptors`, `strategy.mechanism` |
 | Guidance for | all, analyst, strategist, writer |
-| Diagnoses | 4 |
-| Needs from the adapter | report `parameters` in result.json for every design; the bands are made from it; to band by speed instead, report `inference_speed.examples_per_s` and set strategy.descriptors to the name of that metric under diagnostics; set `limits` for the smallest and largest size worth having, so that designs outside the range are not trained |
+| Diagnoses | 4, in the guide |
+| Needs from the evaluator | report `parameters` in result.json for every design; the bands are made from it; to band by speed instead, report `inference_speed.examples_per_s` and set strategy.descriptors to the name of that metric under diagnostics; set `limits` for the smallest and largest size worth having, so that designs outside the range are not trained |
 | Goes well with | `model-distillation` |
 | Not with | `settings-tuning`, `model-efficiency` |
 
-| If the results show | Then |
-|---|---|
-| a band holds no design, or only one | aim new designs at it: scale the nearest good design up or down as a whole |
-| a larger band's best design scores no better than the band below it | the larger designs are wasting capacity: move the smaller band's best design up by scaling it, and compare |
-| the smallest band's designs all fail or score near chance | that size is below what this approach can do: change the kind of layer, or accept the band above as the floor |
-| the curve is flat across the top bands | the data or the recipe is the limit, not size: stop adding large designs and spend the budget lower down |
+[The guide for this goal](guides/model-size-frontier.md) has the starting brief, the advice the agents are given and the diagnoses in full.
 
 ### model-training-recipe
 
@@ -194,18 +156,12 @@ Every skill that comes with evoloop. This page is written from the skill files t
 | Tags | recipe, training, loss, optimizer, schedule, regularization, augmentation |
 | Sets | `schedule.local_mix`, `space.preset`, `space.roles` |
 | Guidance for | all, analyst, strategist, writer |
-| Diagnoses | 5 |
-| Needs from the adapter | mark the loss, optimizer, schedule and augmentation as blocks with those roles; the model blocks stay closed; report the training score beside the validation score under diagnostics, so that fitting and generalising can be told apart; report `best_epoch` and `epochs_run` in result.json |
+| Diagnoses | 5, in the guide |
+| Needs from the evaluator | mark the loss, optimizer, schedule and augmentation as blocks with those roles; the model blocks stay closed; report the training score beside the validation score under diagnostics, so that fitting and generalising can be told apart; report `best_epoch` and `epochs_run` in result.json |
 | Goes well with | `model-performance`, `model-finetuning` |
 | Not with | `settings-tuning` |
 
-| If the results show | Then |
-|---|---|
-| training is unstable or diverges after a recipe change | lower the peak learning rate or lengthen warm-up for that design before rejecting the change |
-| the training score rose and the validation score did not | the change helped fitting, not generalisation: pair it with regularization or augmentation |
-| a new augmentation lowers both training and validation scores | the answer is not invariant to it: weaken or drop it |
-| the best epoch is the last one | the run is too short for this recipe: the comparison favours fast recipes, so say so and ask for a longer run |
-| the best epoch is very early and later epochs are worse | the rate is too high late, or regularization too weak: change the decay or add regularization |
+[The guide for this goal](guides/model-training-recipe.md) has the starting brief, the advice the agents are given and the diagnoses in full.
 
 ## Algorithm
 
@@ -217,21 +173,15 @@ Every skill that comes with evoloop. This page is written from the skill files t
 
 | | |
 |---|---|
-| Tags | speed, runtime, performance, optimisation, complexity, memory, benchmark |
+| Tags | speed, runtime, performance, optimization, complexity, memory, benchmark |
 | Sets | `evaluation.screen_keep`, `schedule.local_mix`, `schedule.novelty` |
 | Guidance for | all, analyst, strategist, writer |
-| Diagnoses | 5 |
-| Needs from the adapter | compare every design's output with a stored reference output and write `valid: false` with `rejected: "output differs"` when it does not match (exactly, or within a stated tolerance); time the run several times on a quiet machine with a fixed number of threads, and report the median as the score with objective.direction minimize; set evaluation.noise from the spread of repeats; keep a second set of inputs the search never sees, and report its timing under diagnostics.hidden; report peak memory under diagnostics if it matters, and bound it with `limits` |
+| Diagnoses | 5, in the guide |
+| Needs from the evaluator | compare every design's output with a stored reference output and write `valid: false` with `rejected: "output differs"` when it does not match (exactly, or within a stated tolerance); time the run several times on a quiet machine with a fixed number of threads, and report the median as the score with objective.direction minimize; set evaluation.noise from the spread of repeats; keep a second set of inputs the search never sees, and report its timing under diagnostics.hidden; report peak memory under diagnostics if it matters, and bound it with `limits` |
 | Goes well with | `data-pipeline`, `bioinformatics-algorithm` |
 | Not with | `settings-tuning` |
 
-| If the results show | Then |
-|---|---|
-| a design is rejected because its output differs from the reference | find which case differs and keep that case's behaviour; do not relax the check |
-| a design is faster on small inputs and slower on large ones (or the reverse) | the complexity changed: decide which size matters from the task, and say which the benchmark weighs |
-| timings of one design differ between repeats by as much as the gains | the measurement is the problem: gains below the noise floor are not gains |
-| time fell and memory rose sharply | a cache or a table is paying for the speed: check it against the memory limit and say so |
-| many small edits each gain a little, then nothing | the current algorithm is at its floor: change the algorithm or the data structure |
+[The guide for this goal](guides/algorithm-runtime.md) has the starting brief, the advice the agents are given and the diagnoses in full.
 
 ## Bioinformatics
 
@@ -246,18 +196,12 @@ Every skill that comes with evoloop. This page is written from the skill files t
 | Tags | bioinformatics, genomics, sequence, alignment, variant calling, peak calling, benchmark, truth set |
 | Sets | `schedule.local_mix`, `schedule.novelty` |
 | Guidance for | all, analyst, strategist, writer |
-| Diagnoses | 5 |
-| Needs from the adapter | score against a truth set with a standard comparison for the task, and report precision, recall and their combination under diagnostics; the score should be one number that does not reward trading one for the other at a single threshold; use more than one dataset (another sample, depth or organism), and keep one the search never sees under diagnostics.hidden; check the output's format and coordinates before scoring, and write `valid: false` with the reason when they are wrong; report run time and peak memory under diagnostics, and bound them with `limits` if they matter |
+| Diagnoses | 5, in the guide |
+| Needs from the evaluator | score against a truth set with a standard comparison for the task, and report precision, recall and their combination under diagnostics; the score should be one number that does not reward trading one for the other at a single threshold; use more than one dataset (another sample, depth or organism), and keep one the search never sees under diagnostics.hidden; check the output's format and coordinates before scoring, and write `valid: false` with the reason when they are wrong; report run time and peak memory under diagnostics, and bound them with `limits` if they matter |
 | Goes well with | `algorithm-runtime` |
 | Not with | `settings-tuning` |
 
-| If the results show | Then |
-|---|---|
-| precision rose and recall fell by about as much (or the reverse) | a threshold moved, not the method: look for a change that separates true from false cases better |
-| the gain is on one dataset of the benchmark and not the others | it is fitted to that dataset: keep only changes that hold across them |
-| results are off by one position, or wrong on one strand only | a coordinate or strand convention was broken: restore it before judging anything else |
-| errors concentrate in repeats, low-complexity sequence or low coverage | treat those cases explicitly (a separate model, a mask, a penalty) and say how |
-| the output changes between two runs on the same input | the method is not deterministic: fix seeds, ordering and tie-breaks first |
+[The guide for this goal](guides/bioinformatics-algorithm.md) has the starting brief, the advice the agents are given and the diagnoses in full.
 
 ## Pipeline
 
@@ -272,18 +216,12 @@ Every skill that comes with evoloop. This page is written from the skill files t
 | Tags | pipeline, data processing, throughput, io, memory, etl, preprocessing, parallel |
 | Sets | `evaluation.screen_keep`, `schedule.local_mix`, `schedule.novelty` |
 | Guidance for | all, analyst, strategist, writer |
-| Diagnoses | 5 |
-| Needs from the adapter | run the pipeline on fixed sample data and compare its output with a stored reference (a checksum of sorted records, or row counts with value checks); write `valid: false` with the reason when it differs; report the cost as the score with objective.direction minimize: wall time as a median of repeats, or a figure that combines time and memory if both matter; report time per step and peak memory under diagnostics, so that the agents can see where the cost is; use sample data large enough that input and output costs resemble the real run, and keep a second sample the search never sees under diagnostics.hidden |
+| Diagnoses | 5, in the guide |
+| Needs from the evaluator | run the pipeline on fixed sample data and compare its output with a stored reference (a checksum of sorted records, or row counts with value checks); write `valid: false` with the reason when it differs; report the cost as the score with objective.direction minimize: wall time as a median of repeats, or a figure that combines time and memory if both matter; report time per step and peak memory under diagnostics, so that the agents can see where the cost is; use sample data large enough that input and output costs resemble the real run, and keep a second sample the search never sees under diagnostics.hidden |
 | Goes well with | `algorithm-runtime` |
 | Not with | `settings-tuning` |
 
-| If the results show | Then |
-|---|---|
-| a design is rejected because its output differs | find the step that changed it (order, missing values, precision, duplicates) and keep that behaviour |
-| run time is dominated by reading or writing | read less and fewer times, or change the format; faster computation will not show |
-| adding parallel workers gives no gain, or a loss | the steps contend for disk or memory: reduce what is read first, then parallelise fewer, larger pieces |
-| memory peaks at one step | process that step in chunks or streams, or reduce the data before it |
-| a design is faster on the sample and its gain depends on the sample's size | say how the cost grows with input size; a gain that vanishes at full size is not one |
+[The guide for this goal](guides/data-pipeline.md) has the starting brief, the advice the agents are given and the diagnoses in full.
 
 ## Settings
 
@@ -298,14 +236,9 @@ Every skill that comes with evoloop. This page is written from the skill files t
 | Tags | hyperparameters, tuning, bayesian, tpe, learning rate, no agents |
 | Sets | `audit.reviews`, `harness.conductor`, `harness.coordinator`, `harness.level`, `schedule.local_mix`, `schedule.novel_share`, `schedule.phases`, `space.preset`, `strategist.mode`, `strategy.mechanism`, `variation.proposals_per_slot`, `variation.settings_by`, `variation.step_adaptation` |
 | Guidance for | all, analyst, writer |
-| Diagnoses | 4 |
-| Needs from the adapter | every setting to tune must sit in a marked params block (one dict of numbers, true/false or text); give bounds for settings that must stay in a range with `space.ranges`, e.g. {"fit.lr": [0.00001, 0.1]}; without one a setting may move a hundredfold either way; to stop poor settings early, report progress and set `evaluation.ladder` |
+| Diagnoses | 4, in the guide |
+| Needs from the evaluator | every setting to tune must sit in a marked params block (one dict of numbers, true/false or text); give bounds for settings that must stay in a range with `space.ranges`, e.g. {"fit.lr": [0.00001, 0.1]}; without one a setting may move a hundredfold either way; to stop poor settings early, report progress and set `evaluation.ladder` |
 | Goes well with | any |
 | Not with | `model-performance`, `model-distillation`, `model-efficiency`, `model-size-frontier`, `model-mechanistic`, `model-training-recipe`, `model-ensemble-members`, `model-finetuning`, `algorithm-runtime`, `bioinformatics-algorithm`, `data-pipeline` |
 
-| If the results show | Then |
-|---|---|
-| the best designs have a setting at the edge of its range | widen that range in space.ranges; the optimum is probably outside it |
-| the score barely changes across a setting's whole range | the setting does not matter here: fix it and spend the budget on the others |
-| scores differ as much between repeats as between settings | the noise floor is too high to tune on: lengthen the run or average seeds before continuing |
-| good values of one setting depend on another | the estimator models each setting alone: tune the pair in a second, narrower search around the best design |
+[The guide for this goal](guides/settings-tuning.md) has the starting brief, the advice the agents are given and the diagnoses in full.

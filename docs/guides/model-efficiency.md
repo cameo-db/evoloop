@@ -19,8 +19,7 @@ limits:
     max: 5000000
 ```
 
-!!! note "A starting point"
-    These settings are a reasoned starting point. They have not been measured against alternatives; see [Status and limits](../status.md). The numbers in the example (the budget, any limits or ranges) are placeholders for yours.
+The budget, and any limits or ranges, are placeholders: put in your own.
 
 ## Why this set-up
 
@@ -30,20 +29,20 @@ The skill sets these for you (anything you set in the brief wins):
 
 | Setting | Value |
 |---|---|
-| [`report.columns`](../fields.md) | `[speed]` |
-| [`schedule.local_mix`](../fields.md) | `{ablation: 0.5, edit: 0.35, settings: 0.15}` |
-| [`strategy.mechanism`](../fields.md) | `pareto` |
-| [`strategy.second_direction`](../fields.md) | `minimize` |
-| [`strategy.second_metric`](../fields.md) | `parameters` |
+| [`report.columns`](../fields.md#report-columns) | `[speed]` |
+| [`schedule.local_mix`](../fields.md#schedule-local_mix) | `{ablation: 0.5, edit: 0.35, settings: 0.15}` |
+| [`strategy.mechanism`](../fields.md#strategy-mechanism) | `pareto` |
+| [`strategy.second_direction`](../fields.md#strategy-second_direction) | `minimize` |
+| [`strategy.second_metric`](../fields.md#strategy-second_metric) | `parameters` |
 
 ## What your evaluator must report
 
 - report `parameters` in result.json (and `inference_speed.examples_per_s` to rank on speed: then set strategy.second_metric to examples_per_s and strategy.second_direction to maximize)
 - set `limits` for the largest size or lowest speed you accept, and put those figures in the first progress line so that a design outside them costs seconds
 - add a reference row for the model you are trying to shrink
-- **Required in every result:** `parameters`. A search that never sees it is told so in the report.
+- Every result must report `parameters`. If none does, the report says so.
 
-How the adapter reports these: [The project's code](../project-contract.md).
+[Write the evaluator](../evaluator.md) shows how to report these; [Evaluator interface](../project-contract.md) is the reference.
 
 ## Choose something else when
 
@@ -58,7 +57,7 @@ It combines well with [`model-distillation`](model-distillation.md) (`run.skill:
 
 Read the population table: it lists the designs on the trade-off front with their score and size. Pick the smallest whose score is within your tolerance of the reference row. A design is only an improvement if its loss in score is below the noise floor or acceptable to you.
 
-Where to look: `evoloop leaderboard`, `evoloop show`, and the report ([Records and the study file](../records.md)). To change course while it runs: [Steering a run](../steering.md).
+Where to look: `evoloop leaderboard`, `evoloop show`, and the report ([Files of a run](../records.md)). To change course while it runs: [Watch and steer a run](../steering.md).
 
 ## What the agents are told
 

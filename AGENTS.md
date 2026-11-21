@@ -46,7 +46,7 @@ A suggestion is not an answer: it is shown to the person preselected, with your 
 answer only when they leave it or pick it. Do not suggest where you have no evidence; say so and ask.
 
 Two of the questions decide most of the rest: the kind of search (`run.type`, how to search) and the kind of
-optimisation (`run.skill`: a better score, a distilled student, tuned settings, a smaller or faster model, or an
+optimization (`run.skill`: a better score, a distilled student, tuned settings, a smaller or faster model, or an
 interpretable model improved, a faster algorithm or pipeline). `evoloop skills` lists the library and
 `evoloop skills --search WORDS` finds one; suggest what the person's goal describes. Skills can be combined, and the
 search gets its own editable copy of each when the brief is confirmed.
@@ -96,7 +96,8 @@ to cost, then every setting with where it came from) before anything is confirme
 
 `pytest tests` runs the suite with stub agents (no model call). Several pages are written by the code, and the
 tests fail if they are stale: regenerate `docs/skill-library.md` with `evoloop skills --markdown`, the guides with
-`evoloop skills --guides docs/guides`, and the pages `docs/menu.md` and
+`evoloop skills --guides docs/guides`, the plan explorer's data with `evoloop menu --plans > docs/assets/plans.json`,
+and the pages `docs/menu.md` and
 `docs/fields.md` are written by the code: after changing an option, a preset or a field, regenerate them
 with `evoloop menu --markdown > docs/menu.md` and `evoloop menu fields --markdown > docs/fields.md`, or
 the tests fail.

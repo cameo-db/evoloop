@@ -332,7 +332,7 @@ def test_the_library_can_be_listed_searched_and_read_by_a_program(tmp_path, caps
     rows = json.loads(capsys.readouterr().out)
     assert len(rows) == 12 and set(rows[0]) >= {"name", "title", "domain", "objective", "tags", "version", "sets", "needs", "digest"}
     page = skill.library_markdown()
-    assert all("### %s" % name in page for name in skill.names()) and "If the results show" in page
+    assert all("### %s" % name in page for name in skill.names()) and "The guide for this goal" in page
     with open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "docs", "skill-library.md"),
               encoding="utf-8") as handle:
         assert handle.read() == page, "docs/skill-library.md is stale: regenerate it with `evoloop skills --markdown`"
@@ -341,7 +341,7 @@ def test_the_library_can_be_listed_searched_and_read_by_a_program(tmp_path, caps
 def test_every_goal_has_a_guide_that_matches_its_skill(tmp_path):
     root = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "docs", "guides")
     written = skill.write_guides(str(tmp_path))
-    assert written == sorted(["index.md"] + ["%s.md" % name for name in skill.names()])
+    assert written == sorted("%s.md" % name for name in skill.names())
     for page in written:
         with open(os.path.join(str(tmp_path), page), encoding="utf-8") as fresh, open(os.path.join(root, page), encoding="utf-8") as kept:
             assert kept.read() == fresh.read(), "docs/guides/%s is stale: regenerate with `evoloop skills --guides docs/guides`" % page
@@ -353,18 +353,19 @@ def test_every_goal_has_a_guide_that_matches_its_skill(tmp_path):
         for part in ("## Start here", "skill: %s" % name, "## Why this set-up", "## What your evaluator must report",
                      "## Reading the result", "## What the agents are told"):
             assert part in page, (name, part)
-    index = skill.guides_index_markdown()
-    assert all("(%s.md)" % name in index for name in skill.names())
     with open(os.path.join(os.path.dirname(root), "..", "mkdocs.yml"), encoding="utf-8") as handle:
         nav = handle.read()
     assert all("guides/%s.md" % name in nav for name in skill.names())            # every guide can be reached
 
 
-def test_the_front_page_and_the_readme_list_the_whole_library_and_say_it_can_grow():
+def test_the_decision_page_and_the_readme_list_the_whole_library_and_say_it_can_grow():
     root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    for page in (os.path.join(root, "docs", "index.md"), os.path.join(root, "README.md")):
+    for page in (os.path.join(root, "docs", "which-search.md"), os.path.join(root, "README.md")):
         with open(page, encoding="utf-8") as handle:
             text = handle.read()
-        assert "skill library" in text.lower() and "Write your own" in text and "Add it to the library" in text, page
-        assert all("`%s`" % name in text for name in skill.names()), page
-        assert "study.json" in text and "cameo-db.github.io" in text, page          # and how the result is kept
+        assert all("`%s`" % name in text for name in skill.names()), page            # every goal can be found
+    with open(os.path.join(root, "docs", "skills.md"), encoding="utf-8") as handle:
+        text = handle.read()
+    assert "Writing your own" in text and "Adding a skill to the library" in text and "Combining skills" in text
+    with open(os.path.join(root, "README.md"), encoding="utf-8") as handle:
+        assert "study.json" in handle.read()                                          # and how the result is kept

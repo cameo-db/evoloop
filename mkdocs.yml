@@ -29,46 +29,61 @@ extra_javascript:
   - assets/js/explore.js
 extra_css:
   - extra.css
+validation:
+  links:
+    anchors: warn
 nav:
   - Home: index.md
-  - Get started:
-      - Run the CPU demo: quickstart.md
-      - Use your own project: setting-up.md
-      - The evaluator contract: project-contract.md
-      - Adapting to your machine: servers.md
-      - Status and limits: status.md
-  - Optimization guides:
-      - What do you want to optimize?: guides/index.md
-      - The skill library, every skill in full: skill-library.md
-      - How skills work, and writing your own: skills.md
-      - Tune hyperparameters: guides/settings-tuning.md
-      - Improve a model's score: guides/model-performance.md
-      - Train a fixed architecture better: guides/model-training-recipe.md
-      - Find a smaller or faster model: guides/model-efficiency.md
-      - Find the best model at several sizes: guides/model-size-frontier.md
-      - Distil a student from a teacher: guides/model-distillation.md
-      - Models that fail differently, for an ensemble: guides/model-ensemble-members.md
-      - Adapt a pretrained model: guides/model-finetuning.md
-      - Improve an interpretable or biophysical model: guides/model-mechanistic.md
-      - Make an algorithm faster: guides/algorithm-runtime.md
-      - Improve a bioinformatics method: guides/bioinformatics-algorithm.md
-      - Make a data pipeline faster or cheaper: guides/data-pipeline.md
-  - How it works:
-      - How a search works: how-it-works.md
-      - See what a choice changes (interactive): explore.md
-      - How each choice changes the search: choices.md
-      - Model and effort: models.md
-      - Agentic or harnessed, and what it costs: autonomy.md
-      - The strategist and the budget: strategist.md
-      - How it compares with established methods: compared.md
-  - Run and review:
-      - Steering a run: steering.md
-      - Records, and saving the study for CAMEO: records.md
-      - Auditing the agents: auditing.md
+  - Start:
+      - Run the demo: quickstart.md
+      - Set up your search: setting-up.md
+      - Write the evaluator: evaluator.md
+      - Measure your noise: noise.md
+      - Run on a cluster: servers.md
+  - Choose a search:
+      - Which search should I run?: which-search.md
+      - Models:
+          - Improve a model's score: guides/model-performance.md
+          - Train a fixed architecture better: guides/model-training-recipe.md
+          - Tune hyperparameters: guides/settings-tuning.md
+          - Adapt a pretrained model: guides/model-finetuning.md
+      - Smaller and faster:
+          - Find a smaller or faster model: guides/model-efficiency.md
+          - Find the best model at several sizes: guides/model-size-frontier.md
+          - Distil a student from a teacher: guides/model-distillation.md
+      - More particular:
+          - Models that fail differently, for an ensemble: guides/model-ensemble-members.md
+          - Improve an interpretable or biophysical model: guides/model-mechanistic.md
+          - Make an algorithm faster: guides/algorithm-runtime.md
+          - Improve a bioinformatics method: guides/bioinformatics-algorithm.md
+          - Make a data pipeline faster or cheaper: guides/data-pipeline.md
+      - Edit or write a skill: skills.md
+  - Concepts:
+      - One step of a search: how-it-works.md
+      - What gets tried next: schedule.md
+      - Who becomes a parent: parents.md
+      - Edits, crossover and settings moves: moves.md
+      - Cheaper evaluations: early-stopping.md
+      - When two scores can be compared: comparable.md
+      - The agents, and how much they decide: agents.md
+      - Compared with FunSearch and AlphaEvolve: compared.md
+  - Run and steer:
+      - Watch and steer a run: steering.md
+      - Budget and cost: cost.md
+      - Working with the strategist: strategist.md
+      - Audit the agents: auditing.md
+      - Save and deposit the study: study.md
   - Reference:
       - Commands: commands.md
-      - Fields of the brief: fields.md
-      - Menu of choices and presets: menu.md
+      - Brief fields: fields.md
+      - Options and presets: menu.md
+      - Evaluator interface: project-contract.md
+      - Skill file format: skill-format.md
+      - Files of a run: records.md
+      - Skill library: skill-library.md
+      - Models and prices: models.md
+      - Glossary: glossary.md
+      - Status and limits: status.md
 markdown_extensions:
   - tables
   - admonition

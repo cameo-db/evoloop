@@ -16,8 +16,7 @@ budget:
   evaluations: 150
 ```
 
-!!! note "A starting point"
-    These settings are a reasoned starting point. They have not been measured against alternatives; see [Status and limits](../status.md). The numbers in the example (the budget, any limits or ranges) are placeholders for yours.
+The budget, and any limits or ranges, are placeholders: put in your own.
 
 ## Why this set-up
 
@@ -27,18 +26,18 @@ The skill sets these for you (anything you set in the brief wins):
 
 | Setting | Value |
 |---|---|
-| [`schedule.novelty`](../fields.md) | `0.6` |
-| [`schedule.novelty_measure`](../fields.md) | `behaviour` |
-| [`schedule.phases`](../fields.md) | `[{cross: 0.1, local: 0.3, new: 0.6, until: 0.6}, {cross: 0.15, local: 0.6, new: 0.25, until: 1.0}]` |
-| [`strategy.descriptors`](../fields.md) | `[behaviour]` |
-| [`strategy.mechanism`](../fields.md) | `archive` |
+| [`schedule.novelty`](../fields.md#schedule-novelty) | `0.6` |
+| [`schedule.novelty_measure`](../fields.md#schedule-novelty_measure) | `behaviour` |
+| [`schedule.phases`](../fields.md#schedule-phases) | `[{cross: 0.1, local: 0.3, new: 0.6, until: 0.6}, {cross: 0.15, local: 0.6, new: 0.25, until: 1.0}]` |
+| [`strategy.descriptors`](../fields.md#strategy-descriptors) | `[behaviour]` |
+| [`strategy.mechanism`](../fields.md#strategy-mechanism) | `archive` |
 
 ## What your evaluator must report
 
 - report `signature` in result.json: a list of numbers saying where the model's errors fall (per class, per range of the target, or per held-out example); the groups are made from it
 - after the search, score the average of the best design of each group yourself; evoloop does not train or score ensembles
 
-How the adapter reports these: [The project's code](../project-contract.md).
+[Write the evaluator](../evaluator.md) shows how to report these; [Evaluator interface](../project-contract.md) is the reference.
 
 ## Choose something else when
 
@@ -52,7 +51,7 @@ It combines well with [`model-distillation`](model-distillation.md) (`run.skill:
 
 Read the population table: each row is the best design of one behaviour group. Those are the candidate members. evoloop does not score the ensemble itself: average the best of each group yourself and check the average against the best single model.
 
-Where to look: `evoloop leaderboard`, `evoloop show`, and the report ([Records and the study file](../records.md)). To change course while it runs: [Steering a run](../steering.md).
+Where to look: `evoloop leaderboard`, `evoloop show`, and the report ([Files of a run](../records.md)). To change course while it runs: [Watch and steer a run](../steering.md).
 
 ## What the agents are told
 

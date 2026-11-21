@@ -16,8 +16,7 @@ budget:
   evaluations: 80
 ```
 
-!!! note "A starting point"
-    These settings are a reasoned starting point. They have not been measured against alternatives; see [Status and limits](../status.md). The numbers in the example (the budget, any limits or ranges) are placeholders for yours.
+The budget, and any limits or ranges, are placeholders: put in your own.
 
 ## Why this set-up
 
@@ -27,9 +26,9 @@ The skill sets these for you (anything you set in the brief wins):
 
 | Setting | Value |
 |---|---|
-| [`schedule.local_mix`](../fields.md) | `{ablation: 0.1, edit: 0.55, settings: 0.35}` |
-| [`space.preset`](../fields.md) | `custom` |
-| [`space.roles`](../fields.md) | `{augmentation: open, loss: open, optimizer: open, recipe: open, schedule: open, training: open}` |
+| [`schedule.local_mix`](../fields.md#schedule-local_mix) | `{ablation: 0.1, edit: 0.55, settings: 0.35}` |
+| [`space.preset`](../fields.md#space-preset) | `custom` |
+| [`space.roles`](../fields.md#space-roles) | `{augmentation: open, loss: open, optimizer: open, recipe: open, schedule: open, training: open}` |
 
 ## What your evaluator must report
 
@@ -37,7 +36,7 @@ The skill sets these for you (anything you set in the brief wins):
 - report the training score beside the validation score under diagnostics, so that fitting and generalising can be told apart
 - report `best_epoch` and `epochs_run` in result.json
 
-How the adapter reports these: [The project's code](../project-contract.md).
+[Write the evaluator](../evaluator.md) shows how to report these; [Evaluator interface](../project-contract.md) is the reference.
 
 ## Choose something else when
 
@@ -52,7 +51,7 @@ It combines well with [`model-performance`](model-performance.md), [`model-finet
 
 Compare the best recipe with the baseline row: the difference is what training alone was worth. Look at whether the training score or the gap to validation moved, and at the best epoch: a best epoch at the end of the run means the comparison favoured fast recipes and a longer run is needed.
 
-Where to look: `evoloop leaderboard`, `evoloop show`, and the report ([Records and the study file](../records.md)). To change course while it runs: [Steering a run](../steering.md).
+Where to look: `evoloop leaderboard`, `evoloop show`, and the report ([Files of a run](../records.md)). To change course while it runs: [Watch and steer a run](../steering.md).
 
 ## What the agents are told
 

@@ -155,7 +155,7 @@ Then check it with the CAMEO kit ([`cameo.py`](https://cameo-db.github.io/kit/ca
 python3 cameo.py check mysearch/runs/r1/study.json
 ```
 
-[What goes in the file, what each star needs, and how to deposit](https://evoloop.readthedocs.io/en/latest/records/#saving-the-study-as-json-and-depositing-it-in-cameo).
+[What goes in the file, what each star needs, and how to deposit](https://evoloop.readthedocs.io/en/latest/study/).
 
 <details>
 <summary><b>Everything you can choose</b></summary>
@@ -170,9 +170,9 @@ python3 cameo.py check mysearch/runs/r1/study.json
 | **Cost of an evaluation** | weak designs stopped early by a screen or a promotion ladder; a child trained from scratch or from its parent's weights |
 | **The writers** | which Claude model and effort for each role; several models by share; whole blocks or find-and-replace edits |
 | **Who decides** | code alone (deterministic), a strategist agent that may shift the course within bounds you set, or an agent that runs the search and that you talk to |
-| **Oversight** | caps on evaluations and on model dollars; hard limits on size or speed; a scorecard of every agent |
+| **Oversight** | caps on evaluations and on agent dollars; hard limits on size or speed; a scorecard of every agent |
 
-[How each choice changes the search](docs/choices.md) · [Menu of choices and presets](docs/menu.md)
+[Which search should I run?](docs/which-search.md) · [Options and presets](docs/menu.md)
 
 </details>
 
@@ -204,7 +204,7 @@ stated noise floor, skills, and an audit of the agents.
 - A scorecard of the agents: what each cost and whether its forecasts held.
 - A study file in the CAMEO entry format.
 
-[Records and the study file](docs/records.md)
+[Files of a run](docs/records.md) · [Save and deposit the study](docs/study.md)
 
 </details>
 
@@ -221,10 +221,11 @@ ones. [Status and limits](docs/status.md) says exactly what has been run.
 
 | | |
 |---|---|
-| Get started | [Run the CPU demo](docs/quickstart.md) · [Use your own project](docs/setting-up.md) · [The evaluator contract](docs/project-contract.md) · [Adapting to your machine](docs/servers.md) |
-| Understand | [How a search works](docs/how-it-works.md) · [How each choice changes the search](docs/choices.md) · [Skills](docs/skills.md) |
-| Run and review | [Steering a run](docs/steering.md) · [Records](docs/records.md) · [Auditing the agents](docs/auditing.md) |
-| Reference | [Commands](docs/commands.md) · [Fields of the brief](docs/fields.md) · [Skill library](docs/skill-library.md) |
+| Start | [Run the demo](docs/quickstart.md) · [Set up your search](docs/setting-up.md) · [Write the evaluator](docs/evaluator.md) · [Measure your noise](docs/noise.md) · [Run on a cluster](docs/servers.md) |
+| Choose a search | [Which search should I run?](docs/which-search.md) · [Edit or write a skill](docs/skills.md) |
+| Concepts | [One step of a search](docs/how-it-works.md) · [What gets tried next](docs/schedule.md) · [Who becomes a parent](docs/parents.md) · [Cheaper evaluations](docs/early-stopping.md) · [The agents](docs/agents.md) |
+| Run and steer | [Watch and steer a run](docs/steering.md) · [Budget and cost](docs/cost.md) · [Save and deposit the study](docs/study.md) |
+| Reference | [Commands](docs/commands.md) · [Brief fields](docs/fields.md) · [Evaluator interface](docs/project-contract.md) · [Glossary](docs/glossary.md) · [Status and limits](docs/status.md) |
 | For an agent helping someone | [AGENTS.md](AGENTS.md) |
 
 ## Development

@@ -20,7 +20,7 @@ guidance:
     different kind of change:
     - capacity: it cannot fit the training data. More width, depth, or a mechanism it lacks (a longer range, a
       different pooling, an interaction between parts).
-    - optimisation: it could fit but trains slowly or unstably. Normalisation, skip connections, initialisation,
+    - optimization: it could fit but trains slowly or unstably. Normalisation, skip connections, initialisation,
       the learning-rate schedule, the batch size.
     - generalisation: it fits training data and not validation data. Regularisation, augmentation, less capacity,
       weight sharing, an inductive bias that matches the data.
@@ -29,14 +29,14 @@ guidance:
     Do not spend a slot on a change smaller than the noise floor can show.
   analyst: |
     Say which kinds of change are still paying and which have stopped. Separate gains that repeat across lineages
-    from single results within the noise. Name the limit (capacity, optimisation, generalisation) the leader seems
+    from single results within the noise. Name the limit (capacity, optimization, generalisation) the leader seems
     to be at, with the runs that show it.
   strategist: |
     A plateau with many near-identical designs calls for more new designs. A plateau with scattered designs and
     one clear leader calls for local work on the leader.
 diagnose:
   - see: "training and validation scores are both poor and still improving at the end of the run"
-    do: "the run is too short or the optimisation is slow: fix the schedule or normalisation before judging the architecture"
+    do: "the run is too short or the optimization is slow: fix the schedule or normalisation before judging the architecture"
   - see: "training score is good, validation score is clearly worse"
     do: "regularize, augment, or reduce capacity; do not add capacity"
   - see: "both scores stop improving early and stay poor"

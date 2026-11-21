@@ -1,4 +1,4 @@
-# Adapting evoloop to your machine
+# Run on a cluster
 
 A search has two halves. The **brief** says what to optimize and how to search; it should move between
 machines unchanged. The **site file** says what is particular to one machine: its scheduler, its

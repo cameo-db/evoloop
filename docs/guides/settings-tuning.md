@@ -19,8 +19,7 @@ space:
     "fit.lr": [1e-05, 0.1]
 ```
 
-!!! note "A starting point"
-    These settings are a reasoned starting point. They have not been measured against alternatives; see [Status and limits](../status.md). The numbers in the example (the budget, any limits or ranges) are placeholders for yours.
+The budget, and any limits or ranges, are placeholders: put in your own.
 
 ## Why this set-up
 
@@ -30,19 +29,19 @@ The skill sets these for you (anything you set in the brief wins):
 
 | Setting | Value |
 |---|---|
-| [`audit.reviews`](../fields.md) | `none` |
-| [`harness.conductor`](../fields.md) | `code` |
-| [`harness.coordinator`](../fields.md) | `code` |
-| [`harness.level`](../fields.md) | `minimal` |
-| [`schedule.local_mix`](../fields.md) | `{ablation: 0.0, edit: 0.0, settings: 1.0}` |
-| [`schedule.novel_share`](../fields.md) | `0.0` |
-| [`schedule.phases`](../fields.md) | `[{cross: 0.0, local: 1.0, new: 0.0, until: 1.0}]` |
-| [`space.preset`](../fields.md) | `settings_only` |
-| [`strategist.mode`](../fields.md) | `'off'` |
-| [`strategy.mechanism`](../fields.md) | `greedy` |
-| [`variation.proposals_per_slot`](../fields.md) | `1` |
-| [`variation.settings_by`](../fields.md) | `tpe` |
-| [`variation.step_adaptation`](../fields.md) | `false` |
+| [`audit.reviews`](../fields.md#audit-reviews) | `none` |
+| [`harness.conductor`](../fields.md#harness-conductor) | `code` |
+| [`harness.coordinator`](../fields.md#harness-coordinator) | `code` |
+| [`harness.level`](../fields.md#harness-level) | `minimal` |
+| [`schedule.local_mix`](../fields.md#schedule-local_mix) | `{ablation: 0.0, edit: 0.0, settings: 1.0}` |
+| [`schedule.novel_share`](../fields.md#schedule-novel_share) | `0.0` |
+| [`schedule.phases`](../fields.md#schedule-phases) | `[{cross: 0.0, local: 1.0, new: 0.0, until: 1.0}]` |
+| [`space.preset`](../fields.md#space-preset) | `settings_only` |
+| [`strategist.mode`](../fields.md#strategist-mode) | `'off'` |
+| [`strategy.mechanism`](../fields.md#strategy-mechanism) | `greedy` |
+| [`variation.proposals_per_slot`](../fields.md#variation-proposals_per_slot) | `1` |
+| [`variation.settings_by`](../fields.md#variation-settings_by) | `tpe` |
+| [`variation.step_adaptation`](../fields.md#variation-step_adaptation) | `false` |
 
 ## What your evaluator must report
 
@@ -50,7 +49,7 @@ The skill sets these for you (anything you set in the brief wins):
 - give bounds for settings that must stay in a range with `space.ranges`, e.g. {"fit.lr": [0.00001, 0.1]}; without one a setting may move a hundredfold either way
 - to stop poor settings early, report progress and set `evaluation.ladder`
 
-How the adapter reports these: [The project's code](../project-contract.md).
+[Write the evaluator](../evaluator.md) shows how to report these; [Evaluator interface](../project-contract.md) is the reference.
 
 ## Choose something else when
 
@@ -63,7 +62,7 @@ How the adapter reports these: [The project's code](../project-contract.md).
 
 The best row of the leaderboard holds the settings to use. Before trusting them, look at where they sit: a best value at the edge of its range means the range was wrong, and a score that barely moves across a setting means that setting does not matter. Re-fit the winner on new seeds.
 
-Where to look: `evoloop leaderboard`, `evoloop show`, and the report ([Records and the study file](../records.md)). To change course while it runs: [Steering a run](../steering.md).
+Where to look: `evoloop leaderboard`, `evoloop show`, and the report ([Files of a run](../records.md)). To change course while it runs: [Watch and steer a run](../steering.md).
 
 ## What the agents are told
 

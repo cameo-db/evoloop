@@ -16,8 +16,7 @@ budget:
   evaluations: 60
 ```
 
-!!! note "A starting point"
-    These settings are a reasoned starting point. They have not been measured against alternatives; see [Status and limits](../status.md). The numbers in the example (the budget, any limits or ranges) are placeholders for yours.
+The budget, and any limits or ranges, are placeholders: put in your own.
 
 ## Why this set-up
 
@@ -27,17 +26,17 @@ The skill sets these for you (anything you set in the brief wins):
 
 | Setting | Value |
 |---|---|
-| [`schedule.local_mix`](../fields.md) | `{ablation: 0.15, edit: 0.4, settings: 0.45}` |
-| [`schedule.novelty`](../fields.md) | `0.25` |
+| [`schedule.local_mix`](../fields.md#schedule-local_mix) | `{ablation: 0.15, edit: 0.4, settings: 0.45}` |
+| [`schedule.novelty`](../fields.md#schedule-novelty) | `0.25` |
 
 ## What your evaluator must report
 
 - load the pretrained weights from a fixed path outside base/ (weights are not copied per design)
 - mark as open the head, the choice of what is frozen, and the optimizer settings; leave the backbone's definition closed
 - add a reference row for the frozen backbone with a linear head
-- **A reference row on the leaderboard for:** frozen backbone (`evoloop reference`).
+- Add a row to the leaderboard for frozen backbone, to compare against (`evoloop reference`).
 
-How the adapter reports these: [The project's code](../project-contract.md).
+[Write the evaluator](../evaluator.md) shows how to report these; [Evaluator interface](../project-contract.md) is the reference.
 
 ## Choose something else when
 
@@ -51,7 +50,7 @@ It combines well with [`model-training-recipe`](model-training-recipe.md) (`run.
 
 Compare every design with the reference row for the frozen backbone with a linear head: that is the cheapest baseline, and the gain over it is what adapting was worth. Watch the best epoch; fine-tuning that peaks in the first epochs is overfitting.
 
-Where to look: `evoloop leaderboard`, `evoloop show`, and the report ([Records and the study file](../records.md)). To change course while it runs: [Steering a run](../steering.md).
+Where to look: `evoloop leaderboard`, `evoloop show`, and the report ([Files of a run](../records.md)). To change course while it runs: [Watch and steer a run](../steering.md).
 
 ## What the agents are told
 

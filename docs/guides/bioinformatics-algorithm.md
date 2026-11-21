@@ -16,8 +16,7 @@ budget:
   evaluations: 100
 ```
 
-!!! note "A starting point"
-    These settings are a reasoned starting point. They have not been measured against alternatives; see [Status and limits](../status.md). The numbers in the example (the budget, any limits or ranges) are placeholders for yours.
+The budget, and any limits or ranges, are placeholders: put in your own.
 
 ## Why this set-up
 
@@ -27,8 +26,8 @@ The skill sets these for you (anything you set in the brief wins):
 
 | Setting | Value |
 |---|---|
-| [`schedule.local_mix`](../fields.md) | `{ablation: 0.15, edit: 0.6, settings: 0.25}` |
-| [`schedule.novelty`](../fields.md) | `0.3` |
+| [`schedule.local_mix`](../fields.md#schedule-local_mix) | `{ablation: 0.15, edit: 0.6, settings: 0.25}` |
+| [`schedule.novelty`](../fields.md#schedule-novelty) | `0.3` |
 
 ## What your evaluator must report
 
@@ -36,9 +35,9 @@ The skill sets these for you (anything you set in the brief wins):
 - use more than one dataset (another sample, depth or organism), and keep one the search never sees under diagnostics.hidden
 - check the output's format and coordinates before scoring, and write `valid: false` with the reason when they are wrong
 - report run time and peak memory under diagnostics, and bound them with `limits` if they matter
-- **A reference row on the leaderboard for:** the original method (`evoloop reference`).
+- Add a row to the leaderboard for the original method, to compare against (`evoloop reference`).
 
-How the adapter reports these: [The project's code](../project-contract.md).
+[Write the evaluator](../evaluator.md) shows how to report these; [Evaluator interface](../project-contract.md) is the reference.
 
 ## Choose something else when
 
@@ -52,7 +51,7 @@ It combines well with [`algorithm-runtime`](algorithm-runtime.md) (`run.skill: [
 
 Read precision and recall separately, and by dataset. A gain made by trading one for the other is a moved threshold, not a better method. Confirm the winner on the dataset the search never saw.
 
-Where to look: `evoloop leaderboard`, `evoloop show`, and the report ([Records and the study file](../records.md)). To change course while it runs: [Steering a run](../steering.md).
+Where to look: `evoloop leaderboard`, `evoloop show`, and the report ([Files of a run](../records.md)). To change course while it runs: [Watch and steer a run](../steering.md).
 
 ## What the agents are told
 

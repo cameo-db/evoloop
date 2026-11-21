@@ -33,7 +33,7 @@ guidance:
     - teacher-labelled augmentation: the teacher can label any input, so the student can train on perturbed and
       synthetic inputs far beyond the measured set. Aggressive augmentations that would be wrong against measured
       targets are right against the teacher's labels. Treat this as the default, not an extra.
-    - optimisation: students often want a longer schedule and less regularization than the teacher had, because
+    - optimization: students often want a longer schedule and less regularization than the teacher had, because
       the teacher's targets are smoother than the data.
     - starting point: a student that starts from an already trained model of its own kind learns faster than one
       from random weights.

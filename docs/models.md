@@ -1,4 +1,4 @@
-# Model and effort
+# Models and prices
 
 Which model the agents run on, and how hard it reasons, are settings with defaults. You can change
 them when you set a search up and while it runs, for every role at once or role by role.
@@ -46,7 +46,7 @@ agents:
   efforts: {writer: high, strategist: medium}
 ```
 **Several models for the writers.** `agents.writer_mix` shares the writer calls between models, for instance a
-fast one for most designs and a strong one for a fifth of them; see [the writers](how-it-works.md#the-writers).
+fast one for most designs and a strong one for a fifth of them; see [the writers](moves.md#more-than-one-model-writing).
 The cost estimate prices an average writer call by the shares.
 
 
@@ -119,7 +119,7 @@ Two cautions on reading it:
   uses its measured cost per call, which includes the reasoning.
 - **The example's code is a few lines long.** A real model's blocks are far larger, and so is each call.
 
-See [Agentic or harnessed, and what it costs](autonomy.md) for how the estimate is made and how far
+See [Budget and cost](cost.md) for how the estimate is made and how far
 to trust it.
 
 ## The backends

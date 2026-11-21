@@ -3,7 +3,7 @@ title: Make an algorithm faster at the same output
 summary: Speed up a piece of code (or cut its memory) while its output stays correct. The score is a measured time; a design whose output is wrong is rejected, not scored.
 domain: algorithm
 objective: the same results in less time or memory
-tags: [speed, runtime, performance, optimisation, complexity, memory, benchmark]
+tags: [speed, runtime, performance, optimization, complexity, memory, benchmark]
 version: 1
 authors: [evoloop]
 when: >
