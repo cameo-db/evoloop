@@ -102,8 +102,8 @@ Fields marked **asked** are asked whenever they are empty; the others are never 
 | `strategist.plateau` | `12` | yes | Designs with no rise in the best score after which the strategist meets at once. |
 | `strategist.horizon` | `15` | yes | Designs after a decision at which what followed it is scored. |
 | `strategist.min_new_share` | `0.1` | yes | The least share of new designs the strategist may set: exploration is protected. |
-| `strategist.max_share_shift` | `0.15` | yes | The largest move of a share the strategist may make without your yes. |
-| `strategist.force_max` | `5` | yes | The most slots one `force` decision may order. |
+| `strategist.max_share_shift` | `0.15` | yes | How far a share may stand from where you last left it without your yes. |
+| `strategist.force_max` | `5` | yes | The most slots the strategist may have on order at once. |
 | `strategist.ask_first` | `["strategy"]` | yes | The actions that always wait for your yes, whatever the mode. |
 
 ## evaluation

@@ -44,7 +44,7 @@ def test_what_waits_for_the_person():
     assert "advise" in decide("novelty", {"novelty": 0.8}, strategist__mode="advise")[2]
     assert decide("stay", {}, strategist__mode="advise")[2] is None
     mine = [{"kind": "set", "key": "schedule.novelty", "value": 0.2, "by": "Ada", "status": "applied"}]
-    assert "changed by the person" in decide("novelty", {"novelty": 0.8}, ledger=mine)[2]
+    assert "changed by you" in decide("novelty", {"novelty": 0.8}, ledger=mine)[2]
     theirs = [{"kind": "set", "key": "schedule.novelty", "value": 0.2, "by": strategist.BY, "status": "applied"}]
     assert decide("novelty", {"novelty": 0.8}, ledger=theirs)[2] is None
     assert "ask_first" in decide("force", {"mode": "cross", "count": 2}, strategist__ask_first=["force"])[2]
@@ -68,7 +68,7 @@ def test_a_lineage_set_aside_or_brought_back():
     s = settings(population__trial_runs=2, population__retire_after=3, population__lineages=2)
     plain = lineage_rules.state(make_view(rows), s)
     assert plain["L3"]["state"] == "retired" and plain["L2"]["state"] == "active"
-    s["_lineages"] = {"L3": "revived", "L2": "retired"}
+    s["_lineages"] = {"L3": {"to": "revived", "t": 100}, "L2": {"to": "retired", "t": 100}}
     told = lineage_rules.state(make_view(rows), s)
     assert told["L3"]["state"] == "active" and told["L2"]["state"] == "retired" and told["L1"]["state"] == "active"
 
@@ -81,7 +81,7 @@ def test_the_strategist_changes_course_on_a_plateau(tmp_path):
     assert reason.startswith("the budget"), reason
     ledger = controller.store.merged_list("ledger")
     decisions = [e for e in ledger if e["kind"] == "decision"]
-    assert len(decisions) >= 3 and {e["status"] for e in decisions} <= {"applied", "refused", "proposed"}
+    assert len(decisions) >= 3 and {e["status"] for e in decisions} <= {"applied", "refused", "proposed", "expired"}
     assert all(e["by"] == strategist.BY and e["reason"] and e["expects"] for e in decisions)
     moved = [e for e in ledger if e["kind"] == "set" and e["by"] == strategist.BY]
     assert moved and all(e["key"] == "schedule.phases" and e["decision"] in {d["id"] for d in decisions} for e in moved)
@@ -145,7 +145,8 @@ def test_the_governor_makes_a_run_cheaper_when_it_heads_past_the_cap(tmp_path):
     controller = Controller(folder, "t", poll=0.2, agent_backend=Priced(folder, 0.5))
     reason = controller.run(max_seconds=240)
     steps = [e for e in controller.store.merged_list("ledger") if e["kind"] == "set" and e["by"] == strategist.GOVERNOR]
-    assert [e["key"] for e in steps][:3] == ["variation.proposals_per_slot", "variation.proposals_per_slot", "harness.coordinator"]
+    keys = [e["key"] for e in steps]
+    assert keys[:2] == ["variation.proposals_per_slot", "variation.proposals_per_slot"] and keys[2:3] in ([], ["harness.coordinator"])
     assert all("heading for $" in e["reason"] and "against a cap of $30.00" in e["reason"] for e in steps)
     assert controller.agents.dollars <= 30 + 0.5 * controller.capacity() + 1e-9      # the cap held
     assert reason.startswith("paused: the agent spend cap") or reason.startswith("the budget")

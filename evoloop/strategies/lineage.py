@@ -49,20 +49,35 @@ def state(view: View, settings: Dict[str, Any]) -> Dict[str, Dict[str, Any]]:
             lin["state"] = "retired"
         else:
             lin["state"] = "contender"
-    # What the strategist or the person said about a lineage stands over the rules: one set aside is retired
-    # whatever its record; one brought back competes again with its count of moves without a gain wiped.
-    for lid, to in (settings.get("_lineages") or {}).items():
+    # What the strategist or the person said about a lineage stands over the rules. One set aside is retired
+    # whatever its record. One brought back gets a second chance, not a permanent place: its moves without a
+    # gain are counted afresh from that moment, it is active beside the best lineages (it takes no place from
+    # them) until it has used that chance up, and then it retires like any other.
+    for lid, word in (settings.get("_lineages") or {}).items():
+        word = word if isinstance(word, dict) else {"to": word, "t": 0}
         lin = lineages.get(lid)
         if lin is None or lin["best"] is None:
             continue
-        if to == "retired":
+        if word["to"] == "retired":
             lin["state"] = "retired"
-        elif to == "revived" and lin["state"] in ("retired", "contender"):
-            lin["state"], lin["flat"], lin["revived"] = "contender", 0, True
-    contenders = sorted((l for l in lineages.values() if l["state"] == "contender"),
-                        key=lambda l: (not l.get("revived"), -l["best"]))   # one brought back gets its place
+        elif word["to"] == "revived":
+            ended = [view.runs[r] for r in lin["runs"] if view.own_value(view.runs[r]) is not None]
+            before = [view.own_value(r) for r in ended if r.get("ended", 0) <= word["t"]]
+            best, flat = (max(before) if before else None), 0
+            for run in sorted((r for r in ended if r.get("ended", 0) > word["t"]), key=lambda r: r.get("ended", 0)):
+                value = view.own_value(run)
+                if best is None or value > best + view.noise:
+                    best, flat = (value if best is None else max(best, value)), 0
+                elif run["history"].get("mode") == "local":
+                    flat += 1
+            lin["flat"] = flat
+            if flat >= int(pop["retire_after"]):
+                lin["state"] = "retired"
+            elif lin["state"] != "trial":
+                lin["state"], lin["revived"] = "contender", True
+    contenders = sorted((l for l in lineages.values() if l["state"] == "contender"), key=lambda l: -l["best"])
     for index, lin in enumerate(contenders):
-        lin["state"] = "active" if index < int(pop["lineages"]) else "bench"
+        lin["state"] = "active" if index < int(pop["lineages"]) or lin.get("revived") else "bench"
     return lineages
 
 

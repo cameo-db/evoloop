@@ -54,36 +54,57 @@ MENU = {
 
 
 def designs(view: View) -> List[Dict[str, Any]]:
-    """Scored designs of the search, in the order they ended."""
+    """Scored designs of the search in the current period, in the order they ended."""
     return sorted((r for r in view.search_runs() if view.own_value(r) is not None), key=lambda r: r.get("ended", 0))
 
 
+def designs_ever(view: View) -> int:
+    """Scored designs of the search over every period. The cadence of meetings and of the governor is counted
+    in these, so that a change of the run's length, which begins a new period, does not silence them."""
+    return sum(1 for r in view.search_runs() if (r.get("performance") or {}).get("status") in SCORED
+               and isinstance(r["performance"].get("score"), (int, float)))
+
+
 def since_gain(view: View) -> int:
-    """Designs scored since the best score last rose by more than the noise."""
+    """Designs scored since the best score last rose by more than the noise. The baseline and the
+    references of a period set the best to beat; only designs of the search count toward the stretch."""
     best, since = None, 0
-    for run in designs(view):
+    scored = [r for r in view.runs.values() if view.own_value(r) is not None]
+    for run in sorted(scored, key=lambda r: r.get("ended", 0)):
         value = view.own_value(run)
         if best is None or value > best + view.noise:
             best, since = value if best is None else max(best, value), 0
-        else:
+        elif run.get("purpose", "search") in ("search", "trial"):
             since += 1
     return since
 
 
 def spending(store: Store, agents: Agents, view: View, settings: Dict[str, Any]) -> Dict[str, Any]:
-    """What the agents have cost, and where the run is heading at that rate."""
+    """What the agents have cost, and where the run is heading.
+
+    The rate is dollars per design *written* (scored, failed, refused or still training alike), over the
+    last twenty designs once there are that many, so that it follows a step that made the run cheaper.
+    The projection adds that rate for the designs still to be written."""
     budget = settings["budget"]
-    done = len(designs(view))
     cap = budget.get("model_dollars")
-    out: Dict[str, Any] = {"dollars": round(agents.dollars, 4), "cap": cap, "calls": agents.count, "designs": done,
+    written = sorted((r for r in view.runs.values() if r.get("purpose", "search") in ("search", "trial", "not_run")),
+                     key=lambda r: r.get("t", 0))
+    out: Dict[str, Any] = {"dollars": round(agents.dollars, 4), "cap": cap, "calls": agents.count,
+                           "designs_written": len(written), "designs_scored": designs_ever(view),
                            "by_role": {r: round(row["dollars"], 4) for r, row in spend(store).items()}}
-    if done >= 3 and agents.dollars > 0:
-        rate = agents.dollars / done
-        left = max(0.0, float(budget["evaluations"] or 0) - view.charged())
-        out.update(per_design=round(rate, 4), projected=round(agents.dollars + rate * left, 2))
+    if len(written) >= 5 and agents.dollars > 0:
+        rate = agents.dollars / len(written)
+        if len(written) >= 20:
+            start = written[-20].get("t", 0)
+            recent = sum(float(c.get("cost_usd") or 0.0) for c in store.read("calls") if c.get("t", 0) >= start)
+            rate = recent / 20.0
+        flying = sum(1 for r in view.in_flight() if r.get("purpose", "search") in ("search", "trial"))
+        left = max(0.0, float(budget["evaluations"] or 0) - view.charged() - flying)
+        out.update(per_design=round(rate, 4), designs_still_to_write=int(left),
+                   projected=round(agents.dollars + rate * left, 2))
         if cap is not None and rate > 0:
             out["designs_the_cap_still_pays_for"] = int(max(0.0, float(cap) - agents.dollars) / rate)
-    if cap is not None:
+    if cap is not None and budget["spend_policy"] != "none":
         out["reserved_for_writers_from"] = round(float(cap) * (1 - float(budget["reserve_share"])), 2)
     return out
 
@@ -130,7 +151,7 @@ def facts(store: Store, agents: Agents, view: View, settings: Dict[str, Any], wh
                      "novel_share": settings["schedule"]["novel_share"], "novelty": settings["schedule"]["novelty"],
                      "local_mix": settings["schedule"]["local_mix"]},
         "strategy": settings["strategy"]["mechanism"], "crossover_kinds": settings["crossover"]["kinds"],
-        "lineages_set_aside_or_brought_back": settings.get("_lineages") or {},
+        "lineages_set_aside_or_brought_back": {k: v["to"] for k, v in (settings.get("_lineages") or {}).items()},
         "your_earlier_decisions": earlier,
     }
 
@@ -158,69 +179,113 @@ def meet(store: Store, agents: Agents, view: View, settings: Dict[str, Any], why
 
 
 def person_set(ledger: List[Dict[str, Any]], key: str) -> bool:
-    """Whether the setting was last changed, during the run, by the person."""
-    last = [e for e in ledger if e.get("kind") == "set" and e.get("key") == key and e.get("status") == "applied"]
-    return bool(last) and last[-1].get("by") not in (BY, GOVERNOR)
+    """Whether the person had the last word on a setting during the run: they changed it, a part of it
+    (`schedule.local_mix.edit` for `schedule.local_mix`), or something it followed from (a change of the
+    run type or of the budget that moved it)."""
+    last = None
+    for e in ledger:
+        if e.get("kind") != "set" or e.get("status") != "applied":
+            continue
+        other = str(e.get("key"))
+        if other == key or other.startswith(key + ".") or key.startswith(other + ".") or key in (e.get("also_changed") or {}):
+            last = e
+    return last is not None and last.get("by") not in (BY, GOVERNOR)
 
 
-def work_out(decision: Dict[str, Any], view: View, settings: Dict[str, Any], ledger: List[Dict[str, Any]]
+def number(value: Any) -> bool:
+    return isinstance(value, (int, float)) and not isinstance(value, bool) and value == value and abs(value) != float("inf")
+
+
+def work_out(decision: Dict[str, Any], view: View, settings: Dict[str, Any], ledger: List[Dict[str, Any]],
+             anchor: Optional[Dict[str, Any]] = None, approving: bool = False
              ) -> Tuple[Optional[str], Dict[str, Any], Optional[str]]:
     """A decision turned into what it would do: (why it is refused, its effects, why it must wait).
 
-    The effects: `sets` (settings to change), and at most one of `force`, `lineage`, `note`, `question`."""
+    The effects: `sets` (settings to change), and at most one of `force`, `lineage`, `note`, `question`.
+    `anchor` is the settings as they would be without the changes the strategist made by itself since the
+    person last had a say: a share may move `max_share_shift` from *there* without a yes, however many
+    decisions it takes. With `approving`, the person has said yes: the decision is checked against the
+    run as it is now, and nothing makes it wait."""
     s = settings["strategist"]
     action, args = decision.get("action"), decision.get("args")
     args = args if isinstance(args, dict) else {}
     effects: Dict[str, Any] = {"sets": {}}
     wait: Optional[str] = None
     if action not in form.STRATEGIST_ACTIONS:
-        return "not an action on the menu: %r" % action, effects, None
-    num = lambda v: isinstance(v, (int, float)) and not isinstance(v, bool)   # noqa: E731
+        return "not an action on the menu: %r" % (action,), effects, None
+    guarded: List[str] = []     # settings whose change by the person makes this decision wait
     if action == "shares":
         new = {k: args.get(k) for k in ("new", "cross", "local")}
-        if not all(num(v) and v >= 0 for v in new.values()) or abs(sum(new.values()) - 1.0) > 0.011:
+        if not all(number(v) and v >= 0 for v in new.values()) or abs(sum(new.values()) - 1.0) > 0.011:
             return "shares must be three non-negative numbers summing to 1", effects, None
         if new["new"] < float(s["min_new_share"]) - 1e-9:
             return "new designs may not fall below strategist.min_new_share (%s)" % s["min_new_share"], effects, None
         phases = copy.deepcopy(settings["schedule"]["phases"])
         index = schedule.phase_at(settings, schedule.fraction_used(view, settings))["index"]
-        shift = max(abs(float(new[k]) - float(phases[index].get(k, 0.0))) for k in new)
+        base = (anchor or settings)["schedule"]["phases"]
+        base = base[index] if index < len(base) else phases[index]
+        shift = max(abs(float(new[k]) - float(base.get(k, 0.0))) for k in new)
         phases[index].update({k: round(float(v), 4) for k, v in new.items()})
         effects["sets"]["schedule.phases"] = phases
+        effects["phase"] = index
         if shift > float(s["max_share_shift"]) + 1e-9:
-            wait = "a share moves by %.2f, more than strategist.max_share_shift (%s)" % (shift, s["max_share_shift"])
+            wait = "a share would stand %.2f from where you last left it, more than strategist.max_share_shift (%s)" % (
+                shift, s["max_share_shift"])
     elif action == "novelty":
         for key in ("novelty", "novel_share"):
             if key in args:
-                if not num(args[key]) or not 0 <= args[key] <= 1:
+                if not number(args[key]) or not 0 <= args[key] <= 1:
                     return "%s must be a number from 0 to 1" % key, effects, None
                 effects["sets"]["schedule." + key] = float(args[key])
         if not effects["sets"]:
             return "novelty needs `novelty` or `novel_share`", effects, None
     elif action == "local_mix":
         mix = {k: args.get(k, 0.0) for k in form.LOCAL_MOVES}
-        effects["sets"]["schedule.local_mix"] = mix
+        if not all(number(v) and v >= 0 for v in mix.values()) or sum(mix.values()) <= 0:
+            return "local_mix needs non-negative numbers for edit, settings and ablation, not all zero", effects, None
+        effects["sets"]["schedule.local_mix"] = {k: float(v) for k, v in mix.items()}
     elif action == "crossover_kinds":
-        effects["sets"]["crossover.kinds"] = args.get("kinds")
+        kinds = args.get("kinds")
+        if not isinstance(kinds, list) or not kinds or not all(isinstance(k, str) and k in form.CROSS_KINDS for k in kinds):
+            return ("crossover_kinds needs a list of at least one of: %s (to stop crossover, move its share with `shares`)"
+                    % ", ".join(form.CROSS_KINDS)), effects, None
+        effects["sets"]["crossover.kinds"] = [k for k in form.CROSS_KINDS if k in kinds]
     elif action == "strategy":
-        effects["sets"]["strategy.mechanism"] = args.get("mechanism")
+        if args.get("mechanism") not in form.MECHANISMS:
+            return "strategy needs a mechanism: %s" % ", ".join(form.MECHANISMS), effects, None
+        effects["sets"]["strategy.mechanism"] = args["mechanism"]
     elif action == "force":
         mode, kind, count = args.get("mode"), args.get("kind"), args.get("count", 1)
-        if mode not in form.MODES or not num(count) or count < 1:
+        if not isinstance(mode, str) or mode not in form.MODES or not number(count) or count < 1:
             return "force needs a mode (%s) and a count of 1 or more" % ", ".join(form.MODES), effects, None
         allowed = {"cross": form.CROSS_KINDS, "local": form.LOCAL_MOVES}.get(mode, ())
-        if kind is not None and kind not in allowed:
+        if kind is not None and (not isinstance(kind, str) or kind not in allowed):
             return "kind %r does not go with mode %s" % (kind, mode), effects, None
         if mode == "cross" and kind is not None and kind not in settings["crossover"]["kinds"]:
             return "crossover of kind %s is not among crossover.kinds" % kind, effects, None
-        effects["force"] = {"mode": mode, "kind": kind, "left": int(min(count, int(s["force_max"])))}
+        if mode == "local" and kind is not None and float(settings["schedule"]["local_mix"].get(kind, 0.0)) <= 0:
+            return "local moves of kind %s have no share in schedule.local_mix" % kind, effects, None
+        room = int(s["force_max"]) - int(settings.get("_forced_queued") or 0)
+        if room <= 0:
+            return "strategist.force_max slots (%s) are already ordered" % s["force_max"], effects, None
+        effects["force"] = {"mode": mode, "kind": kind, "left": int(min(count, room))}
+        guarded = ["schedule.phases"] + ({"cross": ["crossover.kinds"], "local": ["schedule.local_mix"]}.get(mode, [])
+                                         if kind is not None else [])
     elif action in ("retire", "revive"):
         lineage = args.get("lineage")
-        if lineage not in view.lineages():
-            return "no lineage %r" % lineage, effects, None
+        if settings["strategy"]["mechanism"] != "lineage" or int(settings["strategy"]["islands"]) > 1:
+            return "%s has an effect only under the lineage strategy without islands" % action, effects, None
+        if not isinstance(lineage, str) or lineage not in view.lineages():
+            return "no lineage %r" % (lineage,), effects, None
+        from .strategies.lineage import state as lineage_state
+        now = lineage_state(view, settings)[lineage]["state"]
         leader = view.best()
         if action == "retire" and leader and leader["lineage"] == lineage:
             return "the lineage that holds the best design is not retired", effects, None
+        if action == "retire" and now == "retired":
+            return "lineage %s is already retired" % lineage, effects, None
+        if action == "revive" and now not in ("retired", "bench"):
+            return "lineage %s is %s; only a retired or benched lineage is brought back" % (lineage, now), effects, None
         effects["lineage"] = {"lineage": lineage, "to": "retired" if action == "retire" else "revived"}
     elif action == "direction":
         if not isinstance(args.get("text"), str) or not args["text"].strip():
@@ -234,8 +299,11 @@ def work_out(decision: Dict[str, Any], view: View, settings: Dict[str, Any], led
         fault = form.check_change(key, value)
         if fault:
             return fault, effects, None
+    if approving:
+        return None, effects, None
+    for key in list(effects["sets"]) + guarded:
         if wait is None and person_set(ledger, key):
-            wait = "%s was changed by the person during this run" % key
+            wait = "%s was changed by you during this run" % key
     if wait is None and s["mode"] == "advise" and action != "stay":
         wait = "strategist.mode is advise: every decision waits"
     if wait is None and action in s["ask_first"]:

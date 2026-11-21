@@ -17,8 +17,9 @@ agent given a free hand over a search has a poor record.
 ## When it meets
 
 - every `strategist.every` scored designs (15 by default), and
-- at once when `strategist.plateau` designs (12 by default) have passed with no rise in the best score
-  above the noise.
+- when `strategist.plateau` designs (12 by default) have passed with no rise in the best score above
+  the noise. The best to beat includes the baseline. While a plateau lasts it meets again every half
+  that many designs.
 
 ## What it is shown
 
@@ -30,28 +31,43 @@ notes.
 
 ## What it may do
 
-Up to two decisions a meeting, from this menu:
+Up to two decisions a meeting, one of a kind, from this menu:
 
 | Action | What it does | Applied at once? |
 |---|---|---|
 | `stay` | changes nothing | yes |
-| `shares` | the shares of new designs, crossover and local moves, for the rest of this phase | yes, up to `strategist.max_share_shift` (0.15) per share |
+| `shares` | the shares of new designs, crossover and local moves, for the phase in force | yes, while no share stands more than `strategist.max_share_shift` (0.15) from where you last left it |
 | `novelty` | the novelty dial, and the novel share of new designs | yes |
 | `local_mix` | the shares of the local moves | yes |
-| `crossover_kinds` | which kinds of crossover are used | yes |
-| `force` | the next few slots go to one mode and, if named, one kind of crossover or local move | yes, up to `strategist.force_max` (5) slots |
-| `retire`, `revive` | takes a lineage out of the active set, or brings one back | yes |
-| `direction` | a standing note to the writers | yes; three stand at once at most |
+| `crossover_kinds` | which kinds of crossover are used; at least one | yes |
+| `force` | the next few slots go to one mode and, if named, one kind of crossover or local move | yes, while no more than `strategist.force_max` (5) slots are on order in all |
+| `retire`, `revive` | sets a lineage aside, or gives a retired or benched one a second chance | yes (lineage strategy only) |
+| `direction` | advice to the writers | yes; three stand at once at most |
 | `strategy` | changes the evolution strategy | no: waits for you |
 | `question` | asks you something | yes; the run does not wait |
 
-The bounds are enforced by code:
+## The bounds, as code enforces them
 
-- **Exploration is protected.** New designs cannot be set below `strategist.min_new_share` (0.10).
-- **Your word stands.** A setting you changed during the run is not changed back without your yes.
-- **Anything in `strategist.ask_first` waits for you.** By default that is `strategy`; add any action to it.
-- The lineage holding the best design is never retired.
-- A decision that breaks a bound is refused, and the refusal is on the record.
+- **Exploration is protected.** `shares` cannot set new designs below `strategist.min_new_share`
+  (0.10). Slots ordered with `force` for crossover or local moves wait whenever new designs are below
+  that share of the last twenty designs.
+- **A share cannot creep.** The move is measured from where you last left the shares (the brief, a
+  change of yours, or a decision of the strategist that you approved), however many decisions it takes
+  to get there. Past `strategist.max_share_shift` it waits for you.
+- **Ordered slots are capped in all.** However many meetings, no more than `strategist.force_max`
+  slots are on order at once. An order whose mode cannot be filled is given up, and the record says so.
+- **Your word stands.** A decision waits for you when it would change a setting you changed during the
+  run: the setting itself, a part of it, or one that followed from your change of the run type or the
+  budget. An order for slots waits when you have changed the shares it would override.
+- **Anything in `strategist.ask_first` waits for you.** By default that is `strategy`.
+- **The lineage holding the best design is never retired.** A lineage brought back gets a second
+  chance, not a permanent place: its moves without a gain are counted afresh, it is active beside the
+  best lineages without taking a place from them, and it retires again when it has used that chance up.
+- **A decision that breaks a bound, or cannot be read, is refused**, and the refusal is in the ledger.
+  It never ends the run.
+
+`retire` and `revive` have an effect only under the `lineage` strategy without islands; elsewhere they
+are refused.
 
 ## The three modes
 
@@ -59,10 +75,13 @@ The bounds are enforced by code:
 |---|---|
 | `off` | no strategist (the default outside the run types below) |
 | `advise` | it meets and decides; every decision waits for your yes or no |
-| `act` | small decisions are applied at once; large ones wait for you |
+| `act` | decisions within the bounds are applied at once; the others wait for you |
 
 The run types `explore_then_exploit`, `refine` and `survey` set `act`. `discovery` and `settings_only`
 leave it off.
+
+Switching it `off` during a run takes effect at once: slots it had ordered are given up, and a meeting
+that was under way changes nothing.
 
 ## Decisions that wait for you
 
@@ -72,11 +91,28 @@ evoloop approve mysearch --name r1 --id S14 --by "Your Name"
 evoloop decline mysearch --name r1 --id S14 --by "Your Name" --reason "keep exploring"
 ```
 
-`status.json` lists them under `decisions_waiting`. A waiting decision changes nothing until you answer.
+The report shows each waiting decision in full: its action and arguments, the strategist's reason, what
+it expects, and why it waits. `status.json` lists them under `decisions_waiting`.
+
+- A waiting decision changes nothing until you answer.
+- **A yes is checked against the run as it is then**, not as it was when the decision was made. If the
+  search has moved on and the decision can no longer be done within the bounds (the floor was raised,
+  the lineage now holds the best design), it is refused with the reason. Its effects are worked out
+  afresh, so it does not undo what changed in between.
+- A decision left unanswered for twice `strategist.horizon` designs lapses.
+
+## Setting a lineage aside yourself
+
+```
+evoloop lineage mysearch --name r1 --retire L4 --by "Your Name"
+evoloop lineage mysearch --name r1 --revive L4 --by "Your Name"
+```
+
+The last word on a lineage stands, yours or the strategist's, and each is in the ledger.
 
 ## Talking to it
 
-Write a note; the strategist reads your notes at every meeting, like every other role.
+Write a note addressed to it; it reads your notes at every meeting.
 
 ```
 evoloop note mysearch --name r1 "Exploration is underdelivering: be bolder, and try crossover between the top two families." --roles strategist --by "Your Name"
@@ -88,6 +124,9 @@ To change how it behaves, change its settings:
 evoloop set mysearch --name r1 strategist.mode=advise strategist.every=10 --by "Your Name"
 evoloop set mysearch --name r1 'strategist.ask_first=["strategy", "shares", "force"]' --by "Your Name"
 ```
+
+Its own `direction` to the writers is shown to them apart from your notes, as advice; where the two
+conflict, the writers are told that your note stands.
 
 ## How it is judged
 
@@ -106,11 +145,11 @@ with `strategist.mode: off` on the same budget.
 |---|---|---|
 | `strategist.mode` | `off` (`act` under three run types) | off, advise or act |
 | `strategist.every` | 15 | scored designs between meetings |
-| `strategist.plateau` | 12 | designs with no gain that trigger a meeting at once |
-| `strategist.horizon` | 15 | designs after which a decision is scored |
-| `strategist.min_new_share` | 0.10 | the least share of new designs it may set |
-| `strategist.max_share_shift` | 0.15 | the largest move of a share without your yes |
-| `strategist.force_max` | 5 | the most slots one `force` may order |
+| `strategist.plateau` | 12 | designs with no gain that trigger a meeting |
+| `strategist.horizon` | 15 | designs after which a decision is scored; twice that, an unanswered one lapses |
+| `strategist.min_new_share` | 0.10 | the floor on new designs |
+| `strategist.max_share_shift` | 0.15 | how far a share may stand from where you left it without your yes |
+| `strategist.force_max` | 5 | the most slots on order at once |
 | `strategist.ask_first` | `["strategy"]` | actions that always wait for you |
 
 The model it uses is `agents.models.strategist`, or `agents.default_model`. All of these can be changed
@@ -126,13 +165,17 @@ A run has two budgets, and both can be changed while it goes.
 | agent cost | `budget.model_dollars`, and `budget.model_calls` as a second cap | no further agent call is made; the run ends as paused, and goes on when you raise the cap |
 
 Cost is whatever the backend reports for each call. The report and `status.json` show the spend so far,
-the cost per design, and the figure the run is heading for at that rate.
+the cost per design, and the figure the run is heading for.
+
+The cost per design is dollars per design *written*, whether it was scored, failed, refused or is still
+training, taken over the last twenty designs once there are that many, so that it follows a change
+that made the run cheaper. The projection adds that rate for the designs still to be written.
 
 ### The spend governor
 
-With `budget.spend_policy: pace` (the default) and a dollar cap set, code checks every ten designs
-whether the run is on course to pass the cap. If it is, it takes one step to make the run cheaper, and
-records it in the ledger with the figures:
+With `budget.spend_policy: pace` (the default) and a dollar cap set, code checks every ten scored
+designs whether the run is heading past the cap. If it is, it takes one step to make the run cheaper,
+and records it in the ledger with the figures:
 
 1. one proposal fewer per slot (`variation.proposals_per_slot`), down to one
 2. slots chosen by code, not by a coordinator agent
@@ -146,8 +189,10 @@ It only makes the run cheaper. If you raise the cap and want proposals back, set
 
 ### The reserve
 
-The last `budget.reserve_share` of the cap (0.15) is kept for writing designs. When it is reached, the
-analyst, the strategist, the reviews and the coordinator agent stop, so that what is left buys designs.
+With the `pace` policy, the last `budget.reserve_share` of the cap (0.15) is kept for writing designs.
+When it is reached, the analyst, the strategist, the scheduled reviews and the coordinator agent stop,
+so that what is left buys designs. A review you ask for yourself with `evoloop review` is still made.
+With `budget.spend_policy: none` there is no reserve.
 
 ### What the cap cannot see
 

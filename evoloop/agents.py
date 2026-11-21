@@ -30,7 +30,9 @@ Each call is a fresh context built from the run's records: you have no memory of
 another role. Scores are noisy: a difference smaller than the noise floor is no difference.
 
 `notes_from_the_person`, when present, are standing instructions from the person the search is for. Follow them, and \
-list in `followed_notes` the ids of those that shaped your answer; if you set one aside, say why in `reasoning`.
+list in `followed_notes` the ids of those that shaped your answer; if you set one aside, say why in `reasoning`. \
+`direction_from_the_strategist`, when present, is advice from the role that watches the search as a whole: weigh it, \
+and where it conflicts with a note from the person, the person's note stands.
 
 Return exactly one JSON object and nothing else. Put `reasoning` first (three to six plain sentences on what you \
 weighed), then `note` (one sentence, at most 30 words, on what you chose and why)."""
@@ -230,7 +232,14 @@ class Agents:
         settings = self.holder["settings"]
         notes = [n for n in settings.get("notes") or [] if not n.get("roles") or role in n["roles"]]
         if notes and role != "translator":
-            context = dict(context, notes_from_the_person=[{"id": n["id"], "text": n["text"]} for n in notes])
+            # What the person wrote and what the strategist wrote are shown apart: one is an instruction, the other advice.
+            mine = [{"id": n["id"], "text": n["text"]} for n in notes if n.get("by") != "strategist"]
+            theirs = [{"id": n["id"], "text": n["text"]} for n in notes if n.get("by") == "strategist"]
+            context = dict(context)
+            if mine:
+                context["notes_from_the_person"] = mine
+            if theirs:
+                context["direction_from_the_strategist"] = theirs
         system = CORE + "\n\n" + ROLES[role]
         user = json.dumps(context, indent=1, default=str)
         shown = {key: len(json.dumps(value, default=str)) for key, value in context.items()}

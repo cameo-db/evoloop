@@ -53,7 +53,7 @@ def test_the_docs_name_only_fields_and_commands_that_exist():
     paths = set(form.flatten(form.DEFAULTS))
     groups = {p.split(".")[0] for p in paths}
     commands = {"init", "example", "brief", "plan", "menu", "guide", "run", "status", "report", "study", "set", "note",
-                "withdraw", "steer", "stop", "review", "approve", "decline"}
+                "withdraw", "steer", "stop", "review", "approve", "decline", "lineage"}
     for name in sorted(os.listdir(os.path.join(ROOT, "docs"))) + ["../README.md"]:
         if not name.endswith(".md"):
             continue

@@ -170,13 +170,13 @@ Set with `strategist.ask_first`.
 | Option | What it does |
 |---|---|
 | `stay` | Change nothing. Often the right decision. |
-| `shares` | The shares of new designs, crossover and local moves for the rest of this phase. New designs never below `strategist.min_new_share`; a share moved by more than `strategist.max_share_shift` waits for you. |
+| `shares` | The shares of new designs, crossover and local moves for the phase in force. New designs never below `strategist.min_new_share`; a share more than `strategist.max_share_shift` from where you left it waits. |
 | `novelty` | The novelty dial, and the novel share of new designs. |
 | `local_mix` | The shares of the local moves: edit, settings, ablation. |
-| `crossover_kinds` | Which kinds of crossover are used. |
-| `force` | The next few slots (at most `strategist.force_max`) go to one mode, and if named to one kind of crossover or local move. |
+| `crossover_kinds` | Which kinds of crossover are used; at least one. |
+| `force` | The next few slots (at most `strategist.force_max` on order in all) go to one mode, and if named to one kind of crossover or local move. |
 | `retire` | Take a lineage out of the active set. Never the one that holds the best design. |
-| `revive` | Bring a retired or benched lineage back into the active set. |
+| `revive` | Give a retired or benched lineage a second chance: active again until it has gone as long without a gain. |
 | `direction` | A standing note to the writers, such as where new designs should look. At most three stand at once. |
 | `strategy` | Change the evolution strategy. Waits for you by default (`strategist.ask_first`). |
 | `question` | Ask you something. The run does not wait for the answer. |

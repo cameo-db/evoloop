@@ -117,9 +117,16 @@ def lines(controller: Any, view: View, reason: Optional[str] = None) -> List[str
                        "expected gain": (e.get("expects") or {}).get("gain"),
                        "gain that followed": (e.get("outcome") or {}).get("gain"),
                        "why": (e.get("why") or e.get("reason") or "")[:90]} for e in decisions])
-        waiting = [e["id"] for e in decisions if e.get("status") == "proposed"]
+        waiting = [e for e in decisions if e.get("status") == "proposed"]
         if waiting:
-            out += ["", "Waiting for your yes or no (`evoloop approve` or `evoloop decline` with `--id`): " + ", ".join(waiting) + "."]
+            out += ["", "### Waiting for your yes or no", "",
+                    "Answer with `evoloop approve` or `evoloop decline` and `--id`. A yes is checked against the run as it "
+                    "is then; a decision left unanswered lapses.", ""]
+            for e in waiting:
+                out += ["- **%s** `%s` %s" % (e["id"], e.get("action"), json.dumps(e.get("args"), default=str)),
+                        "  - its reason: %s" % (e.get("reason") or "(none given)"),
+                        "  - it expects: %s" % json.dumps(e.get("expects"), default=str),
+                        "  - it waits because: %s" % e.get("why")]
     money = snap["spend"]
     if money.get("projected") is not None:
         out += ["", "## Agent spend", "", "$%.2f so far, $%.3f per design; at that rate the run ends at about $%.2f%s." % (

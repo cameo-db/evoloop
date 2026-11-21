@@ -230,8 +230,13 @@ def save_brief(folder: str, brief: Dict[str, Any]) -> None:
 
 def given(brief: Dict[str, Any]) -> Dict[str, Any]:
     """The values the person gave, by path: everything in the brief that is not empty."""
-    return {path: value for path, value in flatten({k: v for k, v in brief.items() if k != "status"}).items()
-            if value not in EMPTY and known(path)}
+    out = {}
+    for path, value in flatten({k: v for k, v in brief.items() if k != "status"}).items():
+        if value is False and "off" in (CHOICES.get(path) or ()):
+            value = "off"   # YAML reads a bare `off` as false
+        if value not in EMPTY and known(path):
+            out[path] = value
+    return out
 
 
 def unknown_fields(brief: Dict[str, Any]) -> List[str]:
@@ -276,7 +281,7 @@ def resolve(brief: Dict[str, Any], ledger: Optional[List[Dict[str, Any]]] = None
     settings["_guidance"] = label
     settings["notes"] = [e for e in (ledger or []) if e.get("kind") == "note" and e.get("status", "active") == "active"]
     # Lineages the strategist (or the person) retired or revived: the last word on each stands.
-    settings["_lineages"] = {e["lineage"]: e["to"] for e in (ledger or [])
+    settings["_lineages"] = {e["lineage"]: {"to": e["to"], "t": e.get("t", 0)} for e in (ledger or [])
                              if e.get("kind") == "lineage" and e.get("status", "applied") == "applied"}
     return settings, sources
 
@@ -331,7 +336,8 @@ def check_value(path: str, value: Any) -> Optional[str]:
         return "%s must be a whole number, 0 or more" % path
     if path == "evaluation.screen_keep" and not (number and 0 < value <= 1):
         return "evaluation.screen_keep must be above 0 and at most 1"
-    if path == "strategist.ask_first" and set(value) - set(STRATEGIST_ACTIONS):
+    if path == "strategist.ask_first" and (not isinstance(value, list) or not all(isinstance(a, str) for a in value)
+                                           or set(value) - set(STRATEGIST_ACTIONS)):
         return "strategist.ask_first must be a list from: %s" % ", ".join(STRATEGIST_ACTIONS)
     if path in ("strategist.min_new_share", "strategist.max_share_shift", "budget.reserve_share") \
             and not (number and 0 <= value <= 1):
@@ -347,11 +353,13 @@ def check_value(path: str, value: Any) -> Optional[str]:
                 "variation.proposals_per_slot", "evaluation.allowance"):
         if isinstance(value, bool) or not isinstance(value, (int, float)) or value <= 0:
             return "%s must be a positive number" % path
-    if path == "crossover.kinds" and (not isinstance(value, list) or set(value) - set(CROSS_KINDS)):
+    if path == "crossover.kinds" and (not isinstance(value, list) or not all(isinstance(k, str) and k in CROSS_KINDS for k in value)):
         return "crossover.kinds must be a list from: %s" % ", ".join(CROSS_KINDS)
-    if path == "schedule.local_mix" and (not isinstance(value, dict) or set(value) - set(LOCAL_MOVES)
-                                         or sum(float(v) for v in value.values()) <= 0):
-        return "schedule.local_mix must give shares for: %s" % ", ".join(LOCAL_MOVES)
+    if path == "schedule.local_mix":
+        shares = list(value.values()) if isinstance(value, dict) else [None]
+        if set(value if isinstance(value, dict) else ["?"]) - set(LOCAL_MOVES) or not all(
+                isinstance(v, (int, float)) and not isinstance(v, bool) and v >= 0 for v in shares) or sum(shares) <= 0:
+            return "schedule.local_mix must give non-negative shares, not all zero, for: %s" % ", ".join(LOCAL_MOVES)
     if path == "audit.reviews" and not (value in REVIEW_PRESETS or (isinstance(value, list) and all(
             isinstance(v, (int, float)) and 0 < v <= 1 for v in value))):
         return "audit.reviews must be one of %s, or a list of shares of the budget" % ", ".join(REVIEW_PRESETS)
@@ -481,6 +489,8 @@ def check_change(key: str, value: Any) -> Optional[str]:
         return "%s is not a setting" % key
     if not (is_live(key) or starts_period(key)):
         return "%s cannot change during a run: %s" % (key, FROZEN_WHY)
+    if value in EMPTY and flatten(DEFAULTS).get(key) is not None:
+        return "%s cannot be emptied during a run; give a value" % key
     return check_value(key, value)
 
 

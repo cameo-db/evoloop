@@ -86,7 +86,11 @@ def parse_pairs(pairs: List[str]) -> Dict[str, Any]:
         if "=" not in pair:
             raise SystemExit("expected KEY=VALUE, got %r" % pair)
         key, value = pair.split("=", 1)
-        changes[key.strip()] = yaml.safe_load(value)
+        loaded = yaml.safe_load(value)
+        if isinstance(loaded, bool) and value.strip().lower() not in ("true", "false") \
+                and not isinstance(form.flatten(form.DEFAULTS).get(key.strip()), bool):
+            loaded = value.strip()   # YAML reads off, on, yes and no as booleans; here they are words
+        changes[key.strip()] = loaded
     return changes
 
 
@@ -285,6 +289,14 @@ def cmd_stop(args: Any) -> int:
     return 0
 
 
+def cmd_lineage(args: Any) -> int:
+    if bool(args.retire) == bool(args.revive):
+        raise SystemExit("give one of --retire ID or --revive ID")
+    request(args, {"kind": "lineage", "lineage": args.retire or args.revive, "to": "retired" if args.retire else "revived"})
+    out("requested: lineage %s %s" % (args.retire or args.revive, "retired" if args.retire else "brought back"))
+    return 0
+
+
 def cmd_answer(args: Any) -> int:
     request(args, {"kind": args.command, "id": args.id})
     out("requested: %s %s" % (args.command, args.id))
@@ -399,6 +411,9 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--yes", action="store_true")
     p = add("stop", cmd_stop, "stop the search once running jobs finish, or stop one run", named=True, by=True)
     p.add_argument("--run")
+    p = add("lineage", cmd_lineage, "set a lineage aside, or bring one back (lineage strategy)", named=True, by=True)
+    p.add_argument("--retire", metavar="ID")
+    p.add_argument("--revive", metavar="ID")
     for name, words in (("approve", "say yes to a decision of the strategist that waits for you"),
                         ("decline", "say no to a decision of the strategist that waits for you")):
         p = add(name, cmd_answer, words, named=True, by=True)

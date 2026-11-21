@@ -5,10 +5,10 @@ more than it is.
 
 ## What has been run
 
-- **83 tests** on the built-in example with stub agents (no model call, no GPU). They cover the brief,
+- **114 tests** on the built-in example with stub agents (no model call, no GPU). They cover the brief,
   every strategy, islands, the crossover kinds, steering during a run, changing the strategy, harness
   and search space midway, changing the run length, stopping and continuing, the study file, and one
-  regression test for each defect that an independent review of the code reproduced.
+  regression test for each defect that two independent reviews of the code reproduced.
 - **A run on a real Slurm cluster** of the example: seven CPU jobs, each its own job.
 
 ## What has not been run

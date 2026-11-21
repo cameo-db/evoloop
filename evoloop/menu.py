@@ -82,15 +82,15 @@ STRATEGIST_MODES = {
 }
 STRATEGIST_ACTIONS = {
     "stay": "Change nothing. Often the right decision.",
-    "shares": "The shares of new designs, crossover and local moves for the rest of this phase. New designs never "
-              "below `strategist.min_new_share`; a share moved by more than `strategist.max_share_shift` waits for you.",
+    "shares": "The shares of new designs, crossover and local moves for the phase in force. New designs never "
+              "below `strategist.min_new_share`; a share more than `strategist.max_share_shift` from where you left it waits.",
     "novelty": "The novelty dial, and the novel share of new designs.",
     "local_mix": "The shares of the local moves: edit, settings, ablation.",
-    "crossover_kinds": "Which kinds of crossover are used.",
-    "force": "The next few slots (at most `strategist.force_max`) go to one mode, and if named to one kind of "
+    "crossover_kinds": "Which kinds of crossover are used; at least one.",
+    "force": "The next few slots (at most `strategist.force_max` on order in all) go to one mode, and if named to one kind of "
              "crossover or local move.",
     "retire": "Take a lineage out of the active set. Never the one that holds the best design.",
-    "revive": "Bring a retired or benched lineage back into the active set.",
+    "revive": "Give a retired or benched lineage a second chance: active again until it has gone as long without a gain.",
     "direction": "A standing note to the writers, such as where new designs should look. At most three stand at once.",
     "strategy": "Change the evolution strategy. Waits for you by default (`strategist.ask_first`).",
     "question": "Ask you something. The run does not wait for the answer.",
@@ -157,8 +157,8 @@ FIELDS: Dict[str, str] = {
     "strategist.plateau": "Designs with no rise in the best score after which the strategist meets at once.",
     "strategist.horizon": "Designs after a decision at which what followed it is scored.",
     "strategist.min_new_share": "The least share of new designs the strategist may set: exploration is protected.",
-    "strategist.max_share_shift": "The largest move of a share the strategist may make without your yes.",
-    "strategist.force_max": "The most slots one `force` decision may order.",
+    "strategist.max_share_shift": "How far a share may stand from where you last left it without your yes.",
+    "strategist.force_max": "The most slots the strategist may have on order at once.",
     "strategist.ask_first": "The actions that always wait for your yes, whatever the mode.",
     "evaluation.allowance": "The length of one training run, in the project's own unit. Passed to every job.",
     "evaluation.allowance_unit": "The name of that unit (steps, epochs, seconds), for the records.",

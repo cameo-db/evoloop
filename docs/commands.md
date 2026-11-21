@@ -39,6 +39,7 @@ the person asking, which is recorded in the ledger, and an optional `--reason`.
 | `evoloop review <dir> --name N [--roles R...] --by NAME` | has the assessor review the agents now |
 | `evoloop approve <dir> --name N --id S14 --by NAME` | says yes to a decision of the strategist that waits for you |
 | `evoloop decline <dir> --name N --id S14 --by NAME` | says no to it |
+| `evoloop lineage <dir> --name N --retire L4 --by NAME` | sets a lineage aside; `--revive L4` brings one back (lineage strategy) |
 
 `evoloop set` refuses at once a setting that cannot change in a run, or a value of the wrong kind. A
 request that passes that check and cannot be carried out when the controller reads it is recorded in
