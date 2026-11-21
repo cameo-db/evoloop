@@ -5,7 +5,7 @@ more than it is.
 
 ## What has been run
 
-- **114 tests** on the built-in example with stub agents (no model call, no GPU). They cover the brief,
+- **122 tests** on the built-in example with stub agents (no model call, no GPU). They cover the brief,
   every strategy, islands, the crossover kinds, steering during a run, changing the strategy, harness
   and search space midway, changing the run length, stopping and continuing, the study file, and one
   regression test for each defect that two independent reviews of the code reproduced.
@@ -16,6 +16,8 @@ more than it is.
 - **The strategist with a real agent.** Its bounds, its record and the commands to approve or decline are
   tested with a stub that follows a fixed rule. Whether a real model decides well is not known.
 - **The spend governor against real prices.** It is tested with a backend that charges a fixed sum per call.
+- **The cost estimate against a real bill.** It counts calls from the settings and sizes them from the code; it
+  has not been compared with what a real run cost.
 - **A real agent.** The prompts have not been read by a model, and the `anthropic_api` and
   `claude_code` backends have not been called from this version.
 - **A real training task.** Nothing has been trained on a GPU through this version.

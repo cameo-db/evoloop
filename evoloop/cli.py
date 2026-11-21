@@ -172,11 +172,44 @@ def cmd_brief(args: Any) -> int:
 
 def cmd_plan(args: Any) -> int:
     brief = form.load_brief(os.path.abspath(args.dir))
-    for line in form.plan_lines(brief):
+    from . import estimate
+    folder = os.path.abspath(args.dir)
+    for line in form.plan_lines(brief) + estimate.lines(brief, folder):
         out(line)
     asks = [a["field"] for a in form.questions(brief)]
     if asks:
         out("\nStill to ask: %s" % ", ".join(asks))
+    return 0
+
+
+def cmd_estimate(args: Any) -> int:
+    """What the agents will cost: before a run from the brief; during one, from its own calls so far."""
+    from . import estimate
+    folder = os.path.abspath(args.dir)
+    if not args.name:
+        brief = form.load_brief(folder)
+        lines = estimate.lines(brief, folder)
+        for line in lines or ["give budget.evaluations in the brief first"]:
+            out(line)
+        return 0
+    controller = offline(args)
+    controller.refresh()
+    controller.pool.shutdown(wait=False)
+    view, settings = controller.view(), controller.settings
+    seen = estimate.measured(controller.store)
+    left = max(0.0, float(settings["budget"]["evaluations"] or 0) - view.charged())
+    rest = estimate.estimate(dict(settings, budget=dict(settings["budget"], evaluations=left)), folder, seen)
+    out("Spent so far: $%.2f over %d calls, %s of %s designs." % (controller.agents.dollars, controller.agents.count,
+                                                                 format(view.charged(), "g"), settings["budget"]["evaluations"]))
+    for role, row in sorted(seen.items()):
+        out("  %-12s %d calls, $%.4f a call" % (role, row["calls"], row["dollars_per_call"]))
+    out("For the %s designs still to come:" % format(left, "g"))
+    for role, row in rest["roles"].items():
+        out("  %-12s %s calls, %s  [%s]" % (role, estimate.span(row["calls"]), estimate.span(row["dollars"], "$", 2), row["from"]))
+    if rest["dollars"]:
+        total = [controller.agents.dollars + d for d in rest["dollars"]]
+        cap = settings["budget"]["model_dollars"]
+        out("The run as a whole: %s%s." % (estimate.span(total, "$", 2), " against a cap of $%.2f" % float(cap) if cap is not None else ""))
     return 0
 
 
@@ -388,6 +421,8 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--answer", action="append", metavar="FIELD=VALUE")
     p.add_argument("--confirm", metavar="NAME")
     add("plan", cmd_plan, "the settings the brief leads to, each with where it came from")
+    p = add("estimate", cmd_estimate, "what the agents will cost, at each level of autonomy; with --name, from a run's own calls")
+    p.add_argument("--name", default=None, help="a run: project its remaining cost from what its calls have cost")
     p = add("guide", cmd_guide, "guidance by size of budget")
     p.add_argument("evaluations", nargs="?", type=int)
     p = add("menu", cmd_menu, "every choice a run can make, the presets, and every field of the brief")

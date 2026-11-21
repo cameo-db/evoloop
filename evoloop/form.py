@@ -50,7 +50,7 @@ DEFAULTS: Dict[str, Any] = {
                    "specialist_rate": 0.15},
     "crossover": {"kinds": ["block_swap", "graft", "hybrid"]},
     "variation": {"proposals_per_slot": 2, "step_adaptation": True, "settings_by": "agent"},
-    "harness": {"level": "full", "coordinator": "code", "analyst_every": 8},
+    "harness": {"autonomy": None, "level": "full", "coordinator": "code", "analyst_every": 8},
     "strategist": {"mode": "off", "every": 15, "plateau": 12, "horizon": 15, "min_new_share": 0.10,
                    "max_share_shift": 0.15, "force_max": 5, "ask_first": ["strategy"]},
     "evaluation": {"allowance": None, "allowance_unit": "steps", "seed": 0, "noise": None, "screen_fraction": 0.5,
@@ -101,7 +101,7 @@ CHOICES = {"objective.direction": ("maximize", "minimize"), "strategy.mechanism"
            "compute.scheduler": ("local", "slurm"), "agents.backend": ("stub", "anthropic_api", "claude_code"),
            "evaluation.on_length_change": ("auto", "continue", "rerun", "compare_anyway"),
            "variation.settings_by": ("agent", "sampler"), "strategist.mode": ("off", "advise", "act"),
-           "budget.spend_policy": ("none", "pace")}
+           "budget.spend_policy": ("none", "pace"), "harness.autonomy": ("harnessed", "guided", "agentic")}
 
 # What may change while a run is going. A change applies to the next design; jobs already started are untouched.
 LIVE = ("schedule.", "strategist.", "population.", "crossover.", "variation.", "harness.", "strategy.", "space.", "audit.", "budget.",
@@ -135,6 +135,21 @@ RUN_TYPES: Dict[str, Dict[str, Any]] = {
         "crossover": {"kinds": []}},
     "custom": {},
 }
+# How much of the search the agents decide. An overlay like a run type, laid over it: what you set yourself in the
+# brief still wins. Left empty, the run type's own choices stand.
+AUTONOMY: Dict[str, Dict[str, Any]] = {
+    "harnessed": {   # code decides where the search goes; agents write designs and lessons
+        "harness": {"level": "full", "coordinator": "code"}, "strategist": {"mode": "off"},
+        "variation": {"proposals_per_slot": 1, "settings_by": "sampler"}, "audit": {"reviews": "end"}},
+    "guided": {      # code runs the schedule; a strategist may change its course within bounds
+        "harness": {"level": "full", "coordinator": "code"}, "strategist": {"mode": "act"},
+        "variation": {"settings_by": "agent"}},
+    "agentic": {     # agents choose each slot and steer the search; code keeps the floors and the records
+        "harness": {"level": "full", "coordinator": "agent", "analyst_every": 5},
+        "strategist": {"mode": "act", "every": 10, "plateau": 8, "max_share_shift": 0.30, "force_max": 8, "ask_first": []},
+        "variation": {"proposals_per_slot": 3, "settings_by": "agent"}, "audit": {"reviews": "thirds"}},
+}
+
 
 GUIDANCE: List[Tuple[int, str, Dict[str, Any]]] = [
     (45, "about 30", {
@@ -268,6 +283,12 @@ def resolve(brief: Dict[str, Any], ledger: Optional[List[Dict[str, Any]]] = None
             run_type = entry["value"]
     if run_type in RUN_TYPES and RUN_TYPES[run_type]:
         lay(RUN_TYPES[run_type], "run type %s" % run_type)
+    autonomy = stated.get("harness.autonomy")
+    for entry in changes:
+        if entry["key"] == "harness.autonomy":
+            autonomy = entry["value"]
+    if autonomy in AUTONOMY:
+        lay(AUTONOMY[autonomy], "autonomy %s" % autonomy)
     for path, value in stated.items():
         put(settings, path, copy.deepcopy(value))
         sources[path] = "brief"

@@ -17,7 +17,7 @@ Set with `run.type`.
 
 ### What each run type sets
 
-A run type is a bundle of settings. Anything you set yourself in the brief wins over it.
+It is a bundle of settings. Anything you set yourself in the brief wins over it.
 
 **`explore_then_exploit`**
 
@@ -74,6 +74,59 @@ strategy.mechanism = "greedy"
 **`custom`**
 
 Sets nothing itself.
+
+## Autonomy: agentic first, or strongly harnessed
+
+Set with `harness.autonomy`.
+
+| Option | What it does |
+|---|---|
+| `harnessed` | Code decides where the search goes: the schedule picks each slot, there is no strategist, settings moves are drawn by code, one proposal per slot. Agents write the designs and the lessons. The fewest agent calls of the three. |
+| `guided` | Code runs the schedule and a strategist may change its course within the bounds you set. The middle. |
+| `agentic` | Agents choose each slot and steer the search: an agent coordinator, a strategist that meets more often with wider bounds and asks first for nothing, three proposals per slot. Code still keeps the budget, the floor on new designs, the frozen problem and the records. The most agent calls of the three. |
+
+Left empty, the run type decides. What you set yourself in the brief is kept at every level. `evoloop plan` and `evoloop estimate` show what the agents are likely to cost at each of the three.
+
+### What each level of autonomy sets
+
+It is a bundle of settings. Anything you set yourself in the brief wins over it.
+
+**`harnessed`**
+
+```
+audit.reviews = "end"
+harness.coordinator = "code"
+harness.level = "full"
+strategist.mode = "off"
+variation.proposals_per_slot = 1
+variation.settings_by = "sampler"
+```
+
+**`guided`**
+
+```
+harness.coordinator = "code"
+harness.level = "full"
+strategist.mode = "act"
+variation.settings_by = "agent"
+```
+
+**`agentic`**
+
+```
+audit.reviews = "thirds"
+harness.analyst_every = 5
+harness.coordinator = "agent"
+harness.level = "full"
+strategist.ask_first = []
+strategist.every = 10
+strategist.force_max = 8
+strategist.max_share_shift = 0.3
+strategist.mode = "act"
+strategist.plateau = 8
+variation.proposals_per_slot = 3
+variation.settings_by = "agent"
+```
 
 ## Evolution strategies
 

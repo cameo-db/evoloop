@@ -89,6 +89,7 @@ Fields marked **asked** are asked whenever they are empty; the others are never 
 
 | Field | Default | Changes in a run | What it is |
 |---|---|---|---|
+| `harness.autonomy` | `null` | yes | How much of the search the agents decide: harnessed, guided or agentic. Sets the fields below it. |
 | `harness.level` | `"full"` | yes | How much oversight runs beside the writer. See the harness levels. |
 | `harness.coordinator` | `"code"` | yes | Who picks each slot: code or an agent. |
 | `harness.analyst_every` | `8` | yes | Finished runs between two analyses. |

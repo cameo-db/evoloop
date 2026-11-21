@@ -14,8 +14,9 @@ the person asking, which is recorded in the ledger, and an optional `--reason`.
 | `evoloop brief <dir> --answer FIELD=VALUE` | records an answer (repeatable; the value is read as YAML) |
 | `evoloop brief <dir> --confirm NAME` | records the person's agreement; refused while a required field is empty |
 | `evoloop plan <dir>` | every setting, grouped by where it came from, and the warnings |
-| `evoloop menu [topic]` | every choice a run can make, the presets, and every field; topics: `run-types`, `strategies`, `modes`, `crossover`, `moves`, `spaces`, `harness`, `coordinator`, `strategist`, `strategist-actions`, `spend`, `reviews`, `guidance`, `defaults`, `fields` |
+| `evoloop menu [topic]` | every choice a run can make, the presets, and every field; topics: `run-types`, `autonomy`, `strategies`, `modes`, `crossover`, `moves`, `spaces`, `harness`, `coordinator`, `strategist`, `strategist-actions`, `spend`, `reviews`, `guidance`, `defaults`, `fields` |
 | `evoloop guide [N]` | the guidance for a budget of N evaluations |
+| `evoloop estimate <dir> [--name N]` | what the agents are likely to cost, at each level of autonomy; with `--name`, projected from a run's own calls |
 
 ## Running
 

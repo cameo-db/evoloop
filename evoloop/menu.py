@@ -70,6 +70,17 @@ HARNESS = {
     "standard": "Adds the analyst, which writes lessons from the results every `harness.analyst_every` runs.",
     "full": "Adds a re-check of the leader on a new seed every 20 designs (or `evaluation.recheck_every`).",
 }
+AUTONOMY = {
+    "harnessed": "Code decides where the search goes: the schedule picks each slot, there is no strategist, settings "
+                 "moves are drawn by code, one proposal per slot. Agents write the designs and the lessons. The fewest "
+                 "agent calls of the three.",
+    "guided": "Code runs the schedule and a strategist may change its course within the bounds you set. The middle.",
+    "agentic": "Agents choose each slot and steer the search: an agent coordinator, a strategist that meets more often "
+               "with wider bounds and asks first for nothing, three proposals per slot. Code still keeps the budget, the "
+               "floor on new designs, the frozen problem and the records. The most agent calls of the three.",
+}
+AUTONOMY_NOTE = ("Left empty, the run type decides. What you set yourself in the brief is kept at every level. `evoloop plan` "
+                 "and `evoloop estimate` show what the agents are likely to cost at each of the three.")
 COORDINATOR = {
     "code": "The schedule picks the kind of slot and the strategy picks the parents.",
     "agent": "An agent picks each slot from options code prepares; what the schedule alone would have picked is "
@@ -149,6 +160,7 @@ FIELDS: Dict[str, str] = {
     "variation.proposals_per_slot": "How many proposals the writer returns for a slot; one is chosen and trained.",
     "variation.step_adaptation": "Ask for bolder local edits when a lineage's recent ones gain often, smaller when rarely.",
     "variation.settings_by": "Who makes a settings move: an agent, or a sampler in code (no call).",
+    "harness.autonomy": "How much of the search the agents decide: harnessed, guided or agentic. Sets the fields below it.",
     "harness.level": "How much oversight runs beside the writer. See the harness levels.",
     "harness.coordinator": "Who picks each slot: code or an agent.",
     "harness.analyst_every": "Finished runs between two analyses.",
@@ -228,6 +240,7 @@ FIELDS: Dict[str, str] = {
 
 SECTIONS: List[Tuple[str, str, str, Dict[str, str], str]] = [
     ("run-types", "Run types", "run.type", RUN_TYPES, ""),
+    ("autonomy", "Autonomy: agentic first, or strongly harnessed", "harness.autonomy", AUTONOMY, AUTONOMY_NOTE),
     ("strategies", "Evolution strategies", "strategy.mechanism", STRATEGIES, ISLANDS),
     ("modes", "Slot modes", "schedule.phases", MODES, ""),
     ("crossover", "Crossover kinds", "crossover.kinds", CROSSOVER, PARTNER),
@@ -243,6 +256,7 @@ SECTIONS: List[Tuple[str, str, str, Dict[str, str], str]] = [
      "reviews and the coordinator agent stop when it is reached."),
     ("reviews", "Review schedules", "audit.reviews", REVIEWS, "Or a list of shares of the budget, such as [0.1, 0.4, 0.8]."),
 ]
+PRESETS = {"run-types": form.RUN_TYPES, "autonomy": form.AUTONOMY}
 TOPICS = [s[0] for s in SECTIONS] + ["guidance", "defaults", "fields", "all"]
 
 
@@ -269,8 +283,8 @@ def text(topic: str = "all") -> str:
         out += ["", "%s  (%s)" % (title.upper(), field)]
         for name, words in entries.items():
             out.append("  %-22s %s" % (name, words))
-            if key == "run-types":
-                out += preset_lines(form.RUN_TYPES[name], "      ") or ["      (sets nothing itself)"]
+            if key in PRESETS:
+                out += preset_lines(PRESETS[key][name], "      ") or ["      (sets nothing itself)"]
         if note:
             out.append("  " + note)
     if topic in ("all", "guidance"):
@@ -302,11 +316,11 @@ def menu_markdown() -> str:
         out.append("")
         if note:
             out += [note, ""]
-        if key == "run-types":
-            out += ["### What each run type sets", "",
-                    "A run type is a bundle of settings. Anything you set yourself in the brief wins over it.", ""]
+        if key in PRESETS:
+            out += ["### What each %s sets" % {"run-types": "run type", "autonomy": "level of autonomy"}[key], "",
+                    "It is a bundle of settings. Anything you set yourself in the brief wins over it.", ""]
             for name in entries:
-                lines = preset_lines(form.RUN_TYPES[name], "")
+                lines = preset_lines(PRESETS[key][name], "")
                 out += ["**`%s`**" % name, ""] + (["```", *lines, "```"] if lines else ["Sets nothing itself."]) + [""]
     out += ["## Budget guidance", "",
             "Applied below the run type and the brief, from `budget.evaluations`: under 45 is \"about 30\", under 180 "
@@ -344,6 +358,7 @@ def missing() -> List[str]:
                                  ("run type", tuple(form.RUN_TYPES), RUN_TYPES), ("space", form.SPACES, SPACES),
                                  ("harness", form.HARNESS, HARNESS), ("review", tuple(form.REVIEW_PRESETS), REVIEWS),
                                  ("coordinator", form.CHOICES["harness.coordinator"], COORDINATOR),
+                                 ("autonomy", form.CHOICES["harness.autonomy"], AUTONOMY),
                                  ("strategist mode", form.CHOICES["strategist.mode"], STRATEGIST_MODES),
                                  ("strategist action", form.STRATEGIST_ACTIONS, STRATEGIST_ACTIONS),
                                  ("spend policy", form.CHOICES["budget.spend_policy"], SPEND_POLICIES)):
