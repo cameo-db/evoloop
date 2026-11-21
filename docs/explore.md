@@ -54,3 +54,25 @@ What this figure leaves out: a real design space is not a line, a real design is
 real evaluation takes minutes or hours. It shows how the choice of parents shapes where a fixed budget
 goes. It says nothing about how well any strategy does on your problem.
 [How a search works](how-it-works.md) describes each strategy exactly.
+
+## What stopping weak designs early buys, and what it risks
+
+With a promotion ladder (`evaluation.ladder`), every design is compared with the others part way through
+its training run, and the weaker ones stop there. A stopped design is charged only for the part it ran,
+so the same budget covers more designs.
+
+<div class="evo-widget" id="evo-ladder">The ladder figure needs JavaScript.</div>
+
+Each line is one design's score as it trains. Grey lines were stopped at a rung. Two of these designs
+start slowly and finish among the best.
+
+Things to try:
+
+- **Move the first rung earlier.** The saving grows, and at some point the slow starters are stopped: the
+  figure says when the design that would have ended best is lost.
+- **Keep more at each rung.** Fewer good designs are lost, and less is saved.
+- **One rung against two.** The second rung stops more designs, later, when their curves say more.
+
+The curves are made up to show the trade-off. Whether early progress predicts the final score on your
+task is something only your own runs can tell you; start with a late first rung and a generous share
+kept. [The ladder in detail](how-it-works.md#stopping-weak-designs-early-the-screen-and-the-ladder).

@@ -253,7 +253,73 @@
     reset();
   }
 
+  /* ---------------------------------------------------------------- the ladder */
+  function ladder(root) {
+    var W = 720, H = 250, L = 44, R = 12, T = 12, B = 30, N = 24;
+    var state = {at: 0.1, keep: 0.5, second: true};
+    var r = rng(42), runs = [];
+    for (var i = 0; i < N; i++) {      // each design: where it ends up, and how fast it gets there
+      var slow = i === 5 || i === 17;  // two designs start slowly and end among the best
+      runs.push({final: slow ? 0.9 + 0.04 * r() : 0.45 + 0.42 * r(), rate: slow ? 0.55 : 0.08 + 0.14 * r(), n: i});
+    }
+    function at(run, t) { return run.final * (1 - Math.exp(-t / run.rate)); }
+    function draw() {
+      root.innerHTML = "";
+      var rungs = [[state.at, state.keep]].concat(state.second ? [[Math.min(0.9, state.at * 3), state.keep]] : []);
+      var alive = runs.slice(), stopped = {}, cost = 0;
+      rungs.forEach(function (rung) {
+        var ranked = alive.slice().sort(function (a, b) { return at(b, rung[0]) - at(a, rung[0]); });
+        var kept = ranked.slice(0, Math.max(1, Math.round(ranked.length * rung[1])));
+        ranked.slice(kept.length).forEach(function (run) { stopped[run.n] = rung[0]; cost += rung[0]; });
+        alive = kept;
+      });
+      cost += alive.length;
+      var best = runs.reduce(function (a, b) { return b.final > a.final ? b : a; });
+      var bestKept = alive.reduce(function (a, b) { return b.final > a.final ? b : a; });
+      var X = function (t) { return L + (W - L - R) * t; }, Y = function (v) { return T + (H - T - B) * (1 - v); };
+      var a = el("input", {type: "range", min: 5, max: 30, step: 5, value: Math.round(state.at * 100), "aria-label": "Where the first rung is"});
+      a.addEventListener("input", function () { state.at = a.value / 100; draw(); });
+      var k = el("input", {type: "range", min: 25, max: 75, step: 5, value: Math.round(state.keep * 100), "aria-label": "Share kept at each rung"});
+      k.addEventListener("input", function () { state.keep = k.value / 100; draw(); });
+      root.appendChild(el("div", {"class": "evo-controls"}, [
+        el("div", {"class": "evo-row"}, [el("span", {"class": "evo-label", text: "First rung at " + pct(state.at) + " of a run"}), a]),
+        el("div", {"class": "evo-row"}, [el("span", {"class": "evo-label", text: "Kept at each rung: the best " + pct(state.keep)}), k]),
+        chips("Rungs", [[false, "one"], [true, "two (the second at " + pct(Math.min(0.9, state.at * 3)) + ")"]], state.second, function (v) { state.second = v; draw(); })
+      ]));
+      var svg = el("svg", {viewBox: "0 0 " + W + " " + H, role: "img", "class": "evo-plot", "aria-label": "The learning curves of 24 designs, and where the weaker ones are stopped"});
+      [0, 0.25, 0.5, 0.75, 1].forEach(function (v) {
+        svg.appendChild(el("line", {x1: L, y1: Y(v), x2: W - R, y2: Y(v), "class": "evo-grid"}));
+        svg.appendChild(el("text", {x: L - 6, y: Y(v) + 4, "text-anchor": "end", "class": "evo-small", text: v.toFixed(2)}));
+      });
+      rungs.forEach(function (rung) {
+        svg.appendChild(el("line", {x1: X(rung[0]), y1: T, x2: X(rung[0]), y2: H - B, "class": "evo-link"}));
+        svg.appendChild(el("text", {x: X(rung[0]) + 4, y: T + 10, "class": "evo-small", text: "rung at " + pct(rung[0])}));
+      });
+      runs.forEach(function (run) {
+        var end = stopped[run.n] === undefined ? 1 : stopped[run.n], path = "";
+        for (var j = 0; j <= 60; j++) { var t = end * j / 60; path += (j ? "L" : "M") + X(t).toFixed(1) + " " + Y(at(run, t)).toFixed(1); }
+        var line = el("path", {d: path, "class": "evo-run" + (end < 1 ? " cut" : "") + (run === best ? " best" : "")});
+        line.appendChild(el("title", {text: "Design " + (run.n + 1) + (end < 1 ? ": stopped at " + pct(end) + " of its run" : ": trained to the end") + "; would finish at " + run.final.toFixed(2)}));
+        svg.appendChild(line);
+        if (end < 1) { svg.appendChild(el("circle", {cx: X(end), cy: Y(at(run, end)), r: 3.5, "class": "evo-stop"})); }
+      });
+      svg.appendChild(el("text", {x: (L + W - R) / 2, y: H - 6, "text-anchor": "middle", "class": "evo-small", text: "share of a full training run"}));
+      svg.appendChild(el("text", {transform: "translate(12 " + ((T + H - B) / 2) + ") rotate(-90)", "text-anchor": "middle", "class": "evo-small", text: "score so far"}));
+      var read = el("p", {"class": "evo-read"});
+      var lost = bestKept !== best;
+      read.innerHTML = "These " + N + " designs cost <strong>" + cost.toFixed(1) + "</strong> full runs instead of " + N + ": a budget of 100 evaluations would cover about <strong>" +
+        Math.round(100 * N / cost) + "</strong> designs. " + alive.length + " are trained to the end. " +
+        (lost ? "<strong>The design that would have ended best was stopped</strong> (the thick line): it started slowly. The best one kept ends at " + bestKept.final.toFixed(2) + ", not " + best.final.toFixed(2) + "."
+              : "The design that ends best (the thick line) was kept.");
+      root.appendChild(svg);
+      root.appendChild(read);
+    }
+    draw();
+  }
+
   function start() {
+    var rungs = document.getElementById("evo-ladder");
+    if (rungs) { ladder(rungs); }
     var play = document.getElementById("evo-playground");
     if (play) { playground(play); }
     var plan = document.getElementById("evo-plan-explorer");
