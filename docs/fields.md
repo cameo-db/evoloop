@@ -93,6 +93,7 @@ Fields marked **asked** are asked whenever they are empty; the others are never 
 | `harness.level` | `"full"` | yes | How much oversight runs beside the writer. See the harness levels. |
 | `harness.coordinator` | `"code"` | yes | Who picks each slot: code or an agent. |
 | `harness.analyst_every` | `8` | yes | Finished runs between two analyses. |
+| `harness.conductor` | `"code"` | yes | Who runs the search as a whole: code (the schedule, deterministic) or an agent you talk to with `evoloop chat`. |
 
 ## strategist
 

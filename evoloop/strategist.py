@@ -153,6 +153,7 @@ def facts(store: Store, agents: Agents, view: View, settings: Dict[str, Any], wh
         "strategy": settings["strategy"]["mechanism"], "crossover_kinds": settings["crossover"]["kinds"],
         "lineages_set_aside_or_brought_back": {k: v["to"] for k, v in (settings.get("_lineages") or {}).items()},
         "your_earlier_decisions": earlier,
+        "conversation_with_the_person": [{"they_said": c.get("text"), "you_said": c.get("reply")} for c in store.read("chat")][-6:],
     }
 
 

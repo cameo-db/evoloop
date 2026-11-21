@@ -233,7 +233,16 @@ Set with `harness.level`.
 | `standard` | Adds the analyst, which writes lessons from the results every `harness.analyst_every` runs. |
 | `full` | Adds a re-check of the leader on a new seed every 20 designs (or `evaluation.recheck_every`). |
 
-## Coordinator
+## Who runs the search
+
+Set with `harness.conductor`.
+
+| Option | What it does |
+|---|---|
+| `code` | The deterministic option. The schedule and the strategy run the search exactly as set; nothing changes course unless you change it. |
+| `agent` | An agent runs the search and you talk to it (`evoloop chat`). It answers from the records, changes course from a bounded menu when you ask or when the results call for it, and reports what it did. Code still enforces the budget, the limits and the share of new designs, and records every action. |
+
+## Who picks each slot
 
 Set with `harness.coordinator`.
 

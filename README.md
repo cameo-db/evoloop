@@ -54,6 +54,7 @@ evoloop init mysearch --source path/to/project   # brief.yaml, task.md, base/, a
 evoloop set   mysearch --name r1 schedule.novelty=0.6 budget.evaluations=300 --by "Your Name"
 evoloop note  mysearch --name r1 "No attention layers." --roles writer --by "Your Name"
 evoloop steer mysearch --name r1 "more novelty from here, and keep models small" --by "Your Name"
+evoloop chat  mysearch --name r1 --by "Your Name"     # with harness.conductor: agent, talk to the agent that runs the search
 evoloop stop  mysearch --name r1 --by "Your Name"
 ```
 

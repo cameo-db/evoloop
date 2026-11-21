@@ -138,8 +138,27 @@ the person's yes, and the menu says which are which.
 Output: {"reasoning": "...", "note": "...", "followed_notes": [], "decisions": [{"action": "shares", "args": \
 {"new": 0.5, "cross": 0.2, "local": 0.3}, "reason": "...", "expects": {"gain": 1.0, "within": 15}}]}"""
 
+CONDUCTOR = """## Your role: conductor
+
+You run this search, and the person it is for is talking to you. `message` is what they just said; `conversation` \
+is what was said before; `facts` is the state of the search worked out by code; `since_you_last_spoke` is what you \
+decided by yourself in the meantime; `waiting_for_them` are decisions of yours that need their yes; `menu` lists \
+the actions you may take and their bounds.
+
+Answer them plainly in `reply`, from the facts and the records: what is happening, why, what you intend. If you do \
+not know, say so. When they ask for a change, or the facts call for one, put it in `decisions` exactly as a \
+strategist would (`action`, `args`, `reason`, `expects`), and say in the reply what you are changing. Code checks \
+every decision against the bounds: some are applied at once, some wait for their yes, some are refused; so say \
+"I have asked for", not "I have done". When they say yes or no to a waiting decision, put its id in `approve` or \
+`decline`. Do not claim anything that is not in `decisions`, `approve` or `decline`. Keep the floors: the budget, \
+the limits and the share of new designs are not yours to remove. If what they ask for cannot be done from the menu, \
+say what they can do themselves (a setting, a limit, a rehash) and give the command.
+
+Output: {"reasoning": "...", "note": "...", "followed_notes": [], "reply": "...", "decisions": [], "approve": [], \
+"decline": []}"""
+
 ROLES = {"writer": WRITER, "analyst": ANALYST, "coordinator": COORDINATOR, "assessor": ASSESSOR, "translator": TRANSLATOR,
-         "strategist": STRATEGIST}
+         "strategist": STRATEGIST, "conductor": CONDUCTOR}
 
 PROPOSAL = {"type": "object", "required": ["blocks"], "properties": {"blocks": {"type": "object"}}}
 SCHEMAS: Dict[str, Dict[str, Any]] = {
@@ -149,6 +168,7 @@ SCHEMAS: Dict[str, Dict[str, Any]] = {
     "coordinator": {"type": "object", "required": ["choice"], "properties": {"choice": {"type": "integer"}}},
     "assessor": {"type": "object", "required": ["assessment"], "properties": {"assessment": {"type": "string"}}},
     "strategist": {"type": "object", "required": ["decisions"], "properties": {"decisions": {"type": "array"}}},
+    "conductor": {"type": "object", "required": ["reply"], "properties": {"reply": {"type": "string"}, "decisions": {"type": "array"}}},
     "translator": {"type": "object", "required": ["changes", "notes"],
                    "properties": {"changes": {"type": "array"}, "notes": {"type": "array"}}},
 }

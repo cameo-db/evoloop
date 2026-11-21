@@ -45,6 +45,7 @@ the person asking, which is recorded in the ledger, and an optional `--reason`.
 | `evoloop note <dir> --name N "TEXT" [--roles R...] [--from-review V3] --by NAME` | a standing note the agents read |
 | `evoloop withdraw <dir> --name N --id S4 --by NAME` | withdraws a note |
 | `evoloop steer <dir> --name N "WORDS" --by NAME [--yes]` | your words turned into changes and notes; shown first, applied with `--yes` |
+| `evoloop chat <dir> --name N ["WORDS"] --by NAME` | talk with the agent that runs the search (`harness.conductor: agent`); what it decides is checked and recorded |
 | `evoloop stop <dir> --name N --by NAME` | starts nothing more; the run ends when its jobs do |
 | `evoloop stop <dir> --name N --run R12 --by NAME` | stops one run |
 | `evoloop review <dir> --name N [--roles R...] --by NAME` | has the assessor review the agents now |

@@ -201,6 +201,8 @@ class Controller:
             self.answer(str(request.get("id")), kind == "approve", who, why)
         elif kind == "lineage":
             self.set_lineage(str(request.get("lineage")), str(request.get("to")), who, why)
+        elif kind == "decisions":      # what the conductor decided while talking with the person: checked like any other
+            self.take_decisions([d for d in request.get("decisions") or [] if isinstance(d, dict)])
         elif kind == "rehash":
             self.rehash(who, why, bool(request.get("moves_scores")))
         elif kind == "force":
@@ -786,7 +788,7 @@ class Controller:
             else repr(decision.get("action"))[:60], "args": json.loads(json.dumps(args, default=str)),
             "reason": str(decision.get("reason") or "")[:600], "expects": expects, "call": decision.get("call"),
             "best_before": view.display(best["value"]) if best else None, "effects": effects,
-            "at_designs": strategist.designs_ever(view)}, **fields))
+            "at_designs": strategist.designs_ever(view), "chat": decision.get("chat")}, **fields))
 
     def decide(self, decision: Dict[str, Any]) -> None:
         view = self.view()

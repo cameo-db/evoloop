@@ -50,7 +50,7 @@ agents are likely to cost) before anything is confirmed.
   `evoloop brief DIR --confirm "Their Name"`. Never on your own word.
 - **The approved plan is the agreement to spend.** Do not start a run they have not confirmed.
 - **Dry-run first** with `agents.backend: stub` before real agents are paid.
-- **Steering goes through the commands** (`set`, `note`, `steer`, `stop`, `approve`, `decline`,
+- **Steering goes through the commands** (`set`, `note`, `steer`, `chat`, `stop`, `approve`, `decline`,
   `lineage`), always with `--by` the person's name. Do not edit a run's files.
 - **Do not change `base/` or `adapter/` during a run.**
 - **Test-set results are under `diagnostics.hidden`** and are never shown to the search's agents.

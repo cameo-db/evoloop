@@ -102,6 +102,10 @@ AUTONOMY = {
 }
 AUTONOMY_NOTE = ("Left empty, the run type decides. What you set yourself in the brief is kept at every level. `evoloop plan` "
                  "and `evoloop estimate` show what the agents are likely to cost at each of the three.")
+CONDUCTOR = {
+    "code": "The deterministic option. The schedule and the strategy run the search exactly as set; nothing changes course unless you change it.",
+    "agent": "An agent runs the search and you talk to it (`evoloop chat`). It answers from the records, changes course from a bounded menu when you ask or when the results call for it, and reports what it did. Code still enforces the budget, the limits and the share of new designs, and records every action.",
+}
 COORDINATOR = {
     "code": "The schedule picks the kind of slot and the strategy picks the parents.",
     "agent": "An agent picks each slot from options code prepares; what the schedule alone would have picked is "
@@ -184,6 +188,7 @@ FIELDS: Dict[str, str] = {
     "harness.autonomy": "How much of the search the agents decide: harnessed, guided or agentic. Sets the fields below it.",
     "harness.level": "How much oversight runs beside the writer. See the harness levels.",
     "harness.coordinator": "Who picks each slot: code or an agent.",
+    "harness.conductor": "Who runs the search as a whole: code (the schedule, deterministic) or an agent you talk to with `evoloop chat`.",
     "harness.analyst_every": "Finished runs between two analyses.",
     "strategist.mode": "Whether an agent reviews the search as a whole and may change its course. See the strategist.",
     "strategist.every": "Scored designs between two meetings of the strategist.",
@@ -277,7 +282,8 @@ SECTIONS: List[Tuple[str, str, str, Dict[str, str], str]] = [
     ("moves", "Local moves", "schedule.local_mix", LOCAL_MOVES, ""),
     ("spaces", "Search spaces", "space.preset", SPACES, ""),
     ("harness", "Harness levels", "harness.level", HARNESS, ""),
-    ("coordinator", "Coordinator", "harness.coordinator", COORDINATOR, ""),
+    ("conductor", "Who runs the search", "harness.conductor", CONDUCTOR, ""),
+    ("coordinator", "Who picks each slot", "harness.coordinator", COORDINATOR, ""),
     ("strategist", "The strategist", "strategist.mode", STRATEGIST_MODES, ""),
     ("strategist-actions", "What the strategist may do", "strategist.ask_first", STRATEGIST_ACTIONS,
      "Every decision is a ledger entry with the gain it expects, scored `strategist.horizon` designs later."),
@@ -388,6 +394,7 @@ def missing() -> List[str]:
                                  ("run type", tuple(form.RUN_TYPES), RUN_TYPES), ("space", form.SPACES, SPACES),
                                  ("harness", form.HARNESS, HARNESS), ("review", tuple(form.REVIEW_PRESETS), REVIEWS),
                                  ("coordinator", form.CHOICES["harness.coordinator"], COORDINATOR),
+                                 ("conductor", form.CHOICES["harness.conductor"], CONDUCTOR),
                                  ("autonomy", form.CHOICES["harness.autonomy"], AUTONOMY),
                                  ("effort", form.CHOICES["agents.effort"], EFFORT),
                                  ("strategist mode", form.CHOICES["strategist.mode"], STRATEGIST_MODES),

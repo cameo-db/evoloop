@@ -54,7 +54,7 @@ def test_the_docs_name_only_fields_and_commands_that_exist():
     groups = {p.split(".")[0] for p in paths}
     commands = {"init", "example", "brief", "plan", "menu", "guide", "run", "status", "report", "study", "set", "note",
                 "withdraw", "steer", "stop", "review", "approve", "decline", "lineage", "estimate", "setup", "form",
-                "rehash", "force", "import", "reference", "leaderboard", "show", "controller"}
+                "rehash", "force", "import", "reference", "leaderboard", "show", "controller", "chat"}
     for name in sorted(os.listdir(os.path.join(ROOT, "docs"))) + ["../README.md"]:
         if not name.endswith(".md"):
             continue

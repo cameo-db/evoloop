@@ -462,6 +462,77 @@ def cmd_stop(args: Any) -> int:
     return 0
 
 
+def cmd_chat(args: Any) -> int:
+    """Talk with the agent that runs the search. It answers from the run's records, and what it decides in
+    answer goes to the controller as requests, checked like any other decision and recorded."""
+    from . import strategist
+    from .agents import AgentError, Agents
+    controller = offline(args)
+    controller.refresh()
+    controller.pool.shutdown(wait=False)
+    if controller.settings["harness"]["conductor"] != "agent":
+        raise SystemExit("this search is run by code, so there is no agent to talk to. To hand it to one: "
+                         "evoloop set %s --name %s harness.conductor=agent --by NAME" % (args.dir, args.name))
+    agents = Agents(controller.settings, controller.folder, controller.store, tag="chat%d" % int(time.time()))
+
+    def say(text: str) -> None:
+        controller.refresh()
+        store, view, settings = controller.store, controller.view(), controller.settings
+        ledger = store.merged_list("ledger")
+        talks = store.read("chat")
+        last = talks[-1]["t"] if talks else 0
+        mine = [e for e in ledger if e.get("kind") == "decision" and e.get("action")]
+        waiting = [{"id": e["id"], "action": e["action"], "args": e.get("args"), "why_it_waits": e.get("why")}
+                   for e in mine if e.get("status") == "proposed"]
+        context = {"objective": settings["objective"], "message": text,
+                   "conversation": [{"they_said": c.get("text"), "you_said": c.get("reply")} for c in talks][-8:],
+                   "facts": strategist.facts(store, agents, view, settings, "the person is talking to you"),
+                   "menu": strategist.menu(settings), "waiting_for_them": waiting,
+                   "since_you_last_spoke": [{"id": e["id"], "action": e["action"], "args": e.get("args"), "status": e.get("status"),
+                                             "reason": e.get("reason")} for e in mine if e.get("t", 0) > last][-10:],
+                   "the_run_is": (read_json(os.path.join(controller.run_dir, "run.json"), {}) or {}).get("status")}
+        try:
+            answer = agents.call("conductor", context, about="chat")
+        except AgentError as exc:
+            raise SystemExit("the conductor could not be reached: %s" % exc)
+        number = "T%d" % (len(talks) + 1)
+        decisions = [dict(d, chat=number) for d in answer.get("decisions") or [] if isinstance(d, dict)]
+        ids = {w["id"] for w in waiting}
+        yes = [i for i in answer.get("approve") or [] if i in ids]
+        no = [i for i in answer.get("decline") or [] if i in ids and i not in yes]
+        store.append("chat", {"id": number, "by": args.by, "text": text, "reply": answer.get("reply"), "decisions": decisions,
+                              "approve": yes, "decline": no, "call": answer.get("_call")})
+        out(str(answer.get("reply") or ""))
+        if decisions:
+            request(args, {"kind": "decisions", "decisions": decisions})
+        for kind, which in (("approve", yes), ("decline", no)):
+            for one in which:
+                time.sleep(0.002)
+                request(args, {"kind": kind, "id": one})
+        for d in decisions:
+            out("  asked for: %s %s" % (d.get("action"), json.dumps(d.get("args"), default=str)))
+        for one in yes:
+            out("  your yes to %s is recorded" % one)
+        for one in no:
+            out("  your no to %s is recorded" % one)
+        if decisions or yes or no:
+            out("  (checked and applied at the controller's next turn; `evoloop report` shows what became of each)")
+
+    if args.message:
+        say(args.message)
+        return 0
+    out("Talking with the conductor of %s. An empty line ends the talk." % args.name)
+    while True:
+        try:
+            text = input("you> ").strip()
+        except (EOFError, KeyboardInterrupt):
+            break
+        if not text:
+            break
+        say(text)
+    return 0
+
+
 def cmd_rehash(args: Any) -> int:
     request(args, {"kind": "rehash", "moves_scores": bool(args.moves_scores)})
     out("requested: the change to base/ or adapter/ is recorded as meant%s. The run goes on at its next turn, or when it is "
@@ -713,6 +784,8 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--yes", action="store_true")
     p = add("stop", cmd_stop, "stop the search once running jobs finish, or stop one run", named=True, by=True)
     p.add_argument("--run")
+    p = add("chat", cmd_chat, "talk with the agent that runs the search (harness.conductor: agent)", named=True, by=True)
+    p.add_argument("message", nargs="?", help="one message; leave it out to talk back and forth")
     p = add("rehash", cmd_rehash, "record that a change to base/ or adapter/ during a run is meant", named=True, by=True)
     p.add_argument("--moves-scores", action="store_true", help="scores before and after are not comparable: begin a new period")
     p = add("force", cmd_force, "order the next slots yourself: a mode, a kind, an instruction", named=True, by=True)

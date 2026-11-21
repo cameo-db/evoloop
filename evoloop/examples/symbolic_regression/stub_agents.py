@@ -103,6 +103,24 @@ def respond(role, context):
                                                        "default": "yes"}] if len(results) > 3 else [])
     if role == "coordinator":
         return dict(base, choice=int(context.get("code_would_choose") or 0))
+    if role == "conductor":
+        said = str(context.get("message") or "").lower()
+        decisions, approve, decline = [], [], []
+        waiting = [w["id"] for w in context.get("waiting_for_them") or []]
+        if "novel" in said or "explore" in said:
+            decisions.append({"action": "novelty", "args": {"novelty": 0.8}, "reason": "you asked for more exploration",
+                              "expects": {"gain": 0.5, "within": 10}})
+        if "archive" in said:
+            decisions.append({"action": "strategy", "args": {"mechanism": "archive"}, "reason": "you asked for the archive",
+                              "expects": {"gain": 0.5, "within": 15}})
+        if said.startswith("yes"):
+            approve = waiting
+        if said.startswith("no"):
+            decline = waiting
+        facts = context.get("facts") or {}
+        reply = "The best so far is %s. %d decision(s) of mine wait for you. I have asked for %d change(s)." % (
+            (facts.get("best") or {}).get("candidate"), len(waiting), len(decisions))
+        return dict(base, reply=reply, decisions=decisions, approve=approve, decline=decline)
     if role == "strategist":
         facts = context.get("facts") or {}
         if (facts.get("designs_since_the_best_rose") or 0) >= 6:

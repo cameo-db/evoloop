@@ -21,7 +21,7 @@ What can change:
 | the population | `population.lineages`, `population.trial_runs`, `population.quota` |
 | crossover and variation | `crossover.kinds`, `variation.proposals_per_slot` |
 | the search space | `space.preset`, `space.roles`, `space.forbidden_terms` |
-| the harness and the audit | `harness.level`, `harness.coordinator`, `audit.reviews` |
+| the harness and the audit | `harness.level`, `harness.coordinator`, `harness.conductor`, `audit.reviews` |
 | the budget | `budget.evaluations`, `budget.model_dollars`, `budget.wall_clock_hours` |
 | compute | `compute.max_running`, `compute.time_limit`, `compute.qos`, `compute.gpus` |
 | the model behind a role | `agents.models`, `agents.default_model` |
@@ -190,3 +190,10 @@ evoloop report mysearch --name r1          # everything
 A run that was steered is not a clean test of one fixed strategy. The report lists every entry of the
 ledger with the number of evaluations at which it took effect, and the study file says how many
 steering entries the run had.
+
+## Talking to the agent that runs the search
+
+With `harness.conductor: agent` an agent is in charge of the course of the search, and `evoloop chat`
+talks to it: it explains, changes course within its bounds when you ask, and takes your yes or no. With
+`harness.conductor: code` (the default) the search is deterministic and you steer with the commands on
+this page. See [who runs the search](strategist.md#who-runs-the-search-code-or-an-agent-you-talk-to).

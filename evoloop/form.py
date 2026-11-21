@@ -50,7 +50,7 @@ DEFAULTS: Dict[str, Any] = {
                    "specialist_rate": 0.15},
     "crossover": {"kinds": ["block_swap", "graft", "hybrid"]},
     "variation": {"proposals_per_slot": 2, "step_adaptation": True, "settings_by": "agent"},
-    "harness": {"autonomy": None, "level": "full", "coordinator": "code", "analyst_every": 8},
+    "harness": {"autonomy": None, "level": "full", "coordinator": "code", "analyst_every": 8, "conductor": "code"},
     "strategist": {"mode": "off", "every": 15, "plateau": 12, "horizon": 15, "min_new_share": 0.10,
                    "max_share_shift": 0.15, "force_max": 5, "ask_first": ["strategy"]},
     "evaluation": {"allowance": None, "allowance_unit": "steps", "seed": 0, "noise": None, "screen_fraction": 0.5,
@@ -108,7 +108,7 @@ CHOICES = {"objective.direction": ("maximize", "minimize"), "strategy.mechanism"
            "compute.scheduler": ("local", "slurm"), "agents.backend": ("stub", "anthropic_api", "claude_code"),
            "evaluation.on_length_change": ("auto", "continue", "rerun", "compare_anyway"),
            "variation.settings_by": ("agent", "sampler"), "strategist.mode": ("off", "advise", "act"),
-           "budget.spend_policy": ("none", "pace"), "harness.autonomy": ("harnessed", "guided", "agentic"),
+           "budget.spend_policy": ("none", "pace"), "harness.autonomy": ("harnessed", "guided", "agentic"), "harness.conductor": ("code", "agent"),
            "agents.effort": ("low", "medium", "high", "xhigh", "max", "model_default"), "agents.fallbacks": ("default", "off")}
 
 # What may change while a run is going. A change applies to the next design; jobs already started are untouched.
@@ -308,6 +308,10 @@ def resolve(brief: Dict[str, Any], ledger: Optional[List[Dict[str, Any]]] = None
     # job variables) or a change to the frozen code that the person said moves scores.
     period = sum(1 for e in (ledger or []) if e.get("new_period") and e.get("status", "applied") == "applied")
     settings["_period"] = period
+    # With an agent running the search, it has to be able to act: its meetings are on unless the brief says how.
+    if settings["harness"]["conductor"] == "agent" and settings["strategist"]["mode"] == "off":
+        settings["strategist"]["mode"] = "act"
+        sources["strategist.mode"] = "an agent runs the search (harness.conductor)"
     settings["_guidance"] = label
     settings["notes"] = [e for e in (ledger or []) if e.get("kind") == "note" and e.get("status", "active") == "active"]
     # Lineages the strategist (or the person) retired or revived: the last word on each stands.

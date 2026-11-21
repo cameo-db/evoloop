@@ -83,6 +83,46 @@ leave it off.
 Switching it `off` during a run takes effect at once: slots it had ordered are given up, and a meeting
 that was under way changes nothing.
 
+## Who runs the search: code, or an agent you talk to
+
+`harness.conductor` decides who is in charge of the course of the search.
+
+| `harness.conductor` | What happens |
+|---|---|
+| `code` (the default) | The deterministic option. The schedule and the strategy run the search exactly as set. Nothing changes course unless you change it (or a strategist you switched on does, within its bounds). |
+| `agent` | An agent runs the search and you talk to it. It is the strategist with a voice: it meets on the same occasions, decides from the same menu under the same bounds, and it answers you. |
+
+```
+evoloop chat mysearch --name r1 --by "Your Name"                               # talk back and forth; an empty line ends it
+evoloop chat mysearch --name r1 "why so few new designs lately?" --by "Your Name"   # one message, one answer
+```
+
+In a talk the agent is given the state of the search worked out by code, what it decided since you last
+spoke, what waits for your yes, and the conversation so far. It can:
+
+- **explain**: what is happening and why, from the records;
+- **change course when you ask**: its decisions go to the controller as requests and are checked like
+  any other decision, so one within the bounds is applied at the next turn, one beyond them waits for
+  your yes, and one off the menu is refused. The command prints each thing it asked for;
+- **take your yes or no**: saying "yes" to a waiting decision in the talk approves it in your name.
+
+What you say is also shown to the agent at its later meetings, so a talk steers what it does when you
+are not there. Every message, answer and decision is kept (`chat.jsonl`, and the ledger).
+
+What does not change with an agent in charge: code enforces the budget, the limits, the frozen code and
+the floor on new designs; code picks parents and records every action. The agent cannot edit files or
+settings outside its menu. For those it tells you the command.
+
+Choosing `agent` switches the strategist to `act` if it was `off`; `strategist.mode: advise` keeps
+every decision waiting for your yes. You can switch either way during a run:
+
+```
+evoloop set mysearch --name r1 harness.conductor=agent --by "Your Name"
+evoloop set mysearch --name r1 harness.conductor=code  --by "Your Name"
+```
+
+A talk costs one model call per message, charged to the run's model budget like any other call.
+
 ## Decisions that wait for you
 
 ```
