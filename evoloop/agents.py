@@ -170,11 +170,16 @@ class _BackendConfig:
     def model(self) -> Any:
         a = self.holder["settings"]["agents"]
         return SimpleNamespace(call_timeout_seconds=a["call_timeout_seconds"], max_tokens=a["max_tokens"],
-                               prices=a.get("prices") or {}, backend=a["backend"])
+                               prices=a.get("prices") or {}, backend=a["backend"], fallbacks=a.get("fallbacks") or "off")
 
     def model_for(self, role: str) -> Any:
         a = self.holder["settings"]["agents"]
         return (a.get("models") or {}).get(role) or a.get("default_model")
+
+    def effort_for(self, role: str) -> Any:
+        """The effort set for a role, else the one set for every role; None leaves it to the model."""
+        a = self.holder["settings"]["agents"]
+        return (a.get("efforts") or {}).get(role) or a.get("effort")
 
 
 class Agents:

@@ -41,23 +41,24 @@ evoloop plan mysearch          # the settings, then the estimate
 evoloop estimate mysearch      # the estimate alone
 ```
 
-This is the estimate for the built-in example at 100 designs, with a model priced by hand at $3 per
-million input tokens and $15 per million output tokens. The price is an illustration; put in your
-own (`agents.prices`).
+This is the estimate for the built-in example at 100 designs with the default model and effort
+(Claude Opus 5.5; prices from the built-in list of 2026-11-03):
 
 ```
 What the agents will cost (an estimate, for 100 designs):
-  writer       about 110 (100 to 130) calls, about 674,160 (534,610 to 898,476) tokens, about $4.09 ($2.54 to $6.36)
-  analyst      about 12 (12 to 15) calls, about 50,975 (49,725 to 63,420) tokens, about $0.23 ($0.21 to $0.31)
-  strategist   about 10 (7 to 13) calls, about 33,128 (21,585 to 45,670) tokens, about $0.14 ($0.09 to $0.22)
-  assessor     about 6 (6 to 6) calls, about 45,644 (44,894 to 46,768) tokens, about $0.18 ($0.17 to $0.20)
-  in all       about 138 (125 to 164) calls, about 803,906 (650,814 to 1,054,334) tokens, about $4.64 ($3.01 to $7.09)
+  writer       about 110 (100 to 130) calls, about 674,160 (534,610 to 898,476) tokens, about $5.45 ($3.39 to $8.48)   [claude-opus-5-5, effort high]
+  analyst      about 12 (12 to 15) calls, about 50,975 (49,725 to 63,420) tokens, about $0.30 ($0.28 to $0.41)   [claude-opus-5-5, effort medium]
+  strategist   about 10 (7 to 13) calls, about 33,128 (21,585 to 45,670) tokens, about $0.19 ($0.12 to $0.29)   [claude-opus-5-5, effort medium]
+  assessor     about 6 (6 to 6) calls, about 45,644 (44,894 to 46,768) tokens, about $0.24 ($0.23 to $0.27)   [claude-opus-5-5, effort medium]
+  in all       about 138 (125 to 164) calls, about 803,906 (650,814 to 1,054,334) tokens, about $6.18 ($4.02 to $9.45)
 
 The same search at each level of autonomy (harness.autonomy; yours is not set, so the run type decides):
-  harnessed  about 109 (101 to 129) calls, about $2.62 ($1.92 to $3.74)
-  guided     about 138 (125 to 164) calls, about $4.64 ($3.01 to $7.09)
-  agentic    about 267 (242 to 316) calls, about $5.72 ($3.92 to $8.47)
+  harnessed  about 109 (101 to 129) calls, about $3.48 ($2.56 to $4.98)
+  guided     about 138 (125 to 164) calls, about $6.18 ($4.02 to $9.45)
+  agentic    about 267 (242 to 316) calls, about $7.64 ($5.25 to $11.29)
 ```
+
+The plan goes on to show the same search on each current model; see [Model and effort](models.md).
 
 The example's code is a few lines long. A real model's blocks are far larger, and the writer's cost
 grows with them: it is shown the parents' open blocks and returns the blocks it changes.
@@ -71,8 +72,8 @@ grows with them: it is shown the parents' open blocks and returns the blocks it 
 - **The size of a call** is measured from your search folder: the task text and the open blocks, at
   about four characters to a token, with the designs each kind of slot is shown and the blocks it
   returns.
-- **Dollars** come from `agents.prices`, which you give: `{model: {input: x, output: y}}` in dollars
-  per million tokens. No price is built in. Without one the estimate is in calls and tokens.
+- **Dollars** come from the price of the model each role runs on: yours (`agents.prices`) where you give one, else
+  the built-in list, which is dated. A model with no price is estimated in calls and tokens only.
 
 ### How far to trust it
 

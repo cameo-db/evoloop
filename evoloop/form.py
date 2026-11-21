@@ -65,7 +65,8 @@ DEFAULTS: Dict[str, Any] = {
                 "extra_sbatch": [], "infrastructure_retries": 3, "max_running": None, "max_waiting": 1},
     "run_command": "python adapter/run.py",
     "audit": {"reviews": "halfway", "review_roles": "all"},
-    "agents": {"backend": None, "stub_module": None, "default_model": None, "models": {}, "max_tokens": 16000,
+    "agents": {"backend": None, "stub_module": None, "default_model": "claude-opus-5-5", "models": {}, "effort": "medium",
+               "efforts": {"writer": "high"}, "fallbacks": "default", "max_tokens": 16000,
                "call_timeout_seconds": 900, "max_concurrent_calls": 4, "max_retries": 2, "prices": {}},
     "data": {"name": None, "accession": None, "input": None, "output": None, "examples": None,
              "preprocessing": None, "splits": None, "fraction": 1.0},
@@ -101,13 +102,15 @@ CHOICES = {"objective.direction": ("maximize", "minimize"), "strategy.mechanism"
            "compute.scheduler": ("local", "slurm"), "agents.backend": ("stub", "anthropic_api", "claude_code"),
            "evaluation.on_length_change": ("auto", "continue", "rerun", "compare_anyway"),
            "variation.settings_by": ("agent", "sampler"), "strategist.mode": ("off", "advise", "act"),
-           "budget.spend_policy": ("none", "pace"), "harness.autonomy": ("harnessed", "guided", "agentic")}
+           "budget.spend_policy": ("none", "pace"), "harness.autonomy": ("harnessed", "guided", "agentic"),
+           "agents.effort": ("low", "medium", "high", "xhigh", "max", "model_default"), "agents.fallbacks": ("default", "off")}
 
 # What may change while a run is going. A change applies to the next design; jobs already started are untouched.
 LIVE = ("schedule.", "strategist.", "population.", "crossover.", "variation.", "harness.", "strategy.", "space.", "audit.", "budget.",
         "compute.max_running", "compute.time_limit", "compute.qos", "compute.partition", "compute.gpus", "compute.max_waiting",
         "evaluation.screen_", "evaluation.recheck_every", "evaluation.speciality_metrics", "evaluation.on_length_change",
-        "evaluation.leaders_refit", "agents.models", "agents.default_model", "report.", "run.")
+        "evaluation.leaders_refit", "agents.models", "agents.default_model", "agents.effort", "agents.efforts", "agents.fallbacks", "agents.prices",
+        "report.", "run.")
 # These change what a score means. They may change too, and then a new period begins: the leaders are fitted again
 # (or continued) under the new setting and earlier scores stop deciding selection.
 NEW_PERIOD = ("evaluation.allowance", "evaluation.seed", "data.fraction")
@@ -184,7 +187,7 @@ def flatten(tree: Dict[str, Any], prefix: str = "") -> Dict[str, Any]:
 
 
 # Mappings that are one value, not a group of fields.
-ATOMIC = ("space.roles", "schedule.local_mix", "evaluation.speciality_metrics", "agents.models", "agents.prices",
+ATOMIC = ("space.roles", "schedule.local_mix", "evaluation.speciality_metrics", "agents.models", "agents.prices", "agents.efforts",
           "data.examples", "data.splits")
 
 
@@ -357,6 +360,12 @@ def check_value(path: str, value: Any) -> Optional[str]:
         return "%s must be a whole number, 0 or more" % path
     if path == "evaluation.screen_keep" and not (number and 0 < value <= 1):
         return "evaluation.screen_keep must be above 0 and at most 1"
+    if path == "agents.efforts" and value not in EMPTY and (not isinstance(value, dict) or not all(
+            isinstance(r, str) and v in CHOICES["agents.effort"] for r, v in value.items())):
+        return "agents.efforts must map a role to one of: %s" % ", ".join(CHOICES["agents.effort"])
+    if path == "agents.models" and value not in EMPTY and (not isinstance(value, dict) or not all(
+            isinstance(r, str) and isinstance(m, str) and m for r, m in value.items())):
+        return "agents.models must map a role to a model id"
     if path == "strategist.ask_first" and (not isinstance(value, list) or not all(isinstance(a, str) for a in value)
                                            or set(value) - set(STRATEGIST_ACTIONS)):
         return "strategist.ask_first must be a list from: %s" % ", ".join(STRATEGIST_ACTIONS)
@@ -424,12 +433,23 @@ def warnings(settings: Dict[str, Any]) -> List[str]:
     if suggested and suggested != mech:
         out.append("for %s evaluations the guidance suggests the %s strategy; this run uses %s" % (label, suggested, mech))
     agents = settings["agents"]
-    if agents["backend"] == "anthropic_api" and settings["budget"]["model_dollars"] is not None:
-        models = {agents.get("default_model")} | set((agents.get("models") or {}).values())
-        unpriced = sorted(m for m in models if m and m not in (agents.get("prices") or {}))
-        if unpriced:
-            out.append("no price is given for %s (agents.prices, dollars per million tokens as {input, output}): "
-                       "the spend cap cannot count those calls, and the run pauses after three of them" % ", ".join(unpriced))
+    if agents["backend"] not in (None, "stub"):
+        from .model import catalog
+        roles = ("writer", "analyst", "coordinator", "strategist", "assessor", "translator")
+        models = {role: (agents.get("models") or {}).get(role) or agents.get("default_model") for role in roles}
+        for model in sorted({m for m in models.values() if m}):
+            if catalog.rates(model, agents.get("prices"))[0] is None and agents["backend"] == "anthropic_api":
+                out.append("no price is known for %s: give agents.prices ({%s: {input: x, output: y}}, dollars per million "
+                           "tokens), or the spend cap cannot count its calls and the run pauses after three of them" % (model, model))
+        seen = set()
+        for role, model in models.items():
+            effort = (agents.get("efforts") or {}).get(role) or agents.get("effort")
+            fault = catalog.fault(model, effort)
+            if fault and fault not in seen:
+                seen.add(fault)
+                out.append(fault)
+        if not agents.get("default_model") and not all(models.values()):
+            out.append("no model is set for some roles: give agents.default_model")
     if n and n < 60 and mech == "archive":
         out.append("an archive needs many designs to fill; with %d evaluations most cells will hold one model" % n)
     if n and n < 60 and settings["space"]["preset"] in ("architecture_and_recipe", "everything"):
@@ -527,7 +547,7 @@ BLANK = {
     "evaluation": {"allowance": None, "allowance_unit": "steps", "noise": None, "quick_check": None},
     "baseline": {"mode": None},
     "compute": {"gpus": None, "scheduler": "local", "partition": None, "qos": None, "setup": []},
-    "agents": {"backend": None, "default_model": None, "models": {}},
+    "agents": {"backend": None, "default_model": "claude-opus-5-5", "effort": "medium", "efforts": {"writer": "high"}, "models": {}},
     "space": {"forbidden": [], "must_keep": []},
     "data": {"name": None, "accession": None, "preprocessing": None, "splits": None},
     "depositor": {"name": None, "orcid": None, "lab": None, "institution": None},

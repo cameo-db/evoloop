@@ -15,6 +15,7 @@ changeable while it runs.
 | Crossover | `block_swap`, `graft`, `hybrid` | `crossover.kinds` |
 | Search space | settings only, one module, the architecture, the architecture and the recipe, your own list | `space.preset` |
 | Harness | `minimal`, `standard`, `full`; slots chosen by code or by a coordinator agent | `harness.level`, `harness.coordinator` |
+| Model and effort | any Claude model and effort level, for every role or role by role | `agents.default_model`, `agents.effort` |
 | Autonomy | `harnessed`, `guided`, `agentic`: how much the agents decide | `harness.autonomy` |
 | Strategist | off, advising, or acting within bounds you set | `strategist.mode` |
 | Spend | a dollar cap on the agents, paced by code | `budget.model_dollars`, `budget.spend_policy` |
@@ -57,6 +58,7 @@ Three things hold everywhere:
 - [Setting up a search](setting-up.md): the search folder, marking the code, the brief.
 - [How a search works](how-it-works.md): the schedule, the strategies, crossover, novelty.
 - [Steering a run](steering.md): changing settings, notes to the agents, stopping, without a restart.
+- [Model and effort](models.md): which model each role runs on and how hard it reasons, with defaults you can change.
 - [Agentic or harnessed, and what it costs](autonomy.md): how much the agents decide, with an estimate of the cost of each level.
 - [The strategist and the budget](strategist.md): an agent that can change the course of a search, and the spend cap.
 - [Auditing the agents](auditing.md): the scorecard and the reviews.

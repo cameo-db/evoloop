@@ -70,6 +70,27 @@ HARNESS = {
     "standard": "Adds the analyst, which writes lessons from the results every `harness.analyst_every` runs.",
     "full": "Adds a re-check of the leader on a new seed every 20 designs (or `evaluation.recheck_every`).",
 }
+from .model import catalog as _catalog   # noqa: E402
+
+MODELS = {model: "%s. $%g in, $%g out per million tokens. Effort: %s%s.%s" % (
+    info["name"], info["input"], info["output"], ", ".join(info["efforts"]) or "none",
+    " (its own default: %s)" % info["own_default"] if info["own_default"] else "",
+    " " + info["note"][0].upper() + info["note"][1:] + "." if info["note"] else "")
+    for model, info in _catalog.MODELS.items()}
+MODELS_NOTE = ("The default is `claude-opus-5-5` for every role; `agents.models` sets a model per role. Any other model id can "
+               "be given: it is then priced only if you give `agents.prices`. Prices are Anthropic's first-party API rates as "
+               "of %s and may have changed; a price in `agents.prices` always wins." % _catalog.AS_OF)
+EFFORT = {
+    "low": "The least reasoning and the fewest tokens. For simple, high-volume calls.",
+    "medium": "The default for every role but the writer: a cost-saving step where quality holds.",
+    "high": "The default for the writer, whose designs are where judgment matters most.",
+    "xhigh": "Between high and max. Not accepted by the 4.6 models.",
+    "max": "The most reasoning, for when correctness matters more than cost.",
+    "model_default": "Send no effort: the model uses its own default.",
+}
+EFFORT_NOTE = ("`agents.effort` is for every role and `agents.efforts` sets one per role, e.g. {writer: xhigh, analyst: low}. "
+               "Reasoning is billed as output tokens, so higher effort costs more; the estimate does not count it, and a "
+               "run's measured cost does.")
 AUTONOMY = {
     "harnessed": "Code decides where the search goes: the schedule picks each slot, there is no strategist, settings "
                  "moves are drawn by code, one proposal per slot. Agents write the designs and the lessons. The fewest "
@@ -216,14 +237,17 @@ FIELDS: Dict[str, str] = {
     "audit.review_roles": "`all`, or the list of roles to review.",
     "agents.backend": "stub (no cost), anthropic_api, or claude_code.",
     "agents.stub_module": "With stub: a Python file with respond(role, context); empty for the built-in stub.",
-    "agents.default_model": "The model every role uses unless `agents.models` names another.",
+    "agents.default_model": "The model every role uses unless `agents.models` names another. See the models.",
+    "agents.effort": "How hard the model reasons, for every role: low, medium, high, xhigh, max, or model_default.",
+    "agents.efforts": "An effort per role, over `agents.effort`: {writer: high, analyst: low}.",
+    "agents.fallbacks": "default: where the model supports it, a request it declines is answered by another model in the same call. off: it is lost.",
     "agents.models": "A model per role: {writer: ..., analyst: ...}.",
     "agents.max_tokens": "The longest reply (anthropic_api only).",
     "agents.call_timeout_seconds": "How long one call may take.",
     "agents.max_concurrent_calls": "How many calls run side by side.",
     "agents.max_retries": "Retries of a call that failed for a passing reason; a refusal for the account's limit is never retried.",
-    "agents.prices": "Dollars per million tokens, {model: {input: x, output: y}} (anthropic_api only). Without it "
-                     "the spend cap cannot count the calls.",
+    "agents.prices": "Dollars per million tokens, {model: {input: x, output: y}}, over the built-in list. Needed for a model "
+                     "the list does not have: without a price the spend cap cannot count its calls.",
     "data.name": "The dataset's name.",
     "data.accession": "The dataset's DOI, accession or link. The study file earns no star without it.",
     "data.input": "What an input is.",
@@ -241,6 +265,8 @@ FIELDS: Dict[str, str] = {
 SECTIONS: List[Tuple[str, str, str, Dict[str, str], str]] = [
     ("run-types", "Run types", "run.type", RUN_TYPES, ""),
     ("autonomy", "Autonomy: agentic first, or strongly harnessed", "harness.autonomy", AUTONOMY, AUTONOMY_NOTE),
+    ("models", "Models", "agents.default_model", MODELS, MODELS_NOTE),
+    ("effort", "Effort", "agents.effort", EFFORT, EFFORT_NOTE),
     ("strategies", "Evolution strategies", "strategy.mechanism", STRATEGIES, ISLANDS),
     ("modes", "Slot modes", "schedule.phases", MODES, ""),
     ("crossover", "Crossover kinds", "crossover.kinds", CROSSOVER, PARTNER),
@@ -359,6 +385,7 @@ def missing() -> List[str]:
                                  ("harness", form.HARNESS, HARNESS), ("review", tuple(form.REVIEW_PRESETS), REVIEWS),
                                  ("coordinator", form.CHOICES["harness.coordinator"], COORDINATOR),
                                  ("autonomy", form.CHOICES["harness.autonomy"], AUTONOMY),
+                                 ("effort", form.CHOICES["agents.effort"], EFFORT),
                                  ("strategist mode", form.CHOICES["strategist.mode"], STRATEGIST_MODES),
                                  ("strategist action", form.STRATEGIST_ACTIONS, STRATEGIST_ACTIONS),
                                  ("spend policy", form.CHOICES["budget.spend_policy"], SPEND_POLICIES)):

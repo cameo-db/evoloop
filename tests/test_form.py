@@ -82,7 +82,7 @@ def test_an_unpriced_model_is_warned_about():
     form.put(brief, "agents.backend", "anthropic_api")
     form.put(brief, "agents.default_model", "some-model")
     form.put(brief, "budget.model_dollars", 50)
-    assert any("no price is given for some-model" in w for w in form.warnings(form.resolve(brief)[0]))
+    assert any("no price is known for some-model" in w for w in form.warnings(form.resolve(brief)[0]))
     form.put(brief, "agents.prices", {"some-model": {"input": 3, "output": 15}})
     assert not any("no price" in w for w in form.warnings(form.resolve(brief)[0]))
 

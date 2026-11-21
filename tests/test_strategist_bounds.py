@@ -96,10 +96,9 @@ def test_ordered_slots_do_not_starve_new_designs(tmp_path):
     drive(controller, lambda v: len(scored(v)) >= 10)
     for _ in range(6):                           # it keeps ordering local slots, meeting after meeting
         controller.take_decisions([{"action": "force", "args": {"mode": "local", "count": 5}}])
-        for _ in range(20):
-            controller.turn()
-            if not controller.state["forced"] or controller.finished(controller.view()):
-                break
+        # Wait for the order to be used up (however slow the machine), or for the run to end.
+        if drive(controller, lambda v: not controller.state["forced"]):
+            break
     view = controller.view()
     modes = [r["history"]["mode"] for r in view.search_runs() if r["purpose"] == "search"][10:]
     fresh = sum(1 for m in modes if m in ("new", "novel")) / float(len(modes))

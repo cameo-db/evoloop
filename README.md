@@ -14,6 +14,7 @@ changeable while it runs:
 | Crossover | `block_swap`, `graft`, `hybrid` |
 | Search space | settings only, one module, the architecture, the architecture and the training recipe, your own list |
 | Harness | `minimal`, `standard`, `full`; slots chosen by code or by a coordinator agent |
+| Model and effort | any Claude model, at any effort level, for every role or role by role; defaults you can change |
 | Autonomy | `harnessed`, `guided` or `agentic`: how much the agents decide, with the likely cost of each shown in the plan |
 | Strategist | an agent that reviews the search at intervals and may change its course, within bounds you set |
 | Spend | a dollar cap on the agents, with the run made cheaper by code when it is heading past the cap |
@@ -65,7 +66,7 @@ The pages in [`docs/`](docs/index.md), built by Read the Docs:
 - [Overview](docs/index.md) and [first run](docs/quickstart.md)
 - [Setting up a search](docs/setting-up.md)
 - [How a search works](docs/how-it-works.md): the schedule, the strategies, crossover, novelty
-- [Agentic or harnessed, and what it costs](docs/autonomy.md)
+- [Model and effort](docs/models.md) and [agentic or harnessed, and what it costs](docs/autonomy.md)
 - [Steering a run](docs/steering.md), [the strategist and the budget](docs/strategist.md), [auditing the agents](docs/auditing.md)
 - [The project's code](docs/project-contract.md): the adapter, `result.json`, Slurm
 - [Records and the study file](docs/records.md) (CAMEO entry format 0.4)

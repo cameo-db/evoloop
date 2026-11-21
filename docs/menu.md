@@ -128,6 +128,42 @@ variation.proposals_per_slot = 3
 variation.settings_by = "agent"
 ```
 
+## Models
+
+Set with `agents.default_model`.
+
+| Option | What it does |
+|---|---|
+| `claude-opus-5-5` | Claude Opus 5.5. $4 in, $20 out per million tokens. Effort: low, medium, high, xhigh, max (its own default: medium). The current Opus. |
+| `claude-sonnet-5-5` | Claude Sonnet 5.5. $2 in, $10 out per million tokens. Effort: low, medium, high, xhigh, max (its own default: high). The current Sonnet: faster and cheaper. |
+| `claude-haiku-5-5` | Claude Haiku 5.5. $0.1 in, $0.5 out per million tokens. Effort: low, medium, high, xhigh, max (its own default: medium). The cheapest; the price is for prompts up to 100K tokens. |
+| `claude-fable-5-2` | Claude Fable 5.2. $8 in, $40 out per million tokens. Effort: low, medium, high, xhigh, max (its own default: high). The most capable; single calls can take minutes. |
+| `claude-fable-5-1` | Claude Fable 5.1. $10 in, $50 out per million tokens. Effort: low, medium, high, xhigh, max (its own default: high). |
+| `claude-opus-5` | Claude Opus 5. $5 in, $25 out per million tokens. Effort: low, medium, high, xhigh, max (its own default: high). |
+| `claude-opus-4-8` | Claude Opus 4.8. $5 in, $25 out per million tokens. Effort: low, medium, high, xhigh, max (its own default: high). |
+| `claude-opus-4-7` | Claude Opus 4.7. $5 in, $25 out per million tokens. Effort: low, medium, high, xhigh, max (its own default: high). |
+| `claude-sonnet-5` | Claude Sonnet 5. $2 in, $10 out per million tokens. Effort: low, medium, high, xhigh, max (its own default: high). |
+| `claude-opus-4-6` | Claude Opus 4.6. $5 in, $25 out per million tokens. Effort: low, medium, high, max (its own default: high). |
+| `claude-sonnet-4-6` | Claude Sonnet 4.6. $3 in, $15 out per million tokens. Effort: low, medium, high, max (its own default: high). |
+| `claude-haiku-4-5` | Claude Haiku 4.5. $1 in, $5 out per million tokens. Effort: none. Takes no effort setting. |
+
+The default is `claude-opus-5-5` for every role; `agents.models` sets a model per role. Any other model id can be given: it is then priced only if you give `agents.prices`. Prices are Anthropic's first-party API rates as of 2026-11-03 and may have changed; a price in `agents.prices` always wins.
+
+## Effort
+
+Set with `agents.effort`.
+
+| Option | What it does |
+|---|---|
+| `low` | The least reasoning and the fewest tokens. For simple, high-volume calls. |
+| `medium` | The default for every role but the writer: a cost-saving step where quality holds. |
+| `high` | The default for the writer, whose designs are where judgment matters most. |
+| `xhigh` | Between high and max. Not accepted by the 4.6 models. |
+| `max` | The most reasoning, for when correctness matters more than cost. |
+| `model_default` | Send no effort: the model uses its own default. |
+
+`agents.effort` is for every role and `agents.efforts` sets one per role, e.g. {writer: xhigh, analyst: low}. Reasoning is billed as output tokens, so higher effort costs more; the estimate does not count it, and a run's measured cost does.
+
 ## Evolution strategies
 
 Set with `strategy.mechanism`.

@@ -27,7 +27,7 @@ ASSUMPTIONS = [
     "one design in ten fails or is refused and is written again (range: none to three in ten)",
     "the strategist meets half again as often as its schedule because of plateaus (range: as scheduled to twice)",
     "a writer's reply is the blocks it changes plus about 400 tokens of reasoning, per proposal (range: half to one and a half times)",
-    "prices are the ones you give in agents.prices; none is built in",
+    "prices are yours (agents.prices) where you give them, else the built-in list, which is dated",
 ]
 
 
@@ -123,12 +123,19 @@ def tokens(settings: Dict[str, Any], size: Dict[str, float]) -> Dict[str, Tuple[
 
 
 def price_of(settings: Dict[str, Any], role: str) -> Optional[Dict[str, float]]:
+    """A role's prices: the brief's `agents.prices`, else the built-in list of models."""
+    from .model import catalog
     agents = settings["agents"]
     model = (agents.get("models") or {}).get(role) or agents.get("default_model")
-    rates = (agents.get("prices") or {}).get(model)
-    if isinstance(rates, dict) and isinstance(rates.get("input"), (int, float)) and isinstance(rates.get("output"), (int, float)):
-        return {"input": float(rates["input"]), "output": float(rates["output"])}
-    return None
+    return catalog.rates(model, agents.get("prices"))[0]
+
+
+def chosen(settings: Dict[str, Any]) -> Dict[str, Tuple[Any, Any]]:
+    """The model and the effort each role runs at."""
+    agents = settings["agents"]
+    return {role: ((agents.get("models") or {}).get(role) or agents.get("default_model"),
+                   (agents.get("efforts") or {}).get(role) or agents.get("effort"))
+            for role in ("writer", "analyst", "coordinator", "strategist", "assessor")}
 
 
 def estimate(settings: Dict[str, Any], folder: Optional[str] = None, measured: Optional[Dict[str, Dict[str, float]]] = None
@@ -201,6 +208,23 @@ def by_level(brief: Dict[str, Any], folder: Optional[str] = None) -> Dict[str, D
         out[level] = estimate(form.resolve(variant)[0], folder)
     return out
 
+def other_models(brief: Dict[str, Any], folder: Optional[str], now: Dict[str, Any]) -> List[str]:
+    """The same search with each of the current models for every role: what the choice of model does to the cost."""
+    from .model import catalog
+    settings = form.resolve(brief)[0]
+    if (settings["agents"].get("models") or {}):
+        return []      # roles are on different models already: a one-model comparison would mislead
+    out = ["", "The same search with another model for every role (agents.default_model; yours is %s):" % settings["agents"]["default_model"]]
+    for model in catalog.OFFERED:
+        variant = copy.deepcopy(brief)
+        form.put(variant, "agents.default_model", model)
+        est = estimate(form.resolve(variant)[0], folder)
+        info = catalog.MODELS[model]
+        out.append("  %-20s %s   ($%g in, $%g out per million tokens%s)" % (
+            model, span(est["dollars"], "$", 2), info["input"], info["output"], "; " + info["note"] if info["note"] else ""))
+    return out
+
+
 
 def span(values: Any, unit: str = "", digits: int = 0) -> str:
     if values is None:
@@ -219,9 +243,11 @@ def lines(brief: Dict[str, Any], folder: Optional[str] = None) -> List[str]:
         return ["", "What the agents will cost: nothing. The backend is the stub, which makes no model call."]
     now = estimate(settings, folder)
     out = ["", "What the agents will cost (an estimate, for %s designs):" % settings["budget"]["evaluations"]]
+    picks = chosen(settings)
     for role, row in now["roles"].items():
-        out.append("  %-12s %s calls, %s tokens, %s" % (role, span(row["calls"]), span(row["tokens"]),
-                                                       span(row["dollars"], "$", 2)))
+        model, effort = picks.get(role, (None, None))
+        out.append("  %-12s %s calls, %s tokens, %s   [%s, effort %s]" % (
+            role, span(row["calls"]), span(row["tokens"]), span(row["dollars"], "$", 2), model, effort or "model default"))
     out.append("  %-12s %s calls, %s tokens, %s" % ("in all", span(now["calls"]), span(now["tokens"]), span(now["dollars"], "$", 2)))
     cap = settings["budget"]["model_dollars"]
     if now["dollars"] and cap is not None and now["dollars"][1] > float(cap):
@@ -232,7 +258,20 @@ def lines(brief: Dict[str, Any], folder: Optional[str] = None) -> List[str]:
     for level, est in by_level(brief, folder).items():
         out.append("  %-10s %s calls, %s" % (level, span(est["calls"]), span(est["dollars"], "$", 2)
                                              if est["dollars"] else span(est["tokens"]) + " tokens"))
+    from .model import catalog
+    agents = settings["agents"]
+    models = sorted({m for m, _ in chosen(settings).values() if m})
+    sources = {m: catalog.rates(m, agents.get("prices"))[1] for m in models}
     if not now["priced"]:
-        out.append("  Give agents.prices ({model: {input: x, output: y}}, dollars per million tokens) to see dollars.")
-    out.append("  A rough guide: " + "; ".join(ASSUMPTIONS[1:4]) + ". A run's own calls replace these guesses (`evoloop estimate`).")
+        out.append("  No price is known for: %s. Give agents.prices ({model: {input: x, output: y}}, dollars per million "
+                   "tokens) to see dollars." % ", ".join(m for m in models if sources[m] == "no price"))
+    listed = [m for m in models if sources[m].startswith("the built-in")]
+    if listed:
+        out.append("  Prices for %s are from %s; check them, and give agents.prices where they differ." % (
+            ", ".join(listed), sources[listed[0]]))
+    out.append("  Not counted: the model's own reasoning, which is billed as output and grows with effort. A run's own calls "
+               "replace these guesses after a few calls (`evoloop estimate --name RUN`).")
+    out.append("  A rough guide: " + "; ".join(ASSUMPTIONS[1:4]) + ".")
+    for alt in other_models(brief, folder, now):
+        out.append(alt)
     return out

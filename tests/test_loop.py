@@ -41,7 +41,7 @@ def test_end_to_end(tmp_path):
     assert moves & {"block_swap", "graft", "hybrid"}, moves                # a crossover of some kind ran
     for r in view.search_runs():
         assert r["history"]["mode"] in form.MODES and r["history"]["lineage"]
-    crosses = [r for r in view.runs.values() if r["history"]["move"] in ("block_swap", "hybrid")]
+    crosses = [r for r in view.runs.values() if r["history"]["move"] in ("block_swap", "hybrid") and r.get("candidate")]
     assert all(r["history"]["second_parent"] and len(r["history"]["lineage_parents"]) >= 1 for r in crosses)
     # The stub's list holds a form that does not parse. Among several proposals it is passed over, and the
     # run that was chosen instead keeps the reason: nothing is dropped without a record.

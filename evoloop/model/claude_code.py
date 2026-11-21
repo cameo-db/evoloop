@@ -14,9 +14,11 @@ from typing import Any, Dict, List, Tuple
 from .base import QUOTA_PATTERN, ModelError, QuotaExhausted, TransientError, quota_reset_time
 
 
-def build_argv(binary: str, system: str, model: Any = None) -> List[str]:
+def build_argv(binary: str, system: str, model: Any = None, effort: Any = None) -> List[str]:
     argv = [binary, "--print", "--output-format", "json", "--tools", "", "--strict-mcp-config",
             "--disable-slash-commands", "--no-session-persistence", "--system-prompt", system]
+    if effort and effort != "model_default":   # checked against `claude --help` (2.1.329): low, medium, high, xhigh, max
+        argv += ["--effort", str(effort)]
     if model:
         argv += ["--model", str(model)]
     return argv
@@ -57,7 +59,7 @@ class ClaudeCodeBackend:
 
     def call(self, role: str, system: str, user: str, schema: Dict[str, Any],
              context: Any = None) -> Tuple[str, Dict[str, Any]]:
-        argv = build_argv(self.binary, system, self.cfg.model_for(role))
+        argv = build_argv(self.binary, system, self.cfg.model_for(role), getattr(self.cfg, "effort_for", lambda _: None)(role))
         with tempfile.TemporaryDirectory(prefix="evoloop-cc-") as cwd:  # no project context is picked up
             try:
                 done = subprocess.run(argv, input=user, capture_output=True, text=True, cwd=cwd,

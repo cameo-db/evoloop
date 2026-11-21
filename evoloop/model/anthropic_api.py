@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, Tuple
 
+from . import catalog
 from .base import QUOTA_PATTERN, ModelError, QuotaExhausted, TransientError, quota_reset_time
 
 
@@ -20,11 +21,13 @@ class AnthropicBackend:
         import anthropic
         model = self.cfg.model_for(role)
         if not model:
-            raise ModelError("no model configured for role %r (set model.default_model)" % role)
+            raise ModelError("no model is set for role %r (give agents.default_model)" % role)
+        effort = getattr(self.cfg, "effort_for", lambda _: None)(role)
+        beta, kwargs = request(model, effort, getattr(self.cfg.model, "fallbacks", "off"), int(self.cfg.model.max_tokens),
+                               system, user)
         try:
-            response = self.client.messages.create(
-                model=model, max_tokens=int(self.cfg.model.max_tokens), system=system,
-                messages=[{"role": "user", "content": user}])
+            create = self.client.beta.messages.create if beta else self.client.messages.create
+            response = create(**kwargs)
         except anthropic.RateLimitError as exc:
             raise TransientError("rate limited: %s" % exc)
         except anthropic.APIStatusError as exc:
@@ -36,10 +39,10 @@ class AnthropicBackend:
             raise ModelError("API error %s: %s" % (exc.status_code, exc.message))
         except anthropic.APIConnectionError as exc:
             raise TransientError("connection error: %s" % exc)
-        prices = self.cfg.model.prices
+        given = self.cfg.model.prices
 
-        def cost(usage: Dict[str, Any]) -> Any:   # by the model the API names, else by the one that was asked for
-            return price(prices.get(usage.get("model")) or prices.get(model), usage)
+        def cost(usage: Dict[str, Any]) -> Any:   # by the model that answered (a fallback is priced as itself), else the one asked for
+            return price(catalog.rates(usage.get("model"), given)[0] or catalog.rates(model, given)[0], usage)
         try:
             text, usage = parse_message(response)
         except ModelError as exc:
@@ -47,7 +50,27 @@ class AnthropicBackend:
                 exc.usage["cost_usd"] = cost(exc.usage)
             raise
         usage["cost_usd"] = cost(usage)
+        usage["effort"] = kwargs.get("output_config", {}).get("effort")
         return text, usage
+
+
+def request(model: str, effort: Any, fallbacks: Any, max_tokens: int, system: str, user: str) -> Tuple[bool, Dict[str, Any]]:
+    """The arguments of one Messages request, and whether it goes to the beta endpoint.
+
+    Effort goes in `output_config`; it is left out when none is set or the model takes none, and the model
+    then uses its own default. Thinking is not set: current models think adaptively by themselves, and how
+    deeply follows the effort. With `agents.fallbacks: default`, a model that supports it is given the
+    API's server-side fallback, so a request the model declines is answered by another model in the same
+    call rather than lost; the answering model is in the reply and is priced as itself."""
+    kwargs: Dict[str, Any] = {"model": model, "max_tokens": max_tokens, "system": system,
+                              "messages": [{"role": "user", "content": user}]}
+    send = catalog.effort_to_send(model, effort)
+    if send:
+        kwargs["output_config"] = {"effort": send}
+    beta = fallbacks == "default" and bool((catalog.MODELS.get(model) or {}).get("fallbacks"))
+    if beta:
+        kwargs.update(betas=["server-side-fallback-2026-07-01"], fallbacks="default")
+    return beta, kwargs
 
 
 def price(rates: Any, usage: Dict[str, Any]) -> Any:

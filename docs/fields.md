@@ -184,13 +184,16 @@ Fields marked **asked** are asked whenever they are empty; the others are never 
 |---|---|---|---|
 | `agents.backend` **asked** | `null` | no | stub (no cost), anthropic_api, or claude_code. |
 | `agents.stub_module` | `null` | no | With stub: a Python file with respond(role, context); empty for the built-in stub. |
-| `agents.default_model` | `null` | yes | The model every role uses unless `agents.models` names another. |
+| `agents.default_model` | `"claude-opus-5-5"` | yes | The model every role uses unless `agents.models` names another. See the models. |
 | `agents.models` | `{}` | yes | A model per role: {writer: ..., analyst: ...}. |
+| `agents.effort` | `"medium"` | yes | How hard the model reasons, for every role: low, medium, high, xhigh, max, or model_default. |
+| `agents.efforts` | `{"writer": "high"}` | yes | An effort per role, over `agents.effort`: {writer: high, analyst: low}. |
+| `agents.fallbacks` | `"default"` | yes | default: where the model supports it, a request it declines is answered by another model in the same call. off: it is lost. |
 | `agents.max_tokens` | `16000` | no | The longest reply (anthropic_api only). |
 | `agents.call_timeout_seconds` | `900` | no | How long one call may take. |
 | `agents.max_concurrent_calls` | `4` | no | How many calls run side by side. |
 | `agents.max_retries` | `2` | no | Retries of a call that failed for a passing reason; a refusal for the account's limit is never retried. |
-| `agents.prices` | `{}` | no | Dollars per million tokens, {model: {input: x, output: y}} (anthropic_api only). Without it the spend cap cannot count the calls. |
+| `agents.prices` | `{}` | yes | Dollars per million tokens, {model: {input: x, output: y}}, over the built-in list. Needed for a model the list does not have: without a price the spend cap cannot count its calls. |
 
 ## data
 
