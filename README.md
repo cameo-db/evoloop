@@ -76,9 +76,25 @@ evaluator must report, and how to read the result.
 | improve a bioinformatics method | [`bioinformatics-algorithm`](https://evoloop.readthedocs.io/en/latest/guides/bioinformatics-algorithm/) |
 | make a data pipeline faster or cheaper | [`data-pipeline`](https://evoloop.readthedocs.io/en/latest/guides/data-pipeline/) |
 
-Each of these is a *skill*: one editable file of settings and guidance for the agents. Your search
-gets its own copy to change, skills can be combined, and you can write your own
-([Skills](docs/skills.md)).
+### The skill library
+
+Each row above is a **skill**: one file holding the settings that suit the task, guidance for the
+agents, "if the results show this, do that" diagnoses, and what your evaluator must report. evoloop
+comes with these twelve, and the library is meant to grow:
+
+- **Edit one.** Your search gets its own copy of every skill it uses, in `mysearch/skills/`.
+- **Combine them.** `run.skill: [model-distillation, model-size-frontier]` gives a family of students.
+- **Write your own.** `evoloop skills NAME --copy DIR` copies the nearest one to start from.
+- **Add it to the library.** A skill is a folder with one file, under `evoloop/skills/`; a pull request
+  adds it for everyone.
+
+```
+evoloop skills                      # the library, by domain
+evoloop skills --search "smaller"   # find a skill by what it is for
+evoloop skills model-efficiency     # one skill in full
+```
+
+[How skills work](docs/skills.md) · [Every skill in full](docs/skill-library.md)
 
 ## How a search runs
 
@@ -111,6 +127,25 @@ evoloop steer  mysearch --name r1 "more novelty from here, and keep models small
 evoloop chat   mysearch --name r1 --by "Your Name"      # talk to the agent that runs the search
 evoloop stop   mysearch --name r1 --by "Your Name"
 ```
+
+## Save the study, and deposit it in CAMEO
+
+Every search ends with one JSON file holding every model, training recipe and run, in the format of
+[CAMEO](https://cameo-db.github.io), a public database of models, how they were trained, and how they
+performed.
+
+```
+evoloop study mysearch --name r1        # writes mysearch/runs/r1/study.json and says which star it is on course for
+```
+
+Then check it with the CAMEO kit ([`cameo.py`](https://cameo-db.github.io/kit/cameo.py) and
+[`rules.json`](https://cameo-db.github.io/kit/rules.json), in one folder) and deposit it on the CAMEO site:
+
+```
+python3 cameo.py check mysearch/runs/r1/study.json
+```
+
+[What goes in the file, what each star needs, and how to deposit](https://evoloop.readthedocs.io/en/latest/records/#saving-the-study-as-json-and-depositing-it-in-cameo).
 
 <details>
 <summary><b>Everything you can choose</b></summary>

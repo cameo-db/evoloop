@@ -358,3 +358,13 @@ def test_every_goal_has_a_guide_that_matches_its_skill(tmp_path):
     with open(os.path.join(os.path.dirname(root), "..", "mkdocs.yml"), encoding="utf-8") as handle:
         nav = handle.read()
     assert all("guides/%s.md" % name in nav for name in skill.names())            # every guide can be reached
+
+
+def test_the_front_page_and_the_readme_list_the_whole_library_and_say_it_can_grow():
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    for page in (os.path.join(root, "docs", "index.md"), os.path.join(root, "README.md")):
+        with open(page, encoding="utf-8") as handle:
+            text = handle.read()
+        assert "skill library" in text.lower() and "Write your own" in text and "Add it to the library" in text, page
+        assert all("`%s`" % name in text for name in skill.names()), page
+        assert "study.json" in text and "cameo-db.github.io" in text, page          # and how the result is kept

@@ -171,7 +171,8 @@ Fields marked **asked** are asked whenever they are empty; the others are never 
 | `compute.scheduler` | `"local"` | no | local (processes on this machine) or slurm (each run its own job). |
 | `compute.partition` | `null` | yes | Slurm partition. |
 | `compute.qos` | `null` | yes | Slurm QoS: one name, or a list in order of preference, [{name: a, max_jobs: 8}, {name: b}]. |
-| `compute.gpu_type` | `null` | no | Slurm gres type, e.g. a100; empty for any. |
+| `compute.gpu_type` | `null` | yes | Slurm gres type, e.g. a100; empty for any free GPU. |
+| `compute.larger_gpu_type` | `null` | yes | Slurm gres type for designs too large for the GPU they got: the adapter exits 76 (it is told EVO_LARGER_GPU) and the run is submitted again on this type, uncharged. Empty for none. |
 | `compute.gpus_per_job` | `1` | yes | GPUs each job asks for; 0 for a CPU job. |
 | `compute.cpus_per_job` | `4` | no | Processors each job asks for. |
 | `compute.mem_gb` | `32` | no | Memory each job asks for. |

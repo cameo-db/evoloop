@@ -36,6 +36,8 @@ nav:
       - Status and limits: status.md
   - Optimization guides:
       - What do you want to optimize?: guides/index.md
+      - The skill library, every skill in full: skill-library.md
+      - How skills work, and writing your own: skills.md
       - Tune hyperparameters: guides/settings-tuning.md
       - Improve a model's score: guides/model-performance.md
       - Train a fixed architecture better: guides/model-training-recipe.md
@@ -51,20 +53,18 @@ nav:
   - How it works:
       - How a search works: how-it-works.md
       - How each choice changes the search: choices.md
-      - Skills: skills.md
       - Model and effort: models.md
       - Agentic or harnessed, and what it costs: autonomy.md
       - The strategist and the budget: strategist.md
       - How it compares with established methods: compared.md
   - Run and review:
       - Steering a run: steering.md
-      - Records and the study file: records.md
+      - Records, and saving the study for CAMEO: records.md
       - Auditing the agents: auditing.md
   - Reference:
       - Commands: commands.md
       - Fields of the brief: fields.md
       - Menu of choices and presets: menu.md
-      - Skill library: skill-library.md
 markdown_extensions:
   - tables
   - admonition

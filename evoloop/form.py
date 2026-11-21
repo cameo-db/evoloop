@@ -83,7 +83,7 @@ DEFAULTS: Dict[str, Any] = {
     "budget": {"evaluations": None, "model_dollars": None, "model_calls": None, "wall_clock_hours": None,
                "max_uncounted_failures": 10, "max_uncounted_rejections": 50, "spend_policy": "pace", "reserve_share": 0.15},
     "baseline": {"mode": None, "import_from": None},
-    "compute": {"gpus": None, "scheduler": "local", "partition": None, "qos": None, "gpu_type": None,
+    "compute": {"gpus": None, "scheduler": "local", "partition": None, "qos": None, "gpu_type": None, "larger_gpu_type": None,
                 "gpus_per_job": 1, "cpus_per_job": 4, "mem_gb": 32, "time_limit": "2-00:00:00", "setup": [],
                 "extra_sbatch": [], "infrastructure_retries": 3, "max_running": None, "max_waiting": 1},
     "run_command": "python adapter/run.py",
@@ -139,6 +139,7 @@ CHOICES = {"objective.direction": ("maximize", "minimize"), "strategy.mechanism"
 # What may change while a run is going. A change applies to the next design; jobs already started are untouched.
 LIVE = ("schedule.", "limits", "strategist.", "population.", "crossover.", "variation.", "harness.", "strategy.", "space.", "audit.", "budget.",
         "compute.max_running", "compute.time_limit", "compute.qos", "compute.partition", "compute.gpus", "compute.max_waiting",
+        "compute.gpu_type", "compute.larger_gpu_type",
         "evaluation.screen_", "evaluation.ladder", "evaluation.recheck_every", "evaluation.speciality_metrics", "evaluation.on_length_change",
         "evaluation.leaders_refit", "agents.models", "agents.writer_mix", "agents.default_model", "agents.effort", "agents.efforts", "agents.fallbacks", "agents.prices",
         "report.", "run.")

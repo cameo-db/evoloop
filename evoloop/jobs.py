@@ -24,6 +24,7 @@ from .store import read_json, write_json
 
 MACHINE_EXIT = 75            # EX_TEMPFAIL: the adapter says the machine failed
 CHECK_EXIT = 97              # the quick check failed and the design was not trained
+LARGER_EXIT = 76             # the adapter says the design needs a larger GPU than the one it was given
 CREDENTIALS = ("KEY", "TOKEN", "SECRET", "PASSWORD", "CREDENTIAL")
 INFRASTRUCTURE = ("NODE_FAIL", "BOOT_FAIL", "PREEMPTED", "DEADLINE", "TIMEOUT")
 ACTIVE = ("PENDING", "RUNNING", "CONFIGURING", "COMPLETING", "SUSPENDED", "REQUEUED", "REQUEUE_HOLD", "RESIZING",
@@ -38,7 +39,21 @@ def environment(run: Dict[str, Any], out_dir: str, checkpoint_dir: str, settings
         env[str(name)] = str(value)
     if run.get("continue_from"):
         env["EVO_CONTINUE_FROM"] = run["continue_from"]
+    if larger_available(run, settings["compute"]):
+        # The adapter may exit LARGER_EXIT when the design is too large for the GPU it got: it is then moved to this type.
+        env["EVO_LARGER_GPU"] = str(settings["compute"]["larger_gpu_type"])
     return env
+
+
+def gpu_type_for(run: Dict[str, Any], compute: Dict[str, Any]) -> Optional[str]:
+    """The GPU type this run asks for: the larger type once it was moved there, else the search's own (empty: any)."""
+    return run.get("gpu_type") or compute.get("gpu_type") or None
+
+
+def larger_available(run: Dict[str, Any], compute: Dict[str, Any]) -> bool:
+    """Whether a design too large for its GPU can still be moved to a larger one."""
+    larger = compute.get("larger_gpu_type")
+    return bool(larger) and gpu_type_for(run, compute) != larger
 
 
 def command(settings: Dict[str, Any]) -> str:
@@ -93,6 +108,8 @@ class Local:
         self.procs.pop(run["id"], None)
         if code == MACHINE_EXIT:
             return {"state": "machine", "why": "the run exited %d (the machine failed)" % MACHINE_EXIT}
+        if code == LARGER_EXIT:
+            return {"state": "larger"}
         return {"state": "ended", "exit": code}
 
     def cancel(self, run: Dict[str, Any]) -> None:
@@ -153,8 +170,8 @@ class Slurm:
         if qos:
             lines.append("#SBATCH --qos=%s" % qos)
         if int(compute.get("gpus_per_job") or 0) > 0:
-            gres = "gpu:%s:%d" % (compute["gpu_type"], int(compute["gpus_per_job"])) if compute.get("gpu_type") \
-                else "gpu:%d" % int(compute["gpus_per_job"])
+            gpu_type = gpu_type_for(run, compute)
+            gres = "gpu:%s:%d" % (gpu_type, int(compute["gpus_per_job"])) if gpu_type else "gpu:%d" % int(compute["gpus_per_job"])
             lines.append("#SBATCH --gres=%s" % gres)
         lines.extend("#SBATCH %s" % extra for extra in compute.get("extra_sbatch") or [])
         lines.append("set -u")
@@ -206,6 +223,8 @@ class Slurm:
             return {"state": "running"}
         if state in INFRASTRUCTURE or code == MACHINE_EXIT:
             return {"state": "machine", "why": "Slurm ended the job as %s (exit %d)" % (state, code)}
+        if code == LARGER_EXIT:
+            return {"state": "larger"}
         return {"state": "ended", "exit": code, "slurm_state": state}
 
     def cancel(self, run: Dict[str, Any]) -> None:

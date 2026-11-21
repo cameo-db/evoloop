@@ -144,8 +144,8 @@ Scripted proposals stand in for a model here: this shows the machinery, not what
 
     ---
 
-    Open the leaderboard, inspect the selected design's code and history, and export a CAMEO study
-    file.
+    Open the leaderboard, inspect the selected design's code and history, and save the study as JSON for
+    the CAMEO database.
 
     [What a run leaves behind](records.md)
 
@@ -191,6 +191,45 @@ evaluator must report, and how to read the result.
     Ensembles, fine-tuning, interpretable models, bioinformatics methods.
 
 </div>
+
+## The skill library
+
+Each goal above is a **skill**: one file that holds the settings that suit the task, guidance for the
+agents, "if the results show this, do that" diagnoses, and what your evaluator must report. evoloop
+comes with a library of twelve, and the library is meant to grow.
+
+| Domain | Skill | For |
+|---|---|---|
+| Models | [`model-performance`](guides/model-performance.md) | the best score, nothing else weighed |
+| | [`model-distillation`](guides/model-distillation.md) | a smaller or faster student that matches a teacher |
+| | [`model-efficiency`](guides/model-efficiency.md) | the same score at a lower cost in parameters or time |
+| | [`model-size-frontier`](guides/model-size-frontier.md) | the best model at every size or speed across a broad range |
+| | [`model-training-recipe`](guides/model-training-recipe.md) | a better score from the same architecture, by training it better |
+| | [`model-ensemble-members`](guides/model-ensemble-members.md) | strong models whose errors do not coincide |
+| | [`model-finetuning`](guides/model-finetuning.md) | the best score starting from a pretrained model |
+| | [`model-mechanistic`](guides/model-mechanistic.md) | an interpretable or biophysical model, improved without losing its meaning |
+| Settings | [`settings-tuning`](guides/settings-tuning.md) | the best settings of fixed code, with no agent calls |
+| Algorithms | [`algorithm-runtime`](guides/algorithm-runtime.md) | the same results in less time or memory |
+| Bioinformatics | [`bioinformatics-algorithm`](guides/bioinformatics-algorithm.md) | better accuracy against a truth set |
+| Pipelines | [`data-pipeline`](guides/data-pipeline.md) | the same output in less time, memory or cost |
+
+**It is extensible.**
+
+- **Edit one.** Your search gets its own copy of every skill it uses, in `mysearch/skills/`. Change the
+  guidance, add a diagnosis from your own experience; the library's original is untouched.
+- **Combine them.** `run.skill: [model-distillation, model-size-frontier]` gives a family of students.
+- **Write your own.** Copy the nearest one with `evoloop skills NAME --copy DIR`, rename it, and point
+  `run.skill` at it.
+- **Add it to the library.** A skill is a folder with one file; a pull request adds it for everyone.
+
+`evoloop skills` lists the library and `evoloop skills --search WORDS` searches it.
+[How skills work](skills.md) · [Every skill in full](skill-library.md)
+
+## Keep and share the result
+
+Every search ends with a `study.json`: every model, training recipe and run in one file, in the format of
+[CAMEO](https://cameo-db.github.io), a public database of models, how they were trained, and how they
+performed. [How to save the study as JSON and deposit it](records.md#saving-the-study-as-json-and-depositing-it-in-cameo).
 
 ## What it has been shown to do
 

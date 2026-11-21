@@ -317,6 +317,20 @@ class Controller:
                 if stopped and time.time() - stopped["t"] > 300:
                     self.backend.cancel(run)
                 continue
+            if told["state"] == "larger":
+                compute = self.settings["compute"]
+                if not stopped and jobs.larger_available(run, compute):
+                    # Too large for the GPU it got: submitted again on the larger type, uncharged. Only once, since the
+                    # larger type is then the run's own and the adapter is no longer told it may ask.
+                    larger, was = compute["larger_gpu_type"], jobs.gpu_type_for(run, compute)
+                    self.update(run["id"], gpu_type=larger, job=None, performance={"status": "designed"},
+                                moved_to_larger_gpu={"from": was, "to": larger, "t": time.time()})
+                    self.pending.append(dict(run, job=None, gpu_type=larger))
+                else:
+                    self.finish(run, {"state": "ended", "exit": jobs.LARGER_EXIT}, reason=None if stopped else
+                                "the adapter said the design needs a larger GPU (exit %d) and none is left to move it to"
+                                % jobs.LARGER_EXIT)
+                continue
             if told["state"] == "machine" and not stopped:
                 restarts = int(run.get("restarts") or 0)
                 if restarts < int(self.settings["compute"]["infrastructure_retries"]):

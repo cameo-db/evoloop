@@ -2,6 +2,8 @@
 
 Each goal below is a different search, with its own page: a starting configuration, why it fits, what your evaluator must report, when to choose another, and how to read the result.
 
+Each guide is a skill from the [skill library](../skill-library.md): an editable file of settings and guidance. The library is extensible: your search gets its own copy of each skill to change, skills can be combined, and you can [write your own](../skills.md#writing-your-own).
+
 ## A model
 
 | I want to | Guide | In one line |
