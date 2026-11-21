@@ -89,6 +89,10 @@ Fields marked **asked** are asked whenever they are empty; the others are never 
 | `variation.proposals_per_slot` | `2` | yes | How many proposals the writer returns for a slot; one is chosen and trained. |
 | `variation.step_adaptation` | `true` | yes | Ask for bolder local edits when a lineage's recent ones gain often, smaller when rarely. |
 | `variation.settings_by` | `"agent"` | yes | Who makes a settings move: an agent, or a sampler in code (no call). |
+| `variation.edit_format` | `"full"` | yes | How a writer returns a change to part of a block: `full` (the whole block) or `diff` (find-and-replace edits, fewer tokens on large blocks; an edit that does not apply exactly once is refused). |
+| `variation.approaches` | `"off"` | yes | Ways of working handed to the writers, one per slot, kept or dropped by how their designs did: `off`, `fixed` (only yours) or `evolve` (the analyst adds to them). |
+| `variation.approach_pool` | `6` | yes | With `evolve`: the most approaches kept at once; past it the worst proven one is retired. |
+| `variation.approach_seeds` | `[]` | yes | Your own approaches: a list of short instructions on how to go about designing. Never retired. |
 
 ## harness
 
@@ -134,6 +138,7 @@ Fields marked **asked** are asked whenever they are empty; the others are never 
 | `evaluation.leaders_refit` | `4` | yes | When a new period begins: how many lineages' leaders are fitted again. |
 | `evaluation.test_set` | `"held_out"` | no | `held_out` when test scores are kept from the search. Recorded in the study file. |
 | `evaluation.quick_check` | `null` | no | A command that tests a design in seconds. A design that fails it is not trained. |
+| `evaluation.inherit_weights` | `false` | yes, and a new period begins | A child is handed its parent's checkpoint folder (EVO_PARENT_CHECKPOINT_DIR) so the adapter can start from the weights that fit. Changing it begins a new period. |
 | `evaluation.variables` | `{}` | yes, and a new period begins | Environment variables passed to every job, e.g. {PATIENCE: 5}: the adapter's own knobs. A change begins a new period. |
 
 ## budget
@@ -197,6 +202,7 @@ Fields marked **asked** are asked whenever they are empty; the others are never 
 | `agents.default_model` | `"claude-opus-5-5"` | yes | The model every role uses unless `agents.models` names another. See the models. |
 | `agents.models` | `{}` | yes | A model per role: {writer: ..., analyst: ...}. |
 | `agents.effort` | `"medium"` | yes | How hard the model reasons, for every role: low, medium, high, xhigh, max, or model_default. |
+| `agents.writer_mix` | `[]` | yes | Several models for the writers, by share of the calls: [{model: a, share: 0.8}, {model: b, share: 0.2}], each with an effort if wanted. The report compares their designs. |
 | `agents.efforts` | `{"writer": "high"}` | yes | An effort per role, over `agents.effort`: {writer: high, analyst: low}. |
 | `agents.fallbacks` | `"default"` | yes | default: where the model supports it, a request it declines is answered by another model in the same call. off: it is lost. |
 | `agents.max_tokens` | `64000` | no | The longest reply (anthropic_api only). |

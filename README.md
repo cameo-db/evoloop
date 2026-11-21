@@ -13,12 +13,16 @@ changeable while it runs:
 | Choice | Options |
 |---|---|
 | Run type | `explore_then_exploit` (the default), `refine`, `survey`, `discovery`, `settings_only`, `custom` |
-| Evolution strategy | `lineage`, `archive`, `tournament`, `greedy`; any of them on several islands |
+| Evolution strategy | `lineage`, `archive`, `tournament`, `pareto` (a trade-off front), `greedy`; any of them on several islands, with or without resets |
+| Early stopping | a single screen of new designs, or a promotion ladder (successive halving) over all designs |
+| Diversity | by family and size, or by what the trained model does (where its errors fall) |
 | Schedule | shares of new designs, crossover and local moves by phase; fixed or adaptive |
 | Crossover | `block_swap`, `graft`, `hybrid` |
 | Search space | settings only, one module, the architecture, the architecture and the training recipe, your own list |
 | Harness | `minimal`, `standard`, `full`; slots chosen by code or by a coordinator agent |
 | Model and effort | any Claude model, at any effort level, for every role or role by role; defaults you can change |
+| Writers | one model or a mix by share; whole blocks or find-and-replace edits; approaches kept or dropped by their record |
+| Who runs it | code (deterministic), or an agent you talk to with `evoloop chat` |
 | Autonomy | `harnessed`, `guided` or `agentic`: how much the agents decide, with the likely cost of each shown in the plan |
 | Strategist | an agent that reviews the search at intervals and may change its course, within bounds you set |
 | Spend | a dollar cap on the agents, with the run made cheaper by code when it is heading past the cap |

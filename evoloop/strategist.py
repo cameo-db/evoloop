@@ -254,6 +254,8 @@ def work_out(decision: Dict[str, Any], view: View, settings: Dict[str, Any], led
     elif action == "strategy":
         if args.get("mechanism") not in form.MECHANISMS:
             return "strategy needs a mechanism: %s" % ", ".join(form.MECHANISMS), effects, None
+        if args["mechanism"] == "pareto" and not settings["strategy"].get("second_metric"):
+            return "the pareto strategy needs strategy.second_metric, which only the person sets", effects, None
         effects["sets"]["strategy.mechanism"] = args["mechanism"]
     elif action == "force":
         mode, kind, count = args.get("mode"), args.get("kind"), args.get("count", 1)

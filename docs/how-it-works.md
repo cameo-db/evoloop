@@ -202,6 +202,44 @@ writers as an idea worth testing, never as a constraint.
 among the options code prepares, one per possible mode, and what the schedule alone would have chosen
 is recorded beside every choice.
 
+## The writers
+
+Three options change how designs are written. All are off by default and can be set during a run.
+
+**Several models writing** (`agents.writer_mix`). A share of the writer calls goes to each model, by
+counting:
+
+```yaml
+agents:
+  writer_mix: [{model: claude-haiku-5-5, share: 0.8}, {model: claude-opus-5-5, share: 0.2, effort: high}]
+```
+
+A fast model for breadth and a strong one for the occasional larger step is what AlphaEvolve does. The
+report's "Writers by model" table shows, for each model, its designs, how many scored, how many beat
+their reference, and its best, so the mix can be judged and changed.
+
+**Find-and-replace edits** (`variation.edit_format: diff`). For a change to part of a block, a writer
+may return edits instead of the whole block: the text to find, which must occur exactly once in the
+block, and its replacement. Code applies them; an edit that does not apply exactly once makes the
+proposal invalid, so a change cannot land in the wrong place. On large blocks a local move then costs a
+fraction of the output tokens. New designs are still written in full.
+
+**Approaches that are kept or dropped by their record** (`variation.approaches`). An approach is a
+short instruction on how to go about designing, such as "change the receptive field before the width".
+Each slot an agent writes is handed one approach, or none, and code keeps the record: the share of the
+designs written under it that beat their reference by more than the noise.
+
+| `variation.approaches` | What happens |
+|---|---|
+| `off` | no approaches (the default) |
+| `fixed` | only yours, from `variation.approach_seeds` |
+| `evolve` | yours, and the analyst may add one at each analysis from what the results show; when `variation.approach_pool` (6) are active, the worst one with at least three finished designs is retired. Yours are never retired. |
+
+The draw favours what has paid and still tries what has been tried little, and "no approach" is always
+one of the choices, so the report's table shows whether approaches help at all. This is the part of
+AlphaEvolve that evolves the instructions along with the designs; here the writers' base instructions
+stay fixed and only this one line varies.
+
 ## What a failed design costs
 
 A design that fails, or fails the quick check, is not charged, up to

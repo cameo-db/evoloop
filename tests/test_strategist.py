@@ -53,6 +53,8 @@ def test_what_waits_for_the_person():
 def test_decisions_off_the_menu_or_out_of_bounds_are_refused():
     assert "not an action on the menu" in decide("rewrite_everything", {})[0]
     assert decide("strategy", {"mechanism": "magic"})[0] is not None
+    assert "second_metric" in decide("strategy", {"mechanism": "pareto"})[0]
+    assert decide("strategy", {"mechanism": "pareto"}, strategy__second_metric="parameters")[0] is None
     assert decide("crossover_kinds", {"kinds": ["splice"]})[0] is not None
     assert decide("novelty", {"novelty": 3})[0] is not None
     assert decide("force", {"mode": "cross", "kind": "edit", "count": 1})[0] is not None

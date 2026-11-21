@@ -17,6 +17,8 @@ One JSON-lines file per store; a later line with the same `id` updates the earli
 | `knowledge.jsonl` | lesson, with its evidence | the analyst, checked by code |
 | `questions.jsonl` | question for you, with the default taken meanwhile | agents |
 | `reviews.jsonl` | review of a role | the assessor |
+| `approaches.jsonl` | approach handed to the writers, and whether it is active or retired | you (`variation.approach_seeds`) and the analyst |
+| `chat.jsonl` | message to the agent that runs the search, its answer and what it asked for | you, through `evoloop chat` |
 
 Beside them:
 

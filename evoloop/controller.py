@@ -17,7 +17,7 @@ import signal
 import time
 from typing import Any, Dict, List, Optional, Tuple
 
-from . import audit, form, jobs, report, schedule, space, strategies, strategist, study
+from . import approaches, audit, form, jobs, report, schedule, space, strategies, strategist, study
 from .agents import AgentError, Agents, AgentsUnavailable
 from .design import Designer
 from .store import ENDED, SCORED, Store, View, read_json, write_json
@@ -240,6 +240,10 @@ class Controller:
             space.materialize(os.path.join(self.folder, "base"), os.path.join(self.folder, "adapter"),
                               self.designer.blocks(run["candidate"]), work)
         env = jobs.environment(run, out, self.checkpoint_dir(run), self.settings)
+        parent = self.store.merged("runs").get(run["history"].get("parent")) if self.settings["evaluation"].get("inherit_weights") else None
+        if parent and run.get("purpose", "search") in ("search", "trial") and os.path.isdir(self.checkpoint_dir(parent)):
+            # The child may start from what its parent learned; the adapter decides what fits and loads it.
+            env["EVO_PARENT_CHECKPOINT_DIR"] = self.checkpoint_dir(parent)
         try:
             job = self.backend.submit(run, work, env, self.settings)
         except Exception as exc:
@@ -917,6 +921,7 @@ class Controller:
     def turn(self) -> Optional[str]:
         self.read_inbox()
         self.refresh()
+        approaches.sync(self.store, self.settings)
         view = self.view()
         self.follow(view)
         view = self.collect(self.view())

@@ -86,7 +86,11 @@ def proposal(context, index):
     else:   # structural_change, graft
         blocks["model"] = add_term(source["model"], n)
         change = "added one term"
-    return {"name": "stub design %d" % n, "family": family, "hypothesis": "This form fits the data better.",
+    edits = None
+    if request.get("edit_format") == "diff" and parents and mode == "local":   # the change as find-and-replace edits
+        edits = [{"block": name, "find": source[name], "replace": text} for name, text in blocks.items()]
+        blocks = {}
+    return {"name": "stub design %d" % n, "family": family, "hypothesis": "This form fits the data better.", "edits": edits,
             "predicted_effect": "a lower error", "expected_gain": {"gain": 0.5 + 0.1 * index, "probability_better": 0.4},
             "change_summary": change, "parts_from": None, "blocks": blocks}
 
@@ -99,7 +103,9 @@ def respond(role, context):
         results = [r for r in context.get("results") or [] if r.get("score") is not None]
         lessons = [{"statement": "Adding a term helped in %s." % results[0]["run"], "status": "tentative",
                     "evidence": [results[0]["run"]]}] if results else []
-        return dict(base, lessons=lessons, questions=[{"question": "Should forms with more than 6 constants be allowed?",
+        fresh = "Change one term at a time, and keep the smallest form that fits."
+        suggest = fresh if "approaches" in context and fresh not in [a.get("text") for a in context["approaches"]] else None
+        return dict(base, lessons=lessons, new_approach=suggest, questions=[{"question": "Should forms with more than 6 constants be allowed?",
                                                        "default": "yes"}] if len(results) > 3 else [])
     if role == "coordinator":
         return dict(base, choice=int(context.get("code_would_choose") or 0))

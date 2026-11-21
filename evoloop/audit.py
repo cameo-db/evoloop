@@ -120,6 +120,10 @@ def analyse(store: Store, agents: Agents, designer: Any, view: View, settings: D
         "leaderboard": [designer.summary(view, c["id"]) for c in view.scored()[:10]],
         "lessons_so_far": [{"id": l["id"], "statement": l["statement"], "status": l["status"]}
                            for l in store.read("knowledge")][-30:]}
+    if settings["variation"].get("approaches") == "evolve":
+        from . import approaches
+        context["approaches"] = [{k: row[k] for k in ("id", "text", "by", "status", "designs", "finished", "win_rate")}
+                                 for row in approaches.record(store, view).values()]
     try:
         output = agents.call("analyst", context, about="results %d to %d" % (since, since + len(runs)))
     except AgentError:
@@ -132,6 +136,9 @@ def analyse(store: Store, agents: Agents, designer: Any, view: View, settings: D
             status = "supported" if lesson.get("status") == "supported" and len(lineages) >= 2 else "tentative"
             store.append("knowledge", {"id": "K%d" % (len(store.read("knowledge")) + 1), "statement": str(lesson["statement"])[:600],
                                        "status": status, "evidence": evidence, "call": output.get("_call")})
+    if output.get("new_approach"):
+        from . import approaches
+        approaches.add(store, view, settings, [output["new_approach"]], output.get("_call"))
     for question in output.get("questions") or []:
         if isinstance(question, dict) and question.get("question"):
             store.append("questions", {"id": "Q%d" % (len(store.read("questions")) + 1), "question": str(question["question"])[:600],

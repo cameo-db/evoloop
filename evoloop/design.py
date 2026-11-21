@@ -18,7 +18,7 @@ import random
 import time
 from typing import Any, Dict, List, Optional, Tuple
 
-from . import space
+from . import approaches, space
 from .agents import AgentError, Agents
 from .schedule import phase_at, fraction_used
 from .store import Store, View, read_json, write_json
@@ -228,6 +228,13 @@ class Designer:
                                        for c in request["inspirations"]]
         if request.get("thin_cells"):
             context["thin_cells"] = request["thin_cells"]
+        if parents and settings["variation"].get("edit_format") == "diff":
+            context["request"]["edit_format"] = "diff"
+        if approaches.on(settings):
+            chosen = approaches.pick(self.store, view, settings, self.rng)
+            request["approach"] = chosen["id"] if chosen else approaches.NONE
+            if chosen:
+                context["request"]["approach"] = chosen["text"]
         if request.get("gene"):
             context["gene"] = request["gene"]
         if level != "minimal":
@@ -291,6 +298,26 @@ class Designer:
                 "predicted_effect": "not stated (drawn by code)", "change_summary": "; ".join(moved), "blocks": blocks}
 
     # --- commit ----------------------------------------------------------------------------------
+    @staticmethod
+    def changed(proposal: Dict[str, Any], source: Dict[str, str]) -> Tuple[Dict[str, str], Optional[str]]:
+        """The blocks a proposal changes: those it gives in full, and those it edits by find-and-replace. An edit
+        applies only if its `find` text occurs exactly once in the block, so a change can never land in the wrong place."""
+        given = proposal.get("blocks")
+        out = {k: v for k, v in given.items() if isinstance(v, str)} if isinstance(given, dict) else {}
+        edits = proposal.get("edits")
+        for edit in edits if isinstance(edits, list) else []:
+            if not isinstance(edit, dict) or not all(isinstance(edit.get(k), str) for k in ("block", "find", "replace")):
+                return out, "an edit must give block, find and replace as text"
+            name = edit["block"]
+            text = out.get(name, source.get(name))
+            if text is None:
+                return out, "an edit names the block %s, which does not exist" % name
+            found = text.count(edit["find"]) if edit["find"] else 0
+            if found != 1:
+                return out, "an edit to %s could not be applied: its find text occurs %d times in the block, not once" % (name, found)
+            out[name] = text.replace(edit["find"], edit["replace"], 1)
+        return out, None
+
     def commit(self, request: Dict[str, Any], view: View, settings: Dict[str, Any]) -> Tuple[Optional[Dict[str, Any]], str]:
         """The run record of the chosen proposal, or (None, why nothing can be run)."""
         if request.get("refuse"):
@@ -299,8 +326,8 @@ class Designer:
         novelty = float(settings["schedule"]["novelty"])
         judged, reasons = [], []
         for proposal in request.get("proposals") or []:
-            changed = {k: v for k, v in (proposal.get("blocks") or {}).items() if isinstance(v, str)}
-            fault = space.check(self.table, changed, request["allowed"], settings)
+            changed, unreadable = self.changed(proposal, request["source"])
+            fault = unreadable or space.check(self.table, changed, request["allowed"], settings)
             blocks = dict(request["source"], **changed)
             if fault is None and request.get("purpose") != "recheck" and self.keys(blocks, settings)["candidate"] in existing:
                 fault = "an exact copy of %s" % existing[self.keys(blocks, settings)["candidate"]]
@@ -364,7 +391,8 @@ class Designer:
                    "hypothesis": proposal.get("hypothesis"), "predicted_effect": proposal.get("predicted_effect"),
                    "change_summary": proposal.get("change_summary"), "parts_from": proposal.get("parts_from"),
                    "forecast": forecast, "why_this_slot": request.get("why"), "step": request.get("step"),
-                   "forced_by": request.get("forced_by"),
+                   "forced_by": request.get("forced_by"), "approach": request.get("approach"),
+                   "edits": len(proposal.get("edits") or []) if isinstance(proposal.get("edits"), list) else 0,
                    "call": request.get("call"), "distance": distance, "proposals_weighed": len(request.get("proposals") or []),
                    "not_chosen": [{"name": p.get("name"), "worth": round(w, 3)} for w, p, _, _, _ in judged[1:]] + reasons}
         run = {"id": "R%d" % (len(view.runs) + 1), "candidate": candidate, "key": keys["candidate"], "model": model,

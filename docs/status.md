@@ -24,6 +24,9 @@ more than it is.
   `claude_code` backends have not been called from this version.
 - **A real training task.** Nothing has been trained on a GPU through this version.
 - **Whether any strategy searches better than another.** The strategies are known to work as code.
+- **Several models writing, find-and-replace edits, approaches and weight inheritance with a real agent or a
+  real adapter.** The stub returns whole-block edits and one fixed approach; the example adapter ignores the
+  parent's checkpoint. Whether a real model writes edits that apply, or approaches worth keeping, is not known.
 - **The ladder, the trade-off front, behaviour groups and island resets on a real task.** They are tested on
   the example and on made-up results; whether early progress predicts the final score on your task is not known.
 - On Slurm: GPU jobs, a preempted job being requeued, the QoS list, a time limit being hit.
@@ -48,16 +51,15 @@ more than it is.
 
 Things people running searches have needed that are not here yet:
 
-- A rule that stops a run falling clearly behind the baseline's own curve. Only new designs are screened, once.
+- A rule that stops a run falling clearly behind the baseline's own curve. The screen and the ladder compare
+  designs with each other, not with the baseline.
 - Moving a waiting job to a better QoS when room appears there; jobs are placed once, at submission.
 - Scoring the test set in separate, low-priority jobs. The adapter reports test results itself.
 - Refitting the top N designs at the end (on the full data, or on more seeds) and ensembling them. A change of
   `data.fraction` refits the leader of each lineage, which is close but not the same.
 - Choosing the GPU type per design.
-
 - A proxy tier on a different, cheaper task (a smaller dataset or model), with promotion to the real one. The
   ladder stops weak designs early within the real task; it does not swap the task.
-- Weight inheritance from a parent.
 - Repair of a design that crashed.
 - A file of a cluster's own rules.
 - Running the CAMEO kit's check on the study file.

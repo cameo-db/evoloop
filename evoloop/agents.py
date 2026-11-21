@@ -68,6 +68,13 @@ first parent (or, with no parent, from the current leader, so that a new design 
 - Give `expected_gain`: `gain` is how many noise floors above (positive) or below the reference you expect this to \
 score, your honest middle estimate; `probability_better` is your chance, 0 to 1, that it beats the reference. The \
 reference is the parent, or the leader when there is no parent. These are scored against the result.
+- When the request has `edit_format: diff`, a block you change only in part may be given under `edits` instead of \
+`blocks`: a list of {"block": name, "find": text, "replace": text}. `find` must occur EXACTLY ONCE in that block as \
+you were shown it (copy enough of it, character for character, to be unique); edits to one block apply in order. \
+Give a block you rewrite in `blocks`, in full. An edit whose `find` does not occur exactly once makes the proposal \
+invalid, so when in doubt return the full block.
+- `approach`, when present in the request, is a way of working chosen for this slot. Follow it where it does not \
+conflict with the slot's instruction; its record is kept, so do not pretend to follow it.
 - When `number_of_proposals` is above 1, return that many DIFFERENT proposals. One will be chosen to run, by your \
 forecast and by how far each is from what has been tried.
 
@@ -83,8 +90,14 @@ when the same change did the same thing in two different lineages; otherwise it 
 testing and never a constraint. Cite run ids as evidence. If something needs the person's decision, add a question \
 with the default you would take; the run does not wait for the answer.
 
+`approaches`, when present, are ways of working handed to the writers, one per slot, each with how the designs \
+written under it did (`none` is no approach). If the results suggest a way of working that is not there, you may \
+add ONE under `new_approach`: a short instruction on how to go about designing (what to look at, what to change \
+first, what to avoid), not a particular design. Leave it null when nothing suggests one.
+
 Output: {"reasoning": "...", "note": "...", "followed_notes": [], "lessons": [{"statement": "...", \
-"status": "supported | tentative", "evidence": ["R3", "R9"]}], "questions": [{"question": "...", "default": "..."}]}"""
+"status": "supported | tentative", "evidence": ["R3", "R9"]}], "questions": [{"question": "...", "default": "..."}], \
+"new_approach": null}"""
 
 COORDINATOR = """## Your role: coordinator
 
@@ -160,7 +173,8 @@ Output: {"reasoning": "...", "note": "...", "followed_notes": [], "reply": "..."
 ROLES = {"writer": WRITER, "analyst": ANALYST, "coordinator": COORDINATOR, "assessor": ASSESSOR, "translator": TRANSLATOR,
          "strategist": STRATEGIST, "conductor": CONDUCTOR}
 
-PROPOSAL = {"type": "object", "required": ["blocks"], "properties": {"blocks": {"type": "object"}}}
+# `blocks` and `edits` are read leniently when a design is recorded: a proposal with neither is refused there, with the reason.
+PROPOSAL = {"type": "object", "required": [], "properties": {}}
 SCHEMAS: Dict[str, Dict[str, Any]] = {
     "writer": {"type": "object", "required": ["proposals"],
                "properties": {"proposals": {"type": "array", "items": PROPOSAL}}},
@@ -195,21 +209,29 @@ class _BackendConfig:
         return SimpleNamespace(call_timeout_seconds=a["call_timeout_seconds"], max_tokens=a["max_tokens"],
                                prices=a.get("prices") or {}, backend=a["backend"], fallbacks=a.get("fallbacks") or "off")
 
+    def picked(self, role: str, what: str) -> Any:
+        """What was drawn for this call from `agents.writer_mix`, if anything (each call runs in its own thread)."""
+        return getattr(self.holder.get("local"), what, None) if role == "writer" else None
+
     def model_for(self, role: str) -> Any:
         a = self.holder["settings"]["agents"]
-        return (a.get("models") or {}).get(role) or a.get("default_model")
+        return self.picked(role, "model") or (a.get("models") or {}).get(role) or a.get("default_model")
 
     def effort_for(self, role: str) -> Any:
         """The effort set for a role, else the one set for every role; None leaves it to the model."""
         a = self.holder["settings"]["agents"]
-        return (a.get("efforts") or {}).get(role) or a.get("effort")
+        return self.picked(role, "effort") or (a.get("efforts") or {}).get(role) or a.get("effort")
 
 
 class Agents:
     def __init__(self, settings: Dict[str, Any], folder: str, store: Store, backend: Any = None, tag: str = ""):
-        self.holder = {"settings": settings}
+        self.holder = {"settings": settings, "local": threading.local()}
+        self.mixed: Dict[str, int] = {}      # writer calls so far by model, when several models write
         self.folder, self.store = folder, store
         used = store.read("calls")
+        for done in used:      # so the shares hold across a restart of the controller
+            if done.get("drawn_model"):
+                self.mixed[done["drawn_model"]] = self.mixed.get(done["drawn_model"], 0) + 1
         self.dollars = sum(float(c.get("cost_usd") or 0.0) for c in used)
         self.count = len(used)
         self.lock = threading.Lock()
@@ -253,7 +275,29 @@ class Agents:
             return "agent calls are paused for the account's limit (%s)" % self.client.pause_reason[:120]
         return None
 
+    def draw_writer(self) -> Optional[Dict[str, Any]]:
+        """The model for one writer call when several write (`agents.writer_mix`): by counting, so the realised
+        shares follow the shares set, whatever the order the calls come in."""
+        mix = [m for m in self.holder["settings"]["agents"].get("writer_mix") or [] if isinstance(m, dict) and m.get("model")]
+        if not mix:
+            return None
+        whole = sum(float(m.get("share") or 0) for m in mix) or 1.0
+        with self.lock:
+            done = sum(self.mixed.get(m["model"], 0) for m in mix)
+            chosen = max(mix, key=lambda m: float(m.get("share") or 0) / whole * (done + 1) - self.mixed.get(m["model"], 0))
+            self.mixed[chosen["model"]] = self.mixed.get(chosen["model"], 0) + 1
+        return chosen
+
     def call(self, role: str, context: Dict[str, Any], about: Any = None) -> Dict[str, Any]:
+        drawn = self.draw_writer() if role == "writer" else None
+        local = self.holder["local"]
+        local.model, local.effort = (drawn or {}).get("model"), (drawn or {}).get("effort")
+        try:
+            return self._call(role, context, about, drawn)
+        finally:
+            local.model = local.effort = None
+
+    def _call(self, role: str, context: Dict[str, Any], about: Any, drawn: Optional[Dict[str, Any]]) -> Dict[str, Any]:
         why = self.available()
         if why:
             raise AgentsUnavailable(why)
@@ -276,6 +320,8 @@ class Agents:
             record: Dict[str, Any] = {"id": "A%d_%s" % (self.count, self.tag) if self.tag else "A%d" % self.count,
                                       "role": role, "about": about, "shown": shown,
                                       "notes_shown": [n["id"] for n in notes] if role != "translator" else []}
+            if drawn:
+                record["drawn_model"] = drawn["model"]
         started = time.time()
         usage: Dict[str, Any] = {}
         try:

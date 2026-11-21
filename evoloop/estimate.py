@@ -108,9 +108,11 @@ def tokens(settings: Dict[str, Any], size: Dict[str, float]) -> Dict[str, Tuple[
     weight = sum(share.values()) or 1.0
     # Designs shown: one for a new design or a local move, four for a novel one (three inspirations), two for a crossover.
     shown = (share["new"] * 1 + share["local"] * 1 + share["novel"] * 4 + share["cross"] * 2) / weight
-    # Blocks returned: every structure block for a new or novel design and a hybrid, one block for a local move.
+    # Blocks returned: every structure block for a new or novel design and a hybrid, one block for a local move
+    # (about a quarter of one when local moves come back as find-and-replace edits).
+    part = 0.25 if settings["variation"].get("edit_format") == "diff" else 1.0
     back = ((share["new"] + share["novel"] + share["cross"]) * size["structure"]
-            + share["local"] * size["structure"] / size["blocks"]) / weight
+            + share["local"] * size["structure"] / size["blocks"] * part) / weight
     proposals = float(settings["variation"]["proposals_per_slot"])
     system = lambda role: float(len(CORE) + len(ROLES[role]))   # noqa: E731
     chars = {
@@ -127,6 +129,13 @@ def price_of(settings: Dict[str, Any], role: str) -> Optional[Dict[str, float]]:
     """A role's prices: the brief's `agents.prices`, else the built-in list of models."""
     from .model import catalog
     agents = settings["agents"]
+    mix = [m for m in agents.get("writer_mix") or [] if isinstance(m, dict) and m.get("model")] if role == "writer" else []
+    if mix:      # several models write: the price of an average call, by their shares
+        whole = sum(float(m.get("share") or 0) for m in mix) or 1.0
+        rates = [(float(m.get("share") or 0) / whole, catalog.rates(m["model"], agents.get("prices"))[0]) for m in mix]
+        if any(rate is None for _, rate in rates):
+            return None
+        return {key: sum(share * float(rate.get(key) or 0.0) for share, rate in rates) for key in rates[0][1]}
     model = (agents.get("models") or {}).get(role) or agents.get("default_model")
     return catalog.rates(model, agents.get("prices"))[0]
 

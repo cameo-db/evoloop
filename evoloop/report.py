@@ -6,8 +6,8 @@ import os
 import time
 from typing import Any, Dict, List, Optional
 
-from . import audit, form, schedule, strategies, strategist
-from .store import ENDED, View, write_json
+from . import approaches, audit, form, schedule, strategies, strategist
+from .store import ENDED, Store, View, write_json
 
 
 def leaderboard(view: View, limit: int = 15, columns: Optional[List[str]] = None,
@@ -146,6 +146,13 @@ def lines(controller: Any, view: View, reason: Optional[str] = None) -> List[str
                         "  - its reason: %s" % (e.get("reason") or "(none given)"),
                         "  - it expects: %s" % json.dumps(e.get("expects"), default=str),
                         "  - it waits because: %s" % e.get("why")]
+    if approaches.on(settings) or store.read("approaches"):
+        out += ["", "## Approaches handed to the writers", "",
+                "Beat reference: the share of finished designs that beat their parent (or, with no parent, the middle "
+                "of all designs) by more than the noise. `none` is no approach.", ""] + table(approaches.table(store, view))
+    by_model = writers_by_model(store, view)
+    if len(by_model) > 1:
+        out += ["", "## Writers by model", ""] + table(by_model)
     money = snap["spend"]
     if money.get("projected") is not None:
         out += ["", "## Agent spend", "", "$%.2f so far, $%.3f per design; at that rate the run ends at about $%.2f%s." % (
@@ -210,3 +217,23 @@ def write(controller: Any, view: View, reason: Optional[str] = None) -> str:
     with open(path, "w", encoding="utf-8") as handle:
         handle.write("\n".join(lines(controller, view, reason)) + "\n")
     return path
+
+
+def writers_by_model(store: Store, view: View) -> List[Dict[str, Any]]:
+    """With several models writing (`agents.writer_mix`): what the designs of each came to."""
+    drawn = {c["id"]: c["drawn_model"] for c in store.read("calls") if c.get("role") == "writer" and c.get("drawn_model")}
+    rows: Dict[str, Dict[str, Any]] = {}
+    for call, model in drawn.items():
+        rows.setdefault(model, {"model": model, "calls": 0, "designs": 0, "scored": 0, "beat reference": 0, "best": None})["calls"] += 1
+    for run in view.runs.values():
+        model = drawn.get(run["history"].get("call"))
+        if model is None or run.get("purpose", "search") not in ("search", "trial"):
+            continue
+        row = rows[model]
+        row["designs"] += 1
+        own = view.own_value(run)
+        if own is not None:
+            row["scored"] += 1
+            row["best"] = view.display(own) if row["best"] is None else view.display(max(view.sign * row["best"], own))
+        row["beat reference"] += int(approaches.reward(view, run) or 0)
+    return sorted(rows.values(), key=lambda r: r["model"])

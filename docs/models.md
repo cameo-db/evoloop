@@ -45,6 +45,10 @@ agents:
   effort: low
   efforts: {writer: high, strategist: medium}
 ```
+**Several models for the writers.** `agents.writer_mix` shares the writer calls between models, for instance a
+fast one for most designs and a strong one for a fifth of them; see [the writers](how-it-works.md#the-writers).
+The cost estimate prices an average writer call by the shares.
+
 
 ## The models
 

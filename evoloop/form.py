@@ -55,7 +55,13 @@ DEFAULTS: Dict[str, Any] = {
     "population": {"lineages": 8, "quota": 0.4, "trial_runs": 2, "retire_after": 6, "tie_margin": 1.0,
                    "specialist_rate": 0.15},
     "crossover": {"kinds": ["block_swap", "graft", "hybrid"]},
-    "variation": {"proposals_per_slot": 2, "step_adaptation": True, "settings_by": "agent"},
+    "variation": {"proposals_per_slot": 2, "step_adaptation": True, "settings_by": "agent",
+                  # full: a writer returns the whole of each block it changes. diff: for a change to part of a block it
+                  # may return find-and-replace edits, which cost fewer tokens on large blocks.
+                  "edit_format": "full",
+                  # Ways of working handed to the writers, one per slot, kept or dropped by how their designs did:
+                  # off, fixed (yours only, from approach_seeds) or evolve (the analyst adds to them).
+                  "approaches": "off", "approach_pool": 6, "approach_seeds": []},
     "harness": {"autonomy": None, "level": "full", "coordinator": "code", "analyst_every": 8, "conductor": "code"},
     "strategist": {"mode": "off", "every": 15, "plateau": 12, "horizon": 15, "min_new_share": 0.10,
                    "max_share_shift": 0.15, "force_max": 5, "ask_first": ["strategy"]},
@@ -67,6 +73,8 @@ DEFAULTS: Dict[str, Any] = {
                    "ladder": [], "ladder_applies": "all",
                    "schedule_depends_on_length": True, "keep_checkpoints": False, "on_length_change": "auto",
                    "leaders_refit": 4, "test_set": "held_out", "quick_check": None,
+                   # A child is handed its parent's checkpoint folder (EVO_PARENT_CHECKPOINT_DIR) to start from.
+                   "inherit_weights": False,
                    # Passed to every job as environment variables, e.g. {PATIENCE: 5, MIN_GAIN: 0.001}: what the adapter reads
                    # beside the run length. A change begins a new period, like a change of the run length.
                    "variables": {}},
@@ -79,6 +87,8 @@ DEFAULTS: Dict[str, Any] = {
     "run_command": "python adapter/run.py",
     "audit": {"reviews": "halfway", "review_roles": "all"},
     "agents": {"backend": None, "stub_module": None, "default_model": "claude-opus-5-5", "models": {}, "effort": "medium",
+               # Several models for the writers, by share of the calls: [{model: a, share: 0.8}, {model: b, share: 0.2}].
+               "writer_mix": [],
                "efforts": {"writer": "high"}, "fallbacks": "default", "max_tokens": 64000,
                "call_timeout_seconds": 900, "max_concurrent_calls": 4, "max_retries": 2, "prices": {}},
     "data": {"name": None, "accession": None, "input": None, "output": None, "examples": None,
@@ -118,6 +128,7 @@ CHOICES = {"objective.direction": ("maximize", "minimize"), "strategy.mechanism"
            "compute.scheduler": ("local", "slurm"), "agents.backend": ("stub", "anthropic_api", "claude_code"),
            "evaluation.on_length_change": ("auto", "continue", "rerun", "compare_anyway"),
            "variation.settings_by": ("agent", "sampler"), "strategist.mode": ("off", "advise", "act"),
+           "variation.edit_format": ("full", "diff"), "variation.approaches": ("off", "fixed", "evolve"),
            "evaluation.ladder_applies": ("new", "all"), "schedule.novelty_measure": ("auto", "code", "behaviour"),
            "strategy.second_direction": ("maximize", "minimize"),
            "budget.spend_policy": ("none", "pace"), "harness.autonomy": ("harnessed", "guided", "agentic"), "harness.conductor": ("code", "agent"),
@@ -127,11 +138,11 @@ CHOICES = {"objective.direction": ("maximize", "minimize"), "strategy.mechanism"
 LIVE = ("schedule.", "limits", "strategist.", "population.", "crossover.", "variation.", "harness.", "strategy.", "space.", "audit.", "budget.",
         "compute.max_running", "compute.time_limit", "compute.qos", "compute.partition", "compute.gpus", "compute.max_waiting",
         "evaluation.screen_", "evaluation.ladder", "evaluation.recheck_every", "evaluation.speciality_metrics", "evaluation.on_length_change",
-        "evaluation.leaders_refit", "agents.models", "agents.default_model", "agents.effort", "agents.efforts", "agents.fallbacks", "agents.prices",
+        "evaluation.leaders_refit", "agents.models", "agents.writer_mix", "agents.default_model", "agents.effort", "agents.efforts", "agents.fallbacks", "agents.prices",
         "report.", "run.")
 # These change what a score means. They may change too, and then a new period begins: the leaders are fitted again
 # (or continued) under the new setting and earlier scores stop deciding selection.
-NEW_PERIOD = ("evaluation.allowance", "evaluation.seed", "data.fraction", "evaluation.variables")
+NEW_PERIOD = ("evaluation.allowance", "evaluation.seed", "data.fraction", "evaluation.variables", "evaluation.inherit_weights")
 FROZEN_WHY = "it defines the problem (the objective, the data, the scoring); start a new run to change it"
 
 RUN_TYPES: Dict[str, Dict[str, Any]] = {
@@ -410,6 +421,15 @@ def check_value(path: str, value: Any) -> Optional[str]:
     if path == "agents.efforts" and value not in EMPTY and (not isinstance(value, dict) or not all(
             isinstance(r, str) and v in CHOICES["agents.effort"] for r, v in value.items())):
         return "agents.efforts must map a role to one of: %s" % ", ".join(CHOICES["agents.effort"])
+    if path == "agents.writer_mix" and value not in EMPTY and (not isinstance(value, list) or not all(
+            isinstance(m, dict) and isinstance(m.get("model"), str) and m["model"] and set(m) <= {"model", "share", "effort"}
+            and isinstance(m.get("share"), (int, float)) and not isinstance(m.get("share"), bool) and m["share"] > 0
+            and m.get("effort", "medium") in CHOICES["agents.effort"] for m in value)):
+        return "agents.writer_mix must be a list of {model: id, share: a number above 0} (and, if wanted, effort)"
+    if path == "variation.approach_seeds" and (not isinstance(value, list) or not all(isinstance(t, str) and t.strip() for t in value)):
+        return "variation.approach_seeds must be a list of short instructions, each a line of text"
+    if path == "variation.approach_pool" and not (number and float(value).is_integer() and value >= 1):
+        return "variation.approach_pool must be a whole number, 1 or more"
     if path == "agents.models" and value not in EMPTY and (not isinstance(value, dict) or not all(
             isinstance(r, str) and isinstance(m, str) and m for r, m in value.items())):
         return "agents.models must map a role to a model id"
@@ -497,6 +517,14 @@ def warnings(settings: Dict[str, Any]) -> List[str]:
                 out.append(fault)
         if not agents.get("default_model") and not all(models.values()):
             out.append("no model is set for some roles: give agents.default_model")
+    if settings["evaluation"].get("inherit_weights") and not settings["evaluation"].get("keep_checkpoints"):
+        out.append("evaluation.inherit_weights needs the adapter to keep checkpoints: set evaluation.keep_checkpoints, "
+                   "or a child finds nothing to start from")
+    if settings["variation"].get("approaches") == "fixed" and not settings["variation"].get("approach_seeds"):
+        out.append("variation.approaches is fixed but variation.approach_seeds is empty: there is nothing to hand out")
+    if settings["variation"].get("approaches") == "evolve" and settings["harness"]["level"] == "minimal":
+        out.append("variation.approaches: evolve needs the analyst, which the minimal harness does not run: no "
+                   "approach will be added")
     if mech == "pareto" and not settings["strategy"].get("second_metric"):
         out.append("the pareto strategy needs strategy.second_metric (the second thing to do well on); without it, it "
                    "builds on the best design only")

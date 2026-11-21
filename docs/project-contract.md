@@ -22,6 +22,7 @@ absolute path from the adapter.
 | `EVO_CHECKPOINT_DIR` | a folder kept for this design, seed and period: the same run started again finds its checkpoint there |
 | `EVO_RESTART_COUNT` | 0 on the first start; above 0 when the run was started again after the machine ended it |
 | `EVO_CONTINUE_FROM` | set when the run is to continue an earlier run's checkpoint (after the run length was raised) |
+| `EVO_PARENT_CHECKPOINT_DIR` | with `evaluation.inherit_weights`: the checkpoint folder of the design's parent, to start from |
 | `EVO_RUN_ID`, `EVO_CPUS` | the run's id; the processors it may use |
 | your own | every name in `evaluation.variables`, as you set it |
 
@@ -63,6 +64,21 @@ allowance and `metric` the score or a faithful running estimate of it. At each r
 **Exit codes.** Exit 75 says the machine failed, not the model: the run is started again, uncharged, at
 most `compute.infrastructure_retries` times. A run that ends with no `result.json` is recorded as
 failed, with the end of its log.
+
+## Starting from the parent's weights
+
+With `evaluation.inherit_weights: true` (and `evaluation.keep_checkpoints: true`), the job of a design
+that has a parent is given `EVO_PARENT_CHECKPOINT_DIR`: the folder where the parent's run kept its
+checkpoint. What to do with it is the adapter's business: typically, load every tensor whose name and
+shape match the child's model and initialise the rest as usual. A child that changes little then
+trains from where its parent stopped.
+
+- It makes a child's score depend on its parent's training, so a child is no longer comparable with a
+  design trained from scratch at the same length. The loop does not correct for this. Refit the
+  designs you mean to report from scratch.
+- Changing the setting during a run begins a new period, like a change of the run length.
+- A new design, and the first parent's missing folder, get no variable: the adapter must handle its
+  absence.
 
 ## The quick check
 
