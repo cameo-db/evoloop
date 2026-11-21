@@ -25,6 +25,8 @@ theme:
       primary: teal
       accent: teal
       toggle: {icon: material/weather-sunny, name: Light mode}
+extra_javascript:
+  - assets/js/explore.js
 extra_css:
   - extra.css
 nav:
@@ -53,6 +55,7 @@ nav:
       - Make a data pipeline faster or cheaper: guides/data-pipeline.md
   - How it works:
       - How a search works: how-it-works.md
+      - See what a choice changes (interactive): explore.md
       - How each choice changes the search: choices.md
       - Model and effort: models.md
       - Agentic or harnessed, and what it costs: autonomy.md

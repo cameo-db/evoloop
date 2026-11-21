@@ -20,3 +20,42 @@
 [data-md-color-scheme="slate"] .evo-chart { --evo-surface: #1a1a19; --evo-ink: #f0efec; --evo-soft: #c3c2b7; --evo-grid: #33332f; --evo-series: #3987e5; --evo-dot: #8f8e88; }
 .evo-chart svg { width: 100%; height: auto; display: block; }
 .evo-chart circle[fill="transparent"]:hover { fill: var(--evo-series); fill-opacity: 0.18; }
+
+/* The interactive figures (docs/assets/js/explore.js). Colours: three fixed hues for the three kinds of move. */
+.evo-widget { --evo-new: #eb6834; --evo-cross: #1baf7a; --evo-local: #2a78d6; --evo-base: #8f8e88; --evo-ink: var(--md-default-fg-color);
+  --evo-soft: var(--md-default-fg-color--light); --evo-line: var(--md-default-fg-color--lightest); --evo-surface: var(--md-default-bg-color);
+  border: 1px solid var(--evo-line); border-radius: 12px; padding: 1rem 1.1rem; margin: 1.2rem 0; }
+[data-md-color-scheme="slate"] .evo-widget { --evo-new: #d95926; --evo-cross: #199e70; --evo-local: #3987e5; }
+.evo-controls { display: grid; gap: 0.55rem; margin-bottom: 0.9rem; }
+.evo-row { display: grid; grid-template-columns: 13.5rem minmax(0, 1fr); gap: 0.8rem; align-items: center; }
+.evo-label { font-size: 0.7rem; color: var(--evo-soft); }
+.evo-chips { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.evo-chip { font: inherit; font-size: 0.7rem; padding: 0.28rem 0.7rem; border-radius: 999px; border: 1px solid var(--evo-line); background: transparent; color: var(--evo-ink); cursor: pointer; }
+.evo-chip:hover { border-color: var(--md-accent-fg-color); }
+.evo-chip.on { background: var(--md-primary-fg-color); border-color: var(--md-primary-fg-color); color: var(--md-primary-bg-color); }
+.evo-chip.go { border-color: var(--md-primary-fg-color); color: var(--md-primary-fg-color); font-weight: 600; }
+.evo-chip:focus-visible, .evo-select:focus-visible { outline: 2px solid var(--md-accent-fg-color); outline-offset: 2px; }
+.evo-select { font: inherit; font-size: 0.72rem; padding: 0.3rem 0.5rem; border-radius: 8px; border: 1px solid var(--evo-line); background: var(--evo-surface); color: var(--evo-ink); max-width: 100%; }
+.evo-row input[type=range] { width: min(100%, 22rem); accent-color: var(--md-primary-fg-color); }
+.evo-out h4 { margin: 1rem 0 0.4rem; font-size: 0.78rem; }
+.evo-legend { display: flex; flex-wrap: wrap; gap: 0.9rem; font-size: 0.68rem; color: var(--evo-soft); margin: 0.2rem 0 0.4rem; }
+.evo-swatch { display: inline-block; width: 0.7rem; height: 0.7rem; border-radius: 3px; margin-right: 0.35rem; vertical-align: -1px; }
+.evo-bg-new { background: var(--evo-new); } .evo-bg-cross { background: var(--evo-cross); } .evo-bg-local { background: var(--evo-local); } .evo-bg-base { background: var(--evo-base); }
+.evo-ringed { background: transparent; border: 2px solid var(--evo-ink); border-radius: 50%; }
+.evo-widget svg { width: 100%; height: auto; display: block; }
+.evo-fill-new { fill: var(--evo-new); } .evo-fill-cross { fill: var(--evo-cross); } .evo-fill-local { fill: var(--evo-local); } .evo-fill-base { fill: var(--evo-base); }
+.evo-share { fill: var(--evo-ink); font-size: 12.5px; font-weight: 600; }
+.evo-small { fill: var(--evo-soft); font-size: 11.5px; }
+.evo-tick, .evo-grid { stroke: var(--evo-line); stroke-width: 1; }
+.evo-curve { fill: none; stroke: var(--evo-soft); stroke-width: 2; }
+.evo-link { stroke: var(--evo-soft); stroke-width: 1.2; stroke-dasharray: 3 3; }
+.evo-dot { stroke: var(--evo-surface); stroke-width: 2; }
+.evo-dot.now { stroke: var(--evo-ink); }
+.evo-ring { fill: none; stroke: var(--evo-ink); stroke-width: 2; }
+.evo-facts { display: grid; grid-template-columns: 13.5rem minmax(0, 1fr); gap: 0.3rem 0.8rem; margin: 0; font-size: 0.72rem; }
+.evo-facts dt { color: var(--evo-soft); } .evo-facts dd { margin: 0; }
+.evo-facts dd.evo-changed { font-weight: 600; box-shadow: inset 3px 0 0 var(--md-accent-fg-color); padding-left: 0.5rem; }
+.evo-diff, .evo-warn, .evo-read { font-size: 0.72rem; margin-top: 0.8rem; }
+.evo-diff ul, .evo-warn ul { margin: 0.3rem 0 0 1rem; }
+.evo-brief { font-size: 0.7rem; margin: 0.2rem 0 0; }
+@media screen and (max-width: 44em) { .evo-row, .evo-facts { grid-template-columns: minmax(0, 1fr); gap: 0.2rem; } }

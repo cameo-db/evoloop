@@ -437,3 +437,59 @@ def missing() -> List[str]:
     out += ["field %s" % path for path in paths if not FIELDS.get(path)]
     out += ["field %s (not a field)" % path for path in FIELDS if path not in paths]
     return out
+
+
+# --- the plan explorer of the documentation ---------------------------------------------------------
+PLAN_BUDGETS = (30, 100, 300)
+
+
+def plans() -> Dict[str, Any]:
+    """What a search comes to for every combination of run type, skill, level of autonomy and size of budget:
+    the data behind the documentation's plan explorer. Worked out by the same code that resolves a real brief,
+    so the page cannot say something the tool does not do."""
+    from . import estimate
+    run_types = list(form.RUN_TYPES)
+    names = [""] + skills.names()
+    levels = [""] + list(form.CHOICES["harness.autonomy"])
+    warnings: List[str] = []
+    rows: Dict[str, Any] = {}
+    for run_type in run_types:
+        for name in names:
+            for level in levels:
+                for budget in PLAN_BUDGETS:
+                    brief: Dict[str, Any] = {"objective": {"goal": "explore", "direction": "maximize"},
+                                             "run": {"type": run_type}, "budget": {"evaluations": budget},
+                                             "evaluation": {"allowance": 10, "noise": 0.01}, "agents": {"backend": "anthropic_api"}}
+                    if name:
+                        brief["run"]["skill"] = name
+                    if level:
+                        brief["harness"] = {"autonomy": level}
+                    s = form.resolve(brief)[0]
+                    steps, everyone = form.rungs(s)
+                    calls = {role: int(round(n[1])) for role, n in estimate.calls(s).items() if n[1] >= 0.5}
+                    marks = []
+                    for note in form.warnings(s):
+                        if note not in warnings:
+                            warnings.append(note)
+                        marks.append(warnings.index(note))
+                    rows["|".join([run_type, name, level, str(budget)])] = {
+                        "strategy": s["strategy"]["mechanism"], "islands": int(s["strategy"]["islands"]),
+                        "second": s["strategy"].get("second_metric"), "descriptors": s["strategy"]["descriptors"],
+                        "space": s["space"]["preset"], "novelty": s["schedule"]["novelty"],
+                        "phases": [[p["until"], p.get("new", 0), p.get("cross", 0), p.get("local", 0)] for p in s["schedule"]["phases"]],
+                        "novel_share": s["schedule"]["novel_share"], "local_mix": s["schedule"]["local_mix"],
+                        "settings_by": s["variation"]["settings_by"], "proposals": int(s["variation"]["proposals_per_slot"]),
+                        "level": s["harness"]["level"], "coordinator": s["harness"]["coordinator"],
+                        "strategist": s["strategist"]["mode"], "lineages": int(s["population"]["lineages"]),
+                        "stop": ("ladder" if everyone else ("screen" if steps[0]["keep"] < 1 else "none")),
+                        "rungs": [[r["at"], r["keep"]] for r in steps],
+                        "designs": int(round(budget / form.mean_charge(s))), "calls": calls, "warn": marks}
+    return {"run_types": run_types, "skills": names, "levels": levels, "budgets": list(PLAN_BUDGETS),
+            "about": {"run_types": RUN_TYPES, "skills": dict({"": "No skill: the run type and the defaults decide."}, **{
+                n: (skills.load(n)[0] or {}).get("objective", "") for n in skills.names()}),
+                "levels": dict({"": "Left to the run type."}, **AUTONOMY), "strategies": STRATEGIES, "spaces": SPACES},
+            "warnings": warnings, "plans": rows}
+
+
+def plans_json() -> str:
+    return json.dumps(plans(), sort_keys=True, separators=(",", ":")) + "\n"

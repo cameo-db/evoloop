@@ -316,6 +316,9 @@ def menu_topics() -> List[str]:
 
 def cmd_menu(args: Any) -> int:
     from . import menu
+    if args.plans:
+        sys.stdout.write(menu.plans_json())
+        return 0
     if args.markdown:
         sys.stdout.write(menu.fields_markdown() if args.topic in ("fields", "defaults") else menu.menu_markdown())
     else:
@@ -860,6 +863,7 @@ def build_parser() -> argparse.ArgumentParser:
     p = add("menu", cmd_menu, "every choice a run can make, the presets, and every field of the brief")
     p.add_argument("topic", nargs="?", default="all", choices=menu_topics())
     p.add_argument("--markdown", action="store_true", help="as a page of the documentation (topics: all, fields)")
+    p.add_argument("--plans", action="store_true", help="the data of the documentation's plan explorer, as JSON")
     p = add("run", cmd_run, "start a run, or continue a stopped one", named=True)
     p.add_argument("--max-seconds", type=float, default=None)
     p = add("status", cmd_status, "where the run stands, in a few lines", named=True)
