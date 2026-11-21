@@ -212,7 +212,7 @@ function review() {
   box.append(card);
   const file = el("section", {class: "q"});
   const text = JSON.stringify(nested(), null, 1);
-  file.append(el("h3", {text: "Your answers file"}), el("p", {class: "why", text: "Save this as answers.json in the search folder, then run:  evoloop brief DIR --import answers.json   and   evoloop plan DIR. In a chat with an agent, paste it and ask for it to be imported."}));
+  file.append(el("h3", {text: "Your answers file"}), el("p", {class: "why", text: "Save this as answers.json, then run:  evoloop brief DIR --import PATH/TO/answers.json   and   evoloop plan DIR. In a chat with an agent, paste it and ask for it to be imported."}));
   const area = el("textarea", {class: "out", id: "answers-out", readonly: "", "aria-label": "Answers file"}); area.value = text;
   const said = el("span", {class: "hint", role: "status"});
   const copy = el("button", {class: "act", type: "button", text: "Copy"});

@@ -271,8 +271,9 @@ def save_brief(folder: str, brief: Dict[str, Any]) -> None:
     path = os.path.join(folder, "brief.yaml")
     tmp = path + ".tmp"
     with open(tmp, "w", encoding="utf-8") as handle:
-        handle.write("# The brief: the scope of one search. Fill in what you know; `evoloop brief` asks for the rest.\n"
-                     "# An empty field takes its value from the run type, the budget guidance or the default, and\n"
+        handle.write("# The brief: the scope of one search. Fill in what you know; `evoloop setup` asks for the rest.\n"
+                     "# An empty field takes its value from the skill, the level of autonomy, the run type, the budget\n"
+                     "# guidance or the default (the first that gives one), and\n"
                      "# `evoloop plan` shows which. Never fill a field by guessing.\n")
         yaml.safe_dump(brief, handle, sort_keys=False, default_flow_style=False, width=110)
     os.replace(tmp, path)
@@ -313,6 +314,12 @@ def resolve(brief: Dict[str, Any], ledger: Optional[List[Dict[str, Any]]] = None
         for path, value in flatten(overlay).items():
             place(path, value, source)
 
+    # What is particular to this machine (its scheduler, partitions, QoS, how an environment is activated) comes
+    # from the site file, right after the defaults: a brief that sets something itself still wins.
+    from . import site as sites
+    the_site, site_fault = sites.load(folder)
+    if the_site and the_site["compute"]:
+        lay({"compute": the_site["compute"]}, "site %s" % the_site["name"])
     stated = given(brief)
     changes = [e for e in (ledger or []) if e.get("kind") == "set" and e.get("status", "applied") == "applied"]
     budget = stated.get("budget.evaluations")
@@ -360,6 +367,7 @@ def resolve(brief: Dict[str, Any], ledger: Optional[List[Dict[str, Any]]] = None
         sources["strategist.mode"] = "an agent runs the search (harness.conductor)"
     settings["_guidance"] = label
     settings["_skill"], settings["_skill_fault"] = the_skill, skill_fault
+    settings["_site"], settings["_site_fault"] = the_site, site_fault or sites.fault(the_site, settings)
     settings["notes"] = [e for e in (ledger or []) if e.get("kind") == "note" and e.get("status", "active") == "active"]
     # Lineages the strategist (or the person) retired or revived: the last word on each stands.
     settings["_lineages"] = {e["lineage"]: {"to": e["to"], "t": e.get("t", 0)} for e in (ledger or [])
@@ -524,6 +532,7 @@ def problems(brief: Dict[str, Any]) -> List[str]:
 def warnings(settings: Dict[str, Any]) -> List[str]:
     """Combinations that work against each other. A warning never stops a run."""
     out = [settings["_skill_fault"]] if settings.get("_skill_fault") else []
+    out += [settings["_site_fault"]] if settings.get("_site_fault") else []
     out += (settings.get("_skill") or {}).get("warnings") or []
     for need in ((settings.get("_skill") or {}).get("needs") or {}).get("adapter") or []:
         out.append("the skill needs: %s" % need)
@@ -613,6 +622,7 @@ def at_a_glance(settings: Dict[str, Any]) -> List[str]:
     """What this search will actually do, in a few lines: what is optimised, who writes the designs, which agent
     roles run, how designs are selected and stopped, and what a later choice changed in an earlier one."""
     from . import estimate
+    from . import site as sites
     out = []
     skill = settings.get("_skill")
     out.append("  Optimising:      %s%s" % (settings["run"]["type"] or "no run type yet",
@@ -640,6 +650,14 @@ def at_a_glance(settings: Dict[str, Any]) -> List[str]:
     if strat["mechanism"] == "pareto":
         select += " (score and %s)" % (strat.get("second_metric") or "no second figure set")
     out.append("  Selection:       %s" % select)
+    place = settings.get("_site")
+    compute = settings["compute"]
+    where = "this machine, %s at once" % (compute["gpus"] or "?") if compute["scheduler"] == "local" else "Slurm, one job per design%s%s, %s at once" % (
+        ", partition %s" % compute["partition"] if compute.get("partition") else "",
+        ", qos %s" % ", ".join(sites.names_of(compute["qos"])) if compute.get("qos") else "", compute["gpus"] or "?")
+    out.append("  Runs on:         %s%s" % (where, " (site file: %s)" % place["name"] if place else ""))
+    for rule in (place or {}).get("rules") or []:
+        out.append("  Site rule:       %s" % rule)
     steps, everyone = rungs(settings)
     if everyone:
         out.append("  Early stopping:  a ladder over every design: %s" % ", ".join(

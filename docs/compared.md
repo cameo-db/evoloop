@@ -69,7 +69,7 @@ flowchart LR
 
 These are not in the methods above, and are the reason for the package.
 
-- **Steering without a restart.** Every setting that does not define the problem can be changed while a
+- **Steering without a restart.** Most settings that do not define the problem can be changed while a
   search runs, through a ledger that records who changed what and when. A strategy keeps no state, so
   even the strategy can change. See [Steering a run](steering.md).
 - **Changes that alter what a score means.** Lengthening the training run, changing the data fraction or

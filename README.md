@@ -11,16 +11,16 @@ decision so you can steer the search while it runs.
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/assets/demo-dark.svg">
-    <img src="docs/assets/demo-light.svg" alt="The CPU demo: the validation score of each design and the best so far, from a baseline of 16.19 to a selected design at 0.01247" width="640">
+    <img src="docs/assets/demo-light.svg" alt="A toy model search: the validation accuracy of each of 40 models and the best so far, rising from a baseline of 0.50 to a selected model at 0.97" width="640">
   </picture>
 </p>
-<p align="center"><sub>The CPU demo, fitting a formula to data on a budget of 24 evaluations. Scripted proposals stand in for a model here: this shows the machinery, not what an agent can find.</sub></p>
+<p align="center"><sub>A toy model search: a small classifier on two spirals, 40 models, each really trained on a CPU. The proposals are scripted here, so this shows how a search proceeds, not what an agent would find.</sub></p>
 
 **[Documentation](https://evoloop.readthedocs.io)** · **[Run the CPU demo](#run-the-cpu-demo)** · **[Use your own project](#use-your-own-project)** · **[Status](#status)**
 
 ## Run the CPU demo
 
-No API key, no GPU, under a minute. In a fresh Python environment (3.9 or later):
+A toy model search: no API key, no GPU, about half a minute. In a fresh Python environment (3.9 or later):
 
 ```
 git clone https://github.com/cameo-db/evoloop.git
@@ -55,6 +55,16 @@ evoloop init mysearch --source path/to/project
 5. **Run**: `evoloop run mysearch --name r1`, on your machine or as one Slurm job per design.
 
 [The full walk-through](https://evoloop.readthedocs.io/en/latest/setting-up/).
+
+**You do not have to do this by hand.** evoloop is built to be set up with a coding agent: open this repository in
+Claude Code (or another agent that can read files and run commands) and say *"set up an evoloop search for my
+project"*. Following [AGENTS.md](AGENTS.md), it marks the blocks, writes the evaluator, proposes an answer to each
+question with its reason, and asks you only what it cannot work out. Five decisions are yours: **what to
+optimize**, **what may change**, **how a design is scored**, **how much to spend**, and any **hard limits**.
+Everything else has a default that follows from those.
+
+**On a cluster?** Describe the machine once, in a site file: `evoloop site --detect` drafts it from what the
+scheduler reports ([Adapting to your machine](docs/servers.md)).
 
 ## What do you want to optimize?
 
@@ -200,7 +210,7 @@ stated noise floor, skills, and an audit of the agents.
 
 ## Status
 
-Version 0.2. It passes its tests on the built-in demo with scripted proposals, and has run that demo on
+Version 0.2. It passes its tests on the two built-in examples with scripted proposals, and has run one of them on
 a Slurm cluster. **It has not yet been run with a real model on a real training task**, and no
 comparison of its search settings has been made. The guides give reasoned starting points, not measured
 ones. [Status and limits](docs/status.md) says exactly what has been run.
@@ -211,7 +221,7 @@ ones. [Status and limits](docs/status.md) says exactly what has been run.
 
 | | |
 |---|---|
-| Get started | [Run the CPU demo](docs/quickstart.md) · [Use your own project](docs/setting-up.md) · [The evaluator contract](docs/project-contract.md) |
+| Get started | [Run the CPU demo](docs/quickstart.md) · [Use your own project](docs/setting-up.md) · [The evaluator contract](docs/project-contract.md) · [Adapting to your machine](docs/servers.md) |
 | Understand | [How a search works](docs/how-it-works.md) · [How each choice changes the search](docs/choices.md) · [Skills](docs/skills.md) |
 | Run and review | [Steering a run](docs/steering.md) · [Records](docs/records.md) · [Auditing the agents](docs/auditing.md) |
 | Reference | [Commands](docs/commands.md) · [Fields of the brief](docs/fields.md) · [Skill library](docs/skill-library.md) |

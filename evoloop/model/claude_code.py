@@ -17,7 +17,9 @@ from .base import QUOTA_PATTERN, ModelError, QuotaExhausted, TransientError, quo
 def build_argv(binary: str, system: str, model: Any = None, effort: Any = None) -> List[str]:
     argv = [binary, "--print", "--output-format", "json", "--tools", "", "--strict-mcp-config",
             "--disable-slash-commands", "--no-session-persistence", "--system-prompt", system]
-    if effort and effort != "model_default":   # checked against `claude --help` (2.1.329): low, medium, high, xhigh, max
+    from . import catalog
+    effort = catalog.effort_to_send(model, effort)      # an effort the model does not take is left out, not sent to fail
+    if effort:   # checked against `claude --help` (2.1.329): low, medium, high, xhigh, max
         argv += ["--effort", str(effort)]
     if model:
         argv += ["--model", str(model)]

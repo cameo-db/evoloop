@@ -7,7 +7,7 @@ flowchart TD
     Slot --> Schedule["<b>Schedule</b>: which kind of slot?<br>new · novel · cross · local"]
     Schedule --> Strategy["<b>Strategy</b>: which parents?<br>worked out from the results"]
     Strategy --> Writer["<b>Writer</b>: an agent, or code,<br>writes the blocks"]
-    Writer --> Checks{"<b>Checks</b> by code<br>only open blocks · parses<br>not a copy · within limits"}
+    Writer --> Checks{"<b>Checks</b> by code<br>only open blocks · parses<br>not a copy · nothing forbidden"}
     Checks -- refused --> Writer
     Checks -- ok --> Job["<b>Job</b>: run and score it once"]
     Job --> Records[("Records<br>models, recipes, runs")]

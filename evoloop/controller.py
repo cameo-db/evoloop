@@ -17,7 +17,7 @@ import signal
 import time
 from typing import Any, Dict, List, Optional, Tuple
 
-from . import approaches, audit, form, jobs, report, schedule, skill, space, strategies, strategist, study
+from . import approaches, audit, form, jobs, report, schedule, site, skill, space, strategies, strategist, study
 from .agents import AgentError, Agents, AgentsUnavailable
 from .design import Designer
 from .store import ENDED, SCORED, Store, View, read_json, write_json
@@ -75,6 +75,8 @@ class Controller:
             raise form.BriefError("the brief is not confirmed (run `evoloop brief --confirm NAME` after reading `evoloop plan`)")
         if skill.checkout(form.given(self.brief).get("run.skill"), self.folder):
             self.refresh()
+        if self.settings.get("_site_fault"):
+            raise form.BriefError(self.settings["_site_fault"])
         if self.settings.get("_skill_fault"):
             raise form.BriefError(self.settings["_skill_fault"])
         self.info = {"name": self.name, "started": time.strftime("%Y-%m-%d %H:%M"), "brief": self.brief,
@@ -174,6 +176,8 @@ class Controller:
         if kind == "set":
             for key, value in (request.get("changes") or {}).items():
                 fault = form.check_change(key, value)
+                if not fault:      # what this machine does not allow is refused, whoever asks
+                    fault = site.forbidden(self.settings.get("_site"), key, value)
                 if not fault and key == "run.skill":     # a skill that cannot be found or read is refused, not half-applied
                     fault = skill.combine(value, self.folder)[1]
                     if not fault:      # the search gets its own copy of each skill, to read and to edit

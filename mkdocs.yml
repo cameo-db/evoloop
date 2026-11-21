@@ -33,6 +33,7 @@ nav:
       - Run the CPU demo: quickstart.md
       - Use your own project: setting-up.md
       - The evaluator contract: project-contract.md
+      - Adapting to your machine: servers.md
       - Status and limits: status.md
   - Optimization guides:
       - What do you want to optimize?: guides/index.md

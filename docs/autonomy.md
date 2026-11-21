@@ -23,7 +23,8 @@ every design, and the record of every decision. "Agentic" widens what agents may
 remove the floors.
 
 Left empty, the run type decides (`explore_then_exploit`, `refine` and `survey` are close to `guided`;
-`discovery` and `settings_only` use a lighter harness). What you set yourself in the brief is kept at
+`discovery` and `settings_only` use a lighter harness). A [skill](skills.md) is laid over the level: where both
+set the same thing, the skill's value stands, so `settings-tuning` stays without agents at every level. What you set yourself in the brief is kept at
 every level, so you can take `agentic` and still write `strategist.mode: advise`.
 
 ```
@@ -37,11 +38,11 @@ with it. [The menu](menu.md) shows exactly what each level sets.
 ## What the agents will cost
 
 ```
-evoloop plan mysearch          # the settings, then the estimate
+evoloop plan mysearch          # what will run, the warnings, the estimate, then every setting
 evoloop estimate mysearch      # the estimate alone
 ```
 
-This is the estimate for the built-in example at 100 designs with the default model and effort
+This is the estimate for the built-in formula example at 100 designs with the default model and effort
 (Claude Opus 5.5; prices from the built-in list of 2026-11-03):
 
 ```

@@ -130,3 +130,23 @@ def test_the_report_of_a_laddered_search_marks_what_was_stopped(tmp_path):
     assert "| state" in text.replace("  ", " ") or "state" in text
     assert "stopped at 10%" in text or "stopped at 40%" in text
     assert "provisional" in text and "full" in text
+
+
+# --- the example a newcomer runs first ----------------------------------------------------------------
+def test_the_built_in_model_search_trains_real_models_and_finds_better_ones(tmp_path, capsys):
+    from evoloop.cli import main
+    folder = str(tmp_path / "demo")
+    assert main(["example", folder]) == 0                                        # the classifier is the default
+    assert os.path.isfile(os.path.join(folder, "base", "train.py")) and "spirals" in open(os.path.join(folder, "task.md")).read()
+    assert main(["brief", folder, "--answer", "budget.evaluations=16", "--confirm", "Ada"]) == 0
+    controller = Controller(folder, "first", poll=0.1)
+    assert controller.run(max_seconds=300).startswith("the budget")
+    view = controller.view()
+    base = [c for c in view.scored() if view.run_of(c["id"]).get("purpose") == "baseline"][0]
+    best = view.best()
+    assert controller.settings["objective"]["direction"] == "maximize"
+    assert view.display(base["value"]) < 0.6 and view.display(best["value"]) > 0.85     # from chance to a working model
+    run = view.run_of(best["id"])["performance"]
+    assert run["parameters"] > 3 and run["signature"] and run["test"]["test_accuracy"] > 0.8 and run["inference_speed"]
+    other = str(tmp_path / "formula")
+    assert main(["example", other, "--kind", "formula"]) == 0 and os.path.isfile(os.path.join(other, "base", "model.py"))

@@ -20,7 +20,7 @@ run:
 flowchart LR
     Lib[("Skill library<br>templates in the package")] -- "copied when you confirm" --> Own["mysearch/skills/<br>your copies, yours to edit"]
     Yours["A skill you wrote"] --> Own
-    Own --> Settings["Settings<br>laid over the run type's"]
+    Own --> Settings["Settings<br>laid over the run type's<br>and the autonomy level's"]
     Own --> Guidance["Guidance, diagnoses, stage advice<br>shown to the agents on every call"]
     Own --> Needs["Needs<br>checked in the plan and the report"]
 ```
@@ -76,7 +76,7 @@ mysearch/
     when: >
       When to choose it, and when to choose another.
 
-    settings:                         # laid over the run type's; what you set in the brief still wins
+    settings:                         # laid over the run type's and the autonomy level's; what you set in the brief still wins
       strategy: {mechanism: pareto, second_metric: parameters, second_direction: minimize}
       schedule: {local_mix: {edit: 0.35, settings: 0.15, ablation: 0.5}}
 
@@ -100,13 +100,20 @@ mysearch/
       references: ["the original model"]                  # the report warns if the leaderboard lacks the row
 
     combines: [model-distillation]    # skills it is meant to be used with
-    conflicts: [settings-tuning]      # skills it should not be combined with: the plan warns
+    conflicts: [settings-tuning, model-size-frontier]      # skills it should not be combined with: the plan warns
+
+    goal: Find a smaller or faster model          # the title of its guide page
+    start: {run_type: refine, evaluations: 100}   # the starting brief its guide shows
+    why: Why this set-up fits the task.
+    reading: How to read the result.
+    instead: [{if: you want the best model at several sizes, use: model-size-frontier}]
     ```
 
 | Part | What it does | Who sees it |
 |---|---|---|
 | `settings` | sets what suits the task: the search space, the strategy, the mix of moves | the plan, under "From the skill ..." |
-| `guidance` | what matters in this kind of task, what to try, what to avoid, for each role | every agent, on every call |
+| `guidance` | what matters in this kind of task, what to try, what to avoid, for each role | every agent on every call, except the assessor and the translator |
+| `goal`, `start`, `why`, `reading`, `instead` | the skill's guide page: where to start, why, how to read the result, when to choose another | you: in the [optimization guides](guides/index.md) |
 | `diagnose` | "if the results show this, do that" | the writer and the analyst |
 | `stages` | advice for the first half of the budget, and for the second | the writer |
 | `needs` | what the adapter must do or report, and rows the leaderboard should carry | you: in the plan and in the report's warnings |
@@ -131,8 +138,8 @@ run:
   differently, the later one's value stands, and the plan says which.
 - **Guidance, diagnoses and stage advice** are joined, each part under the name of its skill.
 - **Needs** are added together.
-- A pair marked as conflicting (`settings-tuning` with any skill that changes structure, or
-  `model-efficiency` with `model-size-frontier`) still runs; the plan warns.
+- A pair marked as conflicting (`settings-tuning` with any other skill, `model-size-frontier` with
+  `model-efficiency`, `model-ensemble-members` with `model-efficiency`) still runs; the plan warns.
 
 Combinations that make sense:
 
@@ -150,7 +157,8 @@ Combinations that make sense:
   goal ("distil", "faster", "pipeline", "interpretable") and from the run type.
 - **During a run.** `evoloop set mysearch --name r1 run.skill=model-efficiency --by "Your Name"`. The
   new skill is copied in, and the ledger lists every setting that moved with it.
-- **With any run type.** Where a skill and a run type set the same thing, the skill's value stands,
+- **With any run type and level of autonomy.** Where a skill and a run type or a level of autonomy set the same
+  thing, the skill's value stands,
   because it knows the problem.
 
 ## Writing your own
@@ -180,8 +188,12 @@ What makes a skill useful, from most to least:
 ## Sharing a skill, and the library as a database
 
 To add a skill to the library, add its folder under `evoloop/skills/` in the repository and open a pull
-request. The tests check that every library skill loads, has guidance for the writer and the analyst,
-at least four diagnoses, advice for both stages, and a specific name.
+request. The tests check that every library skill loads and is complete: a specific name, a title, a summary, an
+objective, tags, a note on when to choose it; guidance for every role, for the writer and for the analyst; at
+least four diagnoses; advice for both stages; and the guide fields (`goal`, `start`, `why`, `reading`). After
+adding one, regenerate the pages built from the library (`evoloop skills --markdown > docs/skill-library.md` and
+`evoloop skills --guides docs/guides`), add its guide to the navigation in `mkdocs.yml`, and add its name to the
+list in `tests/test_skills.py`.
 
 Every skill carries the same record: a name, a title, a domain, an objective, tags, a version, authors,
 what it sets, what it needs, and a digest of its contents. `evoloop skills --json` prints the library

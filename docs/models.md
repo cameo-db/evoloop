@@ -95,7 +95,7 @@ effort or model, since the ledger records when it changed.
 
 ## What it does to the cost
 
-The built-in example at 100 designs, with the defaults, as `evoloop plan` prints it:
+The built-in formula example at 100 designs, with the defaults, as `evoloop plan` prints it:
 
 ```
 What the agents will cost (an estimate, for 100 designs):

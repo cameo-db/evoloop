@@ -8,7 +8,7 @@ the person asking, which is recorded in the ledger, and an optional `--reason`.
 | Command | Does |
 |---|---|
 | `evoloop init <dir> [--source PATH]` | makes a search folder; with `--source`, copies the code to `base/` |
-| `evoloop example <dir>` | copies the built-in example to a new folder |
+| `evoloop example <dir> [--kind classifier\|formula]` | copies a built-in example to a new folder: a toy model search (the default), or a formula search |
 | `evoloop setup <dir>` | asks the questions one at a time in the terminal, with suggestions and a count of where you are |
 | `evoloop form <dir> [--out FILE]` | writes the questions as a self-contained HTML form (`setup_form.html`) |
 | `evoloop brief <dir> --import FILE` | reads the answers file the form gives, or any mapping of fields |
@@ -20,14 +20,17 @@ the person asking, which is recorded in the ledger, and an optional `--reason`.
 | `evoloop brief <dir> --questions [--all]` | the same as JSON, for an agent to ask the person; `--all` for every field |
 | `evoloop brief <dir> --answer FIELD=VALUE` | records an answer (repeatable; the value is read as YAML) |
 | `evoloop brief <dir> --confirm NAME` | records the person's agreement; refused while a required field is empty |
-| `evoloop plan <dir>` | every setting, grouped by where it came from, and the warnings |
-| `evoloop menu [topic]` | every choice a run can make, the presets, and every field; topics: `run-types`, `autonomy`, `models`, `effort`, `strategies`, `modes`, `crossover`, `moves`, `spaces`, `harness`, `coordinator`, `strategist`, `strategist-actions`, `spend`, `reviews`, `guidance`, `defaults`, `fields` |
+| `evoloop plan <dir>` | what the search will do at a glance, the warnings, the cost estimate, then every setting grouped by where it came from |
+| `evoloop menu [topic]` | every choice a run can make, the presets, and every field; topics: `run-types`, `autonomy`, `models`, `effort`, `strategies`, `modes`, `crossover`, `moves`, `spaces`, `harness`, `skills`, `conductor`, `coordinator`, `strategist`, `strategist-actions`, `spend`, `reviews`, `guidance`, `defaults`, `fields` |
 | `evoloop guide [N]` | the guidance for a budget of N evaluations |
+| `evoloop site [--dir DIR]` | the site file in use: what is particular to this machine |
+| `evoloop site --detect [--write PATH]` | drafts a site file from what the machine reports (queries only) |
 | `evoloop skills` | the skill library, by domain |
 | `evoloop skills --search WORDS` | skills whose name, tags or purpose hold the words |
 | `evoloop skills NAME` | one skill in full |
 | `evoloop skills NAME --copy DIR` | a skill written out as a folder to edit |
 | `evoloop skills --json` | the library as records, for a listing or a website |
+| `evoloop skills --markdown` | the library as the documentation's Skill library page |
 | `evoloop skills --guides DIR` | writes a guide page for every skill (the documentation's optimization guides) |
 | `evoloop estimate <dir> [--name N]` | what the agents are likely to cost, at each level of autonomy; with `--name`, projected from a run's own calls |
 
@@ -35,11 +38,11 @@ the person asking, which is recorded in the ledger, and an optional `--reason`.
 
 | Command | Does |
 |---|---|
-| `evoloop run <dir> --name N` | starts a run, or continues one that stopped |
+| `evoloop run <dir> --name N [--max-seconds S]` | starts a run, or continues one that stopped; `--max-seconds` returns after that long, leaving the jobs running |
 | `evoloop status <dir> --name N [--json]` | where the run stands, in a few lines |
 | `evoloop leaderboard <dir> --name N [--top 15] [--columns ...]` | the best designs, the baseline and the reference rows |
 | `evoloop show <dir> --name N R37` | one run in full: where it came from, what it changed, how it ended |
-| `evoloop controller <dir> --name N [--partition P] [--qos Q] [--time T] [--setup LINE]` | writes a Slurm job script that runs the search and requeues itself at its time limit |
+| `evoloop controller <dir> --name N [--partition P] [--qos Q] [--time T] [--setup LINE] [--python PATH] [--out FILE]` | writes a Slurm job script that runs the search and requeues itself at its time limit |
 | `evoloop report <dir> --name N` | the run's report, from its records as they are now |
 | `evoloop study <dir> --name N` | writes `study.json` and says which star it is on course for |
 

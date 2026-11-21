@@ -60,7 +60,7 @@ needs:
   figures: []
   references: []
 combines: []
-conflicts: [model-performance, model-distillation, model-efficiency, model-size-frontier, model-mechanistic, model-training-recipe, model-ensemble-members, algorithm-runtime, bioinformatics-algorithm, data-pipeline]
+conflicts: [model-performance, model-distillation, model-efficiency, model-size-frontier, model-mechanistic, model-training-recipe, model-ensemble-members, model-finetuning, algorithm-runtime, bioinformatics-algorithm, data-pipeline]
 goal: Tune hyperparameters
 start:
   run_type: settings_only

@@ -121,8 +121,13 @@ def cmd_init(args: Any) -> int:
     return 0
 
 
+# The built-in examples: a small search for a classifier (real training runs, the score is an accuracy), and a
+# search for a formula (the score is an error, lower is better).
+EXAMPLES = {"classifier": "tiny_classifier", "formula": "symbolic_regression"}
+
+
 def cmd_example(args: Any) -> int:
-    source = os.path.join(os.path.dirname(os.path.abspath(__file__)), "examples", "symbolic_regression")
+    source = os.path.join(os.path.dirname(os.path.abspath(__file__)), "examples", EXAMPLES[args.kind])
     if os.path.exists(args.dir):
         raise SystemExit("%s exists" % args.dir)
     shutil.copytree(source, args.dir, ignore=shutil.ignore_patterns("__pycache__"))
@@ -246,7 +251,7 @@ def cmd_form(args: Any) -> int:
                      else formpage.document(form.load_brief(folder)))
     out("wrote %s" % path)
     out("Open it in a browser (copy it to your own machine if this is a server), answer, save the answers file it gives "
-        "you as answers.json, then: evoloop brief %s --import answers.json" % args.dir)
+        "you as answers.json, then: evoloop brief %s --import PATH/TO/answers.json" % args.dir)
     return 0
 
 
@@ -359,6 +364,40 @@ def cmd_skills(args: Any) -> int:
         return 0
     with open(os.path.join(found["path"], "skill.yaml"), "r", encoding="utf-8") as handle:
         sys.stdout.write(handle.read())
+    return 0
+
+
+def cmd_site(args: Any) -> int:
+    """The site file: what is particular to this machine. Shows the one in use, or drafts one from what the machine reports."""
+    from . import site as sites
+    if args.detect:
+        text = sites.draft(sites.detect())
+        if args.write:
+            if os.path.exists(args.write):
+                raise SystemExit("%s exists already" % args.write)
+            os.makedirs(os.path.dirname(os.path.abspath(args.write)), exist_ok=True)
+            with open(args.write, "w", encoding="utf-8") as handle:
+                handle.write(text)
+            out("written to %s; check every line before relying on it" % args.write)
+        else:
+            sys.stdout.write(text)
+        return 0
+    found, fault = sites.load(args.dir)
+    if fault:
+        raise SystemExit(fault)
+    if found is None:
+        out("No site file is in use. evoloop looks for site.yaml in the search folder, then the file named by EVOLOOP_SITE, "
+            "then ~/.config/evoloop/site.yaml.")
+        out("Draft one from what this machine reports: evoloop site --detect --write ~/.config/evoloop/site.yaml")
+        return 0
+    out("Site: %s (%s)" % (found["name"], found["path"]))
+    for key, value in sorted(found["compute"].items()):
+        out("  compute.%s = %s" % (key, json.dumps(value, default=str)))
+    for rule in found["rules"]:
+        out("  rule: %s" % rule)
+    for kind, banned in found["forbid"].items():
+        if banned:
+            out("  never used: %s %s" % (kind, ", ".join(banned)))
     return 0
 
 
@@ -771,7 +810,7 @@ def build_parser() -> argparse.ArgumentParser:
     def add(name: str, fn: Any, help_text: str, named: bool = False, by: bool = False) -> argparse.ArgumentParser:
         p = sub.add_parser(name, help=help_text)
         p.set_defaults(fn=fn)
-        if name not in ("guide", "menu", "skills"):
+        if name not in ("guide", "menu", "skills", "site"):
             p.add_argument("dir", help="the search folder")
         if named:
             p.add_argument("--name", required=True, help="the run")
@@ -782,7 +821,10 @@ def build_parser() -> argparse.ArgumentParser:
 
     p = add("init", cmd_init, "make a search folder")
     p.add_argument("--source", help="the project's code, copied to base/")
-    add("example", cmd_example, "copy the built-in example to a new folder")
+    p = add("example", cmd_example, "copy a built-in example to a new folder")
+    p.add_argument("--kind", choices=sorted(EXAMPLES), default="classifier",
+                   help="classifier: a small network on two spirals, higher is better (the default); "
+                        "formula: fit a formula to data, lower is better")
     p = add("brief", cmd_brief, "what the brief still lacks; record answers; confirm")
     p.add_argument("--questions", action="store_true", help="the open questions as JSON, for an agent to ask the person")
     p.add_argument("--all", action="store_true", help="every field, not only the required ones")
@@ -801,6 +843,10 @@ def build_parser() -> argparse.ArgumentParser:
     add("plan", cmd_plan, "the settings the brief leads to, each with where it came from")
     p = add("estimate", cmd_estimate, "what the agents will cost, at each level of autonomy; with --name, from a run's own calls")
     p.add_argument("--name", default=None, help="a run: project its remaining cost from what its calls have cost")
+    p = add("site", cmd_site, "what is particular to this machine: the site file in use, or a draft of one")
+    p.add_argument("--dir", default=None, help="a search folder, to see the site file that search would use")
+    p.add_argument("--detect", action="store_true", help="draft a site file from what this machine reports (queries only)")
+    p.add_argument("--write", metavar="PATH", help="with --detect: write the draft to PATH")
     p = add("skills", cmd_skills, "the kinds of optimisation a search can be set up for")
     p.add_argument("skill", nargs="?", help="a built-in skill or the path of a skill folder; leave out for the list")
     p.add_argument("--copy", metavar="DIR", help="write the skill out as a folder to edit")

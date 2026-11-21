@@ -23,10 +23,11 @@ absolute path from the adapter.
 | `EVO_RESTART_COUNT` | 0 on the first start; above 0 when the run was started again after the machine ended it |
 | `EVO_CONTINUE_FROM` | set when the run is to continue an earlier run's checkpoint (after the run length was raised) |
 | `EVO_PARENT_CHECKPOINT_DIR` | with `evaluation.inherit_weights`: the checkpoint folder of the design's parent, to start from |
+| `EVO_LARGER_GPU` | set when `compute.larger_gpu_type` names a larger GPU the design could be moved to (see exit 76 below) |
 | `EVO_RUN_ID`, `EVO_CPUS` | the run's id; the processors it may use |
 | your own | every name in `evaluation.variables`, as you set it |
 
-Variables whose names look like credentials (KEY, TOKEN, SECRET, PASSWORD) are removed from the job's
+Variables whose names look like credentials (KEY, TOKEN, SECRET, PASSWORD, CREDENTIAL) are removed from the job's
 environment, because designs are model-written code.
 
 ## What the job writes
@@ -51,10 +52,15 @@ environment, because designs are model-written code.
 | `rejected` | no | with `valid: false`, the reason the adapter rejected the design (too slow, too large); it is then not a failure |
 | `diagnostics` | no | numbers here are shown to the agents and can be leaderboard columns |
 | `diagnostics.hidden` | no | test-set results: stored and written to the study file, never shown to an agent |
-| `parameters` | no | trainable parameter count; also used for the archive's size bin |
-| `signature` | no | a list of numbers saying where the model's errors fall (per class, per range, per example); used to pair designs for crossover |
-| `inference_speed` | no | for the study file |
+| `parameters` | no | trainable parameter count; used for the archive's size bin, for `limits`, and as the second figure of the `pareto` strategy |
+| `signature` | no | a list of numbers saying where the model's errors fall (per class, per range, per example); used to pair designs for crossover, to group designs by behaviour in the archive, and to choose what a novel slot is shown |
+| `inference_speed` | no | `{"examples_per_s": n}`: for the study file, for a limit on `examples_per_s`, the `speed` column, and the second figure of the `pareto` strategy |
+| `best_epoch`, `epochs_run` | no | where the best score was reached and how far the run went; leaderboard columns |
+| `resource_used` | no | how much of the allowance the run used, in your own unit |
 | `captured` | no | the environment, and the training settings read from the objects the script built; for the study file |
+
+A figure named in `limits` must be in the final result: a result without it is rejected and the run pauses
+([Limits](steering.md#limits)).
 
 **Progress and stopping.** To let weak new designs be stopped part way, append lines to
 `progress.jsonl` as training goes, `{"step": n, "metric": x}`, with `step` in the unit of the
@@ -64,6 +70,10 @@ allowance and `metric` the score or a faithful running estimate of it. At each r
 **Exit codes.** Exit 75 says the machine failed, not the model: the run is started again, uncharged, at
 most `compute.infrastructure_retries` times. A run that ends with no `result.json` is recorded as
 failed, with the end of its log.
+
+Exit 76 says the design is too large for the GPU it was given. If `compute.larger_gpu_type` is set (the job is
+then told so through `EVO_LARGER_GPU`), the run is submitted again on that type, uncharged, once. Otherwise it
+is recorded as failed with that reason.
 
 ## Starting from the parent's weights
 

@@ -215,20 +215,20 @@ def by_level(brief: Dict[str, Any], folder: Optional[str] = None) -> Dict[str, D
     for level in LEVELS:
         variant = copy.deepcopy(brief)
         form.put(variant, "harness.autonomy", level)
-        out[level] = estimate(form.resolve(variant)[0], folder)
+        out[level] = estimate(form.resolve(variant, folder=folder)[0], folder)
     return out
 
 def other_models(brief: Dict[str, Any], folder: Optional[str], now: Dict[str, Any]) -> List[str]:
     """The same search with each of the current models for every role: what the choice of model does to the cost."""
     from .model import catalog
-    settings = form.resolve(brief)[0]
+    settings = form.resolve(brief, folder=folder)[0]
     if (settings["agents"].get("models") or {}):
         return []      # roles are on different models already: a one-model comparison would mislead
     out = ["", "The same search with another model for every role (agents.default_model; yours is %s):" % settings["agents"]["default_model"]]
     for model in catalog.OFFERED:
         variant = copy.deepcopy(brief)
         form.put(variant, "agents.default_model", model)
-        est = estimate(form.resolve(variant)[0], folder)
+        est = estimate(form.resolve(variant, folder=folder)[0], folder)
         info = catalog.MODELS[model]
         out.append("  %-20s %s   ($%g in, $%g out per million tokens%s)" % (
             model, span(est["dollars"], "$", 2), info["input"], info["output"], "; " + info["note"] if info["note"] else ""))
@@ -246,7 +246,7 @@ def span(values: Any, unit: str = "", digits: int = 0) -> str:
 
 def lines(brief: Dict[str, Any], folder: Optional[str] = None) -> List[str]:
     """The estimate as the plan prints it."""
-    settings = form.resolve(brief)[0]
+    settings = form.resolve(brief, folder=folder)[0]
     if not settings["budget"]["evaluations"]:
         return []
     if settings["agents"]["backend"] == "stub":

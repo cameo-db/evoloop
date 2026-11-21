@@ -127,7 +127,7 @@ Every skill that comes with evoloop. This page is written from the skill files t
 | Diagnoses | 4 |
 | Needs from the adapter | load the pretrained weights from a fixed path outside base/ (weights are not copied per design); mark as open the head, the choice of what is frozen, and the optimizer settings; leave the backbone's definition closed; add a reference row for the frozen backbone with a linear head |
 | Goes well with | `model-training-recipe` |
-| Not with | none |
+| Not with | `settings-tuning` |
 
 | If the results show | Then |
 |---|---|
@@ -301,7 +301,7 @@ Every skill that comes with evoloop. This page is written from the skill files t
 | Diagnoses | 4 |
 | Needs from the adapter | every setting to tune must sit in a marked params block (one dict of numbers, true/false or text); give bounds for settings that must stay in a range with `space.ranges`, e.g. {"fit.lr": [0.00001, 0.1]}; without one a setting may move a hundredfold either way; to stop poor settings early, report progress and set `evaluation.ladder` |
 | Goes well with | any |
-| Not with | `model-performance`, `model-distillation`, `model-efficiency`, `model-size-frontier`, `model-mechanistic`, `model-training-recipe`, `model-ensemble-members`, `algorithm-runtime`, `bioinformatics-algorithm`, `data-pipeline` |
+| Not with | `model-performance`, `model-distillation`, `model-efficiency`, `model-size-frontier`, `model-mechanistic`, `model-training-recipe`, `model-ensemble-members`, `model-finetuning`, `algorithm-runtime`, `bioinformatics-algorithm`, `data-pipeline` |
 
 | If the results show | Then |
 |---|---|

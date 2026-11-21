@@ -1,58 +1,76 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 320" role="img" aria-label="Validation score of each design in the CPU demo, and the best so far, over 25 scored runs">
-<rect width="640" height="320" rx="8" fill="#fcfcfb"/>
-<line x1="64" y1="274.0" x2="508" y2="274.0" stroke="#e6e5e1" stroke-width="1"/>
-<text x="56" y="278.0" text-anchor="end" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="#52514e">0.01</text>
-<line x1="64" y1="210.0" x2="508" y2="210.0" stroke="#e6e5e1" stroke-width="1"/>
-<text x="56" y="214.0" text-anchor="end" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="#52514e">0.1</text>
-<line x1="64" y1="146.0" x2="508" y2="146.0" stroke="#e6e5e1" stroke-width="1"/>
-<text x="56" y="150.0" text-anchor="end" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="#52514e">1</text>
-<line x1="64" y1="82.0" x2="508" y2="82.0" stroke="#e6e5e1" stroke-width="1"/>
-<text x="56" y="86.0" text-anchor="end" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="#52514e">10</text>
-<line x1="64" y1="18.0" x2="508" y2="18.0" stroke="#e6e5e1" stroke-width="1"/>
-<text x="56" y="22.0" text-anchor="end" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="#52514e">100</text>
-<text x="64.0" y="292" text-anchor="middle" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="#52514e">1</text>
-<text x="138.0" y="292" text-anchor="middle" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="#52514e">5</text>
-<text x="212.0" y="292" text-anchor="middle" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="#52514e">9</text>
-<text x="286.0" y="292" text-anchor="middle" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="#52514e">13</text>
-<text x="360.0" y="292" text-anchor="middle" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="#52514e">17</text>
-<text x="434.0" y="292" text-anchor="middle" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="#52514e">21</text>
-<text x="508.0" y="292" text-anchor="middle" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="#52514e">25</text>
-<text x="286.0" y="312" text-anchor="middle" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="#52514e">Scored run</text>
-<text transform="translate(16 146.0) rotate(-90)" text-anchor="middle" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="#52514e">Validation score (log scale; lower is better)</text>
-<line x1="64" y1="68.6" x2="508" y2="68.6" stroke="#52514e" stroke-width="1.5" stroke-dasharray="5 4"/>
-<text x="518" y="66.6" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="#52514e">Baseline</text>
-<text x="518" y="83.6" font-size="15" font-weight="600" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="#0b0b0b">16.19</text>
-<path d="M64.0 68.6 H82.5 V76.2 H101.0 V77.3 H156.5 V77.3 H175.0 V267.9 H230.5 V267.9 H508.0" fill="none" stroke="#2a78d6" stroke-width="2" stroke-linejoin="round"/>
-<circle cx="64.0" cy="68.6" r="4" fill="#8f8e88" stroke="#fcfcfb" stroke-width="2"></circle>
-<circle cx="82.5" cy="76.2" r="4" fill="#8f8e88" stroke="#fcfcfb" stroke-width="2"></circle>
-<circle cx="101.0" cy="77.3" r="4" fill="#8f8e88" stroke="#fcfcfb" stroke-width="2"></circle>
-<circle cx="119.5" cy="68.6" r="4" fill="#8f8e88" stroke="#fcfcfb" stroke-width="2"></circle>
-<circle cx="138.0" cy="76.2" r="4" fill="#8f8e88" stroke="#fcfcfb" stroke-width="2"></circle>
-<circle cx="156.5" cy="77.3" r="4" fill="#8f8e88" stroke="#fcfcfb" stroke-width="2"></circle>
-<circle cx="175.0" cy="267.9" r="4" fill="#8f8e88" stroke="#fcfcfb" stroke-width="2"></circle>
-<circle cx="193.5" cy="76.2" r="4" fill="#8f8e88" stroke="#fcfcfb" stroke-width="2"></circle>
-<circle cx="212.0" cy="77.4" r="4" fill="#8f8e88" stroke="#fcfcfb" stroke-width="2"></circle>
-<circle cx="230.5" cy="267.9" r="4" fill="#8f8e88" stroke="#fcfcfb" stroke-width="2"></circle>
-<circle cx="249.0" cy="76.9" r="4" fill="#8f8e88" stroke="#fcfcfb" stroke-width="2"></circle>
-<circle cx="267.5" cy="79.2" r="4" fill="#8f8e88" stroke="#fcfcfb" stroke-width="2"></circle>
-<circle cx="286.0" cy="264.4" r="4" fill="#8f8e88" stroke="#fcfcfb" stroke-width="2"></circle>
-<circle cx="304.5" cy="76.2" r="4" fill="#8f8e88" stroke="#fcfcfb" stroke-width="2"></circle>
-<circle cx="323.0" cy="76.0" r="4" fill="#8f8e88" stroke="#fcfcfb" stroke-width="2"></circle>
-<circle cx="341.5" cy="77.4" r="4" fill="#8f8e88" stroke="#fcfcfb" stroke-width="2"></circle>
-<circle cx="360.0" cy="75.9" r="4" fill="#8f8e88" stroke="#fcfcfb" stroke-width="2"></circle>
-<circle cx="378.5" cy="79.2" r="4" fill="#8f8e88" stroke="#fcfcfb" stroke-width="2"></circle>
-<circle cx="397.0" cy="267.9" r="4" fill="#8f8e88" stroke="#fcfcfb" stroke-width="2"></circle>
-<circle cx="415.5" cy="79.2" r="4" fill="#8f8e88" stroke="#fcfcfb" stroke-width="2"></circle>
-<circle cx="434.0" cy="75.8" r="4" fill="#8f8e88" stroke="#fcfcfb" stroke-width="2"></circle>
-<circle cx="452.5" cy="77.3" r="4" fill="#8f8e88" stroke="#fcfcfb" stroke-width="2"></circle>
-<circle cx="471.0" cy="75.8" r="4" fill="#8f8e88" stroke="#fcfcfb" stroke-width="2"></circle>
-<circle cx="489.5" cy="77.3" r="4" fill="#8f8e88" stroke="#fcfcfb" stroke-width="2"></circle>
-<circle cx="508.0" cy="79.2" r="4" fill="#8f8e88" stroke="#fcfcfb" stroke-width="2"></circle>
-<circle cx="508.0" cy="267.9" r="5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/>
-<text x="518" y="259.9" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="#52514e">Selected</text>
-<text x="518" y="276.9" font-size="15" font-weight="600" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="#0b0b0b">0.01247</text>
-<circle cx="74" cy="28" r="4" fill="#8f8e88" stroke="#fcfcfb" stroke-width="2"/>
-<text x="84" y="32" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="#52514e">each design</text>
-<line x1="166" y1="28" x2="186" y2="28" stroke="#2a78d6" stroke-width="2"/>
-<text x="192" y="32" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="#52514e">best so far</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 330" role="img" aria-label="The validation accuracy of each model in the built-in example, and the best so far, over 40 models">
+<rect width="640" height="330" rx="8" fill="#fcfcfb"/>
+<line x1="62" y1="284.0" x2="512" y2="284.0" stroke="#e6e5e1" stroke-width="1"/>
+<text x="54" y="288.0" text-anchor="end" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="#52514e">0.5</text>
+<line x1="62" y1="231.2" x2="512" y2="231.2" stroke="#e6e5e1" stroke-width="1"/>
+<text x="54" y="235.2" text-anchor="end" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="#52514e">0.6</text>
+<line x1="62" y1="178.4" x2="512" y2="178.4" stroke="#e6e5e1" stroke-width="1"/>
+<text x="54" y="182.4" text-anchor="end" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="#52514e">0.7</text>
+<line x1="62" y1="125.6" x2="512" y2="125.6" stroke="#e6e5e1" stroke-width="1"/>
+<text x="54" y="129.6" text-anchor="end" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="#52514e">0.8</text>
+<line x1="62" y1="72.8" x2="512" y2="72.8" stroke="#e6e5e1" stroke-width="1"/>
+<text x="54" y="76.8" text-anchor="end" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="#52514e">0.9</text>
+<line x1="62" y1="20.0" x2="512" y2="20.0" stroke="#e6e5e1" stroke-width="1"/>
+<text x="54" y="24.0" text-anchor="end" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="#52514e">1</text>
+<text x="62.0" y="302" text-anchor="middle" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="#52514e">1</text>
+<text x="119.7" y="302" text-anchor="middle" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="#52514e">6</text>
+<text x="177.4" y="302" text-anchor="middle" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="#52514e">11</text>
+<text x="235.1" y="302" text-anchor="middle" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="#52514e">16</text>
+<text x="292.8" y="302" text-anchor="middle" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="#52514e">21</text>
+<text x="350.5" y="302" text-anchor="middle" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="#52514e">26</text>
+<text x="408.2" y="302" text-anchor="middle" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="#52514e">31</text>
+<text x="465.8" y="302" text-anchor="middle" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="#52514e">36</text>
+<text x="287.0" y="322" text-anchor="middle" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="#52514e">Model iteration</text>
+<text transform="translate(16 152.0) rotate(-90)" text-anchor="middle" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="#52514e">Validation accuracy (higher is better)</text>
+<line x1="62" y1="284.0" x2="512" y2="284.0" stroke="#52514e" stroke-width="1.5" stroke-dasharray="5 4"/>
+<path d="M62.0 284.0 H73.5 V262.9 H96.6 V213.6 H108.2 V64.0 H142.8 V42.9 H177.4 V41.1 H212.0 V37.6 H246.6 V35.8 H512.0" fill="none" stroke="#2a78d6" stroke-width="2" stroke-linejoin="round"/>
+<circle cx="62.0" cy="284.0" r="4" fill="#8f8e88" stroke="#fcfcfb" stroke-width="2"></circle>
+<circle cx="73.5" cy="262.9" r="4" fill="#8f8e88" stroke="#fcfcfb" stroke-width="2"></circle>
+<circle cx="85.1" cy="271.7" r="4" fill="#8f8e88" stroke="#fcfcfb" stroke-width="2"></circle>
+<circle cx="96.6" cy="213.6" r="4" fill="#8f8e88" stroke="#fcfcfb" stroke-width="2"></circle>
+<circle cx="108.2" cy="64.0" r="4" fill="#8f8e88" stroke="#fcfcfb" stroke-width="2"></circle>
+<circle cx="119.7" cy="262.9" r="4" fill="#8f8e88" stroke="#fcfcfb" stroke-width="2"></circle>
+<circle cx="131.2" cy="213.6" r="4" fill="#8f8e88" stroke="#fcfcfb" stroke-width="2"></circle>
+<circle cx="142.8" cy="42.9" r="4" fill="#8f8e88" stroke="#fcfcfb" stroke-width="2"></circle>
+<circle cx="154.3" cy="90.4" r="4" fill="#8f8e88" stroke="#fcfcfb" stroke-width="2"></circle>
+<circle cx="165.8" cy="208.3" r="4" fill="#8f8e88" stroke="#fcfcfb" stroke-width="2"></circle>
+<circle cx="177.4" cy="41.1" r="4" fill="#8f8e88" stroke="#fcfcfb" stroke-width="2"></circle>
+<circle cx="188.9" cy="46.4" r="4" fill="#8f8e88" stroke="#fcfcfb" stroke-width="2"></circle>
+<circle cx="200.5" cy="215.4" r="4" fill="#8f8e88" stroke="#fcfcfb" stroke-width="2"></circle>
+<circle cx="212.0" cy="37.6" r="4" fill="#8f8e88" stroke="#fcfcfb" stroke-width="2"></circle>
+<circle cx="223.5" cy="48.2" r="4" fill="#8f8e88" stroke="#fcfcfb" stroke-width="2"></circle>
+<circle cx="235.1" cy="218.9" r="4" fill="#8f8e88" stroke="#fcfcfb" stroke-width="2"></circle>
+<circle cx="246.6" cy="35.8" r="4" fill="#8f8e88" stroke="#fcfcfb" stroke-width="2"></circle>
+<circle cx="258.2" cy="99.2" r="4" fill="#8f8e88" stroke="#fcfcfb" stroke-width="2"></circle>
+<circle cx="269.7" cy="37.6" r="4" fill="#8f8e88" stroke="#fcfcfb" stroke-width="2"></circle>
+<circle cx="281.2" cy="41.1" r="4" fill="#8f8e88" stroke="#fcfcfb" stroke-width="2"></circle>
+<circle cx="292.8" cy="44.6" r="4" fill="#8f8e88" stroke="#fcfcfb" stroke-width="2"></circle>
+<circle cx="304.3" cy="48.2" r="4" fill="#8f8e88" stroke="#fcfcfb" stroke-width="2"></circle>
+<circle cx="315.8" cy="37.6" r="4" fill="#8f8e88" stroke="#fcfcfb" stroke-width="2"></circle>
+<circle cx="327.4" cy="145.0" r="4" fill="#8f8e88" stroke="#fcfcfb" stroke-width="2"></circle>
+<circle cx="338.9" cy="49.9" r="4" fill="#8f8e88" stroke="#fcfcfb" stroke-width="2"></circle>
+<circle cx="350.5" cy="210.1" r="4" fill="#8f8e88" stroke="#fcfcfb" stroke-width="2"></circle>
+<circle cx="362.0" cy="85.1" r="4" fill="#8f8e88" stroke="#fcfcfb" stroke-width="2"></circle>
+<circle cx="373.5" cy="37.6" r="4" fill="#8f8e88" stroke="#fcfcfb" stroke-width="2"></circle>
+<circle cx="385.1" cy="37.6" r="4" fill="#8f8e88" stroke="#fcfcfb" stroke-width="2"></circle>
+<circle cx="396.6" cy="42.9" r="4" fill="#8f8e88" stroke="#fcfcfb" stroke-width="2"></circle>
+<circle cx="408.2" cy="48.2" r="4" fill="#8f8e88" stroke="#fcfcfb" stroke-width="2"></circle>
+<circle cx="419.7" cy="69.3" r="4" fill="#8f8e88" stroke="#fcfcfb" stroke-width="2"></circle>
+<circle cx="431.2" cy="35.8" r="4" fill="#8f8e88" stroke="#fcfcfb" stroke-width="2"></circle>
+<circle cx="442.8" cy="65.8" r="4" fill="#8f8e88" stroke="#fcfcfb" stroke-width="2"></circle>
+<circle cx="454.3" cy="55.2" r="4" fill="#8f8e88" stroke="#fcfcfb" stroke-width="2"></circle>
+<circle cx="465.8" cy="37.6" r="4" fill="#8f8e88" stroke="#fcfcfb" stroke-width="2"></circle>
+<circle cx="477.4" cy="129.1" r="4" fill="#8f8e88" stroke="#fcfcfb" stroke-width="2"></circle>
+<circle cx="488.9" cy="37.6" r="4" fill="#8f8e88" stroke="#fcfcfb" stroke-width="2"></circle>
+<circle cx="500.5" cy="37.6" r="4" fill="#8f8e88" stroke="#fcfcfb" stroke-width="2"></circle>
+<circle cx="512.0" cy="41.1" r="4" fill="#8f8e88" stroke="#fcfcfb" stroke-width="2"></circle>
+<circle cx="512.0" cy="35.8" r="5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/>
+<text x="524" y="276.0" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="#52514e">Baseline</text>
+<text x="524" y="293.0" font-size="15" font-weight="600" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="#0b0b0b">0.5</text>
+<text x="524" y="51.8" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="#52514e">Selected</text>
+<text x="524" y="68.8" font-size="15" font-weight="600" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="#0b0b0b">0.97</text>
+<circle cx="316" cy="250" r="4" fill="#8f8e88" stroke="#fcfcfb" stroke-width="2"/>
+<text x="326" y="254" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="#52514e">each model</text>
+<line x1="402" y1="250" x2="422" y2="250" stroke="#2a78d6" stroke-width="2"/>
+<text x="428" y="254" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="#52514e">best so far</text>
 </svg>

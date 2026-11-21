@@ -5,7 +5,7 @@ more than it is.
 
 ## What has been run
 
-- **Over 190 tests** on the built-in example with stub agents (no model call, no GPU). They cover the brief,
+- **Over 190 tests** on the two built-in examples with stub agents (no model call, no GPU). They cover the brief,
   every strategy, islands, the crossover kinds, steering during a run, changing the strategy, harness
   and search space midway, changing the run length, stopping and continuing, the study file, and one
   regression test for each defect that two independent reviews of the code reproduced.
@@ -46,7 +46,7 @@ more than it is.
 - **A design stopped part way keeps its part-way score** as a provisional row: shown, marked with how far it ran,
   not ranked with full-length fits and never a parent.
 - **`objective.constraints`, `space.forbidden` and `space.must_keep` are text for the agents**, not
-  rules; only `space.forbidden_terms` and the open blocks are enforced by code.
+  rules; only `space.forbidden_terms`, `limits` and the open blocks are enforced by code.
 - **A proposal's distance is measured on the code**; behaviour is known only after training, and only if the
   adapter reports `signature`.
 - **One noise figure, given by you.** The loop does not measure it.
@@ -61,9 +61,9 @@ Things people running searches have needed that are not here yet:
 - Scoring the test set in separate, low-priority jobs. The adapter reports test results itself.
 - Refitting the top N designs at the end (on the full data, or on more seeds) and ensembling them. A change of
   `data.fraction` refits the leader of each lineage, which is close but not the same.
-- Choosing the GPU type per design.
+- Choosing the GPU type per design in advance. A design that proves too large for its GPU can be moved to
+  `compute.larger_gpu_type` (the adapter exits 76).
 - A proxy tier on a different, cheaper task (a smaller dataset or model), with promotion to the real one. The
   ladder stops weak designs early within the real task; it does not swap the task.
 - Repair of a design that crashed.
-- A file of a cluster's own rules.
 - Running the CAMEO kit's check on the study file.

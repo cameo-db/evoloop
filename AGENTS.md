@@ -3,6 +3,35 @@
 evoloop searches over marked blocks of a project's code. `docs/index.md` is the overview and
 `docs/setting-up.md` the procedure. This file is about how to work with the person.
 
+## What the person decides, and what you do
+
+evoloop is meant to be set up by you together with the person. They should not have to read the reference or
+work through every setting. Spend their attention on five decisions and take care of the rest:
+
+1. **What to optimize.** A better score, a smaller model, tuned settings, a faster algorithm: these are different
+   searches. `evoloop skills` lists them and `evoloop skills --search WORDS` finds one; `docs/guides/` has a
+   starting configuration for each.
+2. **What may change.** Propose which parts of their code to mark as open blocks, and say what stays frozen.
+3. **How a design is scored**, and how much the score varies between two runs of the same design.
+4. **How much to spend**: evaluations (their compute) and agent dollars.
+5. **Hard limits**, if any: the largest size or slowest speed they would accept.
+
+For everything else, keep the default unless you have evidence for another value, and say so in one line. Do not
+walk the person through settings they have no reason to change.
+
+Your part before the questions:
+
+- **The machine.** Run `evoloop site`. If no site file is in use, run `evoloop site --detect`, go through the draft
+  with the person, and ask only for what the machine cannot report: the account to charge, how their environment
+  is activated, and which queues must not be used. Save it as `~/.config/evoloop/site.yaml`. Its `rules` are
+  printed in every plan: follow them (for instance, no compute on a login node).
+- **The code.** `evoloop init DIR --source PROJECT` copies the project. Mark the blocks in `DIR/base/` with
+  `# EVOLVE-BLOCK-START name=... kind=structure|params role=...` and `# EVOLVE-BLOCK-END`, write `DIR/task.md`
+  (what the agents are told) and `DIR/adapter/run.py` (runs one design, writes `result.json`): see
+  `docs/project-contract.md`. Show the person what you marked and what the evaluator reports.
+- **A dry run.** Before any paid agent or GPU: `agents.backend: stub` and a budget of a few evaluations, to prove
+  the evaluator and the jobs work on this machine.
+
 ## Setting up a search: propose, then ask one question at a time
 
 The questions come from the tool, not from you. **Before the first question, propose your best guess for
@@ -45,8 +74,8 @@ If they would rather fill in a form, `evoloop form DIR` writes a self-contained 
 the answers file it gives them and you run `evoloop brief DIR --import FILE`. In a terminal of their own,
 `evoloop setup DIR` asks the same questions.
 
-Then show them `evoloop plan DIR` (the settings with where each came from, the warnings, and what the
-agents are likely to cost) before anything is confirmed.
+Then show them `evoloop plan DIR` (what the search will do at a glance, the warnings, what the agents are likely
+to cost, then every setting with where it came from) before anything is confirmed.
 
 ## Rules that matter
 
@@ -56,7 +85,8 @@ agents are likely to cost) before anything is confirmed.
   `evoloop brief DIR --confirm "Their Name"`. Never on your own word.
 - **The approved plan is the agreement to spend.** Do not start a run they have not confirmed.
 - **Dry-run first** with `agents.backend: stub` before real agents are paid.
-- **Steering goes through the commands** (`set`, `note`, `steer`, `chat`, `stop`, `approve`, `decline`,
+- **Steering goes through the commands** (`set`, `note`, `withdraw`, `steer`, `chat`, `force`, `import`, `reference`,
+  `rehash`, `review`, `stop`, `approve`, `decline`,
   `lineage`), always with `--by` the person's name. Do not edit a run's files.
 - **Do not change `base/` or `adapter/` during a run.**
 - **Test-set results are under `diagnostics.hidden`** and are never shown to the search's agents.
@@ -64,7 +94,9 @@ agents are likely to cost) before anything is confirmed.
 
 ## The code
 
-`pytest tests` runs the suite with stub agents (no model call). The pages `docs/menu.md` and
+`pytest tests` runs the suite with stub agents (no model call). Several pages are written by the code, and the
+tests fail if they are stale: regenerate `docs/skill-library.md` with `evoloop skills --markdown`, the guides with
+`evoloop skills --guides docs/guides`, and the pages `docs/menu.md` and
 `docs/fields.md` are written by the code: after changing an option, a preset or a field, regenerate them
 with `evoloop menu --markdown > docs/menu.md` and `evoloop menu fields --markdown > docs/fields.md`, or
 the tests fail.

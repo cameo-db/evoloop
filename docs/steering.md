@@ -29,8 +29,10 @@ What can change:
 
 [Fields of the brief](fields.md) says for every field whether it can change.
 
-**What cannot change** is what defines the problem: the objective, the direction of the score, the
-dataset's identity, the frozen code. Such a request is refused with the reason, and the run goes on.
+**What cannot change** is what defines the problem (the objective, the direction of the score, the
+dataset's identity, the frozen code) and a few settings fixed when a run starts (the agent backend, the
+scheduler, the run command, the noise floor, the quick check). [Fields of the brief](fields.md) marks each. Such a
+request is refused with the reason, and the run goes on.
 
 **A change that moves other settings.** Changing `budget.evaluations` across a boundary of the
 guidance, or changing `run.type`, moves the settings that follow from it. The ledger entry lists every

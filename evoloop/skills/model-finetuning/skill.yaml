@@ -53,7 +53,7 @@ needs:
   figures: []
   references: ["frozen backbone"]
 combines: [model-training-recipe]
-conflicts: []
+conflicts: [settings-tuning]
 goal: Adapt a pretrained model to a task
 start:
   run_type: refine

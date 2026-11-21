@@ -11,6 +11,19 @@ flowchart LR
     F -. "steer, chat, stop" .-> F
 ```
 
+## With an agent, or by hand
+
+You do not have to do the steps below yourself. evoloop is built to be set up **with a coding agent**: open the
+repository in Claude Code (or another agent that can read files and run commands), point it at your project, and
+ask it to set up a search. It follows [AGENTS.md](https://github.com/cameo-db/evoloop/blob/main/AGENTS.md): it marks
+the blocks, writes the evaluator, proposes an answer to each question with its reason, and asks you only what it
+cannot work out. You confirm the plan by name before anything runs.
+
+Five decisions are yours, whoever does the typing: **what to optimize**, **what may change**, **how a design is
+scored** (and how noisy that score is), **how much to spend**, and any **hard limits**. Everything else has a default
+that follows from those; leave it alone until a result gives you a reason. This page is the same procedure written
+out, for doing it by hand or for checking what the agent did.
+
 Not sure which kind of search you need? Start from [what you want to optimize](guides/index.md): each
 goal has a starting configuration you can paste into the brief.
 
@@ -81,10 +94,10 @@ order, by section, and say where you are: "question 6 of 17, Budget".
 
 **The form.** Open `setup_form.html` in any browser; if the search folder is on a server, copy the file
 to your own machine first. It shows one section at a time with a count of what is done, and the last
-step gives you an answers file. Save that as `answers.json` in the search folder and run
+step gives you an answers file. Save that as `answers.json` and give its path:
 
 ```
-evoloop brief mysearch --import answers.json
+evoloop brief mysearch --import mysearch/answers.json
 ```
 
 Nothing is sent anywhere by the page; a draft is kept only in that browser.
@@ -101,7 +114,7 @@ FIELD=VALUE --because "..."`). A suggestion is never an answer by itself: it bec
 it or pick it, and you can always choose something else. Nothing is suggested where there is no
 evidence (the goal, the length of a run, the noise of the score); those are asked plainly.
 
-**What is asked.** About sixteen questions; fewer when some do not apply (the model is not asked for
+**What is asked.** Up to twenty questions; 14 to 19 usually apply (the model is not asked for
 with the stub, the Slurm partition not on one machine). Ten have no default and need an answer:
 
 | Field | Question |
@@ -120,10 +133,13 @@ with the stub, the Slurm partition not on one machine). Ten have no default and 
 The others (what may change, agentic or harnessed, the model, the effort, the reviews) have defaults
 you can leave. Every other field of the brief takes its value from the first of these that gives one:
 
-1. the brief (what you set)
-2. the level of autonomy, then the run type
-3. the guidance for the size of the budget
-4. the default
+1. your changes during the run
+2. the brief (what you set)
+3. the skill
+4. the level of autonomy
+5. the run type
+6. the guidance for the size of the budget
+7. the default
 
 [Fields of the brief](fields.md) lists them all. `evoloop menu` prints the choices and the presets.
 
@@ -142,7 +158,7 @@ and the [skill library](skill-library.md).
 evoloop plan mysearch
 ```
 
-The plan leads with what the search will actually do, so that a preset cannot quietly change it:
+The plan leads with what the search will actually do, so that a preset cannot quietly change it (abridged here):
 
 ```
 At a glance
