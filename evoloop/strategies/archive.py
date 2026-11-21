@@ -1,7 +1,8 @@
 """A quality-diversity archive: the best of each kind of design.
 
 Every scored candidate falls in a cell given by its descriptors (`strategy.descriptors`: the family
-label, and a size bin from its parameter count or, failing that, the length of its code). A cell keeps
+label, a size bin from its parameter count, `behaviour` (designs whose errors fall alike, from the
+`signature` the runs report), or a metric of the runs in thirds of its range). A cell keeps
 its best candidate. Parents are drawn across the cells, the less visited ones favoured in proportion
 to `schedule.novelty`, so a design that is different but behind stays in play and can be built on."""
 from __future__ import annotations
@@ -11,7 +12,7 @@ import random
 from typing import Any, Dict, List, Tuple
 
 from ..store import View
-from . import Request, complement, inspirations, rank_draw, specialist
+from . import Request, behaviour_groups, complement, inspirations, rank_draw, specialist
 
 
 def size_bin(view: View, candidate: str) -> int:
@@ -30,6 +31,8 @@ def cell_of(view: View, candidate: str, settings: Dict[str, Any]) -> Tuple[Any, 
             out.append(view.cands[candidate]["family"])
         elif name == "size":
             out.append(size_bin(view, candidate))
+        elif name == "behaviour":   # what the trained model does: designs whose errors fall alike share a cell
+            out.append(behaviour_groups(view, settings).get(candidate))
         else:   # a metric the runs report, in thirds of its range
             values = sorted(v for c in view.scored() for v in [_metric(view, c["id"], name)] if v is not None)
             mine = _metric(view, candidate, name)
@@ -83,7 +86,7 @@ class Archive:
             return {"mode": "cross", "lineage": view.cands[first]["lineage"], "parents": [first, second],
                     "why": "the elites of two different cells"}
         if mode == "novel":
-            return {"mode": "novel", "lineage": None, "parents": [], "inspirations": inspirations(view, scored[:1], 3, rng),
+            return {"mode": "novel", "lineage": None, "parents": [], "inspirations": inspirations(view, scored[:1], 3, rng, settings),
                     "why": "designs that have rarely been built on"}
         thin = sorted(cells(view, settings).items(), key=lambda kv: len(kv[1]["members"]))[:5]
         return {"mode": "new", "lineage": None, "parents": [], "thin_cells": [list(k) for k, _ in thin],

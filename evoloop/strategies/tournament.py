@@ -40,6 +40,6 @@ class Tournament:
             return {"mode": "cross", "lineage": view.cands[first]["lineage"], "parents": [first, second],
                     "why": "a tournament winner and a complementary recent design"}
         if mode == "novel":
-            return {"mode": "novel", "lineage": None, "parents": [], "inspirations": inspirations(view, [], 3, rng),
+            return {"mode": "novel", "lineage": None, "parents": [], "inspirations": inspirations(view, [], 3, rng, settings),
                     "why": "designs that have rarely been built on"}
         return {"mode": "new", "lineage": None, "parents": [], "why": "a family the search has not covered"}

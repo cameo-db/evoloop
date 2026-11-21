@@ -5,7 +5,7 @@ more than it is.
 
 ## What has been run
 
-- **141 tests** on the built-in example with stub agents (no model call, no GPU). They cover the brief,
+- **Over 150 tests** on the built-in example with stub agents (no model call, no GPU). They cover the brief,
   every strategy, islands, the crossover kinds, steering during a run, changing the strategy, harness
   and search space midway, changing the run length, stopping and continuing, the study file, and one
   regression test for each defect that two independent reviews of the code reproduced.
@@ -24,6 +24,8 @@ more than it is.
   `claude_code` backends have not been called from this version.
 - **A real training task.** Nothing has been trained on a GPU through this version.
 - **Whether any strategy searches better than another.** The strategies are known to work as code.
+- **The ladder, the trade-off front, behaviour groups and island resets on a real task.** They are tested on
+  the example and on made-up results; whether early progress predicts the final score on your task is not known.
 - On Slurm: GPU jobs, a preempted job being requeued, the QoS list, a time limit being hit.
 - Continuing a run from a checkpoint after the run length is raised.
 
@@ -38,7 +40,8 @@ more than it is.
 - **A design stopped at the screen keeps its part-way score** on the leaderboard beside full-length ones.
 - **`objective.constraints`, `space.forbidden` and `space.must_keep` are text for the agents**, not
   rules; only `space.forbidden_terms` and the open blocks are enforced by code.
-- **Distance between designs is measured on the code**, not on what the trained models do.
+- **A proposal's distance is measured on the code**; behaviour is known only after training, and only if the
+  adapter reports `signature`.
 - **One noise figure, given by you.** The loop does not measure it.
 
 ## Not built
@@ -52,9 +55,8 @@ Things people running searches have needed that are not here yet:
   `data.fraction` refits the leader of each lineage, which is close but not the same.
 - Choosing the GPU type per design.
 
-- A cheap proxy tier with a promotion ladder (many short runs, the best promoted to longer ones). This
-  is what a search of thousands of evaluations needs.
-- Selection on two objectives at once (a trade-off front).
+- A proxy tier on a different, cheaper task (a smaller dataset or model), with promotion to the real one. The
+  ladder stops weak designs early within the real task; it does not swap the task.
 - Weight inheritance from a parent.
 - Repair of a design that crashed.
 - A file of a cluster's own rules.

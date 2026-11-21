@@ -70,12 +70,39 @@ on" (1). A design that is different but behind stays in play.
 **`tournament`** draws `strategy.tournament_size` of the `strategy.window` most recent designs and
 builds on the best of them. Old designs leave the population however good they were.
 
+**`pareto`** builds on the designs that are best on two things at once: the score and a second figure
+named by `strategy.second_metric` (`parameters`, `examples_per_s`, `training_minutes`, or a metric the
+runs report; `strategy.second_direction` says whether less or more is better).
+
+- A design is on the front when no other design is at least as good on both and better on one. A
+  difference in score below the noise does not push a design off it.
+- Parents are drawn from the front; `schedule.novelty` moves the draw toward the designs that stand
+  alone on it, so the trade-off is filled in and pushed outward.
+- A crossover pairs designs from different parts of the front (a small one with an accurate one).
+- A design that reports no value for the second figure counts as worst on it.
+
+The score alone still decides the leaderboard, the baseline comparison and the strategist's plateau.
+
 **`greedy`** builds on the current best.
 
 **Islands.** `strategy.islands: N` runs N populations of the chosen strategy apart. A slot goes to the
 island with the fewest runs, and that island sees only its own results. Every
 `strategy.migrate_every` scored runs, the best design of another island is brought in as a parent.
 Islands split the budget: on a small one each island gets few runs, and the plan warns.
+
+**Island resets.** With `strategy.reset_every: N` (0, the default, is never), every N scored runs of
+the whole search the weaker half of the islands start again, as in FunSearch. What they held stays in
+the record and on the leaderboard but is no longer their population, and the first slot of each is a
+local move on the best design of an island that was kept. An island that went nowhere stops spending
+slots on the same ideas.
+
+| Like | Settings |
+|---|---|
+| FunSearch | `strategy.islands: 4`, `strategy.reset_every: 40`, `strategy.mechanism: archive`, `strategy.descriptors: [behaviour]` |
+| AlphaEvolve's program database | `strategy.mechanism: archive` on `strategy.islands: 3`, with `evaluation.ladder` |
+| Regularized evolution | `strategy.mechanism: tournament` |
+
+These need budgets in the hundreds: see the guidance by size of budget.
 
 ## Crossover
 
@@ -113,15 +140,45 @@ one whose edits rarely gained for smaller ones.
 - **Specialists.** With `evaluation.speciality_metrics`, a parent is sometimes the design best on one
   metric rather than best overall.
 
-Distance between designs is measured on the code: the share of three-token runs two designs have in
-common. A proposal is not refused for being similar; only an exact copy is.
+**Two measures of difference.**
 
-## Screening new designs
+- *On the code*: the share of three-token runs two designs have in common. This is all that can be
+  known of a proposal before it is trained, so the choice among proposals uses it. A proposal is not
+  refused for being similar; only an exact copy is.
+- *On behaviour*: where the trained model's errors fall. If the adapter reports `signature` in
+  `result.json` (a list of numbers: the error per class, per range of the target, per held-out example),
+  two designs whose signatures correlate at `strategy.behaviour_similarity` (0.9) or above count as the
+  same behaviour, however differently they are written. This is used in three places: the archive can
+  keep the best of each behaviour (`strategy.descriptors: [behaviour]`, the grouping FunSearch uses); a
+  novel slot is shown designs that behave unlike the leader (`schedule.novelty_measure`); and a
+  crossover's second parent is the design whose errors fall least like the first one's.
 
-A new design's first run is compared, at `evaluation.screen_fraction` of its length, with the new
-designs before it at the same point. One clearly in the lower part is stopped there and charged for
-what it ran. This needs the adapter to report progress, and at least
-`evaluation.screen_min_pool` earlier designs. `evaluation.screen_keep: 1` switches it off.
+## Stopping weak designs early: the screen and the ladder
+
+**The screen** (the default). A new design's first run is compared, at `evaluation.screen_fraction` of
+its length, with the new designs before it at the same point. One clearly in the lower part is stopped
+there and charged for what it ran. `evaluation.screen_keep: 1` switches it off.
+
+**The ladder** (`evaluation.ladder`) is successive halving inside one job, for searches that need many
+more designs than full training runs:
+
+```yaml
+evaluation:
+  ladder: [{at: 0.1, keep: 0.5}, {at: 0.3, keep: 0.5}]
+```
+
+At a tenth of a run, the better half of the designs that got there go on and the others stop, charged
+a tenth of an evaluation. At three tenths, half again. Here a design costs 0.375 of a run on average, so
+a budget of 100 evaluations covers about 270 designs; the plan's cost estimate counts the extra agent
+calls. Every design is subject to the ladder (`evaluation.ladder_applies: new` limits it to new
+designs), and it can be set or changed during a run.
+
+Both need the adapter to report progress, and `evaluation.screen_min_pool` earlier designs at a point
+before any is stopped there. Two cautions:
+
+- The ladder trusts early progress. A design that learns slowly and ends well is stopped; keep the
+  first rung late enough for your task, and `keep` generous if unsure.
+- A stopped design keeps its part-way score in the record and on the leaderboard.
 
 ## Noise
 

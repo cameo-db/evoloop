@@ -173,9 +173,10 @@ Set with `strategy.mechanism`.
 | `lineage` | Species kept alive side by side. A new lineage gets a protected trial, the best few are active, none takes more than its quota of the local slots, and one that stops gaining retires to the bench. |
 | `archive` | The best of each kind of design on a grid (by family and size). Parents are drawn across the grid, the less visited cells favoured in proportion to `schedule.novelty`. |
 | `tournament` | Draw a few of the most recent designs and build on the best of them. Older designs leave the population however good they were, so one lucky score cannot dominate for long. |
+| `pareto` | Build on the designs that are best on the score and a second figure at once (`strategy.second_metric`: size, speed, or a metric the runs report). Parents come from that trade-off front, the designs standing alone on it favoured; a crossover pairs designs from different parts of it. |
 | `greedy` | Always build on the current best (or one tied with it within the noise). The right choice when the budget is too small for a population. |
 
-Set `strategy.islands` above 1 to run that many separate populations of the chosen strategy. Each sees its own results only; every `strategy.migrate_every` scored runs the best design of another island is brought in as a parent.
+Set `strategy.islands` above 1 to run that many separate populations of the chosen strategy. Each sees its own results only; every `strategy.migrate_every` scored runs the best design of another island is brought in as a parent. With `strategy.reset_every` above 0, every so many scored runs the weaker half of the islands start again from the best design of an island that was kept (as in FunSearch); what they held stays in the record.
 
 ## Slot modes
 

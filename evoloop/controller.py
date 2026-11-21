@@ -353,32 +353,45 @@ class Controller:
         if isinstance(result, dict) and isinstance(result.get("captured"), dict):
             fields["captured"] = result["captured"]   # what the job read from the objects it built, and its environment
         if run.get("screened"):
-            fields["charge"] = float(self.settings["evaluation"]["screen_fraction"])
+            fields["charge"] = float(run["screened"].get("share") or self.settings["evaluation"]["screen_fraction"])
         if perf["status"] == "not_run":
             fields["charge"] = 0.0
         self.update(run["id"], **fields)
 
     def screen(self, run: Dict[str, Any], view: View) -> None:
-        """A new design's first run is compared, part way, with the new designs before it at the same point.
-        One clearly in the lower part is stopped there and charged for what it ran."""
+        """A run is compared, part way, with the runs before it at the same point, and one clearly in the lower
+        part is stopped there and charged for what it ran. By default one point, for the first run of a new
+        design; with `evaluation.ladder`, several points and every design (successive halving inside a job)."""
+        steps, everyone = form.rungs(self.settings)
         ev = self.settings["evaluation"]
-        fraction, keep = float(ev["screen_fraction"]), float(ev["screen_keep"])
-        if not 0 < fraction < 1 or keep >= 1 or run.get("purpose", "search") != "search" or run.get("screened") \
-                or run["history"].get("mode") not in ("new", "novel") or run["id"] in self.state["screen"]:
+        if run.get("screened") or run.get("purpose", "search") not in (("search", "trial") if everyone else ("search",)) \
+                or not (everyone or run["history"].get("mode") in ("new", "novel")):
             return
-        target = fraction * float(run.get("allowance") or ev["allowance"])
-        rows = [r for r in jobs.read_progress(self.out_dir(run)) if r["step"] >= target]
-        if not rows:
-            return
-        mine = view.sign * float(rows[0]["metric"])
-        pool = sorted(self.state["screen"].values())
-        self.state["screen"][run["id"]] = mine
-        if len(pool) < int(ev["screen_min_pool"]):
-            return
-        cutoff = pool[int(len(pool) * (1 - keep))]   # the score that the kept share of earlier designs reached
-        if mine < cutoff - view.noise:
-            jobs.tell(self.out_dir(run), "stop")
-            self.update(run["id"], screened={"at": target, "metric": rows[0]["metric"], "cutoff": view.sign * cutoff})
+        pools = self.state["screen"]
+        if any(not isinstance(v, dict) for v in pools.values()):   # a record from before there were several points
+            pools = self.state["screen"] = {"%g" % float(ev["screen_fraction"]): dict(pools)}
+        rows = None
+        for rung in steps:
+            at, keep = rung["at"], rung["keep"]
+            seen = pools.setdefault("%g" % at, {})
+            if not 0 < at < 1 or run["id"] in seen:
+                continue
+            target = at * float(run.get("allowance") or ev["allowance"])
+            rows = jobs.read_progress(self.out_dir(run)) if rows is None else rows
+            reached = [r for r in rows if r["step"] >= target]
+            if not reached:
+                return   # not there yet, so not at any later point either
+            mine = view.sign * float(reached[0]["metric"])
+            pool = sorted(seen.values())
+            seen[run["id"]] = mine
+            if keep >= 1 or len(pool) < int(ev["screen_min_pool"]):
+                continue
+            cutoff = pool[int(len(pool) * (1 - keep))]   # the score that the kept share of earlier runs reached
+            if mine < cutoff - view.noise:
+                jobs.tell(self.out_dir(run), "stop")
+                self.update(run["id"], screened={"at": target, "share": at, "metric": reached[0]["metric"],
+                                                 "cutoff": view.sign * cutoff})
+                return
 
     # --- designing -------------------------------------------------------------------------------
     def capacity(self) -> int:
@@ -568,7 +581,7 @@ class Controller:
                     forced.pop(0)
             future = self.pool.submit(self.write, request, options, view, settings)
             self.designing.append((future, request["mode"], {k: request.get(k) for k in (
-                "mode", "lineage", "parents", "island", "purpose")}))
+                "mode", "lineage", "parents", "island", "purpose", "migrant")}))
             free -= 1
             committed += 1
 

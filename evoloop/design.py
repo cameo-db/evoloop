@@ -15,6 +15,7 @@ from __future__ import annotations
 import json
 import os
 import random
+import time
 from typing import Any, Dict, List, Optional, Tuple
 
 from . import space
@@ -369,6 +370,7 @@ class Designer:
         run = {"id": "R%d" % (len(view.runs) + 1), "candidate": candidate, "key": keys["candidate"], "model": model,
                "recipe": recipe, "settings": space.all_params(self.table, blocks), "seed": int(settings["evaluation"]["seed"]),
                "purpose": request.get("purpose") or "search", "period": view.period, "charge": 1.0, "history": history,
+               "designed": round(time.time(), 3),
                "performance": {"status": "designed"}}
         return run, ""
 
@@ -391,7 +393,7 @@ class Designer:
         setting of the run length (a reference for the new period)."""
         first = view.run_of(candidate)
         run = {k: first[k] for k in ("candidate", "key", "model", "recipe", "settings")}
-        run.update(id="R%d" % (len(view.runs) + 1), seed=seed, purpose=purpose, charge=1.0,
+        run.update(id="R%d" % (len(view.runs) + 1), seed=seed, purpose=purpose, charge=1.0, designed=round(time.time(), 3),
                    period=view.period if period is None else period,
                    # Not a move of the search: it has no mode, so it counts toward no share, no retirement, no step size.
                    history=dict(first["history"], parent=first["id"], second_parent=None, move=purpose, mode=None,

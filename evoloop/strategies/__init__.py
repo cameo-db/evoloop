@@ -8,6 +8,7 @@ run can change strategy midway.
     lineage      species kept alive side by side, with quotas, protected trials and retirement
     archive      the best of each kind of design on a grid; parents drawn across the grid
     tournament   draw a few of the most recent designs, build on the best of them (aging)
+    pareto       build on the designs that are best on the trade-off between the score and a second figure
     greedy       always build on the current best
 
 `strategy.islands` above 1 wraps any of them: separate populations that exchange designs at intervals."""
@@ -42,6 +43,48 @@ def signature(view: View, candidate: str) -> Optional[List[float]]:
     return sig if isinstance(sig, list) and len(sig) >= 3 else None
 
 
+def measure(view: View, candidate: str, name: Optional[str]) -> Optional[float]:
+    """A figure of a design beside its score: `parameters`, `examples_per_s`, `training_minutes`, or a metric the
+    runs report."""
+    perf = view.run_of(candidate).get("performance") or {}
+    if name == "parameters":
+        value = perf.get("parameters")
+    elif name == "examples_per_s":
+        value = (perf.get("inference_speed") or {}).get("examples_per_s") if isinstance(perf.get("inference_speed"), dict) else None
+    elif name == "training_minutes":
+        value = perf.get("training_minutes")
+    else:
+        value = (perf.get("valid") or {}).get(name)
+    return float(value) if isinstance(value, (int, float)) and not isinstance(value, bool) else None
+
+
+def behaviour_groups(view: View, settings: Dict[str, Any]) -> Dict[str, Optional[int]]:
+    """Designs grouped by what the trained model does: two fall in one group when the places their errors fall
+    (`signature` in result.json) correlate at `strategy.behaviour_similarity` or above. In order of arrival, so a
+    design's group never changes as the search goes on. None for a design with no signature."""
+    similar = float(settings["strategy"].get("behaviour_similarity") or 0.9)
+    cached = getattr(view, "_behaviour", None)
+    if cached is not None and cached[0] == similar:
+        return cached[1]
+    leaders: List[List[float]] = []
+    out: Dict[str, Optional[int]] = {}
+    for cand in sorted(view.scored(), key=lambda c: c["order"]):
+        sig = signature(view, cand["id"])
+        out[cand["id"]] = None
+        if sig is None:
+            continue
+        for index, leader in enumerate(leaders):
+            r = pearson(sig, leader)
+            if r is not None and r >= similar:
+                out[cand["id"]] = index
+                break
+        else:
+            leaders.append(sig)
+            out[cand["id"]] = len(leaders) - 1
+    view._behaviour = (similar, out)   # type: ignore[attr-defined]
+    return out
+
+
 def complement(view: View, first: str, pool: List[str], rng: random.Random) -> Optional[str]:
     """The partner for a crossover: the candidate whose errors fall least like the first one's.
     Without error signatures, one of another family; without that, a rank-weighted draw."""
@@ -71,12 +114,25 @@ def specialist(view: View, pool: List[str], settings: Dict[str, Any], rng: rando
     return max(have)[1] if have else None
 
 
-def inspirations(view: View, exclude: List[str], count: int, rng: random.Random) -> List[str]:
-    """Designs that have rarely been built on, from anywhere in the ranking: what a novel slot is shown."""
+def inspirations(view: View, exclude: List[str], count: int, rng: random.Random,
+                 settings: Optional[Dict[str, Any]] = None) -> List[str]:
+    """Designs that have rarely been built on, from anywhere in the ranking: what a novel slot is shown.
+    Where the runs report where their errors fall, designs that behave unlike the leader are favoured
+    (`schedule.novelty_measure`: auto or behaviour); with `code`, or no signatures, only the count of
+    descendants decides."""
     pool = [c["id"] for c in view.scored() if c["id"] not in exclude]
+    best = view.best()
+    lead = signature(view, best["id"]) if best and settings is not None \
+        and settings["schedule"].get("novelty_measure", "auto") != "code" else None
+
+    def unlike(candidate: str) -> float:
+        if lead is None:
+            return 1.0
+        r = pearson(lead, signature(view, candidate) or [])
+        return 0.5 if r is None else 0.05 + (1.0 - r) / 2.0     # 0.05 for the same behaviour, about 1 for the opposite
     out: List[str] = []
     while pool and len(out) < count:
-        weights = [1.0 / (1 + view.descendants(c)) for c in pool]
+        weights = [unlike(c) / (1 + view.descendants(c)) for c in pool]
         pick = rng.choices(pool, weights=weights)[0]
         out.append(pick)
         pool.remove(pick)
@@ -105,9 +161,9 @@ def step_size(view: View, lineage: Dict[str, Any], settings: Dict[str, Any]) -> 
 
 
 def make(settings: Dict[str, Any]) -> Any:
-    from . import archive, greedy, islands, lineage, tournament
+    from . import archive, greedy, islands, lineage, pareto, tournament
     kinds = {"lineage": lineage.Lineage, "archive": archive.Archive, "tournament": tournament.Tournament,
-             "greedy": greedy.Greedy}
+             "greedy": greedy.Greedy, "pareto": pareto.Pareto}
     strat = settings["strategy"]
     inner = kinds[strat["mechanism"]]()
     return islands.Islands(inner, int(strat["islands"])) if int(strat.get("islands") or 1) > 1 else inner

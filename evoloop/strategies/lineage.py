@@ -127,6 +127,6 @@ class Lineage:
                     "why": "the best of lineage %s with the candidate whose errors fall least like its own" % first_lin["id"]}
         if mode == "novel":
             return {"mode": "novel", "lineage": None, "parents": [],
-                    "inspirations": inspirations(view, [l["best_candidate"] for l in active[:1]], 3, rng),
+                    "inspirations": inspirations(view, [l["best_candidate"] for l in active[:1]], 3, rng, settings),
                     "why": "designs that have rarely been built on"}
         return {"mode": "new", "lineage": None, "parents": [], "why": "a family the search has not covered"}

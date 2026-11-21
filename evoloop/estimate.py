@@ -68,7 +68,8 @@ def mix(settings: Dict[str, Any]) -> Dict[str, float]:
 
 def calls(settings: Dict[str, Any]) -> Dict[str, Tuple[float, float, float]]:
     """Agent calls by role over the whole budget: (low, expected, high)."""
-    n = float(settings["budget"]["evaluations"] or 0)
+    # Designs written: with a promotion ladder many stop early and cost a share of a run, so the budget covers more.
+    n = float(settings["budget"]["evaluations"] or 0) / form.mean_charge(settings)
     share = mix(settings)
     local = settings["schedule"]["local_mix"]
     whole = sum(float(v) for v in local.values()) or 1.0

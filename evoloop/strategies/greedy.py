@@ -26,6 +26,6 @@ class Greedy:
             return {"mode": "cross", "lineage": view.cands[scored[0]]["lineage"], "parents": [scored[0], second],
                     "why": "the best and a complementary design"}
         if mode == "novel":
-            return {"mode": "novel", "lineage": None, "parents": [], "inspirations": inspirations(view, scored[:1], 3, rng),
+            return {"mode": "novel", "lineage": None, "parents": [], "inspirations": inspirations(view, scored[:1], 3, rng, settings),
                     "why": "designs that have rarely been built on"}
         return {"mode": "new", "lineage": None, "parents": [], "why": "a family the search has not covered"}

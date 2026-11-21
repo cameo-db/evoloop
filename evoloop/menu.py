@@ -18,9 +18,15 @@ STRATEGIES = {
                "the less visited cells favoured in proportion to `schedule.novelty`.",
     "tournament": "Draw a few of the most recent designs and build on the best of them. Older designs leave the "
                   "population however good they were, so one lucky score cannot dominate for long.",
+    "pareto": "Build on the designs that are best on the score and a second figure at once (`strategy.second_metric`: "
+              "size, speed, or a metric the runs report). Parents come from that trade-off front, the designs standing "
+              "alone on it favoured; a crossover pairs designs from different parts of it.",
     "greedy": "Always build on the current best (or one tied with it within the noise). The right choice when the "
               "budget is too small for a population.",
 }
+ISLANDS_RESET = (" With `strategy.reset_every` above 0, every so many scored runs the weaker half of the islands start "
+                 "again from the best design of an island that was kept (as in FunSearch); what they held stays in the "
+                 "record.")
 ISLANDS = ("Set `strategy.islands` above 1 to run that many separate populations of the chosen strategy. Each sees its "
            "own results only; every `strategy.migrate_every` scored runs the best design of another island is "
            "brought in as a parent.")
@@ -164,12 +170,17 @@ FIELDS: Dict[str, str] = {
     "strategy.migrate_every": "With islands: scored runs of an island between migrations into it.",
     "strategy.tournament_size": "With `tournament`: how many are drawn for each parent.",
     "strategy.window": "With `tournament`: how many of the most recent designs make up the population.",
-    "strategy.descriptors": "With `archive`: what makes a cell: `family`, `size`, or the name of a metric the runs report.",
+    "strategy.descriptors": "With `archive`: what makes a cell: `family`, `size`, `behaviour` (designs whose errors fall alike, from the `signature` the runs report), or the name of a metric the runs report.",
+    "strategy.reset_every": "With islands: scored runs of the whole search between resets of the weaker half of the islands; 0 for never.",
+    "strategy.second_metric": "With `pareto`: the second figure to do well on: `parameters`, `examples_per_s`, `training_minutes`, or a metric the runs report.",
+    "strategy.second_direction": "With `pareto`: whether less (minimize) or more (maximize) of the second figure is better.",
+    "strategy.behaviour_similarity": "How alike (correlation, 0 to 1) the errors of two designs must fall for them to count as the same behaviour.",
     "schedule.phases": "The shares of new designs, crossover and local moves, by phase: each phase holds until that "
                        "share of the budget is spent.",
     "schedule.novel_share": "The part of the `new` share that goes to `novel` slots.",
     "schedule.novelty": "0 to 1. How much a design far from everything tried is favoured: in the choice among several "
                         "proposals, and in the archive's draw of a parent.",
+    "schedule.novelty_measure": "What a novel slot counts as different: `code` (rarely built on), `behaviour` (errors fall unlike the leader's), or `auto` (behaviour where the runs report a signature).",
     "schedule.adaptive": "0 to 1. 0 follows the phases exactly; above 0 blends in what each mode has returned.",
     "schedule.floor": "With an adaptive schedule: the least share any mode keeps.",
     "schedule.founder_credit": "With an adaptive schedule: the part of each gain credited to the slot that founded the "
@@ -204,7 +215,9 @@ FIELDS: Dict[str, str] = {
     "evaluation.noise": "How much the score differs between two fits of one model. A smaller difference is no difference.",
     "evaluation.screen_fraction": "The point of a new design's first run at which it is compared with earlier new designs.",
     "evaluation.screen_keep": "The share of new designs that goes on past that point; 1 switches screening off.",
-    "evaluation.screen_min_pool": "Earlier new designs needed before any is stopped at the screen.",
+    "evaluation.screen_min_pool": "Earlier designs needed at a point before any is stopped there (the screen and every rung of the ladder).",
+    "evaluation.ladder": "A promotion ladder: a list of rungs {at: share of a run, keep: share that goes on}. At each rung the weaker designs stop and are charged that share, so the budget covers more designs. Empty for the single screen.",
+    "evaluation.ladder_applies": "With a ladder: `all` designs are subject to it, or only `new` ones (the first run of a new design).",
     "evaluation.recheck_every": "Designs between two fits of the leader on a new seed; 0 leaves it to the harness level.",
     "evaluation.speciality_metrics": "Metrics a run reports, with their direction, by which a specialist parent is chosen.",
     "evaluation.schedule_depends_on_length": "Whether the learning-rate schedule depends on the run's length. If not, "
@@ -276,7 +289,7 @@ SECTIONS: List[Tuple[str, str, str, Dict[str, str], str]] = [
     ("autonomy", "Autonomy: agentic first, or strongly harnessed", "harness.autonomy", AUTONOMY, AUTONOMY_NOTE),
     ("models", "Models", "agents.default_model", MODELS, MODELS_NOTE),
     ("effort", "Effort", "agents.effort", EFFORT, EFFORT_NOTE),
-    ("strategies", "Evolution strategies", "strategy.mechanism", STRATEGIES, ISLANDS),
+    ("strategies", "Evolution strategies", "strategy.mechanism", STRATEGIES, ISLANDS + ISLANDS_RESET),
     ("modes", "Slot modes", "schedule.phases", MODES, ""),
     ("crossover", "Crossover kinds", "crossover.kinds", CROSSOVER, PARTNER),
     ("moves", "Local moves", "schedule.local_mix", LOCAL_MOVES, ""),

@@ -24,7 +24,7 @@ import yaml
 
 EMPTY = (None, "", "TODO")
 MODES = ("new", "novel", "cross", "local")
-MECHANISMS = ("lineage", "archive", "tournament", "greedy")
+MECHANISMS = ("lineage", "archive", "tournament", "pareto", "greedy")
 CROSS_KINDS = ("block_swap", "graft", "hybrid")
 LOCAL_MOVES = ("edit", "settings", "ablation")
 HARNESS = ("minimal", "standard", "full")
@@ -41,10 +41,16 @@ DEFAULTS: Dict[str, Any] = {
               "recipe_roles": ["loss", "optimizer", "schedule", "augmentation", "training", "recipe"],
               "forbidden": [], "must_keep": [], "forbidden_terms": []},
     "strategy": {"mechanism": "lineage", "islands": 1, "migrate_every": 12,
-                 "tournament_size": 3, "window": 24, "descriptors": ["family", "size"]},
+                 "tournament_size": 3, "window": 24, "descriptors": ["family", "size"],
+                 # FunSearch-style resets: every so many scored runs the weaker half of the islands start again from the
+                 # best of a surviving one. 0: never.
+                 "reset_every": 0,
+                 # A second thing to do well on beside the score (`pareto`): a metric the runs report, `parameters`,
+                 # `examples_per_s` or `training_minutes`.
+                 "second_metric": None, "second_direction": "minimize", "behaviour_similarity": 0.9},
     "schedule": {"phases": [{"until": 0.6, "new": 0.65, "cross": 0.10, "local": 0.25},
                             {"until": 1.0, "new": 0.15, "cross": 0.25, "local": 0.60}],
-                 "novel_share": 0.33, "novelty": 0.3, "adaptive": 0.0, "floor": 0.05, "founder_credit": 0.5,
+                 "novel_share": 0.33, "novelty": 0.3, "novelty_measure": "auto", "adaptive": 0.0, "floor": 0.05, "founder_credit": 0.5,
                  "local_mix": {"edit": 0.5, "settings": 0.35, "ablation": 0.15}},
     "population": {"lineages": 8, "quota": 0.4, "trial_runs": 2, "retire_after": 6, "tie_margin": 1.0,
                    "specialist_rate": 0.15},
@@ -55,6 +61,10 @@ DEFAULTS: Dict[str, Any] = {
                    "max_share_shift": 0.15, "force_max": 5, "ask_first": ["strategy"]},
     "evaluation": {"allowance": None, "allowance_unit": "steps", "seed": 0, "noise": None, "screen_fraction": 0.5,
                    "screen_keep": 0.5, "screen_min_pool": 4, "recheck_every": 0, "speciality_metrics": {},
+                   # A promotion ladder (successive halving inside one job): at each share `at` of a run, only the best
+                   # `keep` of the designs that got there go on, e.g. [{at: 0.1, keep: 0.5}, {at: 0.3, keep: 0.5}].
+                   # Empty: the single screen above, for new designs only.
+                   "ladder": [], "ladder_applies": "all",
                    "schedule_depends_on_length": True, "keep_checkpoints": False, "on_length_change": "auto",
                    "leaders_refit": 4, "test_set": "held_out", "quick_check": None,
                    # Passed to every job as environment variables, e.g. {PATIENCE: 5, MIN_GAIN: 0.001}: what the adapter reads
@@ -108,13 +118,15 @@ CHOICES = {"objective.direction": ("maximize", "minimize"), "strategy.mechanism"
            "compute.scheduler": ("local", "slurm"), "agents.backend": ("stub", "anthropic_api", "claude_code"),
            "evaluation.on_length_change": ("auto", "continue", "rerun", "compare_anyway"),
            "variation.settings_by": ("agent", "sampler"), "strategist.mode": ("off", "advise", "act"),
+           "evaluation.ladder_applies": ("new", "all"), "schedule.novelty_measure": ("auto", "code", "behaviour"),
+           "strategy.second_direction": ("maximize", "minimize"),
            "budget.spend_policy": ("none", "pace"), "harness.autonomy": ("harnessed", "guided", "agentic"), "harness.conductor": ("code", "agent"),
            "agents.effort": ("low", "medium", "high", "xhigh", "max", "model_default"), "agents.fallbacks": ("default", "off")}
 
 # What may change while a run is going. A change applies to the next design; jobs already started are untouched.
 LIVE = ("schedule.", "limits", "strategist.", "population.", "crossover.", "variation.", "harness.", "strategy.", "space.", "audit.", "budget.",
         "compute.max_running", "compute.time_limit", "compute.qos", "compute.partition", "compute.gpus", "compute.max_waiting",
-        "evaluation.screen_", "evaluation.recheck_every", "evaluation.speciality_metrics", "evaluation.on_length_change",
+        "evaluation.screen_", "evaluation.ladder", "evaluation.recheck_every", "evaluation.speciality_metrics", "evaluation.on_length_change",
         "evaluation.leaders_refit", "agents.models", "agents.default_model", "agents.effort", "agents.efforts", "agents.fallbacks", "agents.prices",
         "report.", "run.")
 # These change what a score means. They may change too, and then a new period begins: the leaders are fitted again
@@ -367,9 +379,19 @@ def check_value(path: str, value: Any) -> Optional[str]:
                 and not isinstance(value, str):
             return "%s must be text" % path
     if path in ("evaluation.seed", "compute.max_waiting", "compute.infrastructure_retries", "evaluation.leaders_refit",
-                "evaluation.screen_min_pool", "strategy.islands", "budget.max_uncounted_failures") \
+                "evaluation.screen_min_pool", "strategy.islands", "strategy.reset_every", "budget.max_uncounted_failures") \
             and value not in EMPTY and not (number and float(value).is_integer() and value >= 0):
         return "%s must be a whole number, 0 or more" % path
+    if path == "evaluation.ladder" and value not in EMPTY:
+        ok = isinstance(value, list) and all(
+            isinstance(r, dict) and set(r) == {"at", "keep"} and all(isinstance(x, (int, float)) and not isinstance(x, bool)
+                                                                    for x in r.values())
+            and 0 < r["at"] < 1 and 0 < r["keep"] <= 1 for r in value)
+        if not ok or [r["at"] for r in value] != sorted({r["at"] for r in value}):
+            return ("evaluation.ladder must be a list of rungs in rising order, each {at: share of the run, above 0 and "
+                    "below 1, keep: share that goes on, above 0 and at most 1}")
+    if path == "strategy.descriptors" and (not isinstance(value, list) or not value or not all(isinstance(d, str) and d for d in value)):
+        return "strategy.descriptors must be a list of: family, size, behaviour, or the name of a metric the runs report"
     if path == "evaluation.screen_keep" and not (number and 0 < value <= 1):
         return "evaluation.screen_keep must be above 0 and at most 1"
     if path == "evaluation.variables" and value not in EMPTY:
@@ -401,7 +423,7 @@ def check_value(path: str, value: Any) -> Optional[str]:
             and not (number and float(value).is_integer() and value >= 1):
         return "%s must be a whole number, 1 or more" % path
     if path in ("schedule.novel_share", "schedule.novelty", "schedule.adaptive", "schedule.founder_credit", "population.quota",
-                "population.specialist_rate", "evaluation.screen_fraction", "evaluation.screen_keep"):
+                "population.specialist_rate", "evaluation.screen_fraction", "evaluation.screen_keep", "strategy.behaviour_similarity"):
         if isinstance(value, bool) or not isinstance(value, (int, float)) or not 0 <= value <= 1:
             return "%s must be a number from 0 to 1" % path
     if path in ("budget.evaluations", "compute.gpus", "population.lineages", "population.trial_runs",
@@ -475,6 +497,14 @@ def warnings(settings: Dict[str, Any]) -> List[str]:
                 out.append(fault)
         if not agents.get("default_model") and not all(models.values()):
             out.append("no model is set for some roles: give agents.default_model")
+    if mech == "pareto" and not settings["strategy"].get("second_metric"):
+        out.append("the pareto strategy needs strategy.second_metric (the second thing to do well on); without it, it "
+                   "builds on the best design only")
+    if int(settings["strategy"].get("reset_every") or 0) > 0 and int(settings["strategy"].get("islands") or 1) < 2:
+        out.append("strategy.reset_every has no effect without islands (strategy.islands above 1)")
+    if "behaviour" in (settings["strategy"].get("descriptors") or []) or settings["schedule"].get("novelty_measure") == "behaviour":
+        out.append("behaviour is measured from `signature` in result.json: an adapter that does not report it gets "
+                   "no behaviour grouping")
     if n and n < 60 and mech == "archive":
         out.append("an archive needs many designs to fill; with %d evaluations most cells will hold one model" % n)
     if n and n < 60 and settings["space"]["preset"] in ("architecture_and_recipe", "everything"):
@@ -578,3 +608,27 @@ BLANK = {
     "depositor": {"name": None, "orcid": None, "lab": None, "institution": None},
     "status": {"confirmed_by": None, "confirmed_on": None, "confirmed_digest": None, "asked": []},
 }
+
+
+def rungs(settings: Dict[str, Any]) -> Tuple[List[Dict[str, float]], bool]:
+    """The points of a run at which designs are compared and the weaker stopped, and whether every design is
+    subject to them (a ladder) or only the first run of a new design (the single screen)."""
+    ev = settings["evaluation"]
+    ladder = [r for r in ev.get("ladder") or [] if isinstance(r, dict)]
+    if ladder:
+        return ([{"at": float(r["at"]), "keep": float(r["keep"])} for r in sorted(ladder, key=lambda r: r["at"])],
+                ev.get("ladder_applies") != "new")
+    return [{"at": float(ev["screen_fraction"]), "keep": float(ev["screen_keep"])}], False
+
+
+def mean_charge(settings: Dict[str, Any]) -> float:
+    """The share of a full run that a design costs on average under the ladder, when the pool is full: with
+    [{at: 0.1, keep: 0.5}, {at: 0.3, keep: 0.5}] half the designs cost 0.1, a quarter 0.3 and a quarter 1."""
+    steps, everyone = rungs(settings)
+    if not everyone:
+        return 1.0
+    alive, cost = 1.0, 0.0
+    for rung in steps:
+        cost += alive * (1 - rung["keep"]) * rung["at"]
+        alive *= rung["keep"]
+    return cost + alive
