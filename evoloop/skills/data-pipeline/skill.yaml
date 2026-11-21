@@ -64,3 +64,19 @@ needs:
   references: ["the original pipeline"]
 combines: [algorithm-runtime]
 conflicts: [settings-tuning]
+goal: Make a data pipeline faster or cheaper
+start:
+  run_type: explore_then_exploit
+  evaluations: 80
+  brief:
+    objective: {direction: minimize}
+why: >
+  In a pipeline the cost is usually in moving data, so the writers are told to do less and move data fewer times
+  before optimising computation. The output is compared with a reference, and a design whose output differs is
+  rejected.
+reading: >
+  Read the best design's cost against the reference row, and the time per step it reports: that shows where the
+  cost went. Check how the gain grows with input size before relying on it at full scale.
+instead:
+  - if: one function holds the cost
+    use: algorithm-runtime

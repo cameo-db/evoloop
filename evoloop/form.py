@@ -298,10 +298,19 @@ def resolve(brief: Dict[str, Any], ledger: Optional[List[Dict[str, Any]]] = None
     settings = copy.deepcopy(DEFAULTS)
     sources = {path: "default" for path in flatten(DEFAULTS)}
 
+    overrides: List[Dict[str, Any]] = []
+
+    def place(path: str, value: Any, source: str) -> None:
+        """Set one value, keeping a note when it replaces a different one from another layer."""
+        before, was = sources.get(path, "default"), get(settings, path)
+        if before != "default" and before != source and was != value:
+            overrides.append({"setting": path, "was": was, "from": before, "now": value, "by": source})
+        put(settings, path, copy.deepcopy(value))
+        sources[path] = source
+
     def lay(overlay: Dict[str, Any], source: str) -> None:
         for path, value in flatten(overlay).items():
-            put(settings, path, copy.deepcopy(value))
-            sources[path] = source
+            place(path, value, source)
 
     stated = given(brief)
     changes = [e for e in (ledger or []) if e.get("kind") == "set" and e.get("status", "applied") == "applied"]
@@ -318,8 +327,15 @@ def resolve(brief: Dict[str, Any], ledger: Optional[List[Dict[str, Any]]] = None
             run_type = entry["value"]
     if run_type in RUN_TYPES and RUN_TYPES[run_type]:
         lay(RUN_TYPES[run_type], "run type %s" % run_type)
-    # The skill (what kind of optimisation this is) is laid over the run type (how to search): where both set
-    # something, the skill knows the problem better. A skill of the person's own is found under `folder`.
+    autonomy = stated.get("harness.autonomy")
+    for entry in changes:
+        if entry["key"] == "harness.autonomy":
+            autonomy = entry["value"]
+    if autonomy in AUTONOMY:
+        lay(AUTONOMY[autonomy], "autonomy %s" % autonomy)
+    # The skill (what kind of optimisation this is) is laid over the run type and the level of autonomy (how to
+    # search, and how much the agents decide): where they set the same thing, the skill knows the problem, so a
+    # skill that searches without agents stays without agents. A skill of the person's own is found under `folder`.
     from . import skill as skills
     skill_name = stated.get("run.skill")
     for entry in changes:
@@ -328,18 +344,11 @@ def resolve(brief: Dict[str, Any], ledger: Optional[List[Dict[str, Any]]] = None
     the_skill, skill_fault = skills.combine(skill_name, folder)
     if the_skill:
         lay(the_skill["settings"], "skill %s" % the_skill["name"])
-    autonomy = stated.get("harness.autonomy")
-    for entry in changes:
-        if entry["key"] == "harness.autonomy":
-            autonomy = entry["value"]
-    if autonomy in AUTONOMY:
-        lay(AUTONOMY[autonomy], "autonomy %s" % autonomy)
     for path, value in stated.items():
-        put(settings, path, copy.deepcopy(value))
-        sources[path] = "brief"
+        place(path, value, "brief")
     for entry in changes:
-        put(settings, entry["key"], copy.deepcopy(entry["value"]))
-        sources[entry["key"]] = "changed by %s (%s)" % (entry.get("by") or "?", entry.get("id") or "ledger")
+        place(entry["key"], entry["value"], "changed by %s (%s)" % (entry.get("by") or "?", entry.get("id") or "ledger"))
+    settings["_overrides"] = overrides
     # A period begins with any applied entry that changes what a score means: a setting (the run length, the
     # job variables) or a change to the frozen code that the person said moves scores.
     period = sum(1 for e in (ledger or []) if e.get("new_period") and e.get("status", "applied") == "applied")
@@ -599,15 +608,84 @@ def confirmed(brief: Dict[str, Any]) -> bool:
     return bool(status.get("confirmed_by")) and status.get("confirmed_digest") == digest(brief)
 
 
-def plan_lines(brief: Dict[str, Any], star: Optional[str] = None, folder: Optional[str] = None) -> List[str]:
+def at_a_glance(settings: Dict[str, Any]) -> List[str]:
+    """What this search will actually do, in a few lines: what is optimised, who writes the designs, which agent
+    roles run, how designs are selected and stopped, and what a later choice changed in an earlier one."""
+    from . import estimate
+    out = []
+    skill = settings.get("_skill")
+    out.append("  Optimising:      %s%s" % (settings["run"]["type"] or "no run type yet",
+                                          ", skill %s" % skill["name"] if skill else ", no skill"))
+    calls = estimate.calls(settings) if settings["budget"]["evaluations"] else {}
+    by = settings["variation"]["settings_by"]
+    moves = {"agent": "an agent", "sampler": "a sampler in code (no agent call)",
+             "tpe": "a Bayesian estimator in code (tpe; no agent call)"}[by]
+    writes = calls.get("writer", (0, 0, 0))[1] > 0
+    if settings["space"]["preset"] == "settings_only":
+        out.append("  Designs:         settings only; every move is made by %s" % moves)
+    else:
+        out.append("  Designs:         written by %s; settings moves by %s" % ("an agent" if writes else "code", moves))
+    backend = settings["agents"]["backend"]
+    active = ["%s (about %d calls)" % (role, round(n[1])) for role, n in calls.items() if n[1] >= 0.5]
+    if backend == "stub":
+        out.append("  Agents:          the stub backend (scripted, no cost)%s" % (
+            "; roles: " + ", ".join(active) if active else "; no role is called"))
+    else:
+        out.append("  Agents:          %s" % (", ".join(active) if active else "none: this search calls no agent"))
+        if active:
+            out.append("  Model:           %s, effort %s" % (settings["agents"]["default_model"], settings["agents"]["effort"]))
+    strat = settings["strategy"]
+    select = strat["mechanism"] + (" on %d islands" % int(strat["islands"]) if int(strat.get("islands") or 1) > 1 else "")
+    if strat["mechanism"] == "pareto":
+        select += " (score and %s)" % (strat.get("second_metric") or "no second figure set")
+    out.append("  Selection:       %s" % select)
+    steps, everyone = rungs(settings)
+    if everyone:
+        out.append("  Early stopping:  a ladder over every design: %s" % ", ".join(
+            "at %d%% keep %d%%" % (round(100 * r["at"]), round(100 * r["keep"])) for r in steps))
+    elif steps[0]["keep"] < 1:
+        out.append("  Early stopping:  new designs screened at %d%%, the best %d%% go on" % (
+            round(100 * steps[0]["at"]), round(100 * steps[0]["keep"])))
+    else:
+        out.append("  Early stopping:  none")
+    money = settings["budget"]["model_dollars"]
+    out.append("  Budget:          %s evaluations of %s %s%s" % (
+        settings["budget"]["evaluations"], settings["evaluation"]["allowance"], settings["evaluation"]["allowance_unit"],
+        "; agents capped at $%s" % money if money not in (None, "") else "; no cap on agent spend"))
+    if settings.get("limits"):
+        out.append("  Limits:          %s (a result that does not report one of these is rejected and the run pauses)" % ", ".join(
+            "%s %s" % (m, " and ".join("%s %g" % (k, v) for k, v in sorted(b.items()))) for m, b in settings["limits"].items()))
+    # A later choice that changed what the skill set, or that the skill changed: the ones worth knowing before a run.
+    told = [o for o in settings.get("_overrides") or [] if o["from"].startswith("skill") or (
+        o["by"].startswith("skill") and o["from"].startswith("autonomy"))]
+    for o in told:
+        if o["from"].startswith("skill"):
+            out.append("  Changed:         %s is %r (%s), not the %r of the %s" % (
+                o["setting"], o["now"], "you set it" if o["by"] == "brief" else o["by"], o["was"], o["from"]))
+        else:
+            out.append("  Kept:            %s stays %r as the %s sets it; the %s asks for %r" % (
+                o["setting"], o["now"], o["by"], o["from"], o["was"]))
+    return out
+
+
+def plan_lines(brief: Dict[str, Any], star: Optional[str] = None, folder: Optional[str] = None,
+               cost: Optional[List[str]] = None) -> List[str]:
+    """The plan: what the search will do at a glance, the warnings, what the agents will cost, and then every
+    setting with the layer its value came from."""
     settings, sources = resolve(brief, folder=folder)
     flat = flatten({k: v for k, v in settings.items() if not k.startswith("_") and k != "notes"})
-    out = ["Plan for: %s" % (settings["objective"]["goal"] or "(no goal yet)"), ""]
+    out = ["Plan for: %s" % (settings["objective"]["goal"] or "(no goal yet)"), "", "At a glance"]
+    out += at_a_glance(settings)
     if settings.get("_skill"):
-        out.append("Skill: %s. %s" % (settings["_skill"]["name"], settings["_skill"]["summary"]))
-        out.append("")
+        out += ["", "Skill: %s. %s" % (settings["_skill"]["name"], settings["_skill"]["summary"])]
+    notes = warnings(settings)
+    if notes:
+        out += ["", "Warnings:"] + ["  - " + note for note in notes]
+    if cost:
+        out += [line for line in cost]
+    out += ["", "Every setting, by where its value came from"]
     if settings["_guidance"]:
-        out.append("Budget guidance used: %s evaluations." % settings["_guidance"])
+        out.append("(budget guidance used: %s evaluations)" % settings["_guidance"])
     groups: Dict[str, List[str]] = {}
     for path in sorted(flat):
         groups.setdefault(sources.get(path, "default"), []).append("  %s = %s" % (path, json.dumps(flat[path], default=str)))
@@ -615,11 +693,6 @@ def plan_lines(brief: Dict[str, Any], star: Optional[str] = None, folder: Option
         out.append("")
         out.append("From the %s:" % source if source != "brief" else "From the brief (what you set):")
         out.extend(groups[source])
-    notes = warnings(settings)
-    if notes:
-        out.append("")
-        out.append("Warnings:")
-        out.extend("  - " + note for note in notes)
     if star:
         out.append("")
         out.append(star)

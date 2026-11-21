@@ -1,168 +1,214 @@
-# evoloop
+---
+hide:
+  - navigation
+  - toc
+---
 
-evoloop improves a project's code by evolutionary search. You mark the parts of the code that may
-change. Language-model agents write new versions of those parts. Code decides what gets tried next,
-runs each design once, keeps the score, and records everything.
+<div class="evo-hero" markdown>
+<div class="evo-hero-text" markdown>
 
-It is built for searches where one evaluation is costly, such as a training run: tens to hundreds of
-evaluations, with scores that differ between two runs of the same design. You can change its course
-while it runs.
+# Optimize the parts of your code you choose.
 
-## The workflow
+Mark the code that may change and supply a scoring function. Agents propose code edits, or a built-in
+optimizer tunes fixed settings. evoloop evaluates the variants within your budget, and records every
+decision so you can steer the search while it runs.
 
-```mermaid
-flowchart LR
-    A["<b>1. Mark the code</b><br>what may change"] --> B["<b>2. Write the adapter</b><br>how one design is scored"]
-    B --> C["<b>3. Answer the questions</b><br>skill, run type, budget"]
-    C --> D["<b>4. Read the plan</b><br>settings, warnings, cost"]
-    D --> E{"<b>5. Confirm</b><br>by name"}
-    E --> F["<b>6. Run</b>"]
-    F --> G["<b>7. Read the results</b><br>report, leaderboard, study file"]
-    F -. "steer, chat, stop" .-> F
-```
+[Run the CPU demo](quickstart.md){ .md-button .md-button--primary }
+[Use my own project](setting-up.md){ .md-button }
 
-??? note "1. Mark the code"
-    `evoloop init mysearch --source path/to/project` copies your project into a search folder. In the
-    copy, you put markers around the parts that may change:
+The demo runs locally with scripted proposals: no API key, no GPU, under a minute.
+{ .evo-fine }
 
-    ```python
-    # EVOLVE-BLOCK-START name=trunk kind=structure role=trunk
-    ...the code of the trunk...
-    # EVOLVE-BLOCK-END
-    ```
+</div>
+<div class="evo-hero-figure" markdown>
 
-    Everything outside the markers is frozen and checked on every start. Your original project is never
-    touched. Details: [Setting up a search](setting-up.md).
+**Fitting a formula to data** · the CPU demo, a budget of 24 evaluations
+{ .evo-caption }
 
-??? note "2. Write the adapter"
-    `adapter/run.py` runs one design and writes `result.json` with its score. It can also report a
-    size, a speed, where the errors fall, and progress lines that let weak designs be stopped early.
-    Details: [The project's code](project-contract.md).
+<div class="evo-chart">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 320" role="img" aria-label="Validation score of each design in the CPU demo, and the best so far, over 25 scored runs">
+<rect width="640" height="320" rx="8" fill="var(--evo-surface)"/>
+<line x1="64" y1="274.0" x2="508" y2="274.0" stroke="var(--evo-grid)" stroke-width="1"/>
+<text x="56" y="278.0" text-anchor="end" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="var(--evo-soft)">0.01</text>
+<line x1="64" y1="210.0" x2="508" y2="210.0" stroke="var(--evo-grid)" stroke-width="1"/>
+<text x="56" y="214.0" text-anchor="end" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="var(--evo-soft)">0.1</text>
+<line x1="64" y1="146.0" x2="508" y2="146.0" stroke="var(--evo-grid)" stroke-width="1"/>
+<text x="56" y="150.0" text-anchor="end" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="var(--evo-soft)">1</text>
+<line x1="64" y1="82.0" x2="508" y2="82.0" stroke="var(--evo-grid)" stroke-width="1"/>
+<text x="56" y="86.0" text-anchor="end" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="var(--evo-soft)">10</text>
+<line x1="64" y1="18.0" x2="508" y2="18.0" stroke="var(--evo-grid)" stroke-width="1"/>
+<text x="56" y="22.0" text-anchor="end" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="var(--evo-soft)">100</text>
+<text x="64.0" y="292" text-anchor="middle" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="var(--evo-soft)">1</text>
+<text x="138.0" y="292" text-anchor="middle" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="var(--evo-soft)">5</text>
+<text x="212.0" y="292" text-anchor="middle" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="var(--evo-soft)">9</text>
+<text x="286.0" y="292" text-anchor="middle" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="var(--evo-soft)">13</text>
+<text x="360.0" y="292" text-anchor="middle" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="var(--evo-soft)">17</text>
+<text x="434.0" y="292" text-anchor="middle" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="var(--evo-soft)">21</text>
+<text x="508.0" y="292" text-anchor="middle" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="var(--evo-soft)">25</text>
+<text x="286.0" y="312" text-anchor="middle" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="var(--evo-soft)">Scored run</text>
+<text transform="translate(16 146.0) rotate(-90)" text-anchor="middle" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="var(--evo-soft)">Validation score (log scale; lower is better)</text>
+<line x1="64" y1="68.6" x2="508" y2="68.6" stroke="var(--evo-soft)" stroke-width="1.5" stroke-dasharray="5 4"/>
+<text x="518" y="66.6" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="var(--evo-soft)">Baseline</text>
+<text x="518" y="83.6" font-size="15" font-weight="600" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="var(--evo-ink)">16.19</text>
+<path d="M64.0 68.6 H82.5 V76.2 H101.0 V77.3 H156.5 V77.3 H175.0 V267.9 H230.5 V267.9 H508.0" fill="none" stroke="var(--evo-series)" stroke-width="2" stroke-linejoin="round"/>
+<circle cx="64.0" cy="68.6" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>C1 (R1): 16.19, the baseline</title></circle>
+<circle cx="64.0" cy="68.6" r="10" fill="transparent"><title>C1 (R1): 16.19, the baseline</title></circle>
+<circle cx="82.5" cy="76.2" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>C2 (R2): 12.31, new_approach</title></circle>
+<circle cx="82.5" cy="76.2" r="10" fill="transparent"><title>C2 (R2): 12.31, new_approach</title></circle>
+<circle cx="101.0" cy="77.3" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>C3 (R3): 11.83, new_approach</title></circle>
+<circle cx="101.0" cy="77.3" r="10" fill="transparent"><title>C3 (R3): 11.83, new_approach</title></circle>
+<circle cx="119.5" cy="68.6" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>C4 (R4): 16.2, structural_change</title></circle>
+<circle cx="119.5" cy="68.6" r="10" fill="transparent"><title>C4 (R4): 16.2, structural_change</title></circle>
+<circle cx="138.0" cy="76.2" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>C5 (R5): 12.33, new_approach</title></circle>
+<circle cx="138.0" cy="76.2" r="10" fill="transparent"><title>C5 (R5): 12.33, new_approach</title></circle>
+<circle cx="156.5" cy="77.3" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>C6 (R6): 11.83, settings_move</title></circle>
+<circle cx="156.5" cy="77.3" r="10" fill="transparent"><title>C6 (R6): 11.83, settings_move</title></circle>
+<circle cx="175.0" cy="267.9" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>C7 (R7): 0.01247, new_approach</title></circle>
+<circle cx="175.0" cy="267.9" r="10" fill="transparent"><title>C7 (R7): 0.01247, new_approach</title></circle>
+<circle cx="193.5" cy="76.2" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>C8 (R8): 12.31, structural_change</title></circle>
+<circle cx="193.5" cy="76.2" r="10" fill="transparent"><title>C8 (R8): 12.31, structural_change</title></circle>
+<circle cx="212.0" cy="77.4" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>C9 (R9): 11.81, new_approach</title></circle>
+<circle cx="212.0" cy="77.4" r="10" fill="transparent"><title>C9 (R9): 11.81, new_approach</title></circle>
+<circle cx="230.5" cy="267.9" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>C10 (R10): 0.01247, ablation</title></circle>
+<circle cx="230.5" cy="267.9" r="10" fill="transparent"><title>C10 (R10): 0.01247, ablation</title></circle>
+<circle cx="249.0" cy="76.9" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>C11 (R11): 12.02, new_approach</title></circle>
+<circle cx="249.0" cy="76.9" r="10" fill="transparent"><title>C11 (R11): 12.02, new_approach</title></circle>
+<circle cx="267.5" cy="79.2" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>C12 (R12): 11.07, new_approach</title></circle>
+<circle cx="267.5" cy="79.2" r="10" fill="transparent"><title>C12 (R12): 11.07, new_approach</title></circle>
+<circle cx="286.0" cy="264.4" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>C13 (R13): 0.01414, settings_move</title></circle>
+<circle cx="286.0" cy="264.4" r="10" fill="transparent"><title>C13 (R13): 0.01414, settings_move</title></circle>
+<circle cx="304.5" cy="76.2" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>C14 (R14): 12.31, new_approach</title></circle>
+<circle cx="304.5" cy="76.2" r="10" fill="transparent"><title>C14 (R14): 12.31, new_approach</title></circle>
+<circle cx="323.0" cy="76.0" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>C15 (R15): 12.41, structural_change</title></circle>
+<circle cx="323.0" cy="76.0" r="10" fill="transparent"><title>C15 (R15): 12.41, structural_change</title></circle>
+<circle cx="341.5" cy="77.4" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>C16 (R16): 11.82, new_approach</title></circle>
+<circle cx="341.5" cy="77.4" r="10" fill="transparent"><title>C16 (R16): 11.82, new_approach</title></circle>
+<circle cx="360.0" cy="75.9" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>C17 (R17): 12.47, structural_change</title></circle>
+<circle cx="360.0" cy="75.9" r="10" fill="transparent"><title>C17 (R17): 12.47, structural_change</title></circle>
+<circle cx="378.5" cy="79.2" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>C18 (R18): 11.07, settings_move</title></circle>
+<circle cx="378.5" cy="79.2" r="10" fill="transparent"><title>C18 (R18): 11.07, settings_move</title></circle>
+<circle cx="397.0" cy="267.9" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>C19 (R19): 0.01247, settings_move</title></circle>
+<circle cx="397.0" cy="267.9" r="10" fill="transparent"><title>C19 (R19): 0.01247, settings_move</title></circle>
+<circle cx="415.5" cy="79.2" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>C20 (R20): 11.07, structural_change</title></circle>
+<circle cx="415.5" cy="79.2" r="10" fill="transparent"><title>C20 (R20): 11.07, structural_change</title></circle>
+<circle cx="434.0" cy="75.8" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>C21 (R21): 12.5, structural_change</title></circle>
+<circle cx="434.0" cy="75.8" r="10" fill="transparent"><title>C21 (R21): 12.5, structural_change</title></circle>
+<circle cx="452.5" cy="77.3" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>C22 (R22): 11.85, new_approach</title></circle>
+<circle cx="452.5" cy="77.3" r="10" fill="transparent"><title>C22 (R22): 11.85, new_approach</title></circle>
+<circle cx="471.0" cy="75.8" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>C10 (R23): 12.5, a re-check of the leader on a new seed</title></circle>
+<circle cx="471.0" cy="75.8" r="10" fill="transparent"><title>C10 (R23): 12.5, a re-check of the leader on a new seed</title></circle>
+<circle cx="489.5" cy="77.3" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>C23 (R24): 11.82, graft</title></circle>
+<circle cx="489.5" cy="77.3" r="10" fill="transparent"><title>C23 (R24): 11.82, graft</title></circle>
+<circle cx="508.0" cy="79.2" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>C24 (R25): 11.08, new_approach</title></circle>
+<circle cx="508.0" cy="79.2" r="10" fill="transparent"><title>C24 (R25): 11.08, new_approach</title></circle>
+<circle cx="508.0" cy="267.9" r="5" fill="var(--evo-series)" stroke="var(--evo-surface)" stroke-width="2"/>
+<text x="518" y="259.9" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="var(--evo-soft)">Selected</text>
+<text x="518" y="276.9" font-size="15" font-weight="600" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="var(--evo-ink)">0.01247</text>
+<circle cx="74" cy="28" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"/>
+<text x="84" y="32" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="var(--evo-soft)">each design</text>
+<line x1="166" y1="28" x2="186" y2="28" stroke="var(--evo-series)" stroke-width="2"/>
+<text x="192" y="32" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="var(--evo-soft)">best so far</text>
+</svg>
+</div>
 
-??? note "3. Answer the questions"
-    One question at a time, with choices and a suggested answer where there is evidence for one: in a
-    terminal (`evoloop setup`), in a browser form (`evoloop form`), or with an agent in a chat. Two
-    answers decide most of the rest: the [skill](skills.md) (what kind of problem this is) and the run
-    type (how to search).
+Scripted proposals stand in for a model here: this shows the machinery, not what an agent can find.
+[Reproduce it](quickstart.md)
+{ .evo-fine }
 
-??? note "4. Read the plan"
-    `evoloop plan mysearch` shows every setting and where its value came from, warnings about
-    combinations that work against each other, and an estimate of what the agents will cost.
+</div>
+</div>
 
-??? note "5. Confirm"
-    `evoloop brief mysearch --confirm "Your Name"`. Nothing runs before this. The skills you chose are
-    copied into the search folder, where you can edit them.
+## How a search runs
 
-??? note "6. Run, and steer"
-    `evoloop run mysearch --name r1`, on your machine or with one Slurm job per design. While it runs you
-    can change settings, add notes for the agents, order particular moves, switch skills, or talk to the
-    agent that runs the search. Every change is checked and recorded. Details:
-    [Steering a run](steering.md).
+<div class="grid cards" markdown>
 
-??? note "7. Read the results"
-    A report with the leaderboard, what each kind of move returned and what waits for you; every design
-    with its code and history; a ledger of every change; a scorecard of the agents; and a study file in
-    the CAMEO entry format. Details: [Records and the study file](records.md).
+-   **1. Define the experiment**
 
-## What happens for each design
+    ---
 
-```mermaid
-flowchart TD
-    You["You<br>brief and steering"] --> Ledger[("Ledger<br>every change, by whom")]
-    Ledger --> Slot["A job slot is free"]
-    Slot --> Schedule["<b>Schedule</b>: which kind of slot?<br>new · novel · cross · local"]
-    Schedule --> Strategy["<b>Strategy</b>: which parents?<br>worked out from the results"]
-    Strategy --> Writer["<b>Writer</b>: an agent, or code,<br>writes the blocks"]
-    Writer --> Checks{"<b>Checks</b> by code<br>only open blocks · parses<br>not a copy · within limits"}
-    Checks -- refused --> Writer
-    Checks -- ok --> Job["<b>Job</b>: run and score it once"]
-    Job --> Records[("Records<br>models, recipes, runs")]
-    Records --> Slot
-    Records --> Out["Report · scorecard · study file"]
-```
+    Mark the blocks that may change, tell evoloop how to score one design, and read the plan before
+    anything runs.
 
-Three rules hold everywhere:
+    [Use my own project](setting-up.md)
 
-- **Agents write and judge; code decides and records.** Whatever an agent returns is checked by code
-  before it counts. The budget, the limits and the frozen code are enforced by code, never by a prompt.
-- **Agents never talk to each other.** Each call is a fresh context built from the run's records, so a
-  search can stop, restart, or change its agents at any point.
-- **A guess is only ever a suggestion.** The tool proposes answers with reasons; you see every one and
-  can change it.
+-   **2. Run and steer**
 
-## The two choices that decide most of the rest
+    ---
 
-| Choice | It says | Options |
-|---|---|---|
-| **Skill** (`run.skill`) | what kind of problem this is | a [library](skill-library.md) of templates you can edit, combine and add to |
-| **Run type** (`run.type`) | how to search | `explore_then_exploit`, `refine`, `survey`, `discovery`, `settings_only`, `custom` |
+    The search proposes and evaluates changes, one job per design. Adjust its direction as results
+    arrive; every change is recorded.
 
-??? note "The skills"
-    | Skill | For |
-    |---|---|
-    | `model-performance` | the best score, nothing else weighed |
-    | `model-distillation` | a smaller or faster student that matches a teacher |
-    | `model-efficiency` | the same score at a lower cost in parameters or time |
-    | `model-size-frontier` | the best model at every size or speed across a broad range |
-    | `model-training-recipe` | a better score from the same architecture, by training it better |
-    | `model-ensemble-members` | a set of strong models whose errors do not coincide |
-    | `model-finetuning` | the best score on a task starting from a pretrained model |
-    | `model-mechanistic` | a better fit without losing what the parameters mean |
-    | `settings-tuning` | the best values for the settings of fixed code, by a Bayesian estimator, with no agent calls |
-    | `algorithm-runtime` | the same results in less time or memory |
-    | `bioinformatics-algorithm` | better accuracy against a truth set, at an acceptable run time |
-    | `data-pipeline` | the same output from a pipeline in less time, memory or cost |
+    [Steering a run](steering.md)
 
-    A skill sets what suits the task, gives each agent guidance for its role, and says what your adapter
-    must report. Skills can be combined (`run.skill: [model-distillation, model-size-frontier]`).
-    [Skills](skills.md) explains them; the [skill library](skill-library.md) shows each in full.
+-   **3. Compare the designs**
 
-??? note "The run types"
-    | Run type | For | Shares of new designs, crossover, local moves |
-    |---|---|---|
-    | `explore_then_exploit` | most searches | 65 / 10 / 25 for the first 60% of the budget, then 15 / 25 / 60 |
-    | `refine` | a known good model | 10 / 20 / 70 throughout; few families |
-    | `survey` | a new problem | 75 / 10 / 15 throughout; each kind of design kept in play |
-    | `discovery` | long runs with cheap evaluations | novelty high, the lightest harness |
-    | `settings_only` | a hyperparameter search | every slot is a settings move |
-    | `custom` | your own description | where you set nothing, the guidance for the budget and the defaults |
+    ---
 
-    The [menu](menu.md) lists exactly what each sets.
+    Open the leaderboard, inspect the selected design's code and history, and export a CAMEO study
+    file.
 
-## How a choice changes what the search does
+    [What a run leaves behind](records.md)
 
-Every choice moves the search along a few axes. This is the short version;
-[How each choice changes the search](choices.md) goes through all of them.
+</div>
 
-| If you want | Change | Effect |
-|---|---|---|
-| more exploration | the share of new designs in `schedule.phases`; `schedule.novelty` up; `survey` | more families tried, each less deeply |
-| more exploitation | the share of local moves up; `refine`; `strategy.mechanism: greedy` | the leader improved faster, at the risk of a local optimum |
-| different kinds of design kept alive | `strategy.mechanism: archive` or `lineage`; islands | a design that is different but behind stays in play |
-| two goals at once | `strategy.mechanism: pareto` with `strategy.second_metric` | a trade-off front instead of one winner |
-| more designs for the same compute | `evaluation.ladder` | weak designs stopped early; slow starters can be lost |
-| a lower agent bill | `harness.level: minimal`; a cheaper model; `variation.settings_by: tpe` | fewer or cheaper calls, less judgement |
-| more judgement from the agents | `harness.autonomy: agentic`; `strategist.mode: act`; `harness.conductor: agent` | the course adapts to the results, within bounds you set |
+## What do you want to optimize?
 
-## Where each setting's value comes from
+Each goal is a different search. Its guide gives a starting configuration, why it fits, what your
+evaluator must report, and how to read the result.
 
-```mermaid
-flowchart LR
-    D["Defaults"] --> G["Guidance for<br>the size of the budget"] --> R["Run type"] --> S["Skill"] --> A["Autonomy"] --> B["Your brief"] --> L["Your changes<br>during the run"]
-```
+<div class="grid cards" markdown>
 
-A later layer wins over an earlier one, so what you set yourself always stands. `evoloop plan` prints
-every setting with the layer it came from.
+-   [**Tune hyperparameters**](guides/settings-tuning.md)
 
-## Where to go next
+    Numbers only, by a Bayesian estimator. No agent calls.
 
-| To | Read |
-|---|---|
-| see it work, at no cost | [First run](quickstart.md) |
-| set up your own search | [Setting up a search](setting-up.md), [Skills](skills.md), [The project's code](project-contract.md) |
-| decide between options | [How each choice changes the search](choices.md), [Menu of choices and presets](menu.md) |
-| understand the mechanisms | [How a search works](how-it-works.md), [How it compares with established methods](compared.md) |
-| run and steer | [Steering a run](steering.md), [The strategist and the budget](strategist.md), [Commands](commands.md) |
-| choose models and autonomy | [Model and effort](models.md), [Agentic or harnessed, and what it costs](autonomy.md) |
-| check the agents and the results | [Auditing the agents](auditing.md), [Records and the study file](records.md) |
-| know what is proven | [Status and limits](status.md) |
+-   [**Improve a model's score**](guides/model-performance.md)
+
+    The architecture is open; one number to raise.
+
+-   [**Train a fixed architecture better**](guides/model-training-recipe.md)
+
+    The loss, optimizer, schedule and augmentation.
+
+-   [**Find a smaller or faster model**](guides/model-efficiency.md)
+
+    One cheaper model at about the same score.
+
+-   [**Find the best model at several sizes**](guides/model-size-frontier.md)
+
+    A whole trade-off curve to choose from.
+
+-   [**Distil a student from a teacher**](guides/model-distillation.md)
+
+    A small model that keeps a large one's accuracy.
+
+-   [**Make an algorithm or pipeline faster**](guides/algorithm-runtime.md)
+
+    The same output, in less time or memory.
+
+-   [**All optimization guides**](guides/index.md)
+
+    Ensembles, fine-tuning, interpretable models, bioinformatics methods.
+
+</div>
+
+## What it has been shown to do
+
+evoloop passes its tests on the built-in demo with scripted proposals, and has run that demo on a Slurm
+cluster. It has **not** yet been run with a real model on a real training task, and no comparison of
+its search settings has been made. The guides give reasoned starting points, not measured ones.
+[Status and limits](status.md) says exactly what has been run.
+
+<div class="grid cards" markdown>
+
+-   **Understand it**
+
+    [How a search works](how-it-works.md) · [How each choice changes the search](choices.md) ·
+    [How it compares with established methods](compared.md)
+
+-   **Look something up**
+
+    [Commands](commands.md) · [Fields of the brief](fields.md) · [The evaluator contract](project-contract.md) ·
+    [Skill library](skill-library.md)
+
+</div>

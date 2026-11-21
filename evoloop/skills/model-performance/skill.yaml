@@ -54,3 +54,22 @@ needs:
   references: []
 combines: [model-training-recipe]
 conflicts: [settings-tuning]
+goal: Improve a model's score
+start:
+  run_type: explore_then_exploit
+  evaluations: 100
+why: >
+  With the architecture open and one number to raise, the search should spend its first evaluations finding out
+  which kinds of design work, then concentrate on the best. That is the explore-then-exploit schedule, with
+  families of designs kept alive side by side so that an early leader does not crowd out a slower starter.
+reading: >
+  Read the leaderboard for the best design and its family, then "What each mode returned" to see whether new
+  designs or local work produced the gains. A leader with a single fit is a candidate, not a result: fit it
+  again on new seeds, and on the held-out set, before reporting it.
+instead:
+  - if: the model must also be smaller or faster
+    use: model-efficiency
+  - if: the architecture must stay as it is
+    use: model-training-recipe
+  - if: only numbers (learning rate, widths) should change
+    use: settings-tuning

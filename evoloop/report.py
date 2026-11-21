@@ -11,18 +11,27 @@ from .store import ENDED, Store, View, write_json
 
 
 def leaderboard(view: View, limit: int = 15, columns: Optional[List[str]] = None,
-                references: Optional[List[Dict[str, Any]]] = None) -> List[Dict[str, Any]]:
+                references: Optional[List[Dict[str, Any]]] = None, allowance: Any = None) -> List[Dict[str, Any]]:
     """The best designs by validation score, with the baseline always shown, and the reference rows the person
-    added (other models to compare with: never part of the search, and marked as such). `columns` names further
-    figures: valid.<metric>, test.<metric>, speed, best_epoch, epochs_run."""
-    rows = []
-    ranked = view.scored()
-    shown = ranked[:limit] + [c for c in ranked[limit:] if view.run_of(c["id"]).get("purpose") == "baseline"]
-    for cand in shown:
+    added (other models to compare with: never part of the search, and marked as such). Every row says how its
+    score was reached: `state` is `full` for a fit of the whole run length (`length`), or `stopped at N%` for one
+    stopped part way. Designs with only part-way scores are listed after the ranked ones, as provisional: they
+    are not ranked with full-length fits. `columns` names further figures: valid.<metric>, test.<metric>, speed,
+    best_epoch, epochs_run."""
+    def row_of(cand: Dict[str, Any], score: Any, kind: str) -> Dict[str, Any]:
         run = view.run_of(cand["id"])
         perf = run["performance"]
-        row = {"kind": "baseline" if run.get("purpose") == "baseline" else "design", "model": cand["id"], "lineage": cand["lineage"],
-               "family": cand["family"], "score": view.display(cand["value"]), "fits": len(cand["values"])}
+        cut = run.get("screened") if isinstance(run.get("screened"), dict) else None
+        length = run.get("allowance") or allowance
+        if kind == "provisional":
+            share = cut.get("share") if cut else None
+            state = "stopped at %d%%" % round(100 * float(share)) if isinstance(share, (int, float)) else "stopped early"
+            length = cut.get("at") if cut and cut.get("at") is not None else None
+        else:
+            state = "full"
+        row = {"kind": kind, "model": cand["id"], "lineage": cand["lineage"], "family": cand["family"],
+               "score": view.display(score), "state": state, "length": length,
+               "fits": len(cand["values"]) or len(cand.get("partial") or [])}
         for column in columns or []:
             part, _, name = column.partition(".")
             if part in ("valid", "test"):
@@ -32,15 +41,25 @@ def leaderboard(view: View, limit: int = 15, columns: Optional[List[str]] = None
             else:
                 row[column] = perf.get(column)
         row.update(parameters=perf.get("parameters"), minutes=perf.get("training_minutes"))
-        rows.append(row)
+        return row
+
+    def by_score(row: Dict[str, Any]) -> float:
+        return -view.sign * float(row["score"]) if isinstance(row.get("score"), (int, float)) else float("inf")
+    ranked = view.scored()
+    shown = ranked[:limit] + [c for c in ranked[limit:] if view.run_of(c["id"]).get("purpose") == "baseline"]
+    rows = [row_of(c, c["value"], "baseline" if view.run_of(c["id"]).get("purpose") == "baseline" else "design") for c in shown]
     for ref in references or []:
-        row = {"kind": "reference", "model": ref.get("label"), "lineage": None, "family": ref.get("note"), "score": ref.get("score"), "fits": None}
+        row = {"kind": "reference", "model": ref.get("label"), "lineage": None, "family": ref.get("note"), "score": ref.get("score"),
+               "state": "as given", "length": None, "fits": None}
         for column in columns or []:
             part, _, name = column.partition(".")
             row[column] = (ref.get(part) or {}).get(name) if part in ("valid", "test") else None
         row.update(parameters=ref.get("parameters"), minutes=None)
         rows.append(row)
-    return sorted(rows, key=lambda r: -view.sign * float(r["score"]) if isinstance(r.get("score"), (int, float)) else float("inf"))
+    rows = sorted(rows, key=by_score)
+    stopped = [c for c in view.cands.values() if c.get("provisional") is not None]
+    rows += sorted((row_of(c, c["provisional"], "provisional") for c in stopped), key=by_score)[:max(0, limit - len(shown)) or 5]
+    return rows
 
 
 def snapshot(controller: Any, view: View, reason: Optional[str] = None) -> Dict[str, Any]:
@@ -101,7 +120,10 @@ def lines(controller: Any, view: View, reason: Optional[str] = None) -> List[str
     if snap["best"]:
         out.append("Best: %s (%s), score %.6g." % (snap["best"]["candidate"], snap["best"]["family"], snap["best"]["score"]))
     out += ["", "## Leaderboard (validation)", ""] + table(leaderboard(view, int(settings["report"]["top"]), settings["report"]["columns"],
-                                                                         store.read("references")))
+                                                                         store.read("references"),
+                                                                         allowance=settings["evaluation"]["allowance"]))
+    out += ["", "`state` says how a score was reached: `full` is a fit of the whole run length; a design stopped part way "
+            "is listed last as provisional and is not ranked with full-length fits.", ""]
     out += ["", "## Population (%s)" % settings["strategy"]["mechanism"], ""]
     population = strategies.make(settings).population(view, settings)
     out += table([{k: v for k, v in row.items() if not isinstance(v, (list, dict)) or k in ("parents", "cell")}

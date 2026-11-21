@@ -28,6 +28,7 @@ the person asking, which is recorded in the ledger, and an optional `--reason`.
 | `evoloop skills NAME` | one skill in full |
 | `evoloop skills NAME --copy DIR` | a skill written out as a folder to edit |
 | `evoloop skills --json` | the library as records, for a listing or a website |
+| `evoloop skills --guides DIR` | writes a guide page for every skill (the documentation's optimization guides) |
 | `evoloop estimate <dir> [--name N]` | what the agents are likely to cost, at each level of autonomy; with `--name`, projected from a run's own calls |
 
 ## Running

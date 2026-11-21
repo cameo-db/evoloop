@@ -124,12 +124,16 @@ class View:
         self.cands: Dict[str, Dict[str, Any]] = {}
         for run in sorted(runs.values(), key=order):
             key = run.get("candidate") or run["id"]
-            cand = self.cands.setdefault(key, {"id": key, "runs": [], "values": [], "first": run})
+            cand = self.cands.setdefault(key, {"id": key, "runs": [], "values": [], "partial": [], "first": run})
             cand["runs"].append(run["id"])
             if self.counts(run):
-                cand["values"].append(self.sign * float(run["performance"]["score"]))
+                # A run stopped part way has a score for the part it ran. It is kept, and shown as provisional, but it
+                # does not rank the design beside full-length fits or make it a parent.
+                part = run["performance"].get("status") == "stopped_early"
+                cand["partial" if part else "values"].append(self.sign * float(run["performance"]["score"]))
         for cand in self.cands.values():
             cand["value"] = sum(cand["values"]) / len(cand["values"]) if cand["values"] else None
+            cand["provisional"] = sum(cand["partial"]) / len(cand["partial"]) if cand["partial"] and not cand["values"] else None
             first = cand["first"]
             cand.update(lineage=first["history"].get("lineage"), model=first.get("model"), recipe=first.get("recipe"),
                         family=(models.get(first.get("model")) or {}).get("family"),

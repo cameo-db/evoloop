@@ -62,3 +62,17 @@ needs:
   references: ["the original method"]
 combines: [algorithm-runtime]
 conflicts: [settings-tuning]
+goal: Improve a bioinformatics method
+start:
+  run_type: explore_then_exploit
+  evaluations: 100
+why: >
+  The method is scored against a truth set, and the writers are told what makes this kind of code different:
+  coordinate, strand and format conventions that must not change, and gains that must hold across datasets and
+  not on one.
+reading: >
+  Read precision and recall separately, and by dataset. A gain made by trading one for the other is a moved
+  threshold, not a better method. Confirm the winner on the dataset the search never saw.
+instead:
+  - if: the method is right and only slow
+    use: algorithm-runtime

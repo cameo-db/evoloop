@@ -194,6 +194,8 @@ schedule.novelty = 0.3
 
 ```
 audit.reviews = "none"
+harness.conductor = "code"
+harness.coordinator = "code"
 harness.level = "minimal"
 schedule.local_mix = {"edit": 0.0, "settings": 1.0, "ablation": 0.0}
 schedule.novel_share = 0.0

@@ -63,3 +63,22 @@ needs:
   references: ["the original code"]
 combines: [data-pipeline, bioinformatics-algorithm]
 conflicts: [settings-tuning]
+goal: Make an algorithm faster
+start:
+  run_type: explore_then_exploit
+  evaluations: 80
+  brief:
+    objective: {direction: minimize}
+why: >
+  The score is a measured time and the output must not change, so the benchmark rejects any design whose output
+  differs. Early stopping is off, because a timing is not a curve. The largest gains come from a different
+  algorithm, so the first half of the budget explores.
+reading: >
+  Read the best design's time against the reference row for the original code, and count the designs rejected
+  for a wrong output. Then run the winner on the inputs the search never saw: a gain that does not hold there
+  was fitted to the benchmark.
+instead:
+  - if: the method's accuracy, not its speed, is the goal
+    use: bioinformatics-algorithm
+  - if: the cost is spread over several steps of a pipeline
+    use: data-pipeline

@@ -131,6 +131,10 @@ on `examples_per_s` from its inference speed.
 evoloop set mysearch --name r1 'limits={"parameters": {"max": 20000000}, "examples_per_s": {"min": 500}}' --by "Your Name"
 ```
 
+- **A limit must be measurable.** If a result does not report a figure that a limit names, the design is rejected
+  and the run comes to rest as paused, saying which figure is missing. Make the adapter report it, or remove the
+  limit, and continue the run. A limit is never skipped because its figure is absent. (Progress lines may lack
+  it: only the final result must carry it.)
 - A design outside a limit is **rejected**: it gets no score and is not charged, up to
   `budget.max_uncounted_rejections` (50); it is not a failure and does not count toward a stall.
 - A run whose progress lines already show it outside a limit is stopped there, not trained to the end.

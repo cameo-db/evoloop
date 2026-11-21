@@ -122,3 +122,15 @@ Starting points for common aims. Each is a few lines of the brief.
 | the cheapest possible tuning | `run.skill: settings-tuning`, `space.ranges`, `evaluation.ladder` |
 | many designs on a tight compute budget | `evaluation.ladder`, `harness.level: minimal`, a cheaper writer model |
 | a search you want to talk to | `harness.conductor: agent`, `strategist.mode: advise` |
+
+## Where each setting's value comes from
+
+```mermaid
+flowchart LR
+    D["Defaults"] --> G["Guidance for<br>the size of the budget"] --> R["Run type"] --> A["Autonomy"] --> S["Skill"] --> B["Your brief"] --> L["Your changes<br>during the run"]
+```
+
+A later layer wins over an earlier one. The skill comes after the run type and the level of autonomy
+because it knows the problem: a skill that searches without agents stays without agents whatever level
+of autonomy is chosen. What you set yourself always stands. `evoloop plan` leads with what the search
+will actually do and says where one choice overrode another.

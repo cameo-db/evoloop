@@ -336,3 +336,25 @@ def test_the_library_can_be_listed_searched_and_read_by_a_program(tmp_path, caps
     with open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "docs", "skill-library.md"),
               encoding="utf-8") as handle:
         assert handle.read() == page, "docs/skill-library.md is stale: regenerate it with `evoloop skills --markdown`"
+
+
+def test_every_goal_has_a_guide_that_matches_its_skill(tmp_path):
+    root = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "docs", "guides")
+    written = skill.write_guides(str(tmp_path))
+    assert written == sorted(["index.md"] + ["%s.md" % name for name in skill.names()])
+    for page in written:
+        with open(os.path.join(str(tmp_path), page), encoding="utf-8") as fresh, open(os.path.join(root, page), encoding="utf-8") as kept:
+            assert kept.read() == fresh.read(), "docs/guides/%s is stale: regenerate with `evoloop skills --guides docs/guides`" % page
+    for name in skill.names():
+        one = skill.load(name)[0]
+        assert one["goal"] and one["why"] and one["reading"] and one["start"].get("run_type") in form.RUN_TYPES, name
+        assert all(n in skill.names() for row in one["instead"] for n in skill.wanted(row["use"])), name
+        page = skill.guide_markdown(name)
+        for part in ("## Start here", "skill: %s" % name, "## Why this set-up", "## What your evaluator must report",
+                     "## Reading the result", "## What the agents are told"):
+            assert part in page, (name, part)
+    index = skill.guides_index_markdown()
+    assert all("(%s.md)" % name in index for name in skill.names())
+    with open(os.path.join(os.path.dirname(root), "..", "mkdocs.yml"), encoding="utf-8") as handle:
+        nav = handle.read()
+    assert all("guides/%s.md" % name in nav for name in skill.names())            # every guide can be reached

@@ -52,7 +52,7 @@ import yaml
 HERE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "skills")
 ROLES = ("all", "writer", "analyst", "strategist", "coordinator", "conductor")
 FIELDS = ("name", "title", "summary", "domain", "objective", "tags", "version", "authors", "when", "settings",
-          "guidance", "diagnose", "stages", "needs", "combines", "conflicts")
+          "guidance", "diagnose", "stages", "needs", "combines", "conflicts", "goal", "start", "why", "reading", "instead")
 # The first skills had short names; a brief that uses one still works.
 ALIASES = {"performance": "model-performance", "distillation": "model-distillation", "tuning": "settings-tuning",
            "efficiency": "model-efficiency", "mechanistic": "model-mechanistic"}
@@ -139,6 +139,12 @@ def check(raw: Any) -> Optional[str]:
     stages = raw.get("stages") or {}
     if not isinstance(stages, dict) or set(stages) - {"early", "late"} or not all(isinstance(v, str) for v in stages.values()):
         return "stages must map early and late to text"
+    start = raw.get("start") or {}
+    if not isinstance(start, dict) or set(start) - {"run_type", "evaluations", "brief"} or not isinstance(start.get("brief") or {}, dict):
+        return "start must give run_type, evaluations and, if wanted, brief (further lines of a starting brief)"
+    instead = raw.get("instead") or []
+    if not isinstance(instead, list) or not all(isinstance(d, dict) and set(d) == {"if", "use"} for d in instead):
+        return "instead must be a list of {if: the situation, use: the skill to choose}"
     for key in ("tags", "authors", "combines", "conflicts"):
         if not isinstance(raw.get(key) or [], list) or not all(isinstance(x, str) for x in raw.get(key) or []):
             return "%s must be a list of text" % key
@@ -180,6 +186,9 @@ def load(name: Any, folder: Optional[str] = None) -> Tuple[Optional[Dict[str, An
                 "diagnose": [{"see": d["see"].strip(), "do": d["do"].strip()} for d in raw.get("diagnose") or []],
                 "stages": {k: v.strip() for k, v in (raw.get("stages") or {}).items() if v.strip()},
                 "needs": {k: list(needs.get(k) or []) for k in ("adapter", "figures", "references")},
+                "goal": str(raw.get("goal") or raw.get("title") or label), "start": raw.get("start") or {},
+                "why": " ".join(str(raw.get("why") or "").split()), "reading": " ".join(str(raw.get("reading") or "").split()),
+                "instead": [{"if": str(d["if"]), "use": str(d["use"])} for d in raw.get("instead") or []],
                 "combines": [ALIASES.get(n, n) for n in raw.get("combines") or []],
                 "conflicts": [ALIASES.get(n, n) for n in raw.get("conflicts") or []]}, None)
     _cache[file] = (stamp, out)
@@ -365,3 +374,129 @@ def library_markdown() -> str:
                 out += ["| %s | %s |" % (d["see"].replace("|", "\\|"), d["do"].replace("|", "\\|")) for d in one["diagnose"]]
                 out.append("")
     return "\n".join(out).rstrip() + "\n"
+
+
+def _cell(text: str) -> str:
+    return " ".join(str(text).split()).replace("|", "\\|")
+
+def _brief(tree: Dict[str, Any], indent: int = 0) -> str:
+    """A piece of a brief as it would be written by hand: sections as blocks, lists on one line."""
+    out = []
+    for key, value in tree.items():
+        name = key if re.fullmatch(r"[A-Za-z_][\w]*", str(key)) else '"%s"' % key
+        if isinstance(value, dict) and value:
+            out.append("%s%s:" % ("  " * indent, name))
+            out.append(_brief(value, indent + 1))
+        else:
+            shown = yaml.safe_dump(value, default_flow_style=True).strip().replace("\n...", "")
+            if isinstance(value, list):
+                shown = "[%s]" % ", ".join("%g" % v if isinstance(v, float) else str(v) for v in value)
+            out.append("%s%s: %s" % ("  " * indent, name, shown))
+    return "\n".join(out)
+
+
+
+def guide_markdown(name: str) -> str:
+    """One optimisation goal as a practical page: where to start, why, what the evaluator must report, when to
+    choose something else, and how to read the result. Written from the skill's own file."""
+    from . import form
+    one = load(name)[0]
+    start = one["start"]
+    brief: Dict[str, Any] = {"run": {"type": start.get("run_type") or "explore_then_exploit", "skill": one["name"]},
+                             "budget": {"evaluations": start.get("evaluations") or 100}}
+    for key, value in (start.get("brief") or {}).items():
+        brief.setdefault(key, {}).update(value) if isinstance(value, dict) else brief.__setitem__(key, value)
+    out = ["# %s" % one["goal"], "",
+           "Skill `%s` · domain: %s · [the skill in full](../skill-library.md#%s)" % (one["name"], one["domain"], one["name"]), "",
+           one["summary"], "", "## Start here", "",
+           "Put this in `brief.yaml` (or give the same answers to `evoloop setup`), then read `evoloop plan` before you confirm.", "",
+           "```yaml", _brief(brief).rstrip(), "```", "",
+           "!!! note \"A starting point\"", "    These settings are a reasoned starting point. They have not been measured against "
+           "alternatives; see [Status and limits](../status.md). The numbers in the example (the budget, any limits or "
+           "ranges) are placeholders for yours.", ""]
+    out += ["## Why this set-up", "", one["why"], ""]
+    sets = form.flatten(one["settings"])
+    if sets:
+        out += ["The skill sets these for you (anything you set in the brief wins):", "", "| Setting | Value |", "|---|---|"]
+        out += ["| [`%s`](../fields.md) | `%s` |" % (path, _cell(yaml.safe_dump(value, default_flow_style=True).strip().replace("\n...", "")))
+                for path, value in sorted(sets.items())]
+        out.append("")
+    else:
+        out += ["The skill sets nothing itself: the run type and the defaults decide the search, and the skill supplies "
+                "the guidance.", ""]
+    out += ["## What your evaluator must report", ""]
+    needs = one["needs"]
+    if needs["adapter"] or needs["figures"] or needs["references"]:
+        out += ["- %s" % n for n in needs["adapter"]]
+        out += ["- **Required in every result:** `%s`. A search that never sees it is told so in the report." % f for f in needs["figures"]]
+        out += ["- **A reference row on the leaderboard for:** %s (`evoloop reference`)." % r for r in needs["references"]]
+    else:
+        out += ["Nothing beyond the score."]
+    out += ["", "How the adapter reports these: [The project's code](../project-contract.md).", ""]
+    if one["instead"] or one["conflicts"]:
+        out += ["## Choose something else when", "", "| If | Use |", "|---|---|"]
+        for row in one["instead"]:
+            names_ = wanted(row["use"])
+            link = " with ".join("[`%s`](%s.md)" % (n, n) for n in names_)
+            out.append("| %s | %s |" % (_cell(row["if"]), link))
+        out.append("")
+    if one["combines"]:
+        out += ["It combines well with %s (`run.skill: [%s, ...]`)." % (
+            ", ".join("[`%s`](%s.md)" % (n, n) for n in one["combines"]), one["name"]), ""]
+    out += ["## Reading the result", "", one["reading"], "",
+            "Where to look: `evoloop leaderboard`, `evoloop show`, and the report "
+            "([Records and the study file](../records.md)). To change course while it runs: [Steering a run](../steering.md).", ""]
+    out += ["## What the agents are told", ""]
+    for role in ("all", "writer", "analyst", "strategist"):
+        if one["guidance"].get(role):
+            out += ["??? note \"%s\"" % {"all": "Every role", "writer": "The writer", "analyst": "The analyst",
+                                           "strategist": "The strategist"}[role]]
+            out += ["    " + line if line else "" for line in one["guidance"][role].split("\n")] + [""]
+    if one["diagnose"]:
+        out += ["| If the results show | Then |", "|---|---|"]
+        out += ["| %s | %s |" % (_cell(d["see"]), _cell(d["do"])) for d in one["diagnose"]]
+        out.append("")
+    if one["stages"]:
+        out += ["Early in the budget: %s" % one["stages"].get("early", ""), "", "Late in the budget: %s" % one["stages"].get("late", ""), ""]
+    out += ["You can change any of this: the search gets its own copy of the skill in `skills/%s/skill.yaml` "
+            "([Skills](../skills.md))." % one["name"], ""]
+    return "\n".join(out).rstrip() + "\n"
+
+
+def guides_index_markdown() -> str:
+    rows = [load(n)[0] for n in names()]
+    out = ["# What do you want to optimize?", "",
+           "Each goal below is a different search, with its own page: a starting configuration, why it fits, what "
+           "your evaluator must report, when to choose another, and how to read the result.", ""]
+    labels = {"model": "A model", "settings": "Numbers only", "algorithm": "An algorithm", "bioinformatics": "A bioinformatics method",
+              "pipeline": "A data pipeline"}
+    seen: List[str] = []
+    for row in rows:
+        if row["domain"] in seen:
+            continue
+        seen.append(row["domain"])
+        out += ["## %s" % labels.get(row["domain"], row["domain"].capitalize()), "", "| I want to | Guide | In one line |", "|---|---|---|"]
+        out += ["| %s | [`%s`](%s.md) | %s |" % (r["goal"], r["name"], r["name"], _cell(r["objective"])) for r in rows if r["domain"] == row["domain"]]
+        out.append("")
+    out += ["## Telling similar goals apart", "",
+            "| You have | You want | Use |", "|---|---|---|",
+            "| a good model | its learning rate, weight decay or widths set better | [`settings-tuning`](settings-tuning.md) |",
+            "| a good model | to change how it trains: the loss, the optimizer, augmentation | [`model-training-recipe`](model-training-recipe.md) |",
+            "| a good model | one smaller or faster replacement | [`model-efficiency`](model-efficiency.md) |",
+            "| a good model | the best model at each of several sizes | [`model-size-frontier`](model-size-frontier.md) |",
+            "| a strong model or ensemble | a small model that keeps its accuracy | [`model-distillation`](model-distillation.md) |",
+            "| a task and a baseline | the best score you can get | [`model-performance`](model-performance.md) |",
+            "| correct code that is slow | the same output, sooner | [`algorithm-runtime`](algorithm-runtime.md) or [`data-pipeline`](data-pipeline.md) |", "",
+            "Goals can be combined ([Skills](../skills.md#combining-skills)), and none of these starting points has been "
+            "measured against the others yet ([Status and limits](../status.md)).", ""]
+    return "\n".join(out).rstrip() + "\n"
+
+
+def write_guides(folder: str) -> List[str]:
+    os.makedirs(folder, exist_ok=True)
+    pages = {"index.md": guides_index_markdown()}
+    pages.update({"%s.md" % name: guide_markdown(name) for name in names()})
+    for page, text in pages.items():
+        with open(os.path.join(folder, page), "w", encoding="utf-8") as handle:
+            handle.write(text)
+    return sorted(pages)

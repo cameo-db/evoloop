@@ -5,7 +5,7 @@ more than it is.
 
 ## What has been run
 
-- **Over 150 tests** on the built-in example with stub agents (no model call, no GPU). They cover the brief,
+- **Over 190 tests** on the built-in example with stub agents (no model call, no GPU). They cover the brief,
   every strategy, islands, the crossover kinds, steering during a run, changing the strategy, harness
   and search space midway, changing the run length, stopping and continuing, the study file, and one
   regression test for each defect that two independent reviews of the code reproduced.
@@ -43,7 +43,8 @@ more than it is.
 - **Working copies and checkpoints are never removed**, and the whole of `base/` is copied per run.
 - **A job that hits its time limit is started again**, up to `compute.infrastructure_retries` times,
   from its checkpoint if the adapter keeps one and from scratch otherwise.
-- **A design stopped at the screen keeps its part-way score** on the leaderboard beside full-length ones.
+- **A design stopped part way keeps its part-way score** as a provisional row: shown, marked with how far it ran,
+  not ranked with full-length fits and never a parent.
 - **`objective.constraints`, `space.forbidden` and `space.must_keep` are text for the agents**, not
   rules; only `space.forbidden_terms` and the open blocks are enforced by code.
 - **A proposal's distance is measured on the code**; behaviour is known only after training, and only if the

@@ -67,3 +67,18 @@ needs:
   references: []
 combines: []
 conflicts: [settings-tuning]
+goal: Improve an interpretable or biophysical model
+start:
+  run_type: refine
+  evaluations: 80
+why: >
+  The model is meant to be read, so the search keeps its overall shape, tells the writers that every parameter
+  must keep a stated meaning, and uses more ablations than usual to find parts that do no work. Novelty is turned
+  down: a different kind of model is not the goal.
+reading: >
+  A higher score is only half the result. For the best designs, read `evoloop show` to see what changed and what
+  the writer said it stands for, and check the fitted parameters yourself. The rule that parameters keep a
+  meaning is an instruction to the writers, not a check in code.
+instead:
+  - if: only the score matters
+    use: model-performance

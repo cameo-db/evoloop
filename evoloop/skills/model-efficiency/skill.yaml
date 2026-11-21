@@ -63,3 +63,22 @@ needs:
   references: []
 combines: [model-distillation]
 conflicts: [settings-tuning, model-size-frontier]
+goal: Find a smaller or faster model
+start:
+  run_type: refine
+  evaluations: 100
+  brief:
+    limits: {parameters: {max: 5000000}}
+why: >
+  The aim is one cheaper model at about the same score, so designs are selected on the trade-off between score
+  and size instead of on score alone, and half the local moves remove something. Starting from a model you know
+  is good, a refining search keeps close to it.
+reading: >
+  Read the population table: it lists the designs on the trade-off front with their score and size. Pick the
+  smallest whose score is within your tolerance of the reference row. A design is only an improvement if its
+  loss in score is below the noise floor or acceptable to you.
+instead:
+  - if: you want the best model at each of several sizes
+    use: model-size-frontier
+  - if: a larger model or ensemble is available to learn from
+    use: model-distillation

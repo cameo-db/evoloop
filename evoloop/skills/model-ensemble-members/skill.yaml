@@ -59,3 +59,18 @@ needs:
   references: []
 combines: [model-distillation]
 conflicts: [settings-tuning, model-efficiency]
+goal: Find models that fail differently, for an ensemble
+start:
+  run_type: survey
+  evaluations: 150
+why: >
+  An ensemble gains only as far as its members are wrong in different places. So designs are grouped by where
+  their errors fall and the best of each group is kept, which keeps a design that is slightly worse but
+  different in play.
+reading: >
+  Read the population table: each row is the best design of one behaviour group. Those are the candidate
+  members. evoloop does not score the ensemble itself: average the best of each group yourself and check the
+  average against the best single model.
+instead:
+  - if: you want one best model
+    use: model-performance

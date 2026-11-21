@@ -1,5 +1,19 @@
 # Setting up a search
 
+```mermaid
+flowchart LR
+    A["<b>1. Mark the code</b><br>what may change"] --> B["<b>2. Write the evaluator</b><br>how one design is scored"]
+    B --> C["<b>3. Answer the questions</b><br>goal, run type, budget"]
+    C --> D["<b>4. Read the plan</b><br>what will run, warnings, cost"]
+    D --> E{"<b>5. Confirm</b><br>by name"}
+    E --> F["<b>6. Run</b>"]
+    F --> G["<b>7. Read the results</b>"]
+    F -. "steer, chat, stop" .-> F
+```
+
+Not sure which kind of search you need? Start from [what you want to optimize](guides/index.md): each
+goal has a starting configuration you can paste into the brief.
+
 ```
 evoloop init mysearch --source path/to/project
 ```
@@ -128,9 +142,26 @@ and the [skill library](skill-library.md).
 evoloop plan mysearch
 ```
 
-prints every setting grouped by where it came from, and warnings about choices that work against each
-other (an archive on 30 models, a wide search space on a small budget, a model with no price while a
-dollar cap is set). A warning never stops a run.
+The plan leads with what the search will actually do, so that a preset cannot quietly change it:
+
+```
+At a glance
+  Optimising:      settings_only, skill settings-tuning
+  Designs:         settings only; every move is made by a Bayesian estimator in code (tpe; no agent call)
+  Agents:          none: this search calls no agent
+  Selection:       greedy
+  Early stopping:  new designs screened at 50%, the best 50% go on
+  Budget:          60 evaluations of 10 steps; agents capped at $20
+  Kept:            variation.settings_by stays 'tpe' as the skill settings-tuning sets it; the autonomy guided asks for 'agent'
+```
+
+- **Designs** and **Agents** say who writes the designs and which agent roles will be called, with about how
+  many calls each.
+- **Kept** and **Changed** lines say where one of your choices overrode another: a skill's setting that a level
+  of autonomy asked to change (the skill's stands), or one you set yourself (yours stands).
+- Then come the warnings about choices that work against each other, the estimate of what the agents will cost,
+  and every setting grouped by where its value came from. A warning never stops a run.
+
 
 ```
 evoloop brief mysearch --confirm "Your Name"

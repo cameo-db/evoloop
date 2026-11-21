@@ -296,7 +296,7 @@ Every skill that comes with evoloop. This page is written from the skill files t
 | | |
 |---|---|
 | Tags | hyperparameters, tuning, bayesian, tpe, learning rate, no agents |
-| Sets | `audit.reviews`, `harness.level`, `schedule.local_mix`, `schedule.novel_share`, `schedule.phases`, `space.preset`, `strategist.mode`, `strategy.mechanism`, `variation.proposals_per_slot`, `variation.settings_by`, `variation.step_adaptation` |
+| Sets | `audit.reviews`, `harness.conductor`, `harness.coordinator`, `harness.level`, `schedule.local_mix`, `schedule.novel_share`, `schedule.phases`, `space.preset`, `strategist.mode`, `strategy.mechanism`, `variation.proposals_per_slot`, `variation.settings_by`, `variation.step_adaptation` |
 | Guidance for | all, analyst, writer |
 | Diagnoses | 4 |
 | Needs from the adapter | every setting to tune must sit in a marked params block (one dict of numbers, true/false or text); give bounds for settings that must stay in a range with `space.ranges`, e.g. {"fit.lr": [0.00001, 0.1]}; without one a setting may move a hundredfold either way; to stop poor settings early, report progress and set `evaluation.ladder` |

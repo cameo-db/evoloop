@@ -54,3 +54,17 @@ needs:
   references: ["frozen backbone"]
 combines: [model-training-recipe]
 conflicts: []
+goal: Adapt a pretrained model to a task
+start:
+  run_type: refine
+  evaluations: 60
+why: >
+  Most of what the model knows is in its pretrained weights, so the search stays close to a working set-up and
+  spends more of its moves on settings (which layers train, at what rate) than a search from scratch would.
+reading: >
+  Compare every design with the reference row for the frozen backbone with a linear head: that is the cheapest
+  baseline, and the gain over it is what adapting was worth. Watch the best epoch; fine-tuning that peaks in the
+  first epochs is overfitting.
+instead:
+  - if: you are training from scratch
+    use: model-performance

@@ -1,6 +1,22 @@
 /* Use the width of the screen: the reference tables are wide. */
-.md-grid { max-width: 1500px; }
+.md-grid { max-width: 1400px; }
 .md-typeset table:not([class]) { font-size: 0.72rem; }
 .md-typeset table:not([class]) th { white-space: nowrap; }
 .md-typeset table:not([class]) td:first-child { white-space: nowrap; }
 .md-typeset .mermaid { text-align: center; }
+
+/* The front page: what it is and what to do first, beside one real result. */
+.evo-hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 2.4rem; align-items: center; margin: 0.6rem 0 2.2rem; }
+.evo-hero h1 { font-size: 2.4rem; line-height: 1.12; font-weight: 700; letter-spacing: -0.02em; margin: 0 0 1rem; }
+.evo-hero-text > p { font-size: 0.9rem; }
+.evo-hero .md-button { margin: 0.2rem 0.5rem 0.4rem 0; }
+.evo-hero-figure { border: 1px solid var(--md-default-fg-color--lightest); border-radius: 12px; padding: 1rem 1.1rem 0.6rem; }
+.md-typeset .evo-fine { font-size: 0.68rem; color: var(--md-default-fg-color--light); }
+.md-typeset .evo-caption { font-size: 0.74rem; margin: 0 0 0.4rem; }
+@media screen and (max-width: 60em) { .evo-hero { grid-template-columns: minmax(0, 1fr); gap: 1.2rem; } .evo-hero h1 { font-size: 1.9rem; } }
+
+/* The demo figure takes its colours from the page's theme. */
+.evo-chart { --evo-surface: #fcfcfb; --evo-ink: #0b0b0b; --evo-soft: #52514e; --evo-grid: #e6e5e1; --evo-series: #2a78d6; --evo-dot: #8f8e88; }
+[data-md-color-scheme="slate"] .evo-chart { --evo-surface: #1a1a19; --evo-ink: #f0efec; --evo-soft: #c3c2b7; --evo-grid: #33332f; --evo-series: #3987e5; --evo-dot: #8f8e88; }
+.evo-chart svg { width: 100%; height: auto; display: block; }
+.evo-chart circle[fill="transparent"]:hover { fill: var(--evo-series); fill-opacity: 0.18; }

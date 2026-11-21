@@ -127,6 +127,9 @@ def cmd_example(args: Any) -> int:
         raise SystemExit("%s exists" % args.dir)
     shutil.copytree(source, args.dir, ignore=shutil.ignore_patterns("__pycache__"))
     out("copied the example to %s; confirm its brief with `evoloop brief %s --confirm NAME`" % (args.dir, args.dir))
+    import importlib.util
+    if importlib.util.find_spec("numpy") is None:     # the example's own training code needs it; evoloop itself does not
+        out("the example's training code uses NumPy, which is not installed here: run `python -m pip install numpy` first")
     return 0
 
 
@@ -251,7 +254,7 @@ def cmd_plan(args: Any) -> int:
     brief = form.load_brief(os.path.abspath(args.dir))
     from . import estimate
     folder = os.path.abspath(args.dir)
-    for line in form.plan_lines(brief, folder=folder) + estimate.lines(brief, folder):
+    for line in form.plan_lines(brief, folder=folder, cost=estimate.lines(brief, folder)):
         out(line)
     asks = [a["field"] for a in form.questions(brief)]
     if asks:
@@ -318,6 +321,9 @@ def cmd_menu(args: Any) -> int:
 def cmd_skills(args: Any) -> int:
     """The skill library: the list, a search of it, one skill in full, or one written out as a folder to edit."""
     from . import skill as skills
+    if args.guides:
+        out("written: %s" % ", ".join(skills.write_guides(args.guides)))
+        return 0
     if args.markdown:
         sys.stdout.write(skills.library_markdown())
         return 0
@@ -636,7 +642,8 @@ def cmd_leaderboard(args: Any) -> int:
     controller.pool.shutdown(wait=False)
     settings = controller.settings
     rows = report.leaderboard(controller.view(), args.top or int(settings["report"]["top"]),
-                              args.columns or settings["report"]["columns"], controller.store.read("references"))
+                              args.columns or settings["report"]["columns"], controller.store.read("references"),
+                              allowance=settings["evaluation"]["allowance"])
     out("\n".join(report.table(rows)))
     return 0
 
@@ -800,6 +807,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--search", metavar="WORDS", help="skills whose name, tags or purpose hold these words")
     p.add_argument("--json", action="store_true", help="the library as records, for a listing or a website")
     p.add_argument("--markdown", action="store_true", help="the library as a page of the documentation")
+    p.add_argument("--guides", metavar="DIR", help="write a guide page for every skill into DIR (the documentation's guides)")
     p.add_argument("--dir", default=None, help="the search folder, to find a skill of your own by a relative path")
     p = add("guide", cmd_guide, "guidance by size of budget")
     p.add_argument("evaluations", nargs="?", type=int)

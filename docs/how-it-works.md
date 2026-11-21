@@ -1,5 +1,30 @@
 # How a search works
 
+```mermaid
+flowchart TD
+    You["You<br>brief and steering"] --> Ledger[("Ledger<br>every change, by whom")]
+    Ledger --> Slot["A job slot is free"]
+    Slot --> Schedule["<b>Schedule</b>: which kind of slot?<br>new · novel · cross · local"]
+    Schedule --> Strategy["<b>Strategy</b>: which parents?<br>worked out from the results"]
+    Strategy --> Writer["<b>Writer</b>: an agent, or code,<br>writes the blocks"]
+    Writer --> Checks{"<b>Checks</b> by code<br>only open blocks · parses<br>not a copy · within limits"}
+    Checks -- refused --> Writer
+    Checks -- ok --> Job["<b>Job</b>: run and score it once"]
+    Job --> Records[("Records<br>models, recipes, runs")]
+    Records --> Slot
+    Records --> Out["Report · scorecard · study file"]
+```
+
+Three rules hold everywhere:
+
+- **Agents write and judge; code decides and records.** Whatever an agent returns is checked by code
+  before it counts. The budget, the limits and the frozen code are enforced by code, never by a prompt.
+- **Agents never talk to each other.** Each call is a fresh context built from the run's records, so a
+  search can stop, restart, or change its agents at any point.
+- **A guess is only ever a suggestion.** The tool proposes answers with reasons; you see every one and
+  can change it.
+
+
 ## One design at a time
 
 A design is written only when it can run. Each time a job slot is free:
@@ -177,12 +202,16 @@ a budget of 100 evaluations covers about 270 designs; the plan's cost estimate c
 calls. Every design is subject to the ladder (`evaluation.ladder_applies: new` limits it to new
 designs), and it can be set or changed during a run.
 
+**A stopped design is provisional.** Its part-way score is kept and shown, but it is not ranked with
+full-length fits and never becomes a parent. The leaderboard has a `state` column (`full`, or
+`stopped at 10%`) and a `length` column, and lists provisional designs last.
+
 Both need the adapter to report progress, and `evaluation.screen_min_pool` earlier designs at a point
 before any is stopped there. Two cautions:
 
 - The ladder trusts early progress. A design that learns slowly and ends well is stopped; keep the
   first rung late enough for your task, and `keep` generous if unsure.
-- A stopped design keeps its part-way score in the record and on the leaderboard.
+
 
 ## Noise
 

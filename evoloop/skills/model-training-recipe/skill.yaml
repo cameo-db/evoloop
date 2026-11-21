@@ -59,3 +59,20 @@ needs:
   references: []
 combines: [model-performance, model-finetuning]
 conflicts: [settings-tuning]
+goal: Train a fixed architecture better
+start:
+  run_type: explore_then_exploit
+  evaluations: 80
+why: >
+  The model is settled and the question is how well it can be trained, so only the blocks that define the loss,
+  the optimizer, the schedule and the augmentation are open. Unlike tuning, the code of those blocks can change,
+  not only their numbers.
+reading: >
+  Compare the best recipe with the baseline row: the difference is what training alone was worth. Look at
+  whether the training score or the gap to validation moved, and at the best epoch: a best epoch at the end of
+  the run means the comparison favoured fast recipes and a longer run is needed.
+instead:
+  - if: only the numbers of the recipe should change
+    use: settings-tuning
+  - if: the model itself may change
+    use: model-performance

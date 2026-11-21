@@ -24,6 +24,8 @@ settings:
     novel_share: 0.0
   harness:
     level: minimal
+    coordinator: code
+    conductor: code
   strategist:
     mode: "off"
   audit:
@@ -59,3 +61,22 @@ needs:
   references: []
 combines: []
 conflicts: [model-performance, model-distillation, model-efficiency, model-size-frontier, model-mechanistic, model-training-recipe, model-ensemble-members, algorithm-runtime, bioinformatics-algorithm, data-pipeline]
+goal: Tune hyperparameters
+start:
+  run_type: settings_only
+  evaluations: 60
+  brief:
+    space: {ranges: {"fit.lr": [0.00001, 0.1]}}
+why: >
+  When only numbers change, no judgement is needed to propose the next candidate: an estimator that models which
+  values scored well is cheaper and more systematic than an agent. This search makes no model call, so it costs
+  compute only.
+reading: >
+  The best row of the leaderboard holds the settings to use. Before trusting them, look at where they sit: a
+  best value at the edge of its range means the range was wrong, and a score that barely moves across a setting
+  means that setting does not matter. Re-fit the winner on new seeds.
+instead:
+  - if: the loss, optimizer or augmentation code should change, not only their numbers
+    use: model-training-recipe
+  - if: the model's structure may change
+    use: model-performance

@@ -61,3 +61,22 @@ needs:
   references: []
 combines: [model-distillation]
 conflicts: [settings-tuning, model-efficiency]
+goal: Find the best model at several sizes
+start:
+  run_type: survey
+  evaluations: 200
+  brief:
+    limits: {parameters: {min: 50000, max: 50000000}}
+why: >
+  The deliverable is a curve, not a point: the best design in each band of size. An archive keeps the best of
+  each band, new designs are aimed at bands that are empty, and a design is a success when it leads its band
+  even if a larger one scores higher. This needs more evaluations than a search for one model.
+reading: >
+  Read the population table band by band: each row is the best design of one size band. Plot score against size
+  to see where a fourfold increase stops paying. Bands with one or two designs are not yet explored; treat their
+  best as provisional.
+instead:
+  - if: one cheaper model at a fixed score is enough
+    use: model-efficiency
+  - if: the sizes should be students of a teacher
+    use: "model-distillation, model-size-frontier"

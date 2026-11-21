@@ -69,3 +69,20 @@ needs:
   references: ["teacher", "from scratch"]
 combines: [model-size-frontier, model-efficiency]
 conflicts: [settings-tuning]
+goal: Distil a smaller student from a teacher
+start:
+  run_type: explore_then_exploit
+  evaluations: 100
+why: >
+  A student's result depends as much on how it is trained against the teacher as on its shape, so both the
+  architecture and the recipe are open, and the writers are told to work on the recipe first. The leaderboard
+  is only meaningful beside the teacher and the same student trained without it.
+reading: >
+  Compare the best student with two reference rows: the teacher (how much was lost) and the student trained from
+  scratch (how much the teacher added). A student that only matches its from-scratch twin has not been
+  distilled. Check the size or speed column against what you needed.
+instead:
+  - if: there is no teacher, only a model to shrink
+    use: model-efficiency
+  - if: you want students at several sizes
+    use: "model-distillation, model-size-frontier"

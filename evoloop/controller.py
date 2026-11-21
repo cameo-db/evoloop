@@ -47,6 +47,7 @@ class Controller:
         self.pending: List[Dict[str, Any]] = []
         self.refused = 0
         self.blocked: Optional[str] = None          # a job could not be submitted
+        self.unmeasured: List[str] = []              # figures a limit names that a result did not report
         self.agent_block: Optional[str] = None      # no agent call can be made
         self.submit_failures = 0
         self.retry_after = 0.0
@@ -341,6 +342,12 @@ class Controller:
         since = run.get("running_since") or (run.get("job") or {}).get("started")
         figures = self.measures(result)
         # Outside a limit (seen on a progress line, in the result, or said by the adapter): rejected, not broken.
+        # A limit on a figure the result does not carry cannot be kept: the design is not scored, and the run comes to
+        # rest until the adapter reports the figure or the limit is taken away. (Progress lines may lack it.)
+        absent = [m for m in (self.settings.get("limits") or {}) if m not in figures] if ok else []
+        if absent and not run.get("rejecting"):
+            self.unmeasured = sorted(set(self.unmeasured) | set(absent))
+            run = dict(run, rejecting="the limit on %s cannot be checked: the result does not report it" % ", ".join(absent))
         rejected = run.get("rejecting") or (self.over_limit(figures) if ok else None) or (
             str(result.get("rejected")) if isinstance(result, dict) and not result.get("valid") and result.get("rejected") else None)
         if rejected:
@@ -551,13 +558,13 @@ class Controller:
         # A run that is recorded but not yet submitted holds no slot: it is what the free slots are for.
         started = [r for r in in_flight if r.get("job")]
         free = self.capacity() - len(started) - len(self.designing)
-        while self.pending and free > 0 and not self.draining and not self.blocked:
+        while self.pending and free > 0 and not self.draining and not self.blocked and not self.unmeasured:
             run = self.pending.pop(0)
             if run["id"] not in view.runs:
                 self.store.append("runs", run)
             self.submit(run)
             free -= 1
-        if free <= 0 or self.draining or self.pending or self.blocked or self.passed(view):
+        if free <= 0 or self.draining or self.pending or self.blocked or self.unmeasured or self.passed(view):
             return
         budget = float(self.settings["budget"]["evaluations"] or 0)
         committed = self.spent(view) + len(in_flight) + len(self.designing)
@@ -912,7 +919,7 @@ class Controller:
     def finished(self, view: View) -> Optional[str]:
         started = [r for r in view.in_flight() if r.get("job")]
         # A run recorded but never started does not keep a draining or blocked search alive: it starts when the run goes on.
-        idle = not started and not self.designing and (not self.pending or self.draining or bool(self.blocked) or bool(self.code_changed))
+        idle = not started and not self.designing and (not self.pending or self.draining or bool(self.blocked) or bool(self.unmeasured) or bool(self.code_changed))
         budget = float(self.settings["budget"]["evaluations"] or 0)
         if self.stop_now:
             return "interrupted"
@@ -926,6 +933,11 @@ class Controller:
                 else "the wall-clock limit was reached"
         if self.code_changed:
             return "paused: %s" % self.code_changed
+        self.unmeasured = [m for m in self.unmeasured if m in (self.settings.get("limits") or {})]
+        if self.unmeasured:
+            return ("paused: limits name %s, which the results do not report. Make the adapter report it (in result.json: "
+                    "under diagnostics, or as parameters or inference_speed.examples_per_s), or remove the limit with "
+                    "`evoloop set ... limits=...`; then continue the run" % ", ".join(self.unmeasured))
         if self.passed(view):
             return "the success threshold was passed"
         if self.spent(view) >= budget:
@@ -958,6 +970,7 @@ class Controller:
     def run(self, max_seconds: Optional[float] = None) -> str:
         self.begin()
         self.blocked, self.agent_block, self.submit_failures, self.refused = None, None, 0, 0
+        self.unmeasured = []
         self.read_inbox()      # a rehash asked for while the run was stopped is taken before the code is checked
         self.refresh()
         self.code_changed = self.frozen_fault()
