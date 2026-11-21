@@ -1,0 +1,63 @@
+name: model-size-frontier
+title: A family of models across sizes
+summary: Find the best model at each size (or speed), from very small to large, so that the result is a whole trade-off curve to choose from and not one winner.
+domain: model
+objective: the best model at every size or speed across a broad range
+tags: [pareto, frontier, trade-off, size, speed, family, scaling, coverage]
+version: 1
+authors: [evoloop]
+when: >
+  You need models for several budgets (a phone, a server, a screen of millions of inputs), or want to know what
+  accuracy each size buys before choosing. For one cheaper model at a fixed score use model-efficiency.
+settings:
+  strategy:
+    mechanism: archive
+    descriptors: [size]
+  schedule:
+    novelty: 0.6
+    phases: [{until: 0.5, new: 0.5, cross: 0.15, local: 0.35}, {until: 1.0, new: 0.2, cross: 0.25, local: 0.55}]
+  report:
+    columns: [speed]
+guidance:
+  all: |
+    The result of this search is a set of models, one for each band of size, each the best found in its band. A
+    design is a success if it is the best in its band, even when a larger design scores higher. The bands are
+    steps of about fourfold in parameter count.
+  writer: |
+    `thin_cells`, when present, lists the size bands with the fewest designs: aim a new design at one of them and
+    say in `predicted_effect` what size you expect it to have.
+    Ways to move a design to another band without starting again:
+    - scale it as a whole: width, depth and resolution together, in proportion, travel further than any one alone;
+    - at the small end, change the kind of layer (separable or grouped convolutions, shared weights, a smaller
+      head) before shrinking widths until nothing works;
+    - at the large end, add capacity where the errors say it is missing, not evenly.
+    What is best at one size is often not best at another: do not assume the largest design's shape, shrunk, is
+    the best small one. A local move should stay in its parent's band; say so if you mean to leave it.
+  analyst: |
+    Describe the curve: where a fourfold increase in size still buys score and where it has stopped. Say which
+    bands are well covered and which hold only one or two designs. Lessons are most useful in the form "at this
+    size, X matters; above it, X does not".
+  strategist: |
+    Order new designs for bands that are empty or thin. When every band has several designs, shift toward local
+    moves and crossovers between neighbouring bands.
+diagnose:
+  - see: "a band holds no design, or only one"
+    do: "aim new designs at it: scale the nearest good design up or down as a whole"
+  - see: "a larger band's best design scores no better than the band below it"
+    do: "the larger designs are wasting capacity: move the smaller band's best design up by scaling it, and compare"
+  - see: "the smallest band's designs all fail or score near chance"
+    do: "that size is below what this approach can do: change the kind of layer, or accept the band above as the floor"
+  - see: "the curve is flat across the top bands"
+    do: "the data or the recipe is the limit, not size: stop adding large designs and spend the budget lower down"
+stages:
+  early: "Put at least two designs in every band, by scaling a few good shapes up and down."
+  late: "Improve the best design in each band with local moves, and cross neighbours."
+needs:
+  adapter:
+    - "report `parameters` in result.json for every design; the bands are made from it"
+    - "to band by speed instead, report `inference_speed.examples_per_s` and set strategy.descriptors to the name of that metric under diagnostics"
+    - "set `limits` for the smallest and largest size worth having, so that designs outside the range are not trained"
+  figures: [parameters]
+  references: []
+combines: [model-distillation]
+conflicts: [settings-tuning, model-efficiency]

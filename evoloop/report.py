@@ -124,7 +124,7 @@ def lines(controller: Any, view: View, reason: Optional[str] = None) -> List[str
     if controller.agents.unpriced:
         out += ["", "WARNING: %d agent calls came back with no cost; the spend figure above leaves them out." %
                 controller.agents.unpriced]
-    ledger = [e for e in store.merged_list("ledger") if e.get("kind") in ("init", "set", "note", "stop", "period", "withdraw", "review",
+    ledger = [e for e in store.merged_list("ledger") if e.get("kind") in ("init", "set", "note", "stop", "period", "withdraw", "review", "skill",
                                                                            "lineage", "approve", "decline", "rehash", "force", "import", "reference")]
     decisions = [e for e in store.merged_list("ledger") if e.get("kind") == "decision"]
     if decisions:
@@ -173,6 +173,7 @@ def lines(controller: Any, view: View, reason: Optional[str] = None) -> List[str
                 "import": "imported %s from %s" % (", ".join(e.get("imported") or []) or "nothing", e.get("source")),
                 "reference": "reference row %s (score %s)" % (e.get("label"), e.get("score")),
                 "lineage": "lineage %s %s" % (e.get("lineage"), e.get("to")),
+                "skill": "the skill file(s) %s changed (%s -> %s)" % (", ".join(e.get("skills") or []), e.get("before"), e.get("after")),
                 "approve": "approved %s" % e.get("target"), "decline": "declined %s" % e.get("target")}[e["kind"]]
         if e.get("decision"):
             what += " [decision %s]" % e["decision"]

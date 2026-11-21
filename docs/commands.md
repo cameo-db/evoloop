@@ -23,7 +23,11 @@ the person asking, which is recorded in the ledger, and an optional `--reason`.
 | `evoloop plan <dir>` | every setting, grouped by where it came from, and the warnings |
 | `evoloop menu [topic]` | every choice a run can make, the presets, and every field; topics: `run-types`, `autonomy`, `models`, `effort`, `strategies`, `modes`, `crossover`, `moves`, `spaces`, `harness`, `coordinator`, `strategist`, `strategist-actions`, `spend`, `reviews`, `guidance`, `defaults`, `fields` |
 | `evoloop guide [N]` | the guidance for a budget of N evaluations |
-| `evoloop skills [NAME] [--copy DIR]` | the kinds of optimisation a search can be set up for; one in full; or one written out as a folder to edit |
+| `evoloop skills` | the skill library, by domain |
+| `evoloop skills --search WORDS` | skills whose name, tags or purpose hold the words |
+| `evoloop skills NAME` | one skill in full |
+| `evoloop skills NAME --copy DIR` | a skill written out as a folder to edit |
+| `evoloop skills --json` | the library as records, for a listing or a website |
 | `evoloop estimate <dir> [--name N]` | what the agents are likely to cost, at each level of autonomy; with `--name`, projected from a run's own calls |
 
 ## Running

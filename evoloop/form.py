@@ -325,7 +325,7 @@ def resolve(brief: Dict[str, Any], ledger: Optional[List[Dict[str, Any]]] = None
     for entry in changes:
         if entry["key"] == "run.skill":
             skill_name = entry["value"]
-    the_skill, skill_fault = skills.load(skill_name, folder)
+    the_skill, skill_fault = skills.combine(skill_name, folder)
     if the_skill:
         lay(the_skill["settings"], "skill %s" % the_skill["name"])
     autonomy = stated.get("harness.autonomy")
@@ -411,8 +411,9 @@ def check_value(path: str, value: Any) -> Optional[str]:
             isinstance(k, str) and isinstance(v, (list, tuple)) and len(v) == 2
             and all(isinstance(x, (int, float)) and not isinstance(x, bool) for x in v) and v[0] < v[1] for k, v in value.items())):
         return "space.ranges must map a setting (block.key) to [low, high], low below high"
-    if path == "run.skill" and value not in EMPTY and not isinstance(value, str):
-        return "run.skill must be the name of a built-in skill or the path of a skill folder"
+    if path == "run.skill" and value not in EMPTY and not (isinstance(value, str) or (
+            isinstance(value, list) and all(isinstance(v, str) for v in value))):
+        return "run.skill must be the name of a skill, the path of a skill folder, or a list of them"
     if path == "evaluation.ladder" and value not in EMPTY:
         ok = isinstance(value, list) and all(
             isinstance(r, dict) and set(r) == {"at", "keep"} and all(isinstance(x, (int, float)) and not isinstance(x, bool)
@@ -513,8 +514,9 @@ def problems(brief: Dict[str, Any]) -> List[str]:
 def warnings(settings: Dict[str, Any]) -> List[str]:
     """Combinations that work against each other. A warning never stops a run."""
     out = [settings["_skill_fault"]] if settings.get("_skill_fault") else []
+    out += (settings.get("_skill") or {}).get("warnings") or []
     for need in ((settings.get("_skill") or {}).get("needs") or {}).get("adapter") or []:
-        out.append("the %s skill needs: %s" % (settings["_skill"]["name"], need))
+        out.append("the skill needs: %s" % need)
     n = settings["budget"]["evaluations"] or 0
     mech, level = settings["strategy"]["mechanism"], settings["harness"]["level"]
     label, overlay = guidance_for(n)
@@ -603,6 +605,7 @@ def plan_lines(brief: Dict[str, Any], star: Optional[str] = None, folder: Option
     out = ["Plan for: %s" % (settings["objective"]["goal"] or "(no goal yet)"), ""]
     if settings.get("_skill"):
         out.append("Skill: %s. %s" % (settings["_skill"]["name"], settings["_skill"]["summary"]))
+        out.append("")
     if settings["_guidance"]:
         out.append("Budget guidance used: %s evaluations." % settings["_guidance"])
     groups: Dict[str, List[str]] = {}

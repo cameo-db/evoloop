@@ -193,6 +193,11 @@ def cmd_brief(args: Any) -> int:
         except form.BriefError as exc:
             raise SystemExit(str(exc))
         out("confirmed by %s" % args.confirm)
+        from . import skill as skills
+        copied = skills.checkout(form.given(form.load_brief(folder)).get("run.skill"), folder)
+        if copied:
+            out("the search now has its own copy of: %s (in %s). The run reads these files, and they are yours to edit."
+                % (", ".join(copied), os.path.join(folder, "skills")))
         return 0
     asks = form.questions(brief, everything=args.all)
     if args.questions:
@@ -311,16 +316,31 @@ def cmd_menu(args: Any) -> int:
 
 
 def cmd_skills(args: Any) -> int:
-    """The skills: what kinds of optimisation there are, one in full, or one written out as a folder to edit."""
+    """The skill library: the list, a search of it, one skill in full, or one written out as a folder to edit."""
     from . import skill as skills
-    if not args.skill:
-        out("Skills (set one with run.skill; it is independent of the run type):")
-        for name, summary in skills.summaries().items():
-            out("")
-            out("  %s" % name)
-            out("      %s" % summary)
+    if args.markdown:
+        sys.stdout.write(skills.library_markdown())
+        return 0
+    if args.search or args.json or not args.skill:
+        rows = skills.search(args.search, args.dir) if args.search else skills.index(args.dir)
+        if args.json:
+            out(json.dumps(rows, indent=1, default=str))
+            return 0
+        if not rows:
+            out("no skill matches %r" % args.search)
+            return 0
+        out("Skills%s (set with run.skill; several can be combined):" % (" matching %r" % args.search if args.search else ""))
+        domain = None
+        for row in rows:
+            if row["domain"] != domain and not args.search:
+                domain = row["domain"]
+                out("")
+                out("%s" % domain.upper())
+            out("  %-28s %s%s" % (row["name"], row["objective"] or row["title"], "   [yours]" if row["own"] else ""))
         out("")
-        out("evoloop skills NAME shows one in full; evoloop skills NAME --copy DIR writes it out to edit.")
+        out("evoloop skills NAME            one skill in full")
+        out("evoloop skills --search WORDS  find skills by what they are for")
+        out("evoloop skills NAME --copy DIR write one out as a folder to edit")
         return 0
     found, fault = skills.load(args.skill, args.dir)
     if found is None:
@@ -329,7 +349,7 @@ def cmd_skills(args: Any) -> int:
         if os.path.exists(args.copy):
             raise SystemExit("%s exists already" % args.copy)
         shutil.copytree(found["path"], args.copy)
-        out("written to %s; edit skill.yaml there and set run.skill to that path" % args.copy)
+        out("written to %s; edit skill.yaml there (give it a name of its own) and set run.skill to that path" % args.copy)
         return 0
     with open(os.path.join(found["path"], "skill.yaml"), "r", encoding="utf-8") as handle:
         sys.stdout.write(handle.read())
@@ -777,6 +797,9 @@ def build_parser() -> argparse.ArgumentParser:
     p = add("skills", cmd_skills, "the kinds of optimisation a search can be set up for")
     p.add_argument("skill", nargs="?", help="a built-in skill or the path of a skill folder; leave out for the list")
     p.add_argument("--copy", metavar="DIR", help="write the skill out as a folder to edit")
+    p.add_argument("--search", metavar="WORDS", help="skills whose name, tags or purpose hold these words")
+    p.add_argument("--json", action="store_true", help="the library as records, for a listing or a website")
+    p.add_argument("--markdown", action="store_true", help="the library as a page of the documentation")
     p.add_argument("--dir", default=None, help="the search folder, to find a skill of your own by a relative path")
     p = add("guide", cmd_guide, "guidance by size of budget")
     p.add_argument("evaluations", nargs="?", type=int)

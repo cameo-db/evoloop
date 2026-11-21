@@ -2,28 +2,65 @@ site_name: evoloop
 site_url: https://evoloop.readthedocs.io/en/latest/
 site_description: Evolutionary search over marked code blocks, with language-model agents writing the designs
 repo_url: https://github.com/cameo-db/evoloop
+repo_name: cameo-db/evoloop
 theme:
-  name: readthedocs
+  name: material
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - navigation.indexes
+    - toc.follow
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle: {icon: material/weather-night, name: Dark mode}
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle: {icon: material/weather-sunny, name: Light mode}
+extra_css:
+  - extra.css
 nav:
-  - Overview: index.md
-  - First run: quickstart.md
-  - Setting up a search: setting-up.md
-  - Skills, the kind of optimisation: skills.md
-  - How a search works: how-it-works.md
-  - How it compares with established methods: compared.md
-  - Steering a run: steering.md
-  - Model and effort: models.md
-  - Agentic or harnessed, and what it costs: autonomy.md
-  - The strategist and the budget: strategist.md
-  - Auditing the agents: auditing.md
-  - The project's code: project-contract.md
-  - Records and the study file: records.md
+  - Overview:
+      - What evoloop is: index.md
+      - First run: quickstart.md
+      - How each choice changes the search: choices.md
+      - How it compares with established methods: compared.md
+      - Status and limits: status.md
+  - Set up:
+      - Setting up a search: setting-up.md
+      - Skills, the kind of optimisation: skills.md
+      - Skill library: skill-library.md
+      - The project's code: project-contract.md
+      - Model and effort: models.md
+      - Agentic or harnessed, and what it costs: autonomy.md
+  - How it works:
+      - How a search works: how-it-works.md
+      - The strategist and the budget: strategist.md
+      - Auditing the agents: auditing.md
+      - Records and the study file: records.md
+  - Run and steer:
+      - Steering a run: steering.md
+      - Commands: commands.md
   - Reference:
       - Menu of choices and presets: menu.md
       - Fields of the brief: fields.md
-      - Commands: commands.md
-  - Status and limits: status.md
 markdown_extensions:
   - tables
+  - admonition
+  - attr_list
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
   - toc:
       permalink: true

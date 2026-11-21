@@ -294,7 +294,8 @@ FIELDS: Dict[str, str] = {
 }
 
 SKILLS = skills.summaries()
-SKILLS_NOTE = ("A skill says what kind of problem the search is; the run type says how to search. Choose one of each. "
+SKILLS_NOTE = ("A skill says what kind of problem the search is; the run type says how to search. Skills can be combined "
+               "(`run.skill: [a, b]`), and a search gets its own editable copy of each in its `skills/` folder. "
                "`evoloop skills NAME` shows a skill in full, and `evoloop skills NAME --copy DIR` writes it out as a "
                "folder to edit and use as your own (`run.skill: DIR`).")
 

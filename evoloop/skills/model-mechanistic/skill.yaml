@@ -1,5 +1,14 @@
-name: mechanistic
+name: model-mechanistic
+title: Improve an interpretable or biophysical model
 summary: Improve a model that is interpretable by design, where the parameters stand for something (motifs in filters, a graph of interactions, rates and affinities in a biophysical model). The structure that carries the meaning is kept.
+domain: model
+objective: a better fit without losing what the parameters mean
+tags: [interpretable, mechanistic, biophysical, motifs, interactions, constraints]
+version: 2
+authors: [evoloop]
+when: >
+  The model is meant to be read, not only to predict: its parts stand for things. Not for making a black-box model
+  explainable after the fact.
 settings:
   space:
     preset: template
@@ -33,8 +42,22 @@ guidance:
     Report what the fitted parts came to mean where the results show it, and whether a gain came with a readable
     change or only a numerical one. Flag any design that gained by weakening a constraint.
   strategist: |
-    Favour ablations and local edits over new families; a new family is worth a slot when the errors of every
+    Favour ablations and local edits over new families. A new family is worth a slot when the errors of every
     current design fall in the same place.
+diagnose:
+  - see: "two parts have learned the same thing"
+    do: "remove one, or add a term that makes them compete or differ"
+  - see: "a part has learned nothing (its parameters stay near their start, or removing it costs nothing)"
+    do: "remove it, or change its initialisation if the mechanism is known to matter"
+  - see: "the score depends strongly on the seed"
+    do: "the fit has poor local optima: improve the initialisation or fit in stages before changing the model"
+  - see: "errors of every design fall on the same examples"
+    do: "a mechanism is missing: add the term those examples call for, with a stated meaning"
+  - see: "a design gains by loosening a constraint (sign, non-negativity, a fixed scale)"
+    do: "do not keep it: the parameters are no longer identifiable, so the gain is not a readable one"
+stages:
+  early: "Find out which parts are doing work, with ablations, and get the optimisation reliable across seeds."
+  late: "Change the form of the terms that matter, one at a time, and prefer the simpler design at equal score."
 needs:
   adapter:
     - "optional, and worth doing: report a figure of how well the parts match what is known (the share of filters matching known motifs, recovered interactions, parameters within physical ranges) under diagnostics; it can then be a leaderboard column, a speciality metric, or the second figure of the pareto strategy"
@@ -42,3 +65,5 @@ needs:
     - "mark as open only the blocks that define the interpretable parts and their combination; leave the data handling and the evaluation frozen"
   figures: []
   references: []
+combines: []
+conflicts: [settings-tuning]

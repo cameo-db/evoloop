@@ -1,5 +1,14 @@
-name: efficiency
+name: model-efficiency
+title: Make one model smaller or faster
 summary: Make the model smaller or faster while holding its score. Designs are selected on the trade-off between the score and size (or speed), and removal is the commonest move.
+domain: model
+objective: the same score at a lower cost in parameters or time
+tags: [efficiency, compression, pruning, size, speed, pareto, ablation]
+version: 2
+authors: [evoloop]
+when: >
+  You have a model that scores well enough and costs too much. The aim is one cheaper model at about the same
+  score. For a whole family across sizes use model-size-frontier; with a teacher available, model-distillation.
 settings:
   strategy:
     mechanism: pareto
@@ -31,8 +40,20 @@ guidance:
     For each change say what it did to the score and to the size or speed. A lesson of the form "removing X costs
     nothing" is the most useful kind here; cite the runs.
   strategist: |
-    If the front has stopped moving at the small end, order ablations on its smallest designs; if it has stopped
+    If the front has stopped moving at the small end, order ablations on its smallest designs. If it has stopped
     at the accurate end, order crossovers between the two ends.
+diagnose:
+  - see: "an ablation costs less than the noise floor"
+    do: "the component is dead weight: keep it out, and try removing its neighbours"
+  - see: "parameter count fell but speed did not"
+    do: "the time is not where the parameters are: cut resolution, sequence length or depth instead of width"
+  - see: "every reduction costs score, however small"
+    do: "the model is already tight: change the kind of layer (separable, bottleneck, shared weights) instead of shrinking the same ones"
+  - see: "a much smaller design scores the same as the reference"
+    do: "the reference was over-sized for the data: keep going down until the score moves"
+stages:
+  early: "Find what can be removed for nothing, with ablations across the whole model."
+  late: "Work at the two ends of the front, and cross designs from the ends."
 needs:
   adapter:
     - "report `parameters` in result.json (and `inference_speed.examples_per_s` to rank on speed: then set strategy.second_metric to examples_per_s and strategy.second_direction to maximize)"
@@ -40,3 +61,5 @@ needs:
     - "add a reference row for the model you are trying to shrink"
   figures: [parameters]
   references: []
+combines: [model-distillation]
+conflicts: [settings-tuning, model-size-frontier]

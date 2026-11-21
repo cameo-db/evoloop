@@ -28,11 +28,17 @@ def resolved(folder=None, **answers):
 
 # --- the skills themselves ------------------------------------------------------------------------
 def test_every_built_in_skill_can_be_used_and_says_what_it_is_for():
-    assert skill.names() == ["performance", "distillation", "efficiency", "mechanistic", "tuning"]
+    assert skill.names() == ["model-performance", "model-distillation", "model-efficiency", "model-ensemble-members",
+                             "model-finetuning", "model-mechanistic", "model-size-frontier", "model-training-recipe",
+                             "algorithm-runtime", "bioinformatics-algorithm", "data-pipeline", "settings-tuning"]
     for name in skill.names():
         found, fault = skill.load(name)
         assert fault is None and found["name"] == name and len(found["summary"]) > 40
-        assert found["guidance"].get("all") and found["guidance"].get("writer")
+        assert found["guidance"].get("all") and found["guidance"].get("writer") and found["guidance"].get("analyst")
+        assert len(found["diagnose"]) >= 4 and set(found["stages"]) == {"early", "late"}       # what a result says to do; by stage
+        assert found["title"] and found["objective"] and found["when"] and len(found["tags"]) >= 4 and found["domain"]
+        assert skill.NAME.fullmatch(name), name                                                # specific, so the library can grow
+        assert all(other in skill.names() for other in found["combines"] + found["conflicts"]), name
         assert name in menu.SKILLS and "`%s`" % name in menu.menu_markdown()
     assert skill.load(None) == (None, None) and skill.load("") == (None, None)
     assert "no skill named" in skill.load("nonesuch")[1]
@@ -42,20 +48,20 @@ def test_a_skill_is_laid_over_the_run_type_and_under_what_the_person_set():
     plain, _ = resolved()
     assert plain["strategy"]["mechanism"] == "lineage" and plain["_skill"] is None
     settings, sources = resolved(run__skill="efficiency")
-    assert settings["strategy"]["mechanism"] == "pareto" and sources["strategy.mechanism"] == "skill efficiency"
-    assert settings["strategy"]["second_metric"] == "parameters" and settings["_skill"]["name"] == "efficiency"
+    assert settings["strategy"]["mechanism"] == "pareto" and sources["strategy.mechanism"] == "skill model-efficiency"
+    assert settings["strategy"]["second_metric"] == "parameters" and settings["_skill"]["name"] == "model-efficiency"
     assert settings["space"]["preset"] == "template" and sources["space.preset"] == "run type refine"   # the skill leaves it
     mine, sources = resolved(run__skill="efficiency", strategy__mechanism="archive")
     assert mine["strategy"]["mechanism"] == "archive" and sources["strategy.mechanism"] == "brief"
     tuned, _ = resolved(run__skill="tuning")
     assert tuned["space"]["preset"] == "settings_only" and tuned["variation"]["settings_by"] == "tpe"
     assert tuned["strategist"]["mode"] == "off" and tuned["schedule"]["phases"][0]["local"] == 1.0
-    assert any("the efficiency skill needs" in w for w in form.warnings(settings))       # what the adapter must do
+    assert any("the skill needs" in w for w in form.warnings(settings))       # what the adapter must do
     broken, _ = resolved(run__skill="nonesuch")
     assert broken["_skill"] is None and any("no skill named" in w for w in form.warnings(broken))
     lines = form.plan_lines({k: dict(v) for k, v in dict(BASE, run={"type": "refine", "skill": "mechanistic"}).items()})
-    assert any(line.startswith("Skill: mechanistic.") for line in lines)
-    assert any("From the skill mechanistic:" in line for line in lines)
+    assert any(line.startswith("Skill: model-mechanistic.") for line in lines)
+    assert any("From the skill model-mechanistic:" in line for line in lines)
 
 
 def test_a_skill_of_your_own_is_a_folder_you_can_copy_and_edit(tmp_path, capsys):
@@ -78,8 +84,8 @@ def test_a_skill_of_your_own_is_a_folder_you_can_copy_and_edit(tmp_path, capsys)
         settings, sources = resolved(folder, run__skill=given)
         assert settings["_skill"]["name"] == "mine" and settings["strategy"]["second_metric"] == "examples_per_s"
         assert sources["strategy.second_metric"] == "skill mine"
-    assert skill.guidance(settings["_skill"], "writer") == "Prefer depthwise layers."
-    assert skill.guidance(settings["_skill"], "analyst") is None
+    assert skill.guidance(settings["_skill"], "writer")["guidance"] == "Prefer depthwise layers."
+    assert "guidance" not in skill.guidance(settings["_skill"], "analyst")          # only the diagnoses are left for it
     # A skill may not set what defines the problem, or name a field that does not exist, or a value that is refused.
     for bad, said in (({"evaluation": {"allowance": 5}}, "belongs in the brief"), ({"objective": {"direction": "minimize"}}, "belongs in the brief"),
                       ({"strategy": {"mechanism": "magic"}}, "strategy.mechanism"), ({"nothing": {"here": 1}}, "not a field"),
@@ -111,7 +117,8 @@ def test_the_agents_are_told_what_the_skill_asks_of_their_role(tmp_path):
     for role in ("writer", "analyst", "translator"):
         agents.call(role, {})
     told = backend.heard["writer"]["skill"]
-    assert told["name"] == "distillation" and "teacher-labelled augmentation" in told["guidance"]
+    assert told["name"] == "model-distillation" and "teacher-labelled augmentation" in told["guidance"]
+    assert any("from scratch" in d["see"] for d in told["if_you_see"]) and "at_this_stage" not in told   # no stage without the budget
     assert "from-scratch" in backend.heard["analyst"]["skill"]["guidance"] and "teacher-labelled" not in backend.heard["analyst"]["skill"]["guidance"]
     assert "skill" not in backend.heard["translator"]
     plain, _ = resolved(agents__backend="stub")
@@ -138,7 +145,7 @@ def test_the_skill_can_be_changed_during_a_run_and_a_bad_one_is_refused(tmp_path
     sets = [e for e in controller.store.merged_list("ledger") if e["kind"] == "set"]
     assert [e["status"] for e in sets] == ["refused", "applied"] and "no skill named" in sets[0]["why"]
     assert sets[1]["also_changed"]["strategy.mechanism"] == ["lineage", "pareto"]       # what moved with it is on record
-    assert controller.settings["_skill"]["name"] == "efficiency" and controller.settings["strategy"]["mechanism"] == "pareto"
+    assert controller.settings["_skill"]["name"] == "model-efficiency" and controller.settings["strategy"]["mechanism"] == "pareto"
     ask(folder, "t", {"kind": "stop", "by": "Ada"})
     controller.run(max_seconds=120)
 
@@ -160,12 +167,19 @@ def test_the_report_says_what_the_skill_still_lacks():
 
 def test_setup_suggests_a_skill_from_the_words_of_the_goal(tmp_path):
     folder = search(tmp_path)
-    for goal, wanted in (("Distil the ensemble into a small student.", "distillation"),
-                         ("Tune the learning rate and weight decay.", "tuning"),
-                         ("Make the model faster at the same accuracy.", "efficiency"),
-                         ("An interpretable model whose filters are motifs.", "mechanistic"),
-                         ("A biophysical model of binding.", "mechanistic"),
-                         ("Get the best correlation on held-out data.", "performance")):
+    for goal, wanted in (("Distil the ensemble into a small student.", "model-distillation"),
+                         ("Speed up this algorithm at the same output.", "algorithm-runtime"),
+                         ("A family of models across sizes, the best at each.", "model-size-frontier"),
+                         ("Improve the peak calling method.", "bioinformatics-algorithm"),
+                         ("Make the preprocessing pipeline cheaper.", "data-pipeline"),
+                         ("Fine-tune the pretrained model.", "model-finetuning"),
+                         ("Members for an ensemble.", "model-ensemble-members"),
+                         ("A better loss function and augmentation.", "model-training-recipe"),
+                         ("Tune the learning rate and weight decay.", "settings-tuning"),
+                         ("Make the model faster at the same accuracy.", "model-efficiency"),
+                         ("An interpretable model whose filters are motifs.", "model-mechanistic"),
+                         ("A biophysical model of binding.", "model-mechanistic"),
+                         ("Get the best correlation on held-out data.", "model-performance")):
         brief = form.load_brief(folder)
         form.put(brief, "objective.goal", goal)
         made = interview.infer(folder, brief)
@@ -222,3 +236,103 @@ def test_the_tuning_skill_searches_settings_without_calling_an_agent(tmp_path):
     assert len({r["model"] for r in runs}) == 1                                  # the structure never changed
     assert len({str(sorted(r["settings"].items())) for r in runs}) == len(runs)  # and every design has its own settings
     assert any("densities" in str(r["history"].get("predicted_effect")) for r in runs)
+
+
+# --- the library: combining, a search's own copies, finding -----------------------------------------
+def test_skills_are_merged_in_the_order_given_and_the_plan_says_where_they_differ():
+    assert skill.wanted("distillation, model-size-frontier") == ["model-distillation", "model-size-frontier"]
+    assert skill.wanted(["efficiency", "efficiency", "none"]) == ["model-efficiency"] and skill.wanted(None) == []
+    settings, sources = resolved(run__skill=["model-distillation", "model-size-frontier"])
+    both = settings["_skill"]
+    assert both["name"] == "model-distillation + model-size-frontier" and both["parts"] == ["model-distillation", "model-size-frontier"]
+    assert settings["space"]["preset"] == "architecture_and_recipe" and settings["strategy"]["mechanism"] == "archive"   # one from each
+    assert sources["strategy.mechanism"] == "skill model-distillation + model-size-frontier"
+    told = skill.guidance(both, "writer", used=0.8)
+    assert "From the skill model-distillation:" in told["guidance"] and "From the skill model-size-frontier:" in told["guidance"]
+    assert {d["skill"] for d in told["if_you_see"]} == {"model-distillation", "model-size-frontier"}
+    assert "model-size-frontier:" in told["at_this_stage"] and "Improve the best design in each band" in told["at_this_stage"]
+    assert "Put at least two designs" in skill.guidance(both, "writer", used=0.1)["at_this_stage"]
+    assert both["needs"]["figures"] == ["parameters"] and both["needs"]["references"] == ["teacher", "from scratch"]
+    assert both["clashes"] and both["clashes"][0]["setting"] == "report.columns" or not both["clashes"]
+    # Two skills that set the same thing differently: the later stands, and the plan says so.
+    clash, _ = resolved(run__skill="model-efficiency, model-size-frontier")
+    assert clash["strategy"]["mechanism"] == "archive"
+    notes = form.warnings(clash)
+    assert any("strategy.mechanism" in n and "model-size-frontier stands" in n for n in notes)
+    assert any("not meant to be combined" in n for n in notes)
+    swapped, _ = resolved(run__skill="model-size-frontier, model-efficiency")
+    assert swapped["strategy"]["mechanism"] == "pareto"
+    assert "no skill named" in skill.combine("model-efficiency, nonesuch")[1]
+    assert form.check_value("run.skill", ["a", "b"]) is None and form.check_value("run.skill", [1]) is not None
+
+
+def test_a_search_gets_its_own_copy_of_each_skill_and_reads_that(tmp_path, capsys):
+    folder = search(tmp_path)
+    brief = form.load_brief(folder)
+    form.put(brief, "run.skill", "model-efficiency, model-distillation")
+    form.save_brief(folder, brief)
+    assert main(["brief", folder, "--confirm", "Ada"]) == 0
+    said = capsys.readouterr().out
+    assert "its own copy of: model-efficiency, model-distillation" in said
+    own = os.path.join(folder, "skills", "model-efficiency", "skill.yaml")
+    assert os.path.isfile(own) and os.path.isfile(os.path.join(folder, "skills", "model-distillation", "skill.yaml"))
+    assert skill.checkout("model-efficiency", folder) == []                       # never copied over an edited one
+    assert skill.find("model-efficiency", folder) == os.path.dirname(own)        # the search's copy comes first
+    assert skill.load("model-efficiency", folder)[0]["own"] and not skill.load("model-efficiency")[0]["own"]
+    with open(own, encoding="utf-8") as handle:
+        text = handle.read()
+    with open(own, "w", encoding="utf-8") as handle:
+        handle.write(text.replace("Take away before adding.", "Take away before adding. Never use attention."))
+    assert "Never use attention." in skill.load("model-efficiency", folder)[0]["guidance"]["writer"]
+    assert "Never use attention." not in skill.load("model-efficiency")[0]["guidance"]["writer"]      # the library is untouched
+
+
+def test_an_edit_to_a_skill_during_a_run_goes_on_the_record(tmp_path):
+    folder = search(tmp_path, budget__evaluations=40, evaluation__allowance=150, audit__reviews="none", harness__level="minimal",
+                    run__skill="model-performance")
+    controller = Controller(folder, "t", poll=0.2)
+    drive(controller, lambda v: len(scored(v)) >= 2)
+    own = os.path.join(folder, "skills", "model-performance", "skill.yaml")
+    assert os.path.isfile(own)                                                   # copied when the run began
+    assert not [e for e in controller.store.merged_list("ledger") if e["kind"] == "skill"]
+    with open(own, encoding="utf-8") as handle:
+        text = handle.read()
+    with open(own, "w", encoding="utf-8") as handle:
+        handle.write(text.replace("The aim is the best validation score.", "The aim is the best validation score. No attention."))
+    os.utime(own, (1, 12345.0))
+    controller.turn()
+    edits = [e for e in controller.store.merged_list("ledger") if e["kind"] == "skill"]
+    assert len(edits) == 1 and edits[0]["skills"] == ["model-performance"]
+    assert edits[0]["before"]["model-performance"] != edits[0]["after"]["model-performance"]
+    assert "No attention." in controller.settings["_skill"]["guidance"]["all"]
+    controller.turn()
+    assert len([e for e in controller.store.merged_list("ledger") if e["kind"] == "skill"]) == 1     # once per edit
+    ask(folder, "t", {"kind": "set", "changes": {"run.skill": "model-performance, model-training-recipe"}, "by": "Ada"})
+    controller.turn()
+    assert os.path.isdir(os.path.join(folder, "skills", "model-training-recipe"))
+    assert len([e for e in controller.store.merged_list("ledger") if e["kind"] == "skill"]) == 1     # a change of skills is a `set`
+    ask(folder, "t", {"kind": "stop", "by": "Ada"})
+    controller.run(max_seconds=120)
+    with open(os.path.join(folder, "runs", "t", "report.md"), encoding="utf-8") as handle:
+        assert "the skill file(s) model-performance changed" in handle.read()
+
+
+def test_the_library_can_be_listed_searched_and_read_by_a_program(tmp_path, capsys):
+    import json
+    assert [r["name"] for r in skill.search("pareto")][:1] == ["model-size-frontier"] or "model-size-frontier" in [
+        r["name"] for r in skill.search("pareto")]
+    assert [r["name"] for r in skill.search("faster pipeline")][0] == "data-pipeline"
+    assert [r["name"] for r in skill.search("bioinformatics")][0] == "bioinformatics-algorithm"
+    assert skill.search("zzzz") == []
+    assert main(["skills"]) == 0
+    listed = capsys.readouterr().out
+    assert "MODEL" in listed and "BIOINFORMATICS" in listed and "data-pipeline" in listed
+    assert main(["skills", "--search", "student teacher"]) == 0 and "model-distillation" in capsys.readouterr().out
+    assert main(["skills", "--json"]) == 0
+    rows = json.loads(capsys.readouterr().out)
+    assert len(rows) == 12 and set(rows[0]) >= {"name", "title", "domain", "objective", "tags", "version", "sets", "needs", "digest"}
+    page = skill.library_markdown()
+    assert all("### %s" % name in page for name in skill.names()) and "If the results show" in page
+    with open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "docs", "skill-library.md"),
+              encoding="utf-8") as handle:
+        assert handle.read() == page, "docs/skill-library.md is stale: regenerate it with `evoloop skills --markdown`"

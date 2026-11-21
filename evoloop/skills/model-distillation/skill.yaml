@@ -1,5 +1,14 @@
-name: distillation
+name: model-distillation
+title: Distil a student from a teacher
 summary: Train a smaller or faster student to match a teacher. The student's architecture and its training recipe (loss, optimizer, learning rate, regularization, augmentation) are both open.
+domain: model
+objective: a smaller or faster model that matches a larger model or an ensemble
+tags: [distillation, student, teacher, compression, ensemble, augmentation]
+version: 2
+authors: [evoloop]
+when: >
+  You have a strong model or ensemble that is too large or slow to use, and want a student that keeps its
+  accuracy. Not for shrinking a model with no teacher (model-efficiency).
 settings:
   space:
     preset: architecture_and_recipe
@@ -19,25 +28,38 @@ guidance:
     trained from scratch on the measured targets alone, and the size or speed it was meant to reach.
   writer: |
     The recipe matters as much as the architecture here. What usually moves a student:
-    - the target: the teacher's output in place of, or mixed with, the measured target; for classification, soft
-      targets with a temperature; for regression, the teacher's mean prediction, which is less noisy than the data;
+    - the target: the teacher's output in place of, or mixed with, the measured target. For classification, soft
+      targets with a temperature. For regression, the teacher's mean prediction, which is less noisy than the data.
     - teacher-labelled augmentation: the teacher can label any input, so the student can train on perturbed and
       synthetic inputs far beyond the measured set. Aggressive augmentations that would be wrong against measured
-      targets are right against the teacher's labels. Treat this as the default, not an extra;
+      targets are right against the teacher's labels. Treat this as the default, not an extra.
     - optimisation: students often want a longer schedule and less regularization than the teacher had, because
-      the teacher's targets are smoother than the data;
+      the teacher's targets are smoother than the data.
     - starting point: a student that starts from an already trained model of its own kind learns faster than one
-      from random weights (see `inherit_weights` in the task, if the adapter supports it).
-    Change the student's size only with a reason from the results: an underfit on teacher targets says too small;
-    a fit on teacher targets with a poor held-out score says the data or the recipe, not the size.
-    Do not copy the teacher's architecture at reduced width as the only idea; a different shape often distils better.
+      from random weights.
+    Change the student's size only with a reason from the results. Do not copy the teacher's architecture at
+    reduced width as the only idea; a different shape often distils better.
   analyst: |
     Keep recipe findings and architecture findings apart, and say for each lesson which it is. Note the gap to the
     teacher and to the from-scratch student whenever the results show them: a student that only matches its
     from-scratch twin has gained nothing from the teacher.
   strategist: |
-    If recipe moves are still gaining, keep the share of settings moves and edits high; move to new architectures
+    If recipe moves are still gaining, keep the share of settings moves and edits high. Move to new architectures
     when the recipe has stopped paying on the current ones.
+diagnose:
+  - see: "the student does not fit the teacher's outputs even on training inputs"
+    do: "the student is too small or trains too briefly: train longer first, then widen or deepen"
+  - see: "the student fits the teacher on training inputs but not on held-out ones"
+    do: "add teacher-labelled augmented or synthetic inputs, or regularize; do not enlarge the student"
+  - see: "the student matches the same student trained from scratch on measured targets"
+    do: "the teacher is adding nothing: raise the weight of the teacher's targets, or check that the teacher's outputs are used at all"
+  - see: "the student beats the teacher on validation data"
+    do: "check for leakage between the teacher's training data and the validation set before believing it"
+  - see: "stronger augmentation lowers the score"
+    do: "check that the augmented inputs are labelled by the teacher and not paired with the measured targets"
+stages:
+  early: "Find a recipe that works on one or two student shapes before varying the shape."
+  late: "Keep the recipe, and vary the student's size and shape around the best one to find the smallest that holds the score."
 needs:
   adapter:
     - "the training script must produce the teacher's outputs (or read stored ones) and train the student against them; the loss and augmentation blocks should be marked as open recipe blocks"
@@ -45,3 +67,5 @@ needs:
     - "if the teacher is an ensemble, add a reference row for the ensemble and one for its best single member"
   figures: []
   references: ["teacher", "from scratch"]
+combines: [model-size-frontier, model-efficiency]
+conflicts: [settings-tuning]

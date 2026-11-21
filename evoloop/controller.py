@@ -72,6 +72,8 @@ class Controller:
             return
         if not form.confirmed(self.brief):
             raise form.BriefError("the brief is not confirmed (run `evoloop brief --confirm NAME` after reading `evoloop plan`)")
+        if skill.checkout(form.given(self.brief).get("run.skill"), self.folder):
+            self.refresh()
         if self.settings.get("_skill_fault"):
             raise form.BriefError(self.settings["_skill_fault"])
         self.info = {"name": self.name, "started": time.strftime("%Y-%m-%d %H:%M"), "brief": self.brief,
@@ -172,7 +174,9 @@ class Controller:
             for key, value in (request.get("changes") or {}).items():
                 fault = form.check_change(key, value)
                 if not fault and key == "run.skill":     # a skill that cannot be found or read is refused, not half-applied
-                    fault = skill.load(value, self.folder)[1]
+                    fault = skill.combine(value, self.folder)[1]
+                    if not fault:      # the search gets its own copy of each skill, to read and to edit
+                        skill.checkout(value, self.folder)
                 old = form.get(self.settings, key)
                 entry = {"kind": "set", "key": key, "value": value, "old": old, "by": who, "reason": why,
                          "status": "refused" if fault else "applied", "why": fault}
@@ -228,6 +232,20 @@ class Controller:
     def refresh(self) -> None:
         self.settings, self.sources = form.resolve(self.brief, self.store.merged_list("ledger"), self.folder)
         self.agents.update(self.settings)
+
+    def note_skill(self) -> None:
+        """A skill's file is the person's to edit, during a run too. Each edit is put on the record: which skill,
+        and the digest of the file before and after."""
+        now = (self.settings.get("_skill") or {}).get("digests") or {}
+        before = self.state.get("skill_digests")
+        if before is not None and before != now and self.info:
+            changed = sorted(n for n in before if n in now and before[n] != now[n])   # edits; a change of skills is a `set`
+            if not changed:
+                self.state["skill_digests"] = dict(now)
+                return
+            self.ledger({"kind": "skill", "skills": changed, "before": {n: before.get(n) for n in changed},
+                         "after": {n: now.get(n) for n in changed}, "by": "an edit to the skill files", "status": "applied"})
+        self.state["skill_digests"] = dict(now)
 
     # --- jobs ------------------------------------------------------------------------------------
     def out_dir(self, run: Dict[str, Any]) -> str:
@@ -926,6 +944,7 @@ class Controller:
         self.read_inbox()
         self.refresh()
         approaches.sync(self.store, self.settings)
+        self.note_skill()
         view = self.view()
         self.follow(view)
         view = self.collect(self.view())

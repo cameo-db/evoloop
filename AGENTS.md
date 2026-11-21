@@ -18,7 +18,9 @@ answer only when they leave it or pick it. Do not suggest where you have no evid
 
 Two of the questions decide most of the rest: the kind of search (`run.type`, how to search) and the kind of
 optimisation (`run.skill`: a better score, a distilled student, tuned settings, a smaller or faster model, or an
-interpretable model improved). `evoloop skills` lists the skills; suggest the one the person's goal describes.
+interpretable model improved, a faster algorithm or pipeline). `evoloop skills` lists the library and
+`evoloop skills --search WORDS` finds one; suggest what the person's goal describes. Skills can be combined, and the
+search gets its own editable copy of each when the brief is confirmed.
 
 Then get the next question with
 

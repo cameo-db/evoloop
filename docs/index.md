@@ -1,89 +1,168 @@
 # evoloop
 
 evoloop improves a project's code by evolutionary search. You mark the parts of the code that may
-change. Language-model agents write new versions of those parts; code decides what gets tried next,
-trains each design once, keeps the score, and records everything.
+change. Language-model agents write new versions of those parts. Code decides what gets tried next,
+runs each design once, keeps the score, and records everything.
 
-It is built for searches where one evaluation is a training run: tens to hundreds of evaluations, each
-costing GPU time, with scores that differ between two fits of the same model. And it is not one loop. A
-search is put together from choices made when it is set up, and changeable while it runs.
+It is built for searches where one evaluation is costly, such as a training run: tens to hundreds of
+evaluations, with scores that differ between two runs of the same design. You can change its course
+while it runs.
+
+## The workflow
+
+```mermaid
+flowchart LR
+    A["<b>1. Mark the code</b><br>what may change"] --> B["<b>2. Write the adapter</b><br>how one design is scored"]
+    B --> C["<b>3. Answer the questions</b><br>skill, run type, budget"]
+    C --> D["<b>4. Read the plan</b><br>settings, warnings, cost"]
+    D --> E{"<b>5. Confirm</b><br>by name"}
+    E --> F["<b>6. Run</b>"]
+    F --> G["<b>7. Read the results</b><br>report, leaderboard, study file"]
+    F -. "steer, chat, stop" .-> F
+```
+
+??? note "1. Mark the code"
+    `evoloop init mysearch --source path/to/project` copies your project into a search folder. In the
+    copy, you put markers around the parts that may change:
+
+    ```python
+    # EVOLVE-BLOCK-START name=trunk kind=structure role=trunk
+    ...the code of the trunk...
+    # EVOLVE-BLOCK-END
+    ```
+
+    Everything outside the markers is frozen and checked on every start. Your original project is never
+    touched. Details: [Setting up a search](setting-up.md).
+
+??? note "2. Write the adapter"
+    `adapter/run.py` runs one design and writes `result.json` with its score. It can also report a
+    size, a speed, where the errors fall, and progress lines that let weak designs be stopped early.
+    Details: [The project's code](project-contract.md).
+
+??? note "3. Answer the questions"
+    One question at a time, with choices and a suggested answer where there is evidence for one: in a
+    terminal (`evoloop setup`), in a browser form (`evoloop form`), or with an agent in a chat. Two
+    answers decide most of the rest: the [skill](skills.md) (what kind of problem this is) and the run
+    type (how to search).
+
+??? note "4. Read the plan"
+    `evoloop plan mysearch` shows every setting and where its value came from, warnings about
+    combinations that work against each other, and an estimate of what the agents will cost.
+
+??? note "5. Confirm"
+    `evoloop brief mysearch --confirm "Your Name"`. Nothing runs before this. The skills you chose are
+    copied into the search folder, where you can edit them.
+
+??? note "6. Run, and steer"
+    `evoloop run mysearch --name r1`, on your machine or with one Slurm job per design. While it runs you
+    can change settings, add notes for the agents, order particular moves, switch skills, or talk to the
+    agent that runs the search. Every change is checked and recorded. Details:
+    [Steering a run](steering.md).
+
+??? note "7. Read the results"
+    A report with the leaderboard, what each kind of move returned and what waits for you; every design
+    with its code and history; a ledger of every change; a scorecard of the agents; and a study file in
+    the CAMEO entry format. Details: [Records and the study file](records.md).
+
+## What happens for each design
+
+```mermaid
+flowchart TD
+    You["You<br>brief and steering"] --> Ledger[("Ledger<br>every change, by whom")]
+    Ledger --> Slot["A job slot is free"]
+    Slot --> Schedule["<b>Schedule</b>: which kind of slot?<br>new · novel · cross · local"]
+    Schedule --> Strategy["<b>Strategy</b>: which parents?<br>worked out from the results"]
+    Strategy --> Writer["<b>Writer</b>: an agent, or code,<br>writes the blocks"]
+    Writer --> Checks{"<b>Checks</b> by code<br>only open blocks · parses<br>not a copy · within limits"}
+    Checks -- refused --> Writer
+    Checks -- ok --> Job["<b>Job</b>: run and score it once"]
+    Job --> Records[("Records<br>models, recipes, runs")]
+    Records --> Slot
+    Records --> Out["Report · scorecard · study file"]
+```
+
+Three rules hold everywhere:
+
+- **Agents write and judge; code decides and records.** Whatever an agent returns is checked by code
+  before it counts. The budget, the limits and the frozen code are enforced by code, never by a prompt.
+- **Agents never talk to each other.** Each call is a fresh context built from the run's records, so a
+  search can stop, restart, or change its agents at any point.
+- **A guess is only ever a suggestion.** The tool proposes answers with reasons; you see every one and
+  can change it.
 
 ## The two choices that decide most of the rest
 
 | Choice | It says | Options |
 |---|---|---|
-| **Skill** (`run.skill`) | what kind of problem this is | `performance`, `distillation`, `tuning`, `efficiency`, `mechanistic`, or [your own](skills.md) |
+| **Skill** (`run.skill`) | what kind of problem this is | a [library](skill-library.md) of templates you can edit, combine and add to |
 | **Run type** (`run.type`) | how to search | `explore_then_exploit`, `refine`, `survey`, `discovery`, `settings_only`, `custom` |
 
-## Everything else, by what it is for
+??? note "The skills"
+    | Skill | For |
+    |---|---|
+    | `model-performance` | the best score, nothing else weighed |
+    | `model-distillation` | a smaller or faster student that matches a teacher |
+    | `model-efficiency` | the same score at a lower cost in parameters or time |
+    | `model-size-frontier` | the best model at every size or speed across a broad range |
+    | `model-training-recipe` | a better score from the same architecture, by training it better |
+    | `model-ensemble-members` | a set of strong models whose errors do not coincide |
+    | `model-finetuning` | the best score on a task starting from a pretrained model |
+    | `model-mechanistic` | a better fit without losing what the parameters mean |
+    | `settings-tuning` | the best values for the settings of fixed code, by a Bayesian estimator, with no agent calls |
+    | `algorithm-runtime` | the same results in less time or memory |
+    | `bioinformatics-algorithm` | better accuracy against a truth set, at an acceptable run time |
+    | `data-pipeline` | the same output from a pipeline in less time, memory or cost |
 
-| For | Choice | Options | Set with |
-|---|---|---|---|
-| Selection | Evolution strategy | `lineage`, `archive`, `tournament`, `pareto`, `greedy`; any of them on islands, with or without resets | `strategy.mechanism`, `strategy.islands`, `strategy.reset_every` |
-| | A second objective | the score with size, speed or any reported figure | `strategy.second_metric` |
-| Exploration | Schedule | shares of new designs, crossover and local moves by phase; fixed or adaptive | `schedule.phases` |
-| | Novelty | how far a design far from everything tried is favoured; measured on code or on behaviour | `schedule.novelty`, `schedule.novelty_measure` |
-| | Crossover | `block_swap`, `graft`, `hybrid` | `crossover.kinds` |
-| What may change | Search space | settings only, one module, the architecture, the architecture and the recipe, your own list | `space.preset` |
-| Cost of an evaluation | Early stopping | one screen of new designs, or a promotion ladder over all designs | `evaluation.ladder` |
-| | Starting point | from scratch, or from the parent's weights | `evaluation.inherit_weights` |
-| The writers | Model and effort | any Claude model and effort level, for every role or role by role; several models by share | `agents.default_model`, `agents.effort`, `agents.writer_mix` |
-| | How a change is returned | whole blocks, or find-and-replace edits | `variation.edit_format` |
-| | Ways of working | approaches handed to the writers, kept or dropped by their record | `variation.approaches` |
-| | Settings moves | an agent, a sampler, or a Bayesian estimator in code | `variation.settings_by` |
-| Who decides | Who runs the search | code (deterministic), or an agent you talk to | `harness.conductor` |
-| | Strategist | off, advising, or acting within bounds you set | `strategist.mode` |
-| | Autonomy | `harnessed`, `guided`, `agentic`: how much the agents decide | `harness.autonomy` |
-| | Harness | `minimal`, `standard`, `full`; slots chosen by code or by a coordinator agent | `harness.level`, `harness.coordinator` |
-| Oversight | Spend | a dollar cap on the agents, paced by code | `budget.model_dollars`, `budget.spend_policy` |
-| | Limits | hard bounds on size, speed or any reported figure | `limits` |
-| | Audit | a scorecard by code; reviews of each agent at the points you choose | `audit.reviews` |
+    A skill sets what suits the task, gives each agent guidance for its role, and says what your adapter
+    must report. Skills can be combined (`run.skill: [model-distillation, model-size-frontier]`).
+    [Skills](skills.md) explains them; the [skill library](skill-library.md) shows each in full.
 
-The [menu](menu.md) lists every option with what it does, and what each preset sets.
-[How it compares with established methods](compared.md) says where each mechanism comes from.
+??? note "The run types"
+    | Run type | For | Shares of new designs, crossover, local moves |
+    |---|---|---|
+    | `explore_then_exploit` | most searches | 65 / 10 / 25 for the first 60% of the budget, then 15 / 25 / 60 |
+    | `refine` | a known good model | 10 / 20 / 70 throughout; few families |
+    | `survey` | a new problem | 75 / 10 / 15 throughout; each kind of design kept in play |
+    | `discovery` | long runs with cheap evaluations | novelty high, the lightest harness |
+    | `settings_only` | a hyperparameter search | every slot is a settings move |
+    | `custom` | your own description | where you set nothing, the guidance for the budget and the defaults |
 
-## The loop in one picture
+    The [menu](menu.md) lists exactly what each sets.
 
+## How a choice changes what the search does
+
+Every choice moves the search along a few axes. This is the short version;
+[How each choice changes the search](choices.md) goes through all of them.
+
+| If you want | Change | Effect |
+|---|---|---|
+| more exploration | the share of new designs in `schedule.phases`; `schedule.novelty` up; `survey` | more families tried, each less deeply |
+| more exploitation | the share of local moves up; `refine`; `strategy.mechanism: greedy` | the leader improved faster, at the risk of a local optimum |
+| different kinds of design kept alive | `strategy.mechanism: archive` or `lineage`; islands | a design that is different but behind stays in play |
+| two goals at once | `strategy.mechanism: pareto` with `strategy.second_metric` | a trade-off front instead of one winner |
+| more designs for the same compute | `evaluation.ladder` | weak designs stopped early; slow starters can be lost |
+| a lower agent bill | `harness.level: minimal`; a cheaper model; `variation.settings_by: tpe` | fewer or cheaper calls, less judgement |
+| more judgement from the agents | `harness.autonomy: agentic`; `strategist.mode: act`; `harness.conductor: agent` | the course adapts to the results, within bounds you set |
+
+## Where each setting's value comes from
+
+```mermaid
+flowchart LR
+    D["Defaults"] --> G["Guidance for<br>the size of the budget"] --> R["Run type"] --> S["Skill"] --> A["Autonomy"] --> B["Your brief"] --> L["Your changes<br>during the run"]
 ```
-            you                                  the run's records
-   brief.yaml  +  steering  ───────────────►  ledger (every change, by whom)
-                                                      │
-                                                      ▼
-   ┌──────────────────────────  a job slot is free  ──────────────────────────┐
-   │                                                                          │
-   │  schedule      which kind of slot?      new · novel · cross · local      │
-   │  strategy      which parents?           from the results alone           │
-   │  writer        writes the blocks        an agent, or code                │
-   │  checks        only open blocks, parses, not a copy, nothing forbidden   │
-   │  job           trains it once           one job per design               │
-   │                                                                          │
-   └────────────────────────────────┬─────────────────────────────────────────┘
-                                    ▼
-        results (models, recipes, runs)  ──►  report · scorecard · study file
-```
 
-Three things hold everywhere:
-
-- **Agents never talk to each other.** Each call is a fresh context built from the run's records, and
-  whatever a role returns is checked by code and written to those records.
-- **A strategy keeps no state.** Its population is worked out from the results each time, which is why
-  the strategy can be changed in the middle of a run.
-- **A guess is only ever a suggestion.** The tool and an agent propose answers with their reasons; you see
-  every one and can change it. A required field with no answer stays a question, and a run
-  does not start until you have confirmed the brief by name.
+A later layer wins over an earlier one, so what you set yourself always stands. `evoloop plan` prints
+every setting with the layer it came from.
 
 ## Where to go next
 
-- [First run](quickstart.md): the built-in example, with stub agents, at no cost.
-- [Setting up a search](setting-up.md): the search folder, marking the code, the brief.
-- [Skills](skills.md): the kind of optimisation, and the guidance each gives the agents.
-- [How a search works](how-it-works.md): the schedule, the strategies, crossover, novelty, early stopping, the writers.
-- [How it compares with established methods](compared.md): FunSearch, AlphaEvolve, regularized evolution, and what differs here.
-- [Steering a run](steering.md): changing settings, notes to the agents, stopping, without a restart.
-- [Model and effort](models.md): which model each role runs on and how hard it reasons, with defaults you can change.
-- [Agentic or harnessed, and what it costs](autonomy.md): how much the agents decide, with an estimate of the cost of each level.
-- [The strategist and the budget](strategist.md): an agent that can change the course of a search or run it and talk to you, and the spend cap.
-- [Auditing the agents](auditing.md): the scorecard and the reviews.
-- [The project's code](project-contract.md): what your adapter is given and what it writes.
-- [Records and the study file](records.md): what a run leaves behind.
-- [Status and limits](status.md): what has been tested, what is not built, what is known to be weak.
+| To | Read |
+|---|---|
+| see it work, at no cost | [First run](quickstart.md) |
+| set up your own search | [Setting up a search](setting-up.md), [Skills](skills.md), [The project's code](project-contract.md) |
+| decide between options | [How each choice changes the search](choices.md), [Menu of choices and presets](menu.md) |
+| understand the mechanisms | [How a search works](how-it-works.md), [How it compares with established methods](compared.md) |
+| run and steer | [Steering a run](steering.md), [The strategist and the budget](strategist.md), [Commands](commands.md) |
+| choose models and autonomy | [Model and effort](models.md), [Agentic or harnessed, and what it costs](autonomy.md) |
+| check the agents and the results | [Auditing the agents](auditing.md), [Records and the study file](records.md) |
+| know what is proven | [Status and limits](status.md) |

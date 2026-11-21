@@ -23,23 +23,47 @@ the person can change course when the results call for it.
 
 ## What is taken from where
 
-| Mechanism | Introduced by | In evoloop | How it differs here |
+```mermaid
+flowchart LR
+    FS["FunSearch"] --> E(("evoloop"))
+    AE["AlphaEvolve"] --> E
+    RE["Regularized evolution"] --> E
+    ME["MAP-Elites"] --> E
+    NE["NEAT"] --> E
+    SH["Successive halving, ASHA"] --> E
+    TP["TPE"] --> E
+    E --> Own["its own: steering ledger, periods,<br>noise floor, skills, strategist,<br>audit, two budgets"]
+```
+
+### From FunSearch
+
+| Mechanism | In evoloop | How it differs here |
+|---|---|---|
+| Evolve one function inside a fixed skeleton | `EVOLVE-BLOCK` markers in `base/`; the rest is frozen and hashed | several blocks, each with a kind and a role, so the space can be opened role by role |
+| Islands, the weaker half reset at intervals | `strategy.islands`, `strategy.reset_every` | off by default: islands split a small budget thinly |
+| Programs kept apart by what they do | `strategy.descriptors: [behaviour]` | grouped by where a trained model's errors fall, by correlation, not by an exact match |
+
+### From AlphaEvolve
+
+| Mechanism | In evoloop | How it differs here |
+|---|---|---|
+| A program database: an archive on islands | `strategy.mechanism: archive` with `strategy.islands` | cells are family, size, behaviour or any reported metric |
+| A fast and a strong model writing together | `agents.writer_mix` | any models and shares; the report compares their designs |
+| Edits as diffs | `variation.edit_format: diff` | an edit applies only if its text occurs exactly once in the block |
+| An evaluation cascade | the quick check, then `evaluation.ladder` | successive halving inside one job, not a set of cheaper tests |
+| Several objectives | `strategy.mechanism: pareto` | two figures, not many |
+| Instructions that evolve | `variation.approaches` | one line per slot varies, with a record of what it led to |
+
+### From other methods
+
+| Method | Mechanism | In evoloop | How it differs here |
 |---|---|---|---|
-| Evolve marked regions of a larger program | FunSearch (one function in a fixed skeleton); AlphaEvolve (marked blocks across files) | `EVOLVE-BLOCK` markers in `base/`; everything else is frozen and hashed | blocks carry a kind (`structure` or `params`) and a role (trunk, head, loss, optimizer), so the search space can be opened role by role |
-| A language model writes the candidates from earlier scored ones | FunSearch, AlphaEvolve | the writer is shown the parents, the leaderboard, families, recent results and lessons | every slot has a named kind of move (new, novel, crossover, edit, settings, ablation), so each result has a stated cause |
-| Islands with resets | FunSearch | `strategy.islands`, `strategy.reset_every` | off by default; islands split a small budget thinly |
-| Keep programs apart by what they do | FunSearch (clusters by score signature) | `strategy.descriptors: [behaviour]`, from the `signature` a run reports | the signature is where a trained model's errors fall, compared by correlation, not exact match |
-| An archive of the best of each kind | MAP-Elites; AlphaEvolve's program database | `strategy.mechanism: archive`, on islands if wanted | cells are family, size, behaviour or any reported metric |
-| An ensemble of a fast and a strong model | AlphaEvolve | `agents.writer_mix`, with a report of each model's designs | any models, any shares, changeable during a run |
-| Edits as diffs | AlphaEvolve | `variation.edit_format: diff` | an edit applies only if its text occurs exactly once in the block |
-| An evaluation cascade | AlphaEvolve | the quick check, then `evaluation.ladder` | the ladder is successive halving inside one training job (see below), not a set of cheaper tests |
-| Several objectives | AlphaEvolve | `strategy.mechanism: pareto` on the score and one second figure | two figures, not many; the score alone still ranks the leaderboard |
-| Evolving the instructions | AlphaEvolve (meta-prompts) | `variation.approaches` | one line per slot varies, with a record of what each line led to; the base instructions stay fixed |
-| Tournament selection with aging | Regularized evolution (AmoebaNet) | `strategy.mechanism: tournament` | as published, at smaller scale |
-| Species protected while young | NEAT | `strategy.mechanism: lineage`: a protected trial, a quota, retirement | lineages are families of designs, not genomes; the default strategy |
-| Stopping weak runs early by rank | Successive halving, Hyperband, ASHA | `evaluation.ladder` | asynchronous, within one job, charged by the share of the run used |
-| Bayesian choice of settings | TPE (the default sampler of Optuna and Hyperopt) | `variation.settings_by: tpe` | a small implementation in code; each setting modelled on its own |
-| Weight inheritance | Network morphism, Lamarckian evolution, weight-sharing search | `evaluation.inherit_weights` | the adapter decides what to load; warm-started scores are not corrected for |
+| Regularized evolution | tournament selection with aging | `strategy.mechanism: tournament` | as published, at smaller scale |
+| MAP-Elites | the best of each kind, on a grid | `strategy.mechanism: archive` | the grid's axes are yours to choose |
+| NEAT | new species protected while young | `strategy.mechanism: lineage` | families of designs, not genomes; the default |
+| Successive halving, ASHA | weak runs stopped by rank | `evaluation.ladder` | within one job, charged by the share of the run used |
+| TPE (Optuna, Hyperopt) | Bayesian choice of settings | `variation.settings_by: tpe` | a small implementation; each setting modelled alone |
+| Network morphism, weight sharing | a child starts from its parent's weights | `evaluation.inherit_weights` | the adapter decides what to load |
 
 ## What evoloop adds
 
@@ -90,7 +114,7 @@ These are not in the methods above, and are the reason for the package.
 | FunSearch | `strategy.mechanism: archive`, `strategy.descriptors: [behaviour]`, `strategy.islands: 4`, `strategy.reset_every: 40`, `harness.level: minimal` |
 | AlphaEvolve | `strategy.mechanism: archive` on `strategy.islands: 3`, `agents.writer_mix`, `variation.edit_format: diff`, `variation.approaches: evolve`, `evaluation.ladder` |
 | Regularized evolution | `strategy.mechanism: tournament`, a schedule of local moves only |
-| Hyperband with a Bayesian sampler (BOHB) | `run.skill: tuning` with `evaluation.ladder` |
+| Hyperband with a Bayesian sampler (BOHB) | `run.skill: settings-tuning` with `evaluation.ladder` |
 | A hill climb | `strategy.mechanism: greedy` |
 
 These resemble the methods; they are not reimplementations of them, and they need budgets in the

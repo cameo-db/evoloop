@@ -36,24 +36,34 @@ With few, costly, noisy evaluations, three things matter most, and evoloop is or
    change is recorded with who made it, and scores from before and after a change that alters their
    meaning are never mixed.
 
-## How a search works
+## The workflow
 
+```mermaid
+flowchart LR
+    A["<b>1. Mark the code</b><br>what may change"] --> B["<b>2. Write the adapter</b><br>how one design is scored"]
+    B --> C["<b>3. Answer the questions</b><br>skill, run type, budget"]
+    C --> D["<b>4. Read the plan</b><br>settings, warnings, cost"]
+    D --> E{"<b>5. Confirm</b><br>by name"}
+    E --> F["<b>6. Run</b>"]
+    F --> G["<b>7. Read the results</b><br>report, leaderboard, study file"]
+    F -. "steer, chat, stop" .-> F
 ```
-            you                                  the run's records
-   brief.yaml  +  steering  ───────────────►  ledger (every change, by whom)
-                                                      │
-                                                      ▼
-   ┌──────────────────────────  a job slot is free  ──────────────────────────┐
-   │                                                                          │
-   │  schedule      which kind of slot?      new · novel · cross · local      │
-   │  strategy      which parents?           from the results alone           │
-   │  writer        writes the blocks        an agent, or code                │
-   │  checks        only open blocks, parses, not a copy, nothing forbidden   │
-   │  job           trains it once           one job per design               │
-   │                                                                          │
-   └────────────────────────────────┬─────────────────────────────────────────┘
-                                    ▼
-        results (models, recipes, runs)  ──►  report · scorecard · study file
+
+## What happens for each design
+
+```mermaid
+flowchart TD
+    You["You<br>brief and steering"] --> Ledger[("Ledger<br>every change, by whom")]
+    Ledger --> Slot["A job slot is free"]
+    Slot --> Schedule["<b>Schedule</b>: which kind of slot?<br>new · novel · cross · local"]
+    Schedule --> Strategy["<b>Strategy</b>: which parents?<br>worked out from the results"]
+    Strategy --> Writer["<b>Writer</b>: an agent, or code,<br>writes the blocks"]
+    Writer --> Checks{"<b>Checks</b> by code<br>only open blocks · parses<br>not a copy · within limits"}
+    Checks -- refused --> Writer
+    Checks -- ok --> Job["<b>Job</b>: run and score it once"]
+    Job --> Records[("Records<br>models, recipes, runs")]
+    Records --> Slot
+    Records --> Out["Report · scorecard · study file"]
 ```
 
 Three rules hold everywhere:
@@ -71,16 +81,40 @@ A search is not one loop. It is put together from choices, and two of them set m
 
 **The skill: what kind of problem is this?**
 
-| Skill | For | What changes |
-|---|---|---|
-| `performance` | the best score | the plain search |
-| `distillation` | a smaller or faster student trained to match a teacher | architecture and training recipe both open; guidance on targets, teacher-labelled augmentation, schedules |
-| `tuning` | the settings of a fixed model | a Bayesian estimator in code draws the settings; no agent is called |
-| `efficiency` | a smaller or faster model at the same score | designs are selected on the trade-off between score and size; removal is the commonest move |
-| `mechanistic` | a model that is interpretable by design, or a biophysical one | the structure that carries the meaning is kept; no unreadable parts may be added |
+Skills come from a library of templates. A search gets its own copy of each skill it uses, to edit;
+skills can be combined; and you can write your own.
 
-A skill is one editable file: its settings, its guidance for each agent, and what it needs from your
-code. Write your own for your kind of problem.
+| Domain | Skill | For |
+|---|---|---|
+| Models | `model-performance` | the best score, nothing else weighed |
+| | `model-distillation` | a smaller or faster student that matches a teacher |
+| | `model-efficiency` | the same score at a lower cost in parameters or time |
+| | `model-size-frontier` | the best model at every size or speed across a broad range |
+| | `model-training-recipe` | a better score from the same architecture, by training it better |
+| | `model-ensemble-members` | a set of strong models whose errors do not coincide |
+| | `model-finetuning` | the best score on a task starting from a pretrained model |
+| | `model-mechanistic` | an interpretable or biophysical model improved without losing what its parameters mean |
+| Settings | `settings-tuning` | the best settings of fixed code, by a Bayesian estimator in code, with no agent calls |
+| Algorithms | `algorithm-runtime` | the same results in less time or memory |
+| Bioinformatics | `bioinformatics-algorithm` | better accuracy against a truth set, at an acceptable run time |
+| Pipelines | `data-pipeline` | the same output from a pipeline in less time, memory or cost |
+
+<details>
+<summary>What is in a skill</summary>
+
+One editable file with:
+
+- **settings** that suit the task (the search space, how designs are selected, the mix of moves);
+- **guidance** for each agent: what matters, what to try first, what to avoid;
+- **diagnoses**: "if the results show this, do that";
+- **advice by stage** of the budget, early and late;
+- **needs**: what your adapter must report, and rows the leaderboard should carry;
+- a name, tags and an objective, so that the library can be searched (`evoloop skills --search WORDS`).
+
+Combine them with `run.skill: [model-distillation, model-size-frontier]`. See
+[Skills](docs/skills.md) and the [skill library](docs/skill-library.md).
+
+</details>
 
 **The run type: how should it search?**
 
@@ -173,7 +207,7 @@ evoloop init mysearch --source path/to/project   # brief.yaml, task.md, base/, a
 ```
 evoloop status mysearch --name r1                                  # where it stands, in a few lines
 evoloop set    mysearch --name r1 schedule.novelty=0.6 budget.evaluations=300 --by "Your Name"
-evoloop set    mysearch --name r1 run.skill=efficiency --by "Your Name"
+evoloop set    mysearch --name r1 run.skill=model-efficiency --by "Your Name"
 evoloop note   mysearch --name r1 "No attention layers." --roles writer --by "Your Name"
 evoloop force  mysearch --name r1 --mode cross --count 3 --by "Your Name"
 evoloop steer  mysearch --name r1 "more novelty from here, and keep models small" --by "Your Name"
@@ -192,7 +226,7 @@ A search spends two things, and both are capped.
 - **Evaluations**: training runs, on your compute. With a promotion ladder, a design stopped early is
   charged the share of the run it used.
 - **Model dollars**: the agents. The plan estimates them before you confirm, the run paces itself toward
-  the cap, and the stub backend costs nothing. The `tuning` skill calls no agent at all.
+  the cap, and the stub backend costs nothing. The `settings-tuning` skill calls no agent at all.
 
 ## Requirements
 
@@ -216,7 +250,8 @@ run, what has not, and what is not built.
 | To | Read |
 |---|---|
 | see it work | [First run](docs/quickstart.md) |
-| set up a search | [Setting up a search](docs/setting-up.md), [Skills](docs/skills.md), [The project's code](docs/project-contract.md) |
+| set up a search | [Setting up a search](docs/setting-up.md), [Skills](docs/skills.md), [Skill library](docs/skill-library.md), [The project's code](docs/project-contract.md) |
+| decide between options | [How each choice changes the search](docs/choices.md) |
 | understand the search | [How a search works](docs/how-it-works.md), [How it compares with established methods](docs/compared.md) |
 | run and steer | [Steering a run](docs/steering.md), [The strategist and the budget](docs/strategist.md) |
 | choose models and autonomy | [Model and effort](docs/models.md), [Agentic or harnessed, and what it costs](docs/autonomy.md) |

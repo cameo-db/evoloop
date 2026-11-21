@@ -1,0 +1,56 @@
+name: model-performance
+title: Raise a model's score
+summary: Raise the validation score by whatever the open blocks allow. Size and speed are not weighed unless you set limits.
+domain: model
+objective: the best score, nothing else weighed
+tags: [accuracy, performance, architecture, general]
+version: 2
+authors: [evoloop]
+when: >
+  The default for model development. Choose something more specific when the goal is a smaller model
+  (model-efficiency), a family across sizes (model-size-frontier), a student of a teacher (model-distillation),
+  or when only the training recipe or the settings may change.
+settings: {}
+guidance:
+  all: |
+    The aim is the best validation score. Size, speed and simplicity count only where the person's notes or the
+    limits say so.
+  writer: |
+    Before adding to the leader, work out what limits it. There are three usual limits, and each calls for a
+    different kind of change:
+    - capacity: it cannot fit the training data. More width, depth, or a mechanism it lacks (a longer range, a
+      different pooling, an interaction between parts).
+    - optimisation: it could fit but trains slowly or unstably. Normalisation, skip connections, initialisation,
+      the learning-rate schedule, the batch size.
+    - generalisation: it fits training data and not validation data. Regularisation, augmentation, less capacity,
+      weight sharing, an inductive bias that matches the data.
+    Make one change with one stated cause. A change that helped in one lineage is worth trying in another; a change
+    that failed in two different lineages is not worth a third try without a new reason.
+    Do not spend a slot on a change smaller than the noise floor can show.
+  analyst: |
+    Say which kinds of change are still paying and which have stopped. Separate gains that repeat across lineages
+    from single results within the noise. Name the limit (capacity, optimisation, generalisation) the leader seems
+    to be at, with the runs that show it.
+  strategist: |
+    A plateau with many near-identical designs calls for more new designs. A plateau with scattered designs and
+    one clear leader calls for local work on the leader.
+diagnose:
+  - see: "training and validation scores are both poor and still improving at the end of the run"
+    do: "the run is too short or the optimisation is slow: fix the schedule or normalisation before judging the architecture"
+  - see: "training score is good, validation score is clearly worse"
+    do: "regularize, augment, or reduce capacity; do not add capacity"
+  - see: "both scores stop improving early and stay poor"
+    do: "the model lacks capacity or a mechanism: widen, deepen, or add the missing range or interaction"
+  - see: "the same design gives very different scores on a re-check"
+    do: "the gain is within the noise: treat it as no gain, and prefer changes that reduce variance"
+  - see: "many designs fail the quick check or crash"
+    do: "the changes are too large for the frozen code around them: make smaller edits and keep shapes compatible"
+stages:
+  early: "Cover different families of design; a rough version of each idea is enough to learn whether it has promise."
+  late: "Work on the two or three best families. Combine what each does well, and remove what ablations show is dead weight."
+needs:
+  adapter: []
+  figures: []
+  references: []
+combines: [model-training-recipe]
+conflicts: [settings-tuning]

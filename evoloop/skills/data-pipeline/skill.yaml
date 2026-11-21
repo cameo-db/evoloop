@@ -1,0 +1,66 @@
+name: data-pipeline
+title: Make a data processing pipeline faster or cheaper
+summary: Speed up a multi-step data pipeline (reading, transforming, joining, writing) or cut its memory and cost, with its output unchanged.
+domain: pipeline
+objective: the same output from a pipeline in less time, memory or cost
+tags: [pipeline, data processing, throughput, io, memory, etl, preprocessing, parallel]
+version: 1
+authors: [evoloop]
+when: >
+  A pipeline of several steps produces the right output too slowly or at too high a cost. For a single hot
+  function use algorithm-runtime.
+settings:
+  evaluation:
+    screen_keep: 1.0
+  schedule:
+    novelty: 0.3
+    local_mix: {edit: 0.7, settings: 0.2, ablation: 0.1}
+guidance:
+  all: |
+    This search makes a pipeline cheaper to run without changing what it produces. The score is a measured cost
+    on sample data; the output is compared with a reference, and a design whose output differs is rejected.
+  writer: |
+    In a pipeline the time is usually in moving data, not computing on it. From the largest effect down:
+    - do less: read only the columns, rows and files that are used; filter as early as possible; drop steps whose
+      output nothing reads;
+    - move data fewer times: fewer passes over the input, no intermediate files that are written and read once,
+      streaming in place of loading whole files, a format that is read by column or by block in place of
+      re-parsing text;
+    - reorder: filters and cheap reductions before joins, sorts and expensive transforms; sort once;
+    - process in batches or vectorised operations in place of row by row;
+    - parallelise the steps that are independent, sized to the machine, after the above;
+    - memory: process in chunks, avoid copies, use narrower types.
+    Keep exactly: the rows and their order where order is part of the output, the treatment of missing and
+    malformed records, numeric precision, and the output's format. Say in `hypothesis` which step holds the cost
+    now. Do not assume properties of the sample data (its size, that it is sorted, that it has no missing values)
+    that the real data may not have.
+  analyst: |
+    Say which step holds the time and memory in the best designs, and how that has shifted. List the designs
+    rejected for a changed output, with the step that changed it.
+  strategist: |
+    When edits within steps stop gaining, order designs that restructure the pipeline: merging steps, reordering
+    them, or changing the intermediate format.
+diagnose:
+  - see: "a design is rejected because its output differs"
+    do: "find the step that changed it (order, missing values, precision, duplicates) and keep that behaviour"
+  - see: "run time is dominated by reading or writing"
+    do: "read less and fewer times, or change the format; faster computation will not show"
+  - see: "adding parallel workers gives no gain, or a loss"
+    do: "the steps contend for disk or memory: reduce what is read first, then parallelise fewer, larger pieces"
+  - see: "memory peaks at one step"
+    do: "process that step in chunks or streams, or reduce the data before it"
+  - see: "a design is faster on the sample and its gain depends on the sample's size"
+    do: "say how the cost grows with input size; a gain that vanishes at full size is not one"
+stages:
+  early: "Find which steps hold the cost, and try restructuring: fewer passes, earlier filters, another format."
+  late: "Tighten the remaining hot steps, then parallelise what is independent."
+needs:
+  adapter:
+    - "run the pipeline on fixed sample data and compare its output with a stored reference (a checksum of sorted records, or row counts with value checks); write `valid: false` with the reason when it differs"
+    - "report the cost as the score with objective.direction minimize: wall time as a median of repeats, or a figure that combines time and memory if both matter"
+    - "report time per step and peak memory under diagnostics, so that the agents can see where the cost is"
+    - "use sample data large enough that input and output costs resemble the real run, and keep a second sample the search never sees under diagnostics.hidden"
+  figures: []
+  references: ["the original pipeline"]
+combines: [algorithm-runtime]
+conflicts: [settings-tuning]

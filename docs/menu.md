@@ -81,23 +81,30 @@ Set with `run.skill`.
 
 | Option | What it does |
 |---|---|
-| `performance` | Raise the score by whatever the open blocks allow. The plain search; size and speed are not weighed. |
-| `distillation` | Train a smaller or faster student to match a teacher. The student's architecture and its training recipe (loss, optimizer, learning rate, regularization, augmentation) are both open. |
-| `efficiency` | Make the model smaller or faster while holding its score. Designs are selected on the trade-off between the score and size (or speed), and removal is the commonest move. |
-| `mechanistic` | Improve a model that is interpretable by design, where the parameters stand for something (motifs in filters, a graph of interactions, rates and affinities in a biophysical model). The structure that carries the meaning is kept. |
-| `tuning` | Tune the settings of a fixed model (learning rate, regularization, widths, schedule) with a Bayesian estimator in code. No structure changes and no agent calls. |
+| `model-performance` | Raise the validation score by whatever the open blocks allow. Size and speed are not weighed unless you set limits. |
+| `model-distillation` | Train a smaller or faster student to match a teacher. The student's architecture and its training recipe (loss, optimizer, learning rate, regularization, augmentation) are both open. |
+| `model-efficiency` | Make the model smaller or faster while holding its score. Designs are selected on the trade-off between the score and size (or speed), and removal is the commonest move. |
+| `model-ensemble-members` | Find models that are each good and that make different errors from one another, so that averaging them gains more than averaging copies of the best one. |
+| `model-finetuning` | Start from a pretrained model and search over how to adapt it (what to freeze, what to add, the learning rates by layer, how long to train). |
+| `model-mechanistic` | Improve a model that is interpretable by design, where the parameters stand for something (motifs in filters, a graph of interactions, rates and affinities in a biophysical model). The structure that carries the meaning is kept. |
+| `model-size-frontier` | Find the best model at each size (or speed), from very small to large, so that the result is a whole trade-off curve to choose from and not one winner. |
+| `model-training-recipe` | The architecture is fixed; the training recipe is open (the loss, the optimizer, the learning-rate schedule, regularization, augmentation). Between tuning numbers and changing the model. |
+| `algorithm-runtime` | Speed up a piece of code (or cut its memory) while its output stays correct. The score is a measured time; a design whose output is wrong is rejected, not scored. |
+| `bioinformatics-algorithm` | Improve a method that analyses biological data (an aligner, a caller, a peak finder, a quantifier, a scoring function) against a truth set, without breaking the conventions of the formats and coordinates it works in. |
+| `data-pipeline` | Speed up a multi-step data pipeline (reading, transforming, joining, writing) or cut its memory and cost, with its output unchanged. |
+| `settings-tuning` | Tune the settings of fixed code (a model's learning rate, regularization, widths, schedule; or the parameters of any algorithm) with a Bayesian estimator in code. No structure changes and no agent calls. |
 
-A skill says what kind of problem the search is; the run type says how to search. Choose one of each. `evoloop skills NAME` shows a skill in full, and `evoloop skills NAME --copy DIR` writes it out as a folder to edit and use as your own (`run.skill: DIR`).
+A skill says what kind of problem the search is; the run type says how to search. Skills can be combined (`run.skill: [a, b]`), and a search gets its own editable copy of each in its `skills/` folder. `evoloop skills NAME` shows a skill in full, and `evoloop skills NAME --copy DIR` writes it out as a folder to edit and use as your own (`run.skill: DIR`).
 
 ### What each skill sets
 
 It is a bundle of settings. Anything you set yourself in the brief wins over it.
 
-**`performance`**
+**`model-performance`**
 
 Sets nothing itself.
 
-**`distillation`**
+**`model-distillation`**
 
 ```
 report.columns = ["speed"]
@@ -106,7 +113,7 @@ variation.approach_seeds = ["Change how the student is trained before changing t
 variation.approaches = "fixed"
 ```
 
-**`efficiency`**
+**`model-efficiency`**
 
 ```
 report.columns = ["speed"]
@@ -116,7 +123,24 @@ strategy.second_direction = "minimize"
 strategy.second_metric = "parameters"
 ```
 
-**`mechanistic`**
+**`model-ensemble-members`**
+
+```
+schedule.novelty = 0.6
+schedule.novelty_measure = "behaviour"
+schedule.phases = [{"until": 0.6, "new": 0.6, "cross": 0.1, "local": 0.3}, {"until": 1.0, "new": 0.25, "cross": 0.15, "local": 0.6}]
+strategy.descriptors = ["behaviour"]
+strategy.mechanism = "archive"
+```
+
+**`model-finetuning`**
+
+```
+schedule.local_mix = {"edit": 0.4, "settings": 0.45, "ablation": 0.15}
+schedule.novelty = 0.25
+```
+
+**`model-mechanistic`**
 
 ```
 schedule.local_mix = {"edit": 0.45, "settings": 0.25, "ablation": 0.3}
@@ -125,7 +149,48 @@ space.must_keep = ["Every learned parameter keeps a stated meaning (a motif, an 
 space.preset = "template"
 ```
 
-**`tuning`**
+**`model-size-frontier`**
+
+```
+report.columns = ["speed"]
+schedule.novelty = 0.6
+schedule.phases = [{"until": 0.5, "new": 0.5, "cross": 0.15, "local": 0.35}, {"until": 1.0, "new": 0.2, "cross": 0.25, "local": 0.55}]
+strategy.descriptors = ["size"]
+strategy.mechanism = "archive"
+```
+
+**`model-training-recipe`**
+
+```
+schedule.local_mix = {"edit": 0.55, "settings": 0.35, "ablation": 0.1}
+space.preset = "custom"
+space.roles = {"loss": "open", "optimizer": "open", "schedule": "open", "augmentation": "open", "training": "open", "recipe": "open"}
+```
+
+**`algorithm-runtime`**
+
+```
+evaluation.screen_keep = 1.0
+schedule.local_mix = {"edit": 0.75, "settings": 0.1, "ablation": 0.15}
+schedule.novelty = 0.3
+```
+
+**`bioinformatics-algorithm`**
+
+```
+schedule.local_mix = {"edit": 0.6, "settings": 0.25, "ablation": 0.15}
+schedule.novelty = 0.3
+```
+
+**`data-pipeline`**
+
+```
+evaluation.screen_keep = 1.0
+schedule.local_mix = {"edit": 0.7, "settings": 0.2, "ablation": 0.1}
+schedule.novelty = 0.3
+```
+
+**`settings-tuning`**
 
 ```
 audit.reviews = "none"

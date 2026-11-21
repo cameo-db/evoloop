@@ -207,7 +207,7 @@ class Designer:
                            "change": run["history"].get("change_summary"), "status": perf.get("status"),
                            "score": perf.get("score") if view.counts(run) else None, "reason": perf.get("reason")})
         context: Dict[str, Any] = {
-            "task": self.task(),
+            "task": self.task(), "budget_used": round(fraction_used(view, settings), 3),
             "objective": {"goal": settings["objective"]["goal"], "metric": settings["objective"]["metric"],
                           "direction": settings["objective"]["direction"], "noise_floor": view.noise,
                           "constraints": settings["objective"]["constraints"]},

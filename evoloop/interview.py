@@ -22,10 +22,17 @@ from .model import catalog
 
 KEEP = "__keep__"       # the answer "leave it at the default"
 # Words in a goal that point to a kind of optimisation, most specific first.
-SKILL_HINTS = [("distillation", r"distil\w*|student|teacher"),
-               ("mechanistic", r"interpretab\w*|mechanis\w*|biophysic\w*|motif\w*|kinetic\w*|thermodynamic\w*"),
-               ("tuning", r"hyper-?param\w*|\btun(e|ing)\b|learning rate"),
-               ("efficiency", r"smaller|faster|efficien\w*|compress\w*|lightweight|fewer parameters|\bspeed\b")]
+SKILL_HINTS = [("model-distillation", r"distil\w*|student|teacher"),
+               ("model-ensemble-members", r"ensembl\w*"),
+               ("model-size-frontier", r"pareto|trade-?offs?|frontier|range of sizes|across sizes|family of models|at each size"),
+               ("model-finetuning", r"fine-?tun\w*|pretrained|pre-trained|foundation model"),
+               ("model-mechanistic", r"interpretab\w*|mechanis\w*|biophysic\w*|motif\w*|kinetic\w*|thermodynamic\w*"),
+               ("settings-tuning", r"hyper-?param\w*|\btun(e|ing)\b|learning rate"),
+               ("model-training-recipe", r"recipe|optimi[sz]er|augmentation|regulari[sz]ation|loss function"),
+               ("data-pipeline", r"pipeline|\betl\b|preprocessing"),
+               ("bioinformatics-algorithm", r"bioinformatic\w*|aligner|alignment|variant call\w*|peak call\w*|assembl\w*"),
+               ("algorithm-runtime", r"\balgorithm\b|run ?time|\bcode\b"),
+               ("model-efficiency", r"smaller|faster|efficien\w*|compress\w*|lightweight|fewer parameters|\bspeed\b")]
 SECTIONS = ["Goal", "Budget", "Search", "Training runs", "Compute", "Agents", "Oversight"]
 
 
@@ -51,10 +58,10 @@ QUESTIONS: List[Dict[str, Any]] = [
      "why": "It sets the strategy, the schedule, the harness and the search space unless you set them yourself.",
      "choices": _choices(menu.RUN_TYPES)},
     {"field": "run.skill", "section": "Search", "title": "Kind of optimisation", "kind": "choice",
-     "question": "What kind of optimisation is this?",
+     "question": "What kind of optimisation is this? (To combine skills, give their names separated by commas.)",
      "why": "It sets what suits the task (what is open, how designs are selected) and gives the agents guidance for it. "
             "Independent of the kind of search.",
-     "choices": _choices(menu.SKILLS)},
+     "choices": _choices(menu.SKILLS), "other": True},
     {"field": "run.description", "section": "Search", "title": "Your own description", "kind": "text",
      "question": "Describe the search you want, in your own words.",
      "why": "With the custom kind the agents read this as your first note.", "when": {"run.type": ["custom"]}},
@@ -370,7 +377,9 @@ def infer(folder: str, brief: Dict[str, Any]) -> Dict[str, Any]:
                 found["run.skill"] = (name, "the goal says \"%s\"" % said.group(0))
                 break
         else:
-            found["run.skill"] = ("performance", "the goal names no other kind of optimisation than a better score")
+            found["run.skill"] = ("model-performance", "the goal names no other kind of optimisation than a better score")
+    if stated.get("run.type") == "settings_only":
+        found["run.skill"] = ("settings-tuning", "a search over settings alone: the estimator in code makes the moves, at no agent cost")
     budget = stated.get("budget.evaluations")
     if isinstance(budget, (int, float)) and budget > 0:
         label = form.guidance_for(budget)[0]
