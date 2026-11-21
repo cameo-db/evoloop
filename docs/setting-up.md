@@ -115,6 +115,10 @@ you can leave. Every other field of the brief takes its value from the first of 
 
 With `run.type: custom`, describe the search in `run.description`; where you set nothing, the guidance
 and the defaults apply, and your description is kept as the first note the agents read.
+**The kind of optimisation.** Beside the kind of search, setup asks what kind of problem this is (`run.skill`):
+raising a score, distilling a student, tuning settings, making a model smaller or faster, or improving an
+interpretable model. It suggests one from the words of your goal. See [Skills](skills.md).
+
 
 ## 4. Read the plan and confirm
 

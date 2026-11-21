@@ -16,6 +16,10 @@ Read `task.md`, the marked code and anything the person has told you, and sugges
 A suggestion is not an answer: it is shown to the person preselected, with your reason, and becomes an
 answer only when they leave it or pick it. Do not suggest where you have no evidence; say so and ask.
 
+Two of the questions decide most of the rest: the kind of search (`run.type`, how to search) and the kind of
+optimisation (`run.skill`: a better score, a distilled student, tuned settings, a smaller or faster model, or an
+interpretable model improved). `evoloop skills` lists the skills; suggest the one the person's goal describes.
+
 Then get the next question with
 
     evoloop brief DIR --next

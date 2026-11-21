@@ -13,6 +13,7 @@ changeable while it runs:
 | Choice | Options |
 |---|---|
 | Run type | `explore_then_exploit` (the default), `refine`, `survey`, `discovery`, `settings_only`, `custom` |
+| Skill | what kind of optimisation it is: `performance`, `distillation`, `tuning` (Bayesian, no agent calls), `efficiency`, `mechanistic`, or your own |
 | Evolution strategy | `lineage`, `archive`, `tournament`, `pareto` (a trade-off front), `greedy`; any of them on several islands, with or without resets |
 | Early stopping | a single screen of new designs, or a promotion ladder (successive halving) over all designs |
 | Diversity | by family and size, or by what the trained model does (where its errors fall) |
@@ -75,6 +76,7 @@ The full documentation is at <https://evoloop.readthedocs.io>. The same pages ar
 
 - [Overview](docs/index.md) and [first run](docs/quickstart.md)
 - [Setting up a search](docs/setting-up.md)
+- [Skills](docs/skills.md): performance, distillation, tuning, efficiency, mechanistic models, or your own
 - [How a search works](docs/how-it-works.md): the schedule, the strategies, crossover, novelty
 - [Model and effort](docs/models.md) and [agentic or harnessed, and what it costs](docs/autonomy.md)
 - [Steering a run](docs/steering.md), [the strategist and the budget](docs/strategist.md), [auditing the agents](docs/auditing.md)

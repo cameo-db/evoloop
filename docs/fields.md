@@ -23,6 +23,7 @@ Fields marked **asked** are asked whenever they are empty; the others are never 
 |---|---|---|---|
 | `run.type` **asked** | `null` | yes | The named bundle of settings to start from. See the run types. |
 | `run.description` | `""` | yes | Your own description of the search. Kept as the first note the agents read. |
+| `run.skill` | `null` | yes | What kind of optimisation this is: a built-in skill (see the skills) or the path of a skill folder of your own. It sets what suits the task and gives the agents guidance for it; independent of the run type. |
 
 ## space
 
@@ -36,6 +37,7 @@ Fields marked **asked** are asked whenever they are empty; the others are never 
 | `space.forbidden` | `[]` | yes | What must not be done, as text. Shown to the writers; not checked by code. |
 | `space.must_keep` | `[]` | yes | What must be kept, as text. Shown to the writers; not checked by code. |
 | `space.forbidden_terms` | `[]` | yes | Strings a block may not contain. Enforced by code: a design that has one is not run. |
+| `space.ranges` | `{}` | yes | Bounds for the settings estimator (`variation.settings_by: tpe`): {"block.key": [low, high]}. Without one a setting may move a hundredfold either way. |
 
 ## strategy
 
@@ -88,7 +90,7 @@ Fields marked **asked** are asked whenever they are empty; the others are never 
 |---|---|---|---|
 | `variation.proposals_per_slot` | `2` | yes | How many proposals the writer returns for a slot; one is chosen and trained. |
 | `variation.step_adaptation` | `true` | yes | Ask for bolder local edits when a lineage's recent ones gain often, smaller when rarely. |
-| `variation.settings_by` | `"agent"` | yes | Who makes a settings move: an agent, or a sampler in code (no call). |
+| `variation.settings_by` | `"agent"` | yes | Who makes a settings move: an `agent`; a `sampler` in code that nudges one value (no call); or `tpe`, a Bayesian estimator in code that draws every setting from what the best designs used (no call). |
 | `variation.edit_format` | `"full"` | yes | How a writer returns a change to part of a block: `full` (the whole block) or `diff` (find-and-replace edits, fewer tokens on large blocks; an edit that does not apply exactly once is refused). |
 | `variation.approaches` | `"off"` | yes | Ways of working handed to the writers, one per slot, kept or dropped by how their designs did: `off`, `fixed` (only yours) or `evolve` (the analyst adds to them). |
 | `variation.approach_pool` | `6` | yes | With `evolve`: the most approaches kept at once; past it the worst proven one is retired. |

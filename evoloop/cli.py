@@ -246,7 +246,7 @@ def cmd_plan(args: Any) -> int:
     brief = form.load_brief(os.path.abspath(args.dir))
     from . import estimate
     folder = os.path.abspath(args.dir)
-    for line in form.plan_lines(brief) + estimate.lines(brief, folder):
+    for line in form.plan_lines(brief, folder=folder) + estimate.lines(brief, folder):
         out(line)
     asks = [a["field"] for a in form.questions(brief)]
     if asks:
@@ -307,6 +307,32 @@ def cmd_menu(args: Any) -> int:
         sys.stdout.write(menu.fields_markdown() if args.topic in ("fields", "defaults") else menu.menu_markdown())
     else:
         sys.stdout.write(menu.text(args.topic))
+    return 0
+
+
+def cmd_skills(args: Any) -> int:
+    """The skills: what kinds of optimisation there are, one in full, or one written out as a folder to edit."""
+    from . import skill as skills
+    if not args.skill:
+        out("Skills (set one with run.skill; it is independent of the run type):")
+        for name, summary in skills.summaries().items():
+            out("")
+            out("  %s" % name)
+            out("      %s" % summary)
+        out("")
+        out("evoloop skills NAME shows one in full; evoloop skills NAME --copy DIR writes it out to edit.")
+        return 0
+    found, fault = skills.load(args.skill, args.dir)
+    if found is None:
+        raise SystemExit(fault or "name a skill")
+    if args.copy:
+        if os.path.exists(args.copy):
+            raise SystemExit("%s exists already" % args.copy)
+        shutil.copytree(found["path"], args.copy)
+        out("written to %s; edit skill.yaml there and set run.skill to that path" % args.copy)
+        return 0
+    with open(os.path.join(found["path"], "skill.yaml"), "r", encoding="utf-8") as handle:
+        sys.stdout.write(handle.read())
     return 0
 
 
@@ -718,7 +744,7 @@ def build_parser() -> argparse.ArgumentParser:
     def add(name: str, fn: Any, help_text: str, named: bool = False, by: bool = False) -> argparse.ArgumentParser:
         p = sub.add_parser(name, help=help_text)
         p.set_defaults(fn=fn)
-        if name not in ("guide", "menu"):
+        if name not in ("guide", "menu", "skills"):
             p.add_argument("dir", help="the search folder")
         if named:
             p.add_argument("--name", required=True, help="the run")
@@ -748,6 +774,10 @@ def build_parser() -> argparse.ArgumentParser:
     add("plan", cmd_plan, "the settings the brief leads to, each with where it came from")
     p = add("estimate", cmd_estimate, "what the agents will cost, at each level of autonomy; with --name, from a run's own calls")
     p.add_argument("--name", default=None, help="a run: project its remaining cost from what its calls have cost")
+    p = add("skills", cmd_skills, "the kinds of optimisation a search can be set up for")
+    p.add_argument("skill", nargs="?", help="a built-in skill or the path of a skill folder; leave out for the list")
+    p.add_argument("--copy", metavar="DIR", help="write the skill out as a folder to edit")
+    p.add_argument("--dir", default=None, help="the search folder, to find a skill of your own by a relative path")
     p = add("guide", cmd_guide, "guidance by size of budget")
     p.add_argument("evaluations", nargs="?", type=int)
     p = add("menu", cmd_menu, "every choice a run can make, the presets, and every field of the brief")

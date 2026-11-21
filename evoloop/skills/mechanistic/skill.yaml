@@ -1,0 +1,44 @@
+name: mechanistic
+summary: Improve a model that is interpretable by design, where the parameters stand for something (motifs in filters, a graph of interactions, rates and affinities in a biophysical model). The structure that carries the meaning is kept.
+settings:
+  space:
+    preset: template
+    must_keep:
+      - "Every learned parameter keeps a stated meaning (a motif, an interaction, a rate, an affinity, a concentration). Do not add a component whose parameters cannot be read this way, such as a dense network between the interpretable parts and the output."
+      - "Keep the constraints that make the parts readable: signs, non-negativity, normalisation, saturation, conservation, units."
+  schedule:
+    novelty: 0.2
+    local_mix: {edit: 0.45, settings: 0.25, ablation: 0.3}
+guidance:
+  all: |
+    This model is meant to be read, not only to predict. Its parts stand for things: filters for motifs, an
+    explicit term or edge for each interaction, parameters for rates, affinities or energies. A design that scores
+    higher by adding an unreadable component has failed the task, whatever its score.
+  writer: |
+    Ways to improve such a model without losing what it means:
+    - the form of a term: a saturating or cooperative response in place of a linear one, a competition term, a
+      distance or orientation dependence for an interaction, a different pooling over positions;
+    - what is shared and what is free: tie parameters that should be the same thing (both strands, repeated
+      units), free ones that were wrongly tied;
+    - the number of parts: fewer, when two have learned the same thing or one has learned nothing (an ablation
+      shows it); more, only when the errors point to a missing mechanism;
+    - constraints and priors that keep the parts identifiable: sparsity on interactions, non-negativity,
+      regularisation toward known values, a fixed scale so that two parameters cannot trade off against each other;
+    - initialisation and optimisation, which matter more here than in a free network: constrained models have
+      poor local optima, so a better start or a staged fit (parts first, interactions after) can be the whole gain.
+    In `hypothesis`, name the mechanism the change stands for and what it should make true of the fitted
+    parameters, not only of the score. Prefer the simpler of two designs that score within the noise floor.
+    For a biophysical model, keep the equations dimensionally consistent and say what each new parameter is.
+  analyst: |
+    Report what the fitted parts came to mean where the results show it, and whether a gain came with a readable
+    change or only a numerical one. Flag any design that gained by weakening a constraint.
+  strategist: |
+    Favour ablations and local edits over new families; a new family is worth a slot when the errors of every
+    current design fall in the same place.
+needs:
+  adapter:
+    - "optional, and worth doing: report a figure of how well the parts match what is known (the share of filters matching known motifs, recovered interactions, parameters within physical ranges) under diagnostics; it can then be a leaderboard column, a speciality metric, or the second figure of the pareto strategy"
+    - "report `signature` (where the errors fall) so that designs with the same failure are told apart from ones that fail differently"
+    - "mark as open only the blocks that define the interpretable parts and their combination; leave the data handling and the evaluation frozen"
+  figures: []
+  references: []

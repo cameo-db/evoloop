@@ -1,0 +1,35 @@
+name: tuning
+summary: Tune the settings of a fixed model (learning rate, regularization, widths, schedule) with a Bayesian estimator in code. No structure changes and no agent calls.
+settings:
+  space:
+    preset: settings_only
+  variation:
+    settings_by: tpe
+    proposals_per_slot: 1
+    step_adaptation: false
+  strategy:
+    mechanism: greedy
+  schedule:
+    phases: [{until: 1.0, new: 0.0, cross: 0.0, local: 1.0}]
+    local_mix: {edit: 0.0, settings: 1.0, ablation: 0.0}
+    novel_share: 0.0
+  harness:
+    level: minimal
+  strategist:
+    mode: "off"
+  audit:
+    reviews: none
+guidance:
+  all: |
+    This is a search over settings alone. The model's structure does not change.
+  writer: |
+    You are only called if the person has switched settings moves to an agent. Change settings together when they
+    interact (learning rate with batch size, with warm-up, with weight decay), and move a setting by a factor, not
+    by a small step, until the results bracket the best value.
+needs:
+  adapter:
+    - "every setting to tune must sit in a marked params block (one dict of numbers, true/false or text)"
+    - "give bounds for settings that must stay in a range with `space.ranges`, e.g. {\"fit.lr\": [0.00001, 0.1]}; without one a setting may move a hundredfold either way"
+    - "to stop poor settings early, report progress and set `evaluation.ladder`"
+  figures: []
+  references: []

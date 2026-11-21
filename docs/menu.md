@@ -75,6 +75,72 @@ strategy.mechanism = "greedy"
 
 Sets nothing itself.
 
+## Skills: the kind of optimisation
+
+Set with `run.skill`.
+
+| Option | What it does |
+|---|---|
+| `performance` | Raise the score by whatever the open blocks allow. The plain search; size and speed are not weighed. |
+| `distillation` | Train a smaller or faster student to match a teacher. The student's architecture and its training recipe (loss, optimizer, learning rate, regularization, augmentation) are both open. |
+| `efficiency` | Make the model smaller or faster while holding its score. Designs are selected on the trade-off between the score and size (or speed), and removal is the commonest move. |
+| `mechanistic` | Improve a model that is interpretable by design, where the parameters stand for something (motifs in filters, a graph of interactions, rates and affinities in a biophysical model). The structure that carries the meaning is kept. |
+| `tuning` | Tune the settings of a fixed model (learning rate, regularization, widths, schedule) with a Bayesian estimator in code. No structure changes and no agent calls. |
+
+A skill says what kind of problem the search is; the run type says how to search. Choose one of each. `evoloop skills NAME` shows a skill in full, and `evoloop skills NAME --copy DIR` writes it out as a folder to edit and use as your own (`run.skill: DIR`).
+
+### What each skill sets
+
+It is a bundle of settings. Anything you set yourself in the brief wins over it.
+
+**`performance`**
+
+Sets nothing itself.
+
+**`distillation`**
+
+```
+report.columns = ["speed"]
+space.preset = "architecture_and_recipe"
+variation.approach_seeds = ["Change how the student is trained before changing the student: the loss against the teacher, the weight between teacher and measured targets, the augmentations the teacher labels.", "Give the student inputs the measured data does not contain (perturbed, shuffled, synthetic) and let the teacher label them.", "Match the student's capacity to the gap: if it underfits the teacher, widen or deepen; if it matches the teacher on training inputs and not on held-out ones, regularize or add teacher-labelled data.", "Train longer at a lower learning rate before concluding a student is too small."]
+variation.approaches = "fixed"
+```
+
+**`efficiency`**
+
+```
+report.columns = ["speed"]
+schedule.local_mix = {"edit": 0.35, "settings": 0.15, "ablation": 0.5}
+strategy.mechanism = "pareto"
+strategy.second_direction = "minimize"
+strategy.second_metric = "parameters"
+```
+
+**`mechanistic`**
+
+```
+schedule.local_mix = {"edit": 0.45, "settings": 0.25, "ablation": 0.3}
+schedule.novelty = 0.2
+space.must_keep = ["Every learned parameter keeps a stated meaning (a motif, an interaction, a rate, an affinity, a concentration). Do not add a component whose parameters cannot be read this way, such as a dense network between the interpretable parts and the output.", "Keep the constraints that make the parts readable: signs, non-negativity, normalisation, saturation, conservation, units."]
+space.preset = "template"
+```
+
+**`tuning`**
+
+```
+audit.reviews = "none"
+harness.level = "minimal"
+schedule.local_mix = {"edit": 0.0, "settings": 1.0, "ablation": 0.0}
+schedule.novel_share = 0.0
+schedule.phases = [{"until": 1.0, "new": 0.0, "cross": 0.0, "local": 1.0}]
+space.preset = "settings_only"
+strategist.mode = "off"
+strategy.mechanism = "greedy"
+variation.proposals_per_slot = 1
+variation.settings_by = "tpe"
+variation.step_adaptation = false
+```
+
 ## Autonomy: agentic first, or strongly harnessed
 
 Set with `harness.autonomy`.

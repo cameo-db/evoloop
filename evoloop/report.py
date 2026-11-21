@@ -6,7 +6,7 @@ import os
 import time
 from typing import Any, Dict, List, Optional
 
-from . import approaches, audit, form, schedule, strategies, strategist
+from . import approaches, audit, form, schedule, skill, strategies, strategist
 from .store import ENDED, Store, View, write_json
 
 
@@ -206,7 +206,7 @@ def lines(controller: Any, view: View, reason: Optional[str] = None) -> List[str
         out += ["", "## Runs without a score", ""] + ["- %s (%s): %s" % (r["id"], r["performance"]["status"],
                                                                          str(r["performance"].get("reason"))[:200])
                                                       for r in failed[-20:]]
-    notes = form.warnings(settings)
+    notes = form.warnings(settings) + skill.missing(settings.get("_skill"), view, store.read("references"))
     if notes:
         out += ["", "## Warnings", ""] + ["- " + n for n in notes]
     return out

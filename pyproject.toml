@@ -21,7 +21,7 @@ evoloop = "evoloop.cli:main"
 include = ["evoloop*"]
 
 [tool.setuptools.package-data]
-evoloop = ["examples/**/*"]
+evoloop = ["examples/**/*", "skills/**/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

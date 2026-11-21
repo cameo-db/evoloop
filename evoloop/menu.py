@@ -10,6 +10,7 @@ import json
 from typing import Any, Dict, List, Tuple
 
 from . import form
+from . import skill as skills
 
 STRATEGIES = {
     "lineage": "Species kept alive side by side. A new lineage gets a protected trial, the best few are active, none "
@@ -157,6 +158,7 @@ FIELDS: Dict[str, str] = {
     "objective.success_threshold": "A score at which the search stops designing and ends.",
     "run.type": "The named bundle of settings to start from. See the run types.",
     "run.description": "Your own description of the search. Kept as the first note the agents read.",
+    "run.skill": "What kind of optimisation this is: a built-in skill (see the skills) or the path of a skill folder of your own. It sets what suits the task and gives the agents guidance for it; independent of the run type.",
     "space.preset": "Which marked blocks are open. See the search spaces.",
     "space.modules": "With preset `module`: the roles or block names that are open.",
     "space.roles": "Per role (or block name): open, settings or fixed. Overrides the preset for that role.",
@@ -165,6 +167,7 @@ FIELDS: Dict[str, str] = {
     "space.forbidden": "What must not be done, as text. Shown to the writers; not checked by code.",
     "space.must_keep": "What must be kept, as text. Shown to the writers; not checked by code.",
     "space.forbidden_terms": "Strings a block may not contain. Enforced by code: a design that has one is not run.",
+    "space.ranges": "Bounds for the settings estimator (`variation.settings_by: tpe`): {\"block.key\": [low, high]}. Without one a setting may move a hundredfold either way.",
     "strategy.mechanism": "How parents are chosen and what stays in the population. See the strategies.",
     "strategy.islands": "Separate populations of the strategy; 1 for none.",
     "strategy.migrate_every": "With islands: scored runs of an island between migrations into it.",
@@ -195,7 +198,7 @@ FIELDS: Dict[str, str] = {
     "crossover.kinds": "The kinds of crossover that may be used. Only these are used.",
     "variation.proposals_per_slot": "How many proposals the writer returns for a slot; one is chosen and trained.",
     "variation.step_adaptation": "Ask for bolder local edits when a lineage's recent ones gain often, smaller when rarely.",
-    "variation.settings_by": "Who makes a settings move: an agent, or a sampler in code (no call).",
+    "variation.settings_by": "Who makes a settings move: an `agent`; a `sampler` in code that nudges one value (no call); or `tpe`, a Bayesian estimator in code that draws every setting from what the best designs used (no call).",
     "variation.edit_format": "How a writer returns a change to part of a block: `full` (the whole block) or `diff` (find-and-replace edits, fewer tokens on large blocks; an edit that does not apply exactly once is refused).",
     "variation.approaches": "Ways of working handed to the writers, one per slot, kept or dropped by how their designs did: `off`, `fixed` (only yours) or `evolve` (the analyst adds to them).",
     "variation.approach_pool": "With `evolve`: the most approaches kept at once; past it the worst proven one is retired.",
@@ -290,8 +293,14 @@ FIELDS: Dict[str, str] = {
     "limits": "Hard limits on a design, enforced by code: {metric: {max: x}} or {min: x}, on any figure a result reports, `parameters` or `examples_per_s`.",
 }
 
+SKILLS = skills.summaries()
+SKILLS_NOTE = ("A skill says what kind of problem the search is; the run type says how to search. Choose one of each. "
+               "`evoloop skills NAME` shows a skill in full, and `evoloop skills NAME --copy DIR` writes it out as a "
+               "folder to edit and use as your own (`run.skill: DIR`).")
+
 SECTIONS: List[Tuple[str, str, str, Dict[str, str], str]] = [
     ("run-types", "Run types", "run.type", RUN_TYPES, ""),
+    ("skills", "Skills: the kind of optimisation", "run.skill", SKILLS, SKILLS_NOTE),
     ("autonomy", "Autonomy: agentic first, or strongly harnessed", "harness.autonomy", AUTONOMY, AUTONOMY_NOTE),
     ("models", "Models", "agents.default_model", MODELS, MODELS_NOTE),
     ("effort", "Effort", "agents.effort", EFFORT, EFFORT_NOTE),
@@ -311,7 +320,8 @@ SECTIONS: List[Tuple[str, str, str, Dict[str, str], str]] = [
      "reviews and the coordinator agent stop when it is reached."),
     ("reviews", "Review schedules", "audit.reviews", REVIEWS, "Or a list of shares of the budget, such as [0.1, 0.4, 0.8]."),
 ]
-PRESETS = {"run-types": form.RUN_TYPES, "autonomy": form.AUTONOMY}
+PRESETS = {"run-types": form.RUN_TYPES, "autonomy": form.AUTONOMY,
+           "skills": {name: (skills.load(name)[0] or {}).get("settings") or {} for name in skills.names()}}
 TOPICS = [s[0] for s in SECTIONS] + ["guidance", "defaults", "fields", "all"]
 
 
@@ -372,7 +382,7 @@ def menu_markdown() -> str:
         if note:
             out += [note, ""]
         if key in PRESETS:
-            out += ["### What each %s sets" % {"run-types": "run type", "autonomy": "level of autonomy"}[key], "",
+            out += ["### What each %s sets" % {"run-types": "run type", "autonomy": "level of autonomy", "skills": "skill"}[key], "",
                     "It is a bundle of settings. Anything you set yourself in the brief wins over it.", ""]
             for name in entries:
                 lines = preset_lines(PRESETS[key][name], "")

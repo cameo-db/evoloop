@@ -32,7 +32,9 @@ another role. Scores are noisy: a difference smaller than the noise floor is no 
 `notes_from_the_person`, when present, are standing instructions from the person the search is for. Follow them, and \
 list in `followed_notes` the ids of those that shaped your answer; if you set one aside, say why in `reasoning`. \
 `direction_from_the_strategist`, when present, is advice from the role that watches the search as a whole: weigh it, \
-and where it conflicts with a note from the person, the person's note stands.
+and where it conflicts with a note from the person, the person's note stands. `skill`, when present, says what kind of \
+optimisation this search is and what that kind of task asks of you: what matters, what to try, what to avoid. It is \
+written for the kind of task, not for this project, so `task`, the results and the person's notes outrank it.
 
 Return exactly one JSON object and nothing else. Put `reasoning` first (three to six plain sentences on what you \
 weighed), then `note` (one sentence, at most 30 words, on what you chose and why)."""
@@ -312,6 +314,10 @@ class Agents:
                 context["notes_from_the_person"] = mine
             if theirs:
                 context["direction_from_the_strategist"] = theirs
+        from . import skill as skills
+        told = skills.guidance(settings.get("_skill"), role) if role not in ("translator", "assessor") else None
+        if told:     # what kind of optimisation this is, and what that asks of this role
+            context = dict(context, skill={"name": settings["_skill"]["name"], "guidance": told})
         system = CORE + "\n\n" + ROLES[role]
         user = json.dumps(context, indent=1, default=str)
         shown = {key: len(json.dumps(value, default=str)) for key, value in context.items()}

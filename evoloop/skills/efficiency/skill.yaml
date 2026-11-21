@@ -1,0 +1,42 @@
+name: efficiency
+summary: Make the model smaller or faster while holding its score. Designs are selected on the trade-off between the score and size (or speed), and removal is the commonest move.
+settings:
+  strategy:
+    mechanism: pareto
+    second_metric: parameters
+    second_direction: minimize
+  schedule:
+    local_mix: {edit: 0.35, settings: 0.15, ablation: 0.5}
+  report:
+    columns: [speed]
+guidance:
+  all: |
+    The aim is the best trade-off between the score and the model's cost (its parameter count, or its speed if the
+    person has set that as the second figure). A design that loses less than the noise floor and is clearly
+    smaller or faster is a gain. `limits_enforced_by_code` gives the hard bounds; a design outside them is
+    rejected unrun or stopped early.
+  writer: |
+    Take away before adding. In rough order of what is usually cheapest to remove:
+    - layers or blocks whose removal earlier ablations showed costs nothing;
+    - width, where the layer is far from the output or follows a wider one;
+    - dense layers and large heads, which often hold most of the parameters;
+    - full convolutions, replaced by separable, grouped or bottlenecked ones; attention replaced by something local
+      where the range it covers is short;
+    - resolution early (stride or pooling sooner), which cuts the cost of everything after it.
+    Then spend a little of what was saved where it pays most. State in `predicted_effect` both what you expect for
+    the score and for the size or speed, since both are measured.
+    When the parent sits at the small end of the front, try to recover score at the same size; at the accurate end,
+    try to cut size at the same score. Do not propose a design larger than the largest on the leaderboard.
+  analyst: |
+    For each change say what it did to the score and to the size or speed. A lesson of the form "removing X costs
+    nothing" is the most useful kind here; cite the runs.
+  strategist: |
+    If the front has stopped moving at the small end, order ablations on its smallest designs; if it has stopped
+    at the accurate end, order crossovers between the two ends.
+needs:
+  adapter:
+    - "report `parameters` in result.json (and `inference_speed.examples_per_s` to rank on speed: then set strategy.second_metric to examples_per_s and strategy.second_direction to maximize)"
+    - "set `limits` for the largest size or lowest speed you accept, and put those figures in the first progress line so that a design outside them costs seconds"
+    - "add a reference row for the model you are trying to shrink"
+  figures: [parameters]
+  references: []

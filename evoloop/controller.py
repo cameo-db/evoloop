@@ -17,7 +17,7 @@ import signal
 import time
 from typing import Any, Dict, List, Optional, Tuple
 
-from . import approaches, audit, form, jobs, report, schedule, space, strategies, strategist, study
+from . import approaches, audit, form, jobs, report, schedule, skill, space, strategies, strategist, study
 from .agents import AgentError, Agents, AgentsUnavailable
 from .design import Designer
 from .store import ENDED, SCORED, Store, View, read_json, write_json
@@ -35,7 +35,7 @@ class Controller:
         self.info = read_json(os.path.join(self.run_dir, "run.json"), {}) or {}
         if self.info.get("brief"):
             self.brief = self.info["brief"]   # a run keeps the brief it started with; changes go through the ledger
-        self.settings, self.sources = form.resolve(self.brief, self.store.merged_list("ledger"))
+        self.settings, self.sources = form.resolve(self.brief, self.store.merged_list("ledger"), self.folder)
         self.agents = Agents(self.settings, self.folder, self.store, backend=agent_backend)
         self.designer = Designer(self.folder, self.run_dir, self.store, self.agents, seed=int(self.settings["evaluation"]["seed"]))
         self.backend = backend or jobs.make(self.settings)
@@ -72,6 +72,8 @@ class Controller:
             return
         if not form.confirmed(self.brief):
             raise form.BriefError("the brief is not confirmed (run `evoloop brief --confirm NAME` after reading `evoloop plan`)")
+        if self.settings.get("_skill_fault"):
+            raise form.BriefError(self.settings["_skill_fault"])
         self.info = {"name": self.name, "started": time.strftime("%Y-%m-%d %H:%M"), "brief": self.brief,
                      "frozen": space.frozen_hash(os.path.join(self.folder, "base"), os.path.join(self.folder, "adapter")),
                      "status": "running"}
@@ -169,6 +171,8 @@ class Controller:
         if kind == "set":
             for key, value in (request.get("changes") or {}).items():
                 fault = form.check_change(key, value)
+                if not fault and key == "run.skill":     # a skill that cannot be found or read is refused, not half-applied
+                    fault = skill.load(value, self.folder)[1]
                 old = form.get(self.settings, key)
                 entry = {"kind": "set", "key": key, "value": value, "old": old, "by": who, "reason": why,
                          "status": "refused" if fault else "applied", "why": fault}
@@ -222,7 +226,7 @@ class Controller:
             raise ValueError("unknown kind of request: %r" % kind)
 
     def refresh(self) -> None:
-        self.settings, self.sources = form.resolve(self.brief, self.store.merged_list("ledger"))
+        self.settings, self.sources = form.resolve(self.brief, self.store.merged_list("ledger"), self.folder)
         self.agents.update(self.settings)
 
     # --- jobs ------------------------------------------------------------------------------------
@@ -793,7 +797,7 @@ class Controller:
         """The settings without what the strategist changed by itself: where the person last left them."""
         entries = [e for e in self.store.merged_list("ledger")
                    if not (e.get("kind") == "set" and e.get("by") == strategist.BY and not e.get("approved"))]
-        return form.resolve(self.brief, entries)[0]
+        return form.resolve(self.brief, entries, self.folder)[0]
 
     def record(self, decision: Dict[str, Any], effects: Dict[str, Any], **fields: Any) -> Dict[str, Any]:
         view = self.view()

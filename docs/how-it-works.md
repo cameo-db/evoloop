@@ -128,6 +128,10 @@ values in the params blocks) and `ablation` (one component removed). With
 `variation.step_adaptation`, a lineage whose recent edits gained often is asked for bolder ones, and
 one whose edits rarely gained for smaller ones.
 
+A settings move is made by an agent, by a sampler that nudges one value, or by a Bayesian estimator that
+draws every setting from what the best designs used (`variation.settings_by`: `agent`, `sampler`, `tpe`;
+see [the tuning skill](skills.md#the-tuning-skills-estimator)). The last two cost no agent call.
+
 ## Novelty
 
 - **Novel slots** show the writer designs that were rarely built on, from anywhere in the ranking, and

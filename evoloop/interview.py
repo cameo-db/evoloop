@@ -21,6 +21,11 @@ from . import form, menu
 from .model import catalog
 
 KEEP = "__keep__"       # the answer "leave it at the default"
+# Words in a goal that point to a kind of optimisation, most specific first.
+SKILL_HINTS = [("distillation", r"distil\w*|student|teacher"),
+               ("mechanistic", r"interpretab\w*|mechanis\w*|biophysic\w*|motif\w*|kinetic\w*|thermodynamic\w*"),
+               ("tuning", r"hyper-?param\w*|\btun(e|ing)\b|learning rate"),
+               ("efficiency", r"smaller|faster|efficien\w*|compress\w*|lightweight|fewer parameters|\bspeed\b")]
 SECTIONS = ["Goal", "Budget", "Search", "Training runs", "Compute", "Agents", "Oversight"]
 
 
@@ -45,6 +50,11 @@ QUESTIONS: List[Dict[str, Any]] = [
      "question": "What kind of search do you want?",
      "why": "It sets the strategy, the schedule, the harness and the search space unless you set them yourself.",
      "choices": _choices(menu.RUN_TYPES)},
+    {"field": "run.skill", "section": "Search", "title": "Kind of optimisation", "kind": "choice",
+     "question": "What kind of optimisation is this?",
+     "why": "It sets what suits the task (what is open, how designs are selected) and gives the agents guidance for it. "
+            "Independent of the kind of search.",
+     "choices": _choices(menu.SKILLS)},
     {"field": "run.description", "section": "Search", "title": "Your own description", "kind": "text",
      "question": "Describe the search you want, in your own words.",
      "why": "With the custom kind the agents read this as your first note.", "when": {"run.type": ["custom"]}},
@@ -352,6 +362,15 @@ def infer(folder: str, brief: Dict[str, Any]) -> Dict[str, Any]:
                 found["objective.direction"] = ("minimize" if low else "maximize", "task.md says \"%s\"" % (low or high).group(0))
         except OSError:
             pass
+    goal = str(stated.get("objective.goal") or "").lower()
+    if goal:      # the kind of optimisation, from the words of the goal
+        for name, words in SKILL_HINTS:
+            said = re.search(words, goal)
+            if said:
+                found["run.skill"] = (name, "the goal says \"%s\"" % said.group(0))
+                break
+        else:
+            found["run.skill"] = ("performance", "the goal names no other kind of optimisation than a better score")
     budget = stated.get("budget.evaluations")
     if isinstance(budget, (int, float)) and budget > 0:
         label = form.guidance_for(budget)[0]

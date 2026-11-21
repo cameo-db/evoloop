@@ -8,6 +8,7 @@ nav:
   - Overview: index.md
   - First run: quickstart.md
   - Setting up a search: setting-up.md
+  - Skills, the kind of optimisation: skills.md
   - How a search works: how-it-works.md
   - Steering a run: steering.md
   - Model and effort: models.md

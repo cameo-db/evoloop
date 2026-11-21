@@ -36,10 +36,12 @@ REVIEW_PRESETS = {"none": [], "end": [1.0], "halfway": [0.5, 1.0], "thirds": [0.
 
 DEFAULTS: Dict[str, Any] = {
     "objective": {"goal": None, "metric": "score", "direction": None, "constraints": [], "success_threshold": None},
-    "run": {"type": None, "description": ""},
+    "run": {"type": None, "description": "", "skill": None},
     "space": {"preset": "open_architecture", "modules": [], "roles": {}, "settings": "open",
               "recipe_roles": ["loss", "optimizer", "schedule", "augmentation", "training", "recipe"],
-              "forbidden": [], "must_keep": [], "forbidden_terms": []},
+              "forbidden": [], "must_keep": [], "forbidden_terms": [],
+              # Bounds for the settings sampler (variation.settings_by: tpe): {"block.key": [low, high]}.
+              "ranges": {}},
     "strategy": {"mechanism": "lineage", "islands": 1, "migrate_every": 12,
                  "tournament_size": 3, "window": 24, "descriptors": ["family", "size"],
                  # FunSearch-style resets: every so many scored runs the weaker half of the islands start again from the
@@ -127,7 +129,7 @@ CHOICES = {"objective.direction": ("maximize", "minimize"), "strategy.mechanism"
            "harness.coordinator": ("code", "agent"), "space.preset": SPACES, "baseline.mode": ("train", "import", "skip"),
            "compute.scheduler": ("local", "slurm"), "agents.backend": ("stub", "anthropic_api", "claude_code"),
            "evaluation.on_length_change": ("auto", "continue", "rerun", "compare_anyway"),
-           "variation.settings_by": ("agent", "sampler"), "strategist.mode": ("off", "advise", "act"),
+           "variation.settings_by": ("agent", "sampler", "tpe"), "strategist.mode": ("off", "advise", "act"),
            "variation.edit_format": ("full", "diff"), "variation.approaches": ("off", "fixed", "evolve"),
            "evaluation.ladder_applies": ("new", "all"), "schedule.novelty_measure": ("auto", "code", "behaviour"),
            "strategy.second_direction": ("maximize", "minimize"),
@@ -216,7 +218,7 @@ def flatten(tree: Dict[str, Any], prefix: str = "") -> Dict[str, Any]:
 
 
 # Mappings that are one value, not a group of fields.
-ATOMIC = ("space.roles", "schedule.local_mix", "evaluation.speciality_metrics", "agents.models", "agents.prices", "agents.efforts", "evaluation.variables", "limits",
+ATOMIC = ("space.ranges", "space.roles", "schedule.local_mix", "evaluation.speciality_metrics", "agents.models", "agents.prices", "agents.efforts", "evaluation.variables", "limits",
           "data.examples", "data.splits")
 
 
@@ -290,7 +292,8 @@ def unknown_fields(brief: Dict[str, Any]) -> List[str]:
     return sorted(path for path in flatten({k: v for k, v in brief.items() if k != "status"}) if not known(path))
 
 
-def resolve(brief: Dict[str, Any], ledger: Optional[List[Dict[str, Any]]] = None) -> Tuple[Dict[str, Any], Dict[str, str]]:
+def resolve(brief: Dict[str, Any], ledger: Optional[List[Dict[str, Any]]] = None,
+            folder: Optional[str] = None) -> Tuple[Dict[str, Any], Dict[str, str]]:
     """The settings in force, and for each the layer it came from."""
     settings = copy.deepcopy(DEFAULTS)
     sources = {path: "default" for path in flatten(DEFAULTS)}
@@ -315,6 +318,16 @@ def resolve(brief: Dict[str, Any], ledger: Optional[List[Dict[str, Any]]] = None
             run_type = entry["value"]
     if run_type in RUN_TYPES and RUN_TYPES[run_type]:
         lay(RUN_TYPES[run_type], "run type %s" % run_type)
+    # The skill (what kind of optimisation this is) is laid over the run type (how to search): where both set
+    # something, the skill knows the problem better. A skill of the person's own is found under `folder`.
+    from . import skill as skills
+    skill_name = stated.get("run.skill")
+    for entry in changes:
+        if entry["key"] == "run.skill":
+            skill_name = entry["value"]
+    the_skill, skill_fault = skills.load(skill_name, folder)
+    if the_skill:
+        lay(the_skill["settings"], "skill %s" % the_skill["name"])
     autonomy = stated.get("harness.autonomy")
     for entry in changes:
         if entry["key"] == "harness.autonomy":
@@ -336,6 +349,7 @@ def resolve(brief: Dict[str, Any], ledger: Optional[List[Dict[str, Any]]] = None
         settings["strategist"]["mode"] = "act"
         sources["strategist.mode"] = "an agent runs the search (harness.conductor)"
     settings["_guidance"] = label
+    settings["_skill"], settings["_skill_fault"] = the_skill, skill_fault
     settings["notes"] = [e for e in (ledger or []) if e.get("kind") == "note" and e.get("status", "active") == "active"]
     # Lineages the strategist (or the person) retired or revived: the last word on each stands.
     settings["_lineages"] = {e["lineage"]: {"to": e["to"], "t": e.get("t", 0)} for e in (ledger or [])
@@ -393,6 +407,12 @@ def check_value(path: str, value: Any) -> Optional[str]:
                 "evaluation.screen_min_pool", "strategy.islands", "strategy.reset_every", "budget.max_uncounted_failures") \
             and value not in EMPTY and not (number and float(value).is_integer() and value >= 0):
         return "%s must be a whole number, 0 or more" % path
+    if path == "space.ranges" and value not in EMPTY and (not isinstance(value, dict) or not all(
+            isinstance(k, str) and isinstance(v, (list, tuple)) and len(v) == 2
+            and all(isinstance(x, (int, float)) and not isinstance(x, bool) for x in v) and v[0] < v[1] for k, v in value.items())):
+        return "space.ranges must map a setting (block.key) to [low, high], low below high"
+    if path == "run.skill" and value not in EMPTY and not isinstance(value, str):
+        return "run.skill must be the name of a built-in skill or the path of a skill folder"
     if path == "evaluation.ladder" and value not in EMPTY:
         ok = isinstance(value, list) and all(
             isinstance(r, dict) and set(r) == {"at", "keep"} and all(isinstance(x, (int, float)) and not isinstance(x, bool)
@@ -492,7 +512,9 @@ def problems(brief: Dict[str, Any]) -> List[str]:
 
 def warnings(settings: Dict[str, Any]) -> List[str]:
     """Combinations that work against each other. A warning never stops a run."""
-    out = []
+    out = [settings["_skill_fault"]] if settings.get("_skill_fault") else []
+    for need in ((settings.get("_skill") or {}).get("needs") or {}).get("adapter") or []:
+        out.append("the %s skill needs: %s" % (settings["_skill"]["name"], need))
     n = settings["budget"]["evaluations"] or 0
     mech, level = settings["strategy"]["mechanism"], settings["harness"]["level"]
     label, overlay = guidance_for(n)
@@ -575,10 +597,12 @@ def confirmed(brief: Dict[str, Any]) -> bool:
     return bool(status.get("confirmed_by")) and status.get("confirmed_digest") == digest(brief)
 
 
-def plan_lines(brief: Dict[str, Any], star: Optional[str] = None) -> List[str]:
-    settings, sources = resolve(brief)
+def plan_lines(brief: Dict[str, Any], star: Optional[str] = None, folder: Optional[str] = None) -> List[str]:
+    settings, sources = resolve(brief, folder=folder)
     flat = flatten({k: v for k, v in settings.items() if not k.startswith("_") and k != "notes"})
     out = ["Plan for: %s" % (settings["objective"]["goal"] or "(no goal yet)"), ""]
+    if settings.get("_skill"):
+        out.append("Skill: %s. %s" % (settings["_skill"]["name"], settings["_skill"]["summary"]))
     if settings["_guidance"]:
         out.append("Budget guidance used: %s evaluations." % settings["_guidance"])
     groups: Dict[str, List[str]] = {}

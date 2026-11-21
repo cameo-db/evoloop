@@ -18,7 +18,7 @@ import random
 import time
 from typing import Any, Dict, List, Optional, Tuple
 
-from . import approaches, space
+from . import approaches, space, tpe
 from .agents import AgentError, Agents
 from .schedule import phase_at, fraction_used
 from .store import Store, View, read_json, write_json
@@ -135,7 +135,14 @@ class Designer:
         else:
             request["move"] = "new_approach"
         by_code = request["move"] == "block_swap" or (
-            request["move"] == "settings_move" and settings["variation"]["settings_by"] == "sampler")
+            request["move"] == "settings_move" and settings["variation"]["settings_by"] in ("sampler", "tpe"))
+        if request["move"] == "settings_move" and settings["variation"]["settings_by"] == "tpe":
+            # What the estimator learns from: the settings of the designs with this model when there are enough of
+            # them (the best settings depend on the model), otherwise of every design.
+            same = [c for c in view.scored() if parents and c["model"] == view.cands[parents[0]]["model"]]
+            pool = same if len(same) >= tpe.STARTUP else view.scored()
+            request["tpe"] = {"history": [(view.run_of(c["id"]).get("settings") or {}, c["value"]) for c in pool],
+                              "ranges": settings["space"].get("ranges") or {}}
         request["by_code"] = by_code
         if not by_code:
             request["context"] = self.context(request, view, settings, parents)
@@ -282,6 +289,8 @@ class Designer:
                 "parts_from": {request["parents"][1]: names}, "blocks": {n: second[n] for n in names}}
 
     def sampled(self, request: Dict[str, Any]) -> Dict[str, Any]:
+        if request.get("tpe") is not None:
+            return self.estimated(request)
         spread = {"small": 1.25, "normal": 1.6, "bold": 2.5}.get(request.get("step") or "normal", 1.6)
         blocks, moved = {}, []
         names = [n for n, k in request["allowed"].items() if k == "params"]
@@ -296,6 +305,28 @@ class Designer:
             blocks[name] = space.render_params(var, values)
         return {"name": "sampled", "family": None, "hypothesis": "A nearby setting scores better.",
                 "predicted_effect": "not stated (drawn by code)", "change_summary": "; ".join(moved), "blocks": blocks}
+
+    def estimated(self, request: Dict[str, Any]) -> Dict[str, Any]:
+        """A settings move drawn by the estimator (`variation.settings_by: tpe`): every open setting at once."""
+        parsed, start = {}, {}
+        for name in [n for n, k in request["allowed"].items() if k == "params"]:
+            try:
+                parsed[name] = space.parse_params(request["source"][name])
+            except space.SpaceError:
+                continue
+            for key, value in parsed[name][1].items():
+                start["%s.%s" % (name, key)] = value
+        new, how = tpe.suggest(start, request["tpe"]["history"], self.rng, request["tpe"]["ranges"])
+        blocks, moved = {}, []
+        for name, (var, values) in parsed.items():
+            fresh = {key: new["%s.%s" % (name, key)] for key in values}
+            if fresh != values:
+                blocks[name] = space.render_params(var, fresh)
+                moved += ["%s.%s=%s" % (name, k, v) for k, v in fresh.items() if v != values[k]]
+        return {"name": "estimated", "family": None,
+                "hypothesis": "Settings typical of the best designs and untypical of the others score better.",
+                "predicted_effect": "not stated; drawn " + how, "change_summary": "; ".join(moved)[:300],
+                "blocks": blocks}
 
     # --- commit ----------------------------------------------------------------------------------
     @staticmethod
