@@ -1,12 +1,12 @@
 # Make a data pipeline faster or cheaper
 
-Skill `data-pipeline` · domain: pipeline · [the skill in full](../skill-library.md#data-pipeline)
-
 Speed up a multi-step data pipeline (reading, transforming, joining, writing) or cut its memory and cost, with its output unchanged.
 
-## Start here
+## What a good result looks like
 
-Put this in `brief.yaml` (or give the same answers to `evoloop setup`), then read `evoloop plan` before you confirm.
+Read the best design's cost against the reference row, and the time per step it reports: that shows where the cost went. Check how the gain grows with input size before relying on it at full scale.
+
+## Start here
 
 ```yaml
 run:
@@ -18,7 +18,7 @@ objective:
   direction: minimize
 ```
 
-The budget, and any limits or ranges, are placeholders: put in your own.
+These lines go in `brief.yaml`. The budget, and any limits or ranges, are placeholders for your own. <a href="../../which-search/?goal=data-pipeline&run=explore_then_exploit#preview-your-search">Preview this search</a> to see what it will do, or [set up this search](../setting-up.md) on your project. The goal is the skill `data-pipeline`, shown in full in the [skill library](../skill-library.md#data-pipeline).
 
 ## Why this set-up
 
@@ -50,11 +50,9 @@ The skill sets these for you (anything you set in the brief wins):
 
 It combines well with [`algorithm-runtime`](algorithm-runtime.md) (`run.skill: [data-pipeline, ...]`).
 
-## Reading the result
+## Where to look
 
-Read the best design's cost against the reference row, and the time per step it reports: that shows where the cost went. Check how the gain grows with input size before relying on it at full scale.
-
-Where to look: `evoloop leaderboard`, `evoloop show`, and the report ([Files of a run](../records.md)). To change course while it runs: [Watch and steer a run](../steering.md).
+`evoloop leaderboard` for the ranking, `evoloop show` for one design, and the report for everything ([Files of a run](../records.md)). To change course while it runs: [Watch and steer a run](../steering.md).
 
 ## What the agents are told
 

@@ -17,13 +17,13 @@ theme:
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default
-      primary: teal
-      accent: teal
+      primary: custom
+      accent: custom
       toggle: {icon: material/weather-night, name: Dark mode}
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
-      primary: teal
-      accent: teal
+      primary: custom
+      accent: custom
       toggle: {icon: material/weather-sunny, name: Light mode}
 extra_javascript:
   - assets/js/explore.js
@@ -74,6 +74,7 @@ nav:
       - Audit the agents: auditing.md
       - Save and deposit the study: study.md
   - Reference:
+      - reference.md
       - Commands: commands.md
       - Brief fields: fields.md
       - Options and presets: menu.md

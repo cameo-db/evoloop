@@ -1,3 +1,8 @@
+---
+search:
+  boost: 1.5
+---
+
 # Evaluator interface
 
 This is the contract between the loop and the code it runs.

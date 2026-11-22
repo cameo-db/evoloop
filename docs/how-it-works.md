@@ -30,32 +30,42 @@ shares.
 vary along the radius leads, at 0.967, and its best design is chosen as the parent.
 [Who becomes a parent](parents.md) explains how.
 
-**3. Write it.** A local move is an edit, a settings move or an ablation; this one is an edit. An agent
-is sent the task, the parent's code, the leaderboard, recent results and the lessons so far, and asked
-for one change:
+**3. Write it.** A local move is an edit, a settings move or an ablation. This one is an edit: the
+writer is sent the parent's code, the leaderboard, recent results and the lessons so far, and asked for
+one change. It adds a second hidden layer.
 
-```json
-{"request": {"mode": "local", "move": "structural_change", "step": "normal",
-             "instruction": "ONE attributable change to the parent's structure..."},
- "blocks_you_may_change": {"model": {"kind": "structure", "role": "network"},
-                           "fit": {"kind": "params", "role": "optimizer"}},
- "parents": [{"candidate": "C14", "score": 0.967, "family": "periodic features",
-              "blocks": {"model": "HIDDEN = [12]\nACTIVATION = \"tanh\"\n\ndef features(x): ..."}}],
- "leaderboard": ["..."], "recent": ["..."], "lessons": ["..."]}
+```python
+HIDDEN = [12]        ->        HIDDEN = [12, 8]
 ```
 
-It answers with the new code and a forecast:
+In the demo the writer is a script. In a real search it is an agent, and the exchange looks like this:
 
-```json
-{"proposals": [{"name": "a second layer", "family": "periodic features",
-                "hypothesis": "A second layer lets the network combine the radial waves with the coordinates.",
-                "expected_gain": {"gain": 0.8, "probability_better": 0.4},
-                "change_summary": "added a narrower layer on top",
-                "blocks": {"model": "HIDDEN = [12, 8]\nACTIVATION = \"tanh\"\n\ndef features(x): ..."}}]}
-```
+??? note "The request and the reply (abridged)"
+    The request:
 
-(Both are abridged.) Some moves need no agent: a block swap between two parents, and settings drawn by
-a sampler, are made in code. [Edits, crossover and settings moves](moves.md) lists them.
+    ```json
+    {"request": {"mode": "local", "move": "structural_change", "step": "normal",
+                 "instruction": "ONE attributable change to the parent's structure..."},
+     "blocks_you_may_change": {"model": {"kind": "structure", "role": "network"},
+                               "fit": {"kind": "params", "role": "optimizer"}},
+     "parents": [{"candidate": "C14", "score": 0.967, "family": "periodic features",
+                  "blocks": {"model": "HIDDEN = [12]\nACTIVATION = \"tanh\"\n\ndef features(x): ..."}}],
+     "leaderboard": ["..."], "recent": ["..."], "lessons": ["..."]}
+    ```
+
+    The reply, with the new code and a forecast:
+
+    ```json
+    {"proposals": [{"name": "a second layer", "family": "periodic features",
+                    "hypothesis": "A second layer lets the network combine the radial waves with the coordinates.",
+                    "expected_gain": {"gain": 0.8, "probability_better": 0.4},
+                    "change_summary": "added a narrower layer on top",
+                    "blocks": {"model": "HIDDEN = [12, 8]\nACTIVATION = \"tanh\"\n\ndef features(x): ..."}}]}
+    ```
+
+
+Some moves need no agent: a block swap between two parents, and settings drawn by a sampler, are made
+in code. [Edits, crossover and settings moves](moves.md) lists them.
 
 **4. Check it.** Before anything is trained, Python checks that only the marked blocks changed, that
 the code parses, that no forbidden term appears, and that the design is not a copy of one already

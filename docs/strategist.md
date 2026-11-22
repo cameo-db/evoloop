@@ -1,120 +1,72 @@
 # Working with the strategist
 
-The strategist is an agent that reviews a search as a whole and may change its course, within bounds you
-set. This page covers what it may do, how to answer what it proposes, and how to talk to it.
-[The agents](agents.md#why-have-a-strategist) explains why it exists; [Budget and cost](cost.md) covers the
-spend cap.
+The strategist is an agent that looks at a search as a whole and can change how the remaining budget is
+spent. It either advises you or acts on its own, and either way it works from a fixed list of actions
+inside limits that code enforces. [The agents](agents.md#why-have-a-strategist) explains why it exists.
 
-## When it meets
+## Advice, or action
 
-- every `strategist.every` scored designs (15 by default), and
-- when `strategist.plateau` designs (12 by default) have passed with no rise in the best score above
-  the noise. The best to beat includes the baseline. While a plateau lasts it meets again every half
-  that many designs.
+`strategist.mode` has three values.
 
-## What it is shown
+With `off` there is no strategist.
 
-Facts worked out by code: the designs since the best score last rose; what each mode, each move and
-each kind of crossover has returned; the population; how varied the recent designs are (families,
-distance from what was tried); the schedule in force; the budget left; what the agents have cost and
-where the run is heading at that rate; its own earlier decisions with what followed them; and your
-notes.
+With `advise`, it reviews the search and proposes changes. Each proposal waits for your yes or no, and
+nothing changes until you answer.
 
-## What it may do
+With `act`, proposals that stay inside the limits below are applied straight away. Larger ones still
+wait for you. Three run types (`explore_then_exploit`, `refine`, `survey`) turn this on by default.
 
-Up to two decisions a meeting, one of a kind, from this menu:
+```
+evoloop set mysearch --name r1 strategist.mode=advise --by "Your Name"
+```
 
-| Action | What it does | Applied at once? |
+## When it looks at the search
+
+Every 15 scored designs, and whenever 12 designs have passed without the best score rising by more than
+the noise. During a plateau it looks again every 6.
+
+It is shown facts that code has worked out: how long since the best score rose, what each kind of move
+has gained, how varied the recent designs are, the budget left, what the agents have cost, its own
+earlier decisions and what followed them, and your notes.
+
+## What it can do
+
+It may make up to two changes at a time, each of a different kind.
+
+| Action | What it changes | Applied without asking? |
 |---|---|---|
-| `stay` | changes nothing | yes |
-| `shares` | the shares of new designs, crossover and local moves, for the phase in force | yes, while no share stands more than `strategist.max_share_shift` (0.15) from where you last left it |
-| `novelty` | the novelty dial, and the novel share of new designs | yes |
-| `local_mix` | the shares of the local moves | yes |
-| `crossover_kinds` | which kinds of crossover are used; at least one | yes |
-| `force` | the next few slots go to one mode and, if named, one kind of crossover or local move | yes, while no more than `strategist.force_max` (5) slots are on order in all |
-| `retire`, `revive` | sets a lineage aside, or gives a retired or benched one a second chance | yes (lineage strategy only) |
-| `direction` | advice to the writers | yes; three stand at once at most |
-| `strategy` | changes the evolution strategy | no: waits for you |
-| `question` | asks you something | yes; the run does not wait |
+| `shares` | the split between new designs, crossover and local moves | yes, up to 15 points from where you left a share |
+| `novelty` | how strongly different designs are favoured | yes |
+| `local_mix` | the split between edits, settings moves and ablations | yes |
+| `crossover_kinds` | which kinds of crossover are used | yes |
+| `force` | makes the next few moves one particular kind | yes, up to 5 moves outstanding |
+| `retire`, `revive` | sets a family of designs aside, or brings one back | yes (lineage strategy only) |
+| `direction` | a line of advice to the writers | yes; at most three stand at once |
+| `strategy` | the parent rule itself | no: it waits for you |
+| `question` | asks you something | the search does not wait for the answer |
+| `stay` | nothing | |
 
-## The bounds, as code enforces them
+## The limits
 
-- **Exploration is protected.** `shares` cannot set new designs below `strategist.min_new_share`
-  (0.10). Slots ordered with `force` for crossover or local moves wait whenever new designs are below
-  that share of the last twenty designs.
-- **A share cannot creep.** The move is measured from where you last left the shares (the brief, a
-  change of yours, or a decision of the strategist that you approved), however many decisions it takes
-  to get there. Past `strategist.max_share_shift` it waits for you.
-- **Ordered slots are capped in all.** However many meetings, no more than `strategist.force_max`
-  slots are on order at once. An order whose mode cannot be filled is given up, and the record says so.
-- **Your word stands.** A decision waits for you when it would change a setting you changed during the
-  run: the setting itself, a part of it, or one that followed from your change of the run type or the
-  budget. An order for slots waits when you have changed the shares it would override.
-- **Anything in `strategist.ask_first` waits for you.** By default that is `strategy`.
-- **The lineage holding the best design is never retired.** A lineage brought back gets a second
-  chance, not a permanent place: its moves without a gain are counted afresh, it is active beside the
-  best lineages without taking a place from them, and it retires again when it has used that chance up.
-- **A decision that breaks a bound, or cannot be read, is refused**, and the refusal is in the ledger.
-  It never ends the run.
+Code checks each decision before applying it. A decision outside these limits either waits for you or
+is refused, and either way it is recorded.
 
-`retire` and `revive` have an effect only under the `lineage` strategy without islands; elsewhere they
-are refused.
+New designs cannot be pushed below 10% of the budget (`strategist.min_new_share`).
 
-## The three modes
+A share cannot drift. The 15-point allowance is measured from where you last left the shares, however
+many decisions it takes to get there. To go further it has to ask.
 
-| `strategist.mode` | What happens |
-|---|---|
-| `off` | no strategist (the default outside the run types below) |
-| `advise` | it meets and decides; every decision waits for your yes or no |
-| `act` | decisions within the bounds are applied at once; the others wait for you |
+No more than five ordered moves can be outstanding at once (`strategist.force_max`).
 
-The run types `explore_then_exploit`, `refine` and `survey` set `act`. `discovery` and `settings_only`
-leave it off.
+It cannot override you. A decision that would change a setting you changed during the search waits for
+your approval.
 
-Switching it `off` during a run takes effect at once: slots it had ordered are given up, and a meeting
-that was under way changes nothing.
+The family holding the best design cannot be retired. A family that is revived gets one more chance,
+and is retired again if it does not gain.
 
-## Who runs the search: code, or an agent you talk to
+Anything listed in `strategist.ask_first` always waits for you. By default that is `strategy`.
 
-`harness.conductor` decides who is in charge of the course of the search.
-
-| `harness.conductor` | What happens |
-|---|---|
-| `code` (the default) | The deterministic option. The schedule and the strategy run the search exactly as set. Nothing changes course unless you change it (or a strategist you switched on does, within its bounds). |
-| `agent` | An agent runs the search and you talk to it. It is the strategist with a voice: it meets on the same occasions, decides from the same menu under the same bounds, and it answers you. |
-
-```
-evoloop chat mysearch --name r1 --by "Your Name"                               # talk back and forth; an empty line ends it
-evoloop chat mysearch --name r1 "why so few new designs lately?" --by "Your Name"   # one message, one answer
-```
-
-In a talk the agent is given the state of the search worked out by code, what it decided since you last
-spoke, what waits for your yes, and the conversation so far. It can:
-
-- **explain**: what is happening and why, from the records;
-- **change course when you ask**: its decisions go to the controller as requests and are checked like
-  any other decision, so one within the bounds is applied at the next turn, one beyond them waits for
-  your yes, and one off the menu is refused. The command prints each thing it asked for;
-- **take your yes or no**: saying "yes" to a waiting decision in the talk approves it in your name.
-
-What you say is also shown to the agent at its later meetings, so a talk steers what it does when you
-are not there. Every message, answer and decision is kept (`chat.jsonl`, and the ledger).
-
-What does not change with an agent in charge: code enforces the budget, the limits, the frozen code and
-the floor on new designs; code picks parents and records every action. The agent cannot edit files or
-settings outside its menu. For those it tells you the command.
-
-Choosing `agent` switches the strategist to `act` if it was `off`; `strategist.mode: advise` keeps
-every decision waiting for your yes. You can switch either way during a run:
-
-```
-evoloop set mysearch --name r1 harness.conductor=agent --by "Your Name"
-evoloop set mysearch --name r1 harness.conductor=code  --by "Your Name"
-```
-
-A talk costs one model call per message, charged to the run's model budget like any other call.
-
-## Decisions that wait for you
+## Answering what it proposes
 
 ```
 evoloop report  mysearch --name r1                           # the strategist's section lists what is waiting
@@ -122,67 +74,70 @@ evoloop approve mysearch --name r1 --id S14 --by "Your Name"
 evoloop decline mysearch --name r1 --id S14 --by "Your Name" --reason "keep exploring"
 ```
 
-The report shows each waiting decision in full: its action and arguments, the strategist's reason, what
-it expects, and why it waits. `status.json` lists them under `decisions_waiting`.
+The report shows each waiting proposal with its reason, what it expects to gain, and why it is waiting.
 
-- A waiting decision changes nothing until you answer.
-- **A yes is checked against the run as it is then**, not as it was when the decision was made. If the
-  search has moved on and the decision can no longer be done within the bounds (the floor was raised,
-  the lineage now holds the best design), it is refused with the reason. Its effects are worked out
-  afresh, so it does not undo what changed in between.
-- A decision left unanswered for twice `strategist.horizon` designs lapses.
+When you approve one, it is checked against the search as it stands then. If things have moved on and
+it no longer fits inside the limits, it is refused with the reason. A proposal left unanswered for 30
+designs lapses.
 
-## Setting a lineage aside yourself
+## Telling it what you want
+
+Write a note addressed to it. It reads your notes every time it reviews the search.
+
+```
+evoloop note mysearch --name r1 "Exploration is underdelivering. Try crossover between the top two families." --roles strategist --by "Your Name"
+```
+
+Where its advice to the writers conflicts with a note of yours, the writers are told to follow yours.
+
+## Talking to it
+
+With `harness.conductor: agent`, the strategist also answers you.
+
+```
+evoloop set  mysearch --name r1 harness.conductor=agent --by "Your Name"
+evoloop chat mysearch --name r1 --by "Your Name"
+evoloop chat mysearch --name r1 "why so few new designs lately?" --by "Your Name"
+```
+
+It answers from the search's records. If you ask for a change, it makes the request through the same
+list of actions and the same limits, and the command prints what it asked for. Saying "yes" to a
+waiting proposal approves it in your name. What you say is kept and shown to it at later reviews, so a
+conversation also shapes what it does when you are away.
+
+It cannot edit files, or change a setting that is not on its list. For those it gives you the command.
+Each message costs one agent call. Turning this on switches the strategist to `act` if it was off; set
+`strategist.mode: advise` if you want every change to wait for you.
+
+With `harness.conductor: code`, the default, no agent runs the search and there is nothing to talk to.
+
+## Retiring a family yourself
 
 ```
 evoloop lineage mysearch --name r1 --retire L4 --by "Your Name"
 evoloop lineage mysearch --name r1 --revive L4 --by "Your Name"
 ```
 
-The last word on a lineage stands, yours or the strategist's, and each is in the ledger.
+Whoever spoke last about a family, you or the strategist, is the one obeyed.
 
-## Talking to it
+## Does it help?
 
-Write a note addressed to it; it reads your notes at every meeting.
+Each decision is recorded with the gain the strategist expected. Fifteen designs later, code records
+how much the best score actually rose, and the report sets the two side by side.
 
-```
-evoloop note mysearch --name r1 "Exploration is underdelivering: be bolder, and try crossover between the top two families." --roles strategist --by "Your Name"
-```
+That shows what followed a decision. It cannot show what the decision caused, because there is no copy
+of the search without it. To find out whether the strategist earns its cost, run the same budget with
+`strategist.mode: off` and compare. That comparison has not been made yet.
 
-To change how it behaves, change its settings:
+## Settings
 
-```
-evoloop set mysearch --name r1 strategist.mode=advise strategist.every=10 --by "Your Name"
-evoloop set mysearch --name r1 'strategist.ask_first=["strategy", "shares", "force"]' --by "Your Name"
-```
-
-Its own `direction` to the writers is shown to them apart from your notes, as advice; where the two
-conflict, the writers are told that your note stands.
-
-## How it is judged
-
-Every decision is a ledger entry: the action, its reason, the gain it expects and over how many
-designs. `strategist.horizon` designs later (15 by default) code records what followed: the rise in
-the best score, in noise floors, beside what was expected. The report has a table of every decision,
-its status and both figures.
-
-That shows what followed a decision. It does not show what the decision caused: there is no copy of the
-run without it. To learn whether the strategist earns its place, compare a run with it against one
-with `strategist.mode: off` on the same budget.
-
-## Options and defaults
-
-| Setting | Default | What it is |
+| Setting | Default | |
 |---|---|---|
-| `strategist.mode` | `off` (`act` under three run types) | off, advise or act |
-| `strategist.every` | 15 | scored designs between meetings |
-| `strategist.plateau` | 12 | designs with no gain that trigger a meeting |
-| `strategist.horizon` | 15 | designs after which a decision is scored; twice that, an unanswered one lapses |
-| `strategist.min_new_share` | 0.10 | the floor on new designs |
-| `strategist.max_share_shift` | 0.15 | how far a share may stand from where you left it without your yes |
-| `strategist.force_max` | 5 | the most slots on order at once |
-| `strategist.ask_first` | `["strategy"]` | actions that always wait for you |
-
-The model it uses is `agents.models.strategist`, or `agents.default_model`. All of these can be changed
-during a run.
-
+| [`strategist.mode`](fields.md#strategist-mode) | `off`; `act` under three run types | off, advise or act |
+| [`strategist.every`](fields.md#strategist-every) | 15 | scored designs between reviews |
+| [`strategist.plateau`](fields.md#strategist-plateau) | 12 | designs without a gain that trigger a review |
+| [`strategist.horizon`](fields.md#strategist-horizon) | 15 | designs after which a decision is scored; an unanswered proposal lapses after twice this |
+| [`strategist.min_new_share`](fields.md#strategist-min_new_share) | 0.10 | the least share of new designs |
+| [`strategist.max_share_shift`](fields.md#strategist-max_share_shift) | 0.15 | how far a share may move without asking |
+| [`strategist.force_max`](fields.md#strategist-force_max) | 5 | ordered moves outstanding at once |
+| [`strategist.ask_first`](fields.md#strategist-ask_first) | `["strategy"]` | actions that always wait for you |

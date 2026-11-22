@@ -1,12 +1,12 @@
 # Adapt a pretrained model to a task
 
-Skill `model-finetuning` · domain: model · [the skill in full](../skill-library.md#model-finetuning)
-
 Start from a pretrained model and search over how to adapt it (what to freeze, what to add, the learning rates by layer, how long to train).
 
-## Start here
+## What a good result looks like
 
-Put this in `brief.yaml` (or give the same answers to `evoloop setup`), then read `evoloop plan` before you confirm.
+Compare every design with the reference row for the frozen backbone with a linear head: that is the cheapest baseline, and the gain over it is what adapting was worth. Watch the best epoch; fine-tuning that peaks in the first epochs is overfitting.
+
+## Start here
 
 ```yaml
 run:
@@ -16,7 +16,7 @@ budget:
   evaluations: 60
 ```
 
-The budget, and any limits or ranges, are placeholders: put in your own.
+These lines go in `brief.yaml`. The budget, and any limits or ranges, are placeholders for your own. <a href="../../which-search/?goal=model-finetuning&run=refine#preview-your-search">Preview this search</a> to see what it will do, or [set up this search](../setting-up.md) on your project. The goal is the skill `model-finetuning`, shown in full in the [skill library](../skill-library.md#model-finetuning).
 
 ## Why this set-up
 
@@ -46,11 +46,9 @@ The skill sets these for you (anything you set in the brief wins):
 
 It combines well with [`model-training-recipe`](model-training-recipe.md) (`run.skill: [model-finetuning, ...]`).
 
-## Reading the result
+## Where to look
 
-Compare every design with the reference row for the frozen backbone with a linear head: that is the cheapest baseline, and the gain over it is what adapting was worth. Watch the best epoch; fine-tuning that peaks in the first epochs is overfitting.
-
-Where to look: `evoloop leaderboard`, `evoloop show`, and the report ([Files of a run](../records.md)). To change course while it runs: [Watch and steer a run](../steering.md).
+`evoloop leaderboard` for the ranking, `evoloop show` for one design, and the report for everything ([Files of a run](../records.md)). To change course while it runs: [Watch and steer a run](../steering.md).
 
 ## What the agents are told
 

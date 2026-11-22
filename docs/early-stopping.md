@@ -71,6 +71,6 @@ result does not report a figure that a limit names, the search pauses and says w
 
 ## Settings on this page
 
-`evaluation.screen_fraction`, `evaluation.screen_keep`, `evaluation.screen_min_pool`,
-`evaluation.ladder`, `evaluation.ladder_applies`, `evaluation.inherit_weights`, `limits`. Each is
-described in [Brief fields](fields.md#evaluation).
+[`evaluation.screen_fraction`](fields.md#evaluation-screen_fraction), [`evaluation.screen_keep`](fields.md#evaluation-screen_keep), [`evaluation.screen_min_pool`](fields.md#evaluation-screen_min_pool),
+[`evaluation.ladder`](fields.md#evaluation-ladder), [`evaluation.ladder_applies`](fields.md#evaluation-ladder_applies), [`evaluation.inherit_weights`](fields.md#evaluation-inherit_weights), [`limits`](fields.md#limits). Each is
+

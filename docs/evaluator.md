@@ -1,12 +1,14 @@
+---
+search:
+  boost: 2
+---
+
 # Write the evaluator
 
-The evaluator is the one piece of code you write for evoloop. It is a script, `adapter/run.py`, that
-trains one design and writes its score to a file. The search runs it once per design, as its own job.
+The evaluator is the one script you write for evoloop. It lives at `adapter/run.py`, trains one design,
+and writes that design's score to a file. The search runs it once per design, as a separate job.
 
-## A complete example
-
-This one is for a PyTorch project whose code has a `model.build()` and a few training functions. Yours
-will call your own.
+## The shortest one that works
 
 ```python
 """adapter/run.py: train one design and write its score."""
@@ -16,17 +18,63 @@ import sys
 
 sys.path.insert(0, os.getcwd())      # the job's working copy of your code
 
+import train                         # your own training code, with this design's blocks in place
+
+out = os.environ["EVO_OUT_DIR"]
+os.makedirs(out, exist_ok=True)
+
+score = train.fit_and_validate(epochs=int(float(os.environ["EVO_ALLOWANCE"])),
+                               seed=int(os.environ["EVO_SEED"]))
+
+with open(os.path.join(out, "result.json"), "w") as handle:
+    json.dump({"valid": True, "score": score}, handle)
+```
+
+It reads three variables (where to write, how long to train, the seed) and writes `result.json` with
+`valid` and `score`. `train.fit_and_validate` stands for whatever your project calls to train a model
+and return its validation score.
+
+## Check it by hand
+
+Run it on your unchanged code, the way a job would, before starting any search:
+
+```
+mkdir trial && cp -r mysearch/base/. trial/ && cp -r mysearch/adapter trial/
+cd trial
+EVO_OUT_DIR=out EVO_CHECKPOINT_DIR=checkpoints EVO_SEED=0 EVO_ALLOWANCE=2 python adapter/run.py
+cat out/result.json
+```
+
+If that prints a score, the search can run it. The working copy has the contents of `base/` at its top
+level and your `adapter/` folder beside them, which is why `import train` works.
+
+## A fuller one: progress, early stopping, checkpoints
+
+Reporting progress lets the search stop a weak design part way. Reporting the parameter count and a
+held-out score puts them on the leaderboard and lets limits use them.
+
+```python
+"""adapter/run.py: train one design, report progress, and write its score."""
+import json
+import os
+import sys
+
+sys.path.insert(0, os.getcwd())
+
 import torch
-import model                         # your modules, with this design's blocks already in place
+import model
 import train
 
-out = os.environ["EVO_OUT_DIR"]                          # where to write
-epochs = int(float(os.environ["EVO_ALLOWANCE"]))         # how long to train
+out, checkpoints = os.environ["EVO_OUT_DIR"], os.environ["EVO_CHECKPOINT_DIR"]
+os.makedirs(out, exist_ok=True)
+os.makedirs(checkpoints, exist_ok=True)
+epochs = int(float(os.environ["EVO_ALLOWANCE"]))
 torch.manual_seed(int(os.environ["EVO_SEED"]))
 
 net = model.build()
 data = train.loaders()
 parameters = sum(p.numel() for p in net.parameters())
+best_path = os.path.join(checkpoints, "best.pt")
 
 
 def stop_requested():
@@ -44,13 +92,13 @@ with open(os.path.join(out, "progress.jsonl"), "a") as progress:
         val = train.evaluate(net, data["val"])           # the number the search optimizes
         if best is None or val > best:
             best, best_epoch = val, epoch
-            torch.save(net.state_dict(), os.path.join(os.environ["EVO_CHECKPOINT_DIR"], "best.pt"))
+            torch.save(net.state_dict(), best_path)
         progress.write(json.dumps({"step": epoch, "metric": val, "parameters": parameters}) + "\n")
         progress.flush()
         if stop_requested():
             break
 
-net.load_state_dict(torch.load(os.path.join(os.environ["EVO_CHECKPOINT_DIR"], "best.pt")))
+net.load_state_dict(torch.load(best_path))
 result = {
     "valid": True,
     "score": best,                                       # on validation data
@@ -63,70 +111,55 @@ with open(os.path.join(out, "result.json"), "w") as handle:
     json.dump(result, handle)
 ```
 
-That is the whole contract in practice:
-
-- read three variables: where to write, how long to train, the seed;
-- write `result.json` with `valid` and `score`;
-- optionally append a line to `progress.jsonl` each epoch and check `control.json`, which lets the
-  search stop a weak design early;
-- optionally report more (the parameter count, the held-out score), which the leaderboard, limits and
-  some skills use.
-
-The demo's evaluator is a working example of the same thing in NumPy:
+The demo's evaluator does the same in NumPy and is known to run:
 `evoloop/examples/tiny_classifier/adapter/run.py`.
 
 ## Where it runs
 
-For each design, evoloop makes a working copy: the contents of `base/` with that design's blocks
-spliced in, and your `adapter/` folder beside them. The script starts in that folder, so `import model`
-finds the design's version of your code. `base/` itself is never modified.
+For each design, evoloop makes a working copy of `base/` with that design's blocks in place, puts your
+`adapter/` folder beside it, and starts the script there. `base/` itself is never modified.
 
-The whole of `base/` is copied for every design, so keep data and pretrained weights out of it and
-refer to them by absolute path.
+All of `base/` is copied for every design. Keep datasets and pretrained weights outside it and refer to
+them by absolute path.
 
-## Try it by hand first
+## Then dry-run the search
 
-Before any search, run the evaluator on your unchanged code exactly as a job would:
+Once the script runs by hand, run a four-design search with scripted proposals. It costs nothing and
+shows that jobs start and finish on your machine.
 
 ```
-mkdir trial && cp -r mysearch/base/. trial/ && cp -r mysearch/adapter trial/
-cd trial
-EVO_OUT_DIR=out EVO_SEED=0 EVO_ALLOWANCE=2 EVO_CHECKPOINT_DIR=out python adapter/run.py
-cat out/result.json
+evoloop brief mysearch --answer agents.backend=stub --answer budget.evaluations=4 --confirm "Your Name"
+evoloop run mysearch --name dry
 ```
 
-If that prints a score, the search can run it. Then dry-run the search itself with scripted proposals
-and a tiny budget (`agents.backend: stub`, `budget.evaluations: 4`) to see jobs start and finish on
-your machine before paying for agents or GPUs.
+## Common mistakes
 
-## Things that go wrong
+The score goes the wrong way. `objective.direction` says whether higher or lower is better. A loss
+reported under `maximize` sends the search after the worst model.
 
-**The score goes the wrong way.** `objective.direction` says whether higher or lower is better. A loss
-reported with `maximize` makes the search look for the worst model.
-
-**The score is the test score.** The search optimizes whatever is in `score`, and agents are shown it.
+The score is the test score. The search optimizes whatever is in `score`, and agents are shown it.
 Report validation there and put held-out results under `diagnostics.hidden`.
 
-**The seed does nothing.** If two runs with different `EVO_SEED` give identical scores, your training
-code is not using it. See [Measure your noise](noise.md).
+The seed does nothing. If two runs with different `EVO_SEED` give identical scores, your training code
+is ignoring it. [Measure your noise](noise.md) shows how to check.
 
-**A design crashes with a shape error.** That is normal: agents write designs that do not fit. Add a
-quick check (`evaluation.quick_check: python adapter/check.py`) that builds the model and passes one
-batch through it. A design that fails it is dropped in seconds without being trained.
+Designs crash with shape errors. Agents write designs that do not fit, and that is expected. Add a quick
+check (`evaluation.quick_check: python adapter/check.py`) that builds the model and passes one batch
+through it. A design that fails is dropped in seconds without being trained.
 
-**A limit is set on something not reported.** If `limits` names `examples_per_s` and the result does
-not carry it, the search pauses. Report every figure a limit or a skill needs.
+A limit names something the result does not report. If `limits` mentions `examples_per_s` and
+`result.json` lacks it, the search pauses and says so.
 
-## More you can report
+## What else a result can carry
 
-| In `result.json` | What it enables |
+| In `result.json` | Used for |
 |---|---|
-| `parameters` | limits on size, the size bands of the archive, the size trade-off |
-| `inference_speed: {"examples_per_s": n}` | limits on speed, the speed trade-off, a leaderboard column |
-| `signature: [numbers]` | where the model's errors fall: tells designs that fail differently apart |
-| `diagnostics: {...}` | any metric: shown to the agents and available as a leaderboard column |
+| `parameters` | limits on size, the size bands of the archive, the score-and-size trade-off |
+| `inference_speed: {"examples_per_s": n}` | limits on speed, the score-and-speed trade-off, a leaderboard column |
+| `signature: [numbers]` | where the model's errors fall, to tell designs that fail differently apart |
+| `diagnostics: {...}` | any metric: shown to the agents, available as a leaderboard column |
 | `diagnostics.hidden: {...}` | held-out results: stored, never shown to an agent |
 | `captured: {...}` | package versions and training settings, for the study file |
 
-[Evaluator interface](project-contract.md) is the full reference: every variable, every key, the exit
-codes, and how jobs run on Slurm.
+[Evaluator interface](project-contract.md) is the reference: every variable, every key, the exit codes,
+and how jobs run on Slurm.

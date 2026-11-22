@@ -404,12 +404,16 @@ def guide_markdown(name: str) -> str:
                              "budget": {"evaluations": start.get("evaluations") or 100}}
     for key, value in (start.get("brief") or {}).items():
         brief.setdefault(key, {}).update(value) if isinstance(value, dict) else brief.__setitem__(key, value)
+    run_type = brief["run"]["type"]
+    preview = '<a href="../../which-search/?goal=%s&run=%s#preview-your-search">Preview this search</a>' % (one["name"], run_type)
     out = ["# %s" % one["goal"], "",
-           "Skill `%s` · domain: %s · [the skill in full](../skill-library.md#%s)" % (one["name"], one["domain"], one["name"]), "",
-           one["summary"], "", "## Start here", "",
-           "Put this in `brief.yaml` (or give the same answers to `evoloop setup`), then read `evoloop plan` before you confirm.", "",
+           one["summary"], "",
+           "## What a good result looks like", "", one["reading"], "",
+           "## Start here", "",
            "```yaml", _brief(brief).rstrip(), "```", "",
-           "The budget, and any limits or ranges, are placeholders: put in your own.", ""]
+           "These lines go in `brief.yaml`. The budget, and any limits or ranges, are placeholders for your own. "
+           "%s to see what it will do, or [set up this search](../setting-up.md) on your project. "
+           "The goal is the skill `%s`, shown in full in the [skill library](../skill-library.md#%s)." % (preview, one["name"], one["name"]), ""]
     out += ["## Why this set-up", "", one["why"], ""]
     sets = form.flatten(one["settings"])
     if sets:
@@ -432,15 +436,16 @@ def guide_markdown(name: str) -> str:
     if one["instead"] or one["conflicts"]:
         out += ["## Choose something else when", "", "| If | Use |", "|---|---|"]
         for row in one["instead"]:
-            names_ = wanted(row["use"])
-            link = " with ".join("[`%s`](%s.md)" % (n, n) for n in names_)
+            names_ = [n for n in wanted(row["use"]) if n != one["name"]] or wanted(row["use"])
+            both = len(wanted(row["use"])) > len(names_)
+            link = ("add " if both else "") + " with ".join("[`%s`](%s.md)" % (n, n) for n in names_) + (" to this one" if both else "")
             out.append("| %s | %s |" % (_cell(row["if"]), link))
         out.append("")
     if one["combines"]:
         out += ["It combines well with %s (`run.skill: [%s, ...]`)." % (
             ", ".join("[`%s`](%s.md)" % (n, n) for n in one["combines"]), one["name"]), ""]
-    out += ["## Reading the result", "", one["reading"], "",
-            "Where to look: `evoloop leaderboard`, `evoloop show`, and the report "
+    out += ["## Where to look", "",
+            "`evoloop leaderboard` for the ranking, `evoloop show` for one design, and the report for everything "
             "([Files of a run](../records.md)). To change course while it runs: [Watch and steer a run](../steering.md).", ""]
     out += ["## What the agents are told", ""]
     for role in ("all", "writer", "analyst", "strategist"):

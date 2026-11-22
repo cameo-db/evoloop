@@ -1,31 +1,31 @@
 # Measure your noise
 
-evoloop asks one number of you that it cannot guess: how much your score varies between two runs of
+evoloop needs one number from you that it cannot work out itself: how much your score varies between two runs of
 the same design. It treats any difference smaller than that as no difference, so the number decides
 what counts as progress.
 
-## Measure it in ten minutes
+## Estimate score variation across seeds
 
-Train your baseline five times with different seeds and look at the spread.
+Train your baseline five times with different seeds, at the training length you plan to use, and look
+at the spread.
 
 ```
 mkdir noise && cp -r mysearch/base/. noise/ && cp -r mysearch/adapter noise/
 cd noise
 for seed in 0 1 2 3 4; do
-    EVO_OUT_DIR=out$seed EVO_SEED=$seed EVO_ALLOWANCE=30 python adapter/run.py
+    EVO_OUT_DIR=out$seed EVO_CHECKPOINT_DIR=checkpoints$seed EVO_SEED=$seed EVO_ALLOWANCE=30 python adapter/run.py
 done
 grep -ho '"score": [0-9.e-]*' out*/result.json
 ```
 
-This runs your evaluator exactly as a search would, in a copy of the code. Suppose the five scores are
+This runs your evaluator the way a search would, in a copy of the code. Suppose the five scores are
 0.912, 0.907, 0.915, 0.909 and 0.911. Their standard deviation is about 0.003. Use that:
 
 ```
 evoloop brief mysearch --answer evaluation.noise=0.003
 ```
 
-Use the same training length you will use in the search (`EVO_ALLOWANCE`): shorter runs are usually
-noisier.
+Shorter training runs are usually noisier, so measure at the length the search will use.
 
 ## If you cannot afford five runs
 

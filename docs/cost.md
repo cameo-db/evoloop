@@ -6,7 +6,11 @@ cap, and both can be raised while the search runs.
 | Budget | Setting | When it runs out |
 |---|---|---|
 | training runs | `budget.evaluations` | the search ends |
-| agent cost | `budget.model_dollars` | no further agent call is made; the search pauses, and continues when you raise the cap |
+| agent cost | `budget.model_dollars` | no further agent call is started; the search pauses, and continues when you raise the cap |
+
+The dollar cap is checked before each agent call and the cost is added after it returns. A call already under
+way when the cap is reached still completes, so the total can end slightly above the cap, by at most the cost of
+the calls then in progress.
 
 GPU time is not counted in dollars. Bound it with the number of evaluations and, if you like, with
 `budget.wall_clock_hours`.
@@ -63,7 +67,7 @@ the last twenty, and the total the search is heading for.
 ## Keeping inside the cap
 
 With a dollar cap set, evoloop checks every ten scored designs whether the search is heading past it.
-If so it takes one step to make the search cheaper, and records the step with the figures:
+If so, it takes one step to make the search cheaper and records what it did:
 
 1. one proposal fewer per slot, down to one;
 2. the kind of move chosen by code, if an agent was choosing it;
@@ -89,6 +93,6 @@ resets. It is not retried in a loop and not charged.
 
 ## Settings on this page
 
-`budget.evaluations`, `budget.model_dollars`, `budget.model_calls`, `budget.wall_clock_hours`,
-`budget.spend_policy`, `budget.reserve_share`, `agents.prices`. Each is described in
-[Brief fields](fields.md#budget).
+[`budget.evaluations`](fields.md#budget-evaluations), [`budget.model_dollars`](fields.md#budget-model_dollars), [`budget.model_calls`](fields.md#budget-model_calls), [`budget.wall_clock_hours`](fields.md#budget-wall_clock_hours),
+[`budget.spend_policy`](fields.md#budget-spend_policy), [`budget.reserve_share`](fields.md#budget-reserve_share), [`agents.prices`](fields.md#agents-prices).
+

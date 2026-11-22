@@ -46,7 +46,7 @@ agree to the spend.
 
 `evoloop run demo --name first` ran the search and gave it the name `first`.
 
-## What success looks like
+## What you should see
 
 `evoloop run` returns when the budget of 40 evaluations is spent:
 
@@ -55,7 +55,8 @@ run first: the budget of 40 evaluations is spent
 report: demo/runs/first/report.md
 ```
 
-Then `evoloop leaderboard demo --name first` shows the designs, best first (the last column, minutes, is left out here):
+`evoloop leaderboard demo --name first` then lists the designs, best first. This is one run; in yours
+the top rows may be tied in a different order.
 
 ```
 | kind     | model | lineage | family            | score   | state | length | fits | parameters |
@@ -65,6 +66,15 @@ Then `evoloop leaderboard demo --name first` shows the designs, best first (the 
 ...
 | baseline | C1    | L1      | baseline          | 0.5     | full  | 300    | 1    | 3          |
 ```
+
+`model` is the design's id. `lineage` is its line of descent: `L9` is the ninth family the search
+started. `family` is the label the design's writer gave that kind of design. `state` says whether it
+trained to the end, `length` is the training length (here in steps), and `fits` is how many times it
+was trained. The table also has a `minutes` column, left out here.
+
+### The search, evaluation by evaluation
+
+40 training runs across 39 designs. One design, C17, was trained twice.
 
 <div class="evo-chart">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 330" role="img" aria-label="The validation accuracy of each model in the built-in example, and the best so far, over 40 models">
@@ -89,129 +99,151 @@ Then `evoloop leaderboard demo --name first` shows the designs, best first (the 
 <text x="350.5" y="302" text-anchor="middle" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="var(--evo-soft)">26</text>
 <text x="408.2" y="302" text-anchor="middle" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="var(--evo-soft)">31</text>
 <text x="465.8" y="302" text-anchor="middle" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="var(--evo-soft)">36</text>
-<text x="287.0" y="322" text-anchor="middle" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="var(--evo-soft)">Model iteration</text>
+<text x="287.0" y="322" text-anchor="middle" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="var(--evo-soft)">Evaluation</text>
 <text transform="translate(16 152.0) rotate(-90)" text-anchor="middle" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="var(--evo-soft)">Validation accuracy (higher is better)</text>
 <line x1="62" y1="284.0" x2="512" y2="284.0" stroke="var(--evo-soft)" stroke-width="1.5" stroke-dasharray="5 4"/>
 <path d="M62.0 284.0 H73.5 V262.9 H96.6 V213.6 H108.2 V64.0 H142.8 V42.9 H177.4 V41.1 H212.0 V37.6 H246.6 V35.8 H512.0" fill="none" stroke="var(--evo-series)" stroke-width="2" stroke-linejoin="round"/>
-<circle cx="62.0" cy="284.0" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Model 1 (C1): 0.5, the baseline</title></circle>
-<circle cx="62.0" cy="284.0" r="10" fill="transparent"><title>Model 1 (C1): 0.5, the baseline</title></circle>
-<circle cx="73.5" cy="262.9" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Model 2 (C2): 0.54, a new design</title></circle>
-<circle cx="73.5" cy="262.9" r="10" fill="transparent"><title>Model 2 (C2): 0.54, a new design</title></circle>
-<circle cx="85.1" cy="271.7" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Model 3 (C3): 0.5233, a new design</title></circle>
-<circle cx="85.1" cy="271.7" r="10" fill="transparent"><title>Model 3 (C3): 0.5233, a new design</title></circle>
-<circle cx="96.6" cy="213.6" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Model 4 (C4): 0.6333, an edit</title></circle>
-<circle cx="96.6" cy="213.6" r="10" fill="transparent"><title>Model 4 (C4): 0.6333, an edit</title></circle>
-<circle cx="108.2" cy="64.0" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Model 5 (C5): 0.9167, a new design</title></circle>
-<circle cx="108.2" cy="64.0" r="10" fill="transparent"><title>Model 5 (C5): 0.9167, a new design</title></circle>
-<circle cx="119.7" cy="262.9" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Model 6 (C6): 0.54, a settings move</title></circle>
-<circle cx="119.7" cy="262.9" r="10" fill="transparent"><title>Model 6 (C6): 0.54, a settings move</title></circle>
-<circle cx="131.2" cy="213.6" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Model 7 (C7): 0.6333, a new design</title></circle>
-<circle cx="131.2" cy="213.6" r="10" fill="transparent"><title>Model 7 (C7): 0.6333, a new design</title></circle>
-<circle cx="142.8" cy="42.9" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Model 8 (C8): 0.9567, an edit</title></circle>
-<circle cx="142.8" cy="42.9" r="10" fill="transparent"><title>Model 8 (C8): 0.9567, an edit</title></circle>
-<circle cx="154.3" cy="90.4" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Model 9 (C9): 0.8667, a new design</title></circle>
-<circle cx="154.3" cy="90.4" r="10" fill="transparent"><title>Model 9 (C9): 0.8667, a new design</title></circle>
-<circle cx="165.8" cy="208.3" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Model 10 (C10): 0.6433, an ablation</title></circle>
-<circle cx="165.8" cy="208.3" r="10" fill="transparent"><title>Model 10 (C10): 0.6433, an ablation</title></circle>
-<circle cx="177.4" cy="41.1" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Model 11 (C11): 0.96, a new design</title></circle>
-<circle cx="177.4" cy="41.1" r="10" fill="transparent"><title>Model 11 (C11): 0.96, a new design</title></circle>
-<circle cx="188.9" cy="46.4" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Model 12 (C12): 0.95, a new design</title></circle>
-<circle cx="188.9" cy="46.4" r="10" fill="transparent"><title>Model 12 (C12): 0.95, a new design</title></circle>
-<circle cx="200.5" cy="215.4" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Model 13 (C13): 0.63, a settings move</title></circle>
-<circle cx="200.5" cy="215.4" r="10" fill="transparent"><title>Model 13 (C13): 0.63, a settings move</title></circle>
-<circle cx="212.0" cy="37.6" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Model 14 (C14): 0.9667, a new design</title></circle>
-<circle cx="212.0" cy="37.6" r="10" fill="transparent"><title>Model 14 (C14): 0.9667, a new design</title></circle>
-<circle cx="223.5" cy="48.2" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Model 15 (C15): 0.9467, an edit</title></circle>
-<circle cx="223.5" cy="48.2" r="10" fill="transparent"><title>Model 15 (C15): 0.9467, an edit</title></circle>
-<circle cx="235.1" cy="218.9" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Model 16 (C16): 0.6233, a new design</title></circle>
-<circle cx="235.1" cy="218.9" r="10" fill="transparent"><title>Model 16 (C16): 0.6233, a new design</title></circle>
-<circle cx="246.6" cy="35.8" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Model 17 (C17): 0.97, an edit</title></circle>
-<circle cx="246.6" cy="35.8" r="10" fill="transparent"><title>Model 17 (C17): 0.97, an edit</title></circle>
-<circle cx="258.2" cy="99.2" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Model 18 (C18): 0.85, a new design</title></circle>
-<circle cx="258.2" cy="99.2" r="10" fill="transparent"><title>Model 18 (C18): 0.85, a new design</title></circle>
-<circle cx="269.7" cy="37.6" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Model 19 (C19): 0.9667, a settings move</title></circle>
-<circle cx="269.7" cy="37.6" r="10" fill="transparent"><title>Model 19 (C19): 0.9667, a settings move</title></circle>
-<circle cx="281.2" cy="41.1" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Model 20 (C20): 0.96, a new design</title></circle>
-<circle cx="281.2" cy="41.1" r="10" fill="transparent"><title>Model 20 (C20): 0.96, a new design</title></circle>
-<circle cx="292.8" cy="44.6" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Model 21 (C21): 0.9533, a new design</title></circle>
-<circle cx="292.8" cy="44.6" r="10" fill="transparent"><title>Model 21 (C21): 0.9533, a new design</title></circle>
-<circle cx="304.3" cy="48.2" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Model 22 (C22): 0.9467, an edit</title></circle>
-<circle cx="304.3" cy="48.2" r="10" fill="transparent"><title>Model 22 (C22): 0.9467, an edit</title></circle>
-<circle cx="315.8" cy="37.6" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Model 23 (C17): 0.9667, a re-check on a new seed</title></circle>
-<circle cx="315.8" cy="37.6" r="10" fill="transparent"><title>Model 23 (C17): 0.9667, a re-check on a new seed</title></circle>
-<circle cx="327.4" cy="145.0" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Model 24 (C23): 0.7633, a new design</title></circle>
-<circle cx="327.4" cy="145.0" r="10" fill="transparent"><title>Model 24 (C23): 0.7633, a new design</title></circle>
-<circle cx="338.9" cy="49.9" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Model 25 (C24): 0.9433, a settings move</title></circle>
-<circle cx="338.9" cy="49.9" r="10" fill="transparent"><title>Model 25 (C24): 0.9433, a settings move</title></circle>
-<circle cx="350.5" cy="210.1" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Model 26 (C25): 0.64, a new design</title></circle>
-<circle cx="350.5" cy="210.1" r="10" fill="transparent"><title>Model 26 (C25): 0.64, a new design</title></circle>
-<circle cx="362.0" cy="85.1" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Model 27 (C26): 0.8767, an ablation</title></circle>
-<circle cx="362.0" cy="85.1" r="10" fill="transparent"><title>Model 27 (C26): 0.8767, an ablation</title></circle>
-<circle cx="373.5" cy="37.6" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Model 28 (C27): 0.9667, an edit</title></circle>
-<circle cx="373.5" cy="37.6" r="10" fill="transparent"><title>Model 28 (C27): 0.9667, an edit</title></circle>
-<circle cx="385.1" cy="37.6" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Model 29 (C28): 0.9667, an edit</title></circle>
-<circle cx="385.1" cy="37.6" r="10" fill="transparent"><title>Model 29 (C28): 0.9667, an edit</title></circle>
-<circle cx="396.6" cy="42.9" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Model 30 (C29): 0.9567, a settings move</title></circle>
-<circle cx="396.6" cy="42.9" r="10" fill="transparent"><title>Model 30 (C29): 0.9567, a settings move</title></circle>
-<circle cx="408.2" cy="48.2" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Model 31 (C30): 0.9467, an edit</title></circle>
-<circle cx="408.2" cy="48.2" r="10" fill="transparent"><title>Model 31 (C30): 0.9467, an edit</title></circle>
-<circle cx="419.7" cy="69.3" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Model 32 (C31): 0.9067, a new design</title></circle>
-<circle cx="419.7" cy="69.3" r="10" fill="transparent"><title>Model 32 (C31): 0.9067, a new design</title></circle>
-<circle cx="431.2" cy="35.8" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Model 33 (C32): 0.97, a settings move</title></circle>
-<circle cx="431.2" cy="35.8" r="10" fill="transparent"><title>Model 33 (C32): 0.97, a settings move</title></circle>
-<circle cx="442.8" cy="65.8" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Model 34 (C33): 0.9133, an ablation</title></circle>
-<circle cx="442.8" cy="65.8" r="10" fill="transparent"><title>Model 34 (C33): 0.9133, an ablation</title></circle>
-<circle cx="454.3" cy="55.2" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Model 35 (C35): 0.9333, an edit</title></circle>
-<circle cx="454.3" cy="55.2" r="10" fill="transparent"><title>Model 35 (C35): 0.9333, an edit</title></circle>
-<circle cx="465.8" cy="37.6" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Model 36 (C36): 0.9667, an edit</title></circle>
-<circle cx="465.8" cy="37.6" r="10" fill="transparent"><title>Model 36 (C36): 0.9667, an edit</title></circle>
-<circle cx="477.4" cy="129.1" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Model 37 (C37): 0.7933, a settings move</title></circle>
-<circle cx="477.4" cy="129.1" r="10" fill="transparent"><title>Model 37 (C37): 0.7933, a settings move</title></circle>
-<circle cx="488.9" cy="37.6" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Model 38 (C38): 0.9667, an edit</title></circle>
-<circle cx="488.9" cy="37.6" r="10" fill="transparent"><title>Model 38 (C38): 0.9667, an edit</title></circle>
-<circle cx="500.5" cy="37.6" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Model 39 (C39): 0.9667, an edit</title></circle>
-<circle cx="500.5" cy="37.6" r="10" fill="transparent"><title>Model 39 (C39): 0.9667, an edit</title></circle>
-<circle cx="512.0" cy="41.1" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Model 40 (C40): 0.96, a settings move</title></circle>
-<circle cx="512.0" cy="41.1" r="10" fill="transparent"><title>Model 40 (C40): 0.96, a settings move</title></circle>
-<circle cx="512.0" cy="35.8" r="5" fill="var(--evo-series)" stroke="var(--evo-surface)" stroke-width="2"/>
+<circle cx="62.0" cy="284.0" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Evaluation 1 (design C1): 0.5, the baseline</title></circle>
+<circle cx="62.0" cy="284.0" r="10" fill="transparent"><title>Evaluation 1 (design C1): 0.5, the baseline</title></circle>
+<circle cx="73.5" cy="262.9" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Evaluation 2 (design C2): 0.54, a new design</title></circle>
+<circle cx="73.5" cy="262.9" r="10" fill="transparent"><title>Evaluation 2 (design C2): 0.54, a new design</title></circle>
+<circle cx="85.1" cy="271.7" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Evaluation 3 (design C3): 0.5233, a new design</title></circle>
+<circle cx="85.1" cy="271.7" r="10" fill="transparent"><title>Evaluation 3 (design C3): 0.5233, a new design</title></circle>
+<circle cx="96.6" cy="213.6" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Evaluation 4 (design C4): 0.6333, an edit</title></circle>
+<circle cx="96.6" cy="213.6" r="10" fill="transparent"><title>Evaluation 4 (design C4): 0.6333, an edit</title></circle>
+<circle cx="108.2" cy="64.0" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Evaluation 5 (design C5): 0.9167, a new design</title></circle>
+<circle cx="108.2" cy="64.0" r="10" fill="transparent"><title>Evaluation 5 (design C5): 0.9167, a new design</title></circle>
+<circle cx="119.7" cy="262.9" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Evaluation 6 (design C6): 0.54, a settings move</title></circle>
+<circle cx="119.7" cy="262.9" r="10" fill="transparent"><title>Evaluation 6 (design C6): 0.54, a settings move</title></circle>
+<circle cx="131.2" cy="213.6" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Evaluation 7 (design C7): 0.6333, a new design</title></circle>
+<circle cx="131.2" cy="213.6" r="10" fill="transparent"><title>Evaluation 7 (design C7): 0.6333, a new design</title></circle>
+<circle cx="142.8" cy="42.9" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Evaluation 8 (design C8): 0.9567, an edit</title></circle>
+<circle cx="142.8" cy="42.9" r="10" fill="transparent"><title>Evaluation 8 (design C8): 0.9567, an edit</title></circle>
+<circle cx="154.3" cy="90.4" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Evaluation 9 (design C9): 0.8667, a new design</title></circle>
+<circle cx="154.3" cy="90.4" r="10" fill="transparent"><title>Evaluation 9 (design C9): 0.8667, a new design</title></circle>
+<circle cx="165.8" cy="208.3" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Evaluation 10 (design C10): 0.6433, an ablation</title></circle>
+<circle cx="165.8" cy="208.3" r="10" fill="transparent"><title>Evaluation 10 (design C10): 0.6433, an ablation</title></circle>
+<circle cx="177.4" cy="41.1" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Evaluation 11 (design C11): 0.96, a new design</title></circle>
+<circle cx="177.4" cy="41.1" r="10" fill="transparent"><title>Evaluation 11 (design C11): 0.96, a new design</title></circle>
+<circle cx="188.9" cy="46.4" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Evaluation 12 (design C12): 0.95, a new design</title></circle>
+<circle cx="188.9" cy="46.4" r="10" fill="transparent"><title>Evaluation 12 (design C12): 0.95, a new design</title></circle>
+<circle cx="200.5" cy="215.4" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Evaluation 13 (design C13): 0.63, a settings move</title></circle>
+<circle cx="200.5" cy="215.4" r="10" fill="transparent"><title>Evaluation 13 (design C13): 0.63, a settings move</title></circle>
+<circle cx="212.0" cy="37.6" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Evaluation 14 (design C14): 0.9667, a new design</title></circle>
+<circle cx="212.0" cy="37.6" r="10" fill="transparent"><title>Evaluation 14 (design C14): 0.9667, a new design</title></circle>
+<circle cx="223.5" cy="48.2" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Evaluation 15 (design C15): 0.9467, an edit</title></circle>
+<circle cx="223.5" cy="48.2" r="10" fill="transparent"><title>Evaluation 15 (design C15): 0.9467, an edit</title></circle>
+<circle cx="235.1" cy="218.9" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Evaluation 16 (design C16): 0.6233, a new design</title></circle>
+<circle cx="235.1" cy="218.9" r="10" fill="transparent"><title>Evaluation 16 (design C16): 0.6233, a new design</title></circle>
+<circle cx="246.6" cy="35.8" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Evaluation 17 (design C17): 0.97, an edit</title></circle>
+<circle cx="246.6" cy="35.8" r="10" fill="transparent"><title>Evaluation 17 (design C17): 0.97, an edit</title></circle>
+<circle cx="258.2" cy="99.2" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Evaluation 18 (design C18): 0.85, a new design</title></circle>
+<circle cx="258.2" cy="99.2" r="10" fill="transparent"><title>Evaluation 18 (design C18): 0.85, a new design</title></circle>
+<circle cx="269.7" cy="37.6" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Evaluation 19 (design C19): 0.9667, a settings move</title></circle>
+<circle cx="269.7" cy="37.6" r="10" fill="transparent"><title>Evaluation 19 (design C19): 0.9667, a settings move</title></circle>
+<circle cx="281.2" cy="41.1" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Evaluation 20 (design C20): 0.96, a new design</title></circle>
+<circle cx="281.2" cy="41.1" r="10" fill="transparent"><title>Evaluation 20 (design C20): 0.96, a new design</title></circle>
+<circle cx="292.8" cy="44.6" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Evaluation 21 (design C21): 0.9533, a new design</title></circle>
+<circle cx="292.8" cy="44.6" r="10" fill="transparent"><title>Evaluation 21 (design C21): 0.9533, a new design</title></circle>
+<circle cx="304.3" cy="48.2" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Evaluation 22 (design C22): 0.9467, an edit</title></circle>
+<circle cx="304.3" cy="48.2" r="10" fill="transparent"><title>Evaluation 22 (design C22): 0.9467, an edit</title></circle>
+<circle cx="315.8" cy="37.6" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Evaluation 23 (design C17): 0.9667, a re-check on a new seed</title></circle>
+<circle cx="315.8" cy="37.6" r="10" fill="transparent"><title>Evaluation 23 (design C17): 0.9667, a re-check on a new seed</title></circle>
+<circle cx="327.4" cy="145.0" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Evaluation 24 (design C23): 0.7633, a new design</title></circle>
+<circle cx="327.4" cy="145.0" r="10" fill="transparent"><title>Evaluation 24 (design C23): 0.7633, a new design</title></circle>
+<circle cx="338.9" cy="49.9" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Evaluation 25 (design C24): 0.9433, a settings move</title></circle>
+<circle cx="338.9" cy="49.9" r="10" fill="transparent"><title>Evaluation 25 (design C24): 0.9433, a settings move</title></circle>
+<circle cx="350.5" cy="210.1" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Evaluation 26 (design C25): 0.64, a new design</title></circle>
+<circle cx="350.5" cy="210.1" r="10" fill="transparent"><title>Evaluation 26 (design C25): 0.64, a new design</title></circle>
+<circle cx="362.0" cy="85.1" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Evaluation 27 (design C26): 0.8767, an ablation</title></circle>
+<circle cx="362.0" cy="85.1" r="10" fill="transparent"><title>Evaluation 27 (design C26): 0.8767, an ablation</title></circle>
+<circle cx="373.5" cy="37.6" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Evaluation 28 (design C27): 0.9667, an edit</title></circle>
+<circle cx="373.5" cy="37.6" r="10" fill="transparent"><title>Evaluation 28 (design C27): 0.9667, an edit</title></circle>
+<circle cx="385.1" cy="37.6" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Evaluation 29 (design C28): 0.9667, an edit</title></circle>
+<circle cx="385.1" cy="37.6" r="10" fill="transparent"><title>Evaluation 29 (design C28): 0.9667, an edit</title></circle>
+<circle cx="396.6" cy="42.9" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Evaluation 30 (design C29): 0.9567, a settings move</title></circle>
+<circle cx="396.6" cy="42.9" r="10" fill="transparent"><title>Evaluation 30 (design C29): 0.9567, a settings move</title></circle>
+<circle cx="408.2" cy="48.2" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Evaluation 31 (design C30): 0.9467, an edit</title></circle>
+<circle cx="408.2" cy="48.2" r="10" fill="transparent"><title>Evaluation 31 (design C30): 0.9467, an edit</title></circle>
+<circle cx="419.7" cy="69.3" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Evaluation 32 (design C31): 0.9067, a new design</title></circle>
+<circle cx="419.7" cy="69.3" r="10" fill="transparent"><title>Evaluation 32 (design C31): 0.9067, a new design</title></circle>
+<circle cx="431.2" cy="35.8" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Evaluation 33 (design C32): 0.97, a settings move</title></circle>
+<circle cx="431.2" cy="35.8" r="10" fill="transparent"><title>Evaluation 33 (design C32): 0.97, a settings move</title></circle>
+<circle cx="442.8" cy="65.8" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Evaluation 34 (design C33): 0.9133, an ablation</title></circle>
+<circle cx="442.8" cy="65.8" r="10" fill="transparent"><title>Evaluation 34 (design C33): 0.9133, an ablation</title></circle>
+<circle cx="454.3" cy="55.2" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Evaluation 35 (design C35): 0.9333, an edit</title></circle>
+<circle cx="454.3" cy="55.2" r="10" fill="transparent"><title>Evaluation 35 (design C35): 0.9333, an edit</title></circle>
+<circle cx="465.8" cy="37.6" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Evaluation 36 (design C36): 0.9667, an edit</title></circle>
+<circle cx="465.8" cy="37.6" r="10" fill="transparent"><title>Evaluation 36 (design C36): 0.9667, an edit</title></circle>
+<circle cx="477.4" cy="129.1" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Evaluation 37 (design C37): 0.7933, a settings move</title></circle>
+<circle cx="477.4" cy="129.1" r="10" fill="transparent"><title>Evaluation 37 (design C37): 0.7933, a settings move</title></circle>
+<circle cx="488.9" cy="37.6" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Evaluation 38 (design C38): 0.9667, an edit</title></circle>
+<circle cx="488.9" cy="37.6" r="10" fill="transparent"><title>Evaluation 38 (design C38): 0.9667, an edit</title></circle>
+<circle cx="500.5" cy="37.6" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Evaluation 39 (design C39): 0.9667, an edit</title></circle>
+<circle cx="500.5" cy="37.6" r="10" fill="transparent"><title>Evaluation 39 (design C39): 0.9667, an edit</title></circle>
+<circle cx="512.0" cy="41.1" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"><title>Evaluation 40 (design C40): 0.96, a settings move</title></circle>
+<circle cx="512.0" cy="41.1" r="10" fill="transparent"><title>Evaluation 40 (design C40): 0.96, a settings move</title></circle>
+<circle cx="431.2" cy="35.8" r="5.5" fill="var(--evo-series)" stroke="var(--evo-surface)" stroke-width="2"/>
 <text x="524" y="276.0" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="var(--evo-soft)">Baseline</text>
 <text x="524" y="293.0" font-size="15" font-weight="600" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="var(--evo-ink)">0.5</text>
 <text x="524" y="51.8" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="var(--evo-soft)">Selected</text>
 <text x="524" y="68.8" font-size="15" font-weight="600" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="var(--evo-ink)">0.97</text>
-<circle cx="316" cy="250" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"/>
-<text x="326" y="254" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="var(--evo-soft)">each model</text>
-<line x1="402" y1="250" x2="422" y2="250" stroke="var(--evo-series)" stroke-width="2"/>
-<text x="428" y="254" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="var(--evo-soft)">best so far</text>
+<circle cx="182" cy="250" r="4" fill="var(--evo-dot)" stroke="var(--evo-surface)" stroke-width="2"/>
+<text x="192" y="254" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="var(--evo-soft)">each evaluation</text>
+<line x1="300" y1="250" x2="320" y2="250" stroke="var(--evo-series)" stroke-width="2"/>
+<text x="326" y="254" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="var(--evo-soft)">best validation accuracy so far</text>
 </svg>
 </div>
 
-Reading the columns: `model` is the design (`C32`); `lineage` is its line of descent (`L9`: the ninth
-family started); `family` is the label its writer gave that kind of design; `state` says whether it trained
-to the end; `length` is the training length, here in steps; `fits` is how many times it was trained.
+The baseline is a linear classifier, which cannot separate two spirals, so it scores 0.50. The best
+score then rises in steps: a hidden layer at evaluation 4, the distance from the centre as an extra
+input at evaluation 5, more layers at 8 and 11, and inputs that vary along the radius at 14. Most
+evaluations after that do not beat the best, which is what a search usually looks like.
 
-The starting design is a linear classifier, which cannot separate spirals: it scores 0.50, chance. Forty
-models later the selected design scores 0.97 on validation data and 0.96 on the held-out test set,
-which the search never sees. About four labels in a hundred are wrong on purpose, so nothing can score
-much higher. Hover over a point for the model and the move that made it.
+The selected design scores 0.97 on validation data and 0.96 on the held-out test set, which the search
+never sees. About four labels in a hundred are wrong on purpose, so little can score higher.
 
-What to notice in the figure:
+Evaluation 23 is a re-check. C17 had reached 0.970; trained again on a new seed it scored 0.967. A
+design trained more than once is ranked by the mean of its scores, so C17 sits second, behind C32. A
+score from a single training run is only as reliable as your noise: see
+[When two scores can be compared](comparable.md).
 
-- **The best score rises in steps.** A hidden layer (model 4), distance from the centre as an input
-  (model 5), more layers (models 8 and 11), then inputs that vary along the radius (model 14).
-- **Most models do not beat the best.** That is what a search looks like: many are tried, few are kept.
-- **The leader was checked.** Design C17 reached 0.97, was trained again on a new seed, and scored
-  0.967. The leaderboard ranks a design by the mean of its fits, so a single lucky fit does not win.
-- **The proposals are scripted.** They are real edits (wider, deeper, other inputs, another learning
-  rate) and real training runs, drawn from a fixed list. This shows how a search proceeds and what it
-  records, not what a language model would find.
+The proposals in this demo are scripted. They are real edits (wider, deeper, other inputs, another
+learning rate) and real training runs, but they come from a fixed list. The demo shows how a search
+proceeds and what it records. It does not show what a language model would find.
 
-To see the selected design, with its code, where it came from and what its writer predicted:
+### What changed in the code
+
+The search may only change the marked blocks. This is the model block it started from:
+
+```python
+# EVOLVE-BLOCK-START name=model kind=structure role=network
+HIDDEN = []            # no hidden layer: a linear classifier
+ACTIVATION = "tanh"
+
+def features(x):
+    return x
+# EVOLVE-BLOCK-END
+```
+
+and this is the same block in the selected design:
+
+```python
+HIDDEN = [12, 8]
+ACTIVATION = "tanh"
+
+def features(x):
+    r = np.sqrt((x ** 2).sum(1))
+    return np.stack([x[:, 0], x[:, 1], np.sin(6.0 * r), np.cos(6.0 * r)], axis=1)
+```
+
+To see any design with its code, its parent, what its writer predicted and how it ended:
 
 ```
 evoloop show demo C32 --name first
 ```
 
-Use the design named at the top of your own leaderboard. The figure is drawn from the run's records by
+Use the id at the top of your own leaderboard. The figure is drawn from the run's files by
 `python tools/demo_figure.py demo/runs/first docs/assets`.
 
 ??? note "The numbers behind the figure"

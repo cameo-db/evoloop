@@ -84,13 +84,13 @@ avoid). Once the file exists, the agent sees the site's rules in every plan.
 
 ## What is not supported
 
-- **Schedulers other than Slurm.** PBS, LSF and Grid Engine are not built in. `evoloop site --detect`
+- Schedulers other than Slurm. PBS, LSF and Grid Engine are not built in. `evoloop site --detect`
   says so when it finds `qsub` or `bsub`. Adding one means writing a backend with three operations
   (submit a job, ask its state, cancel it) beside the Slurm one in `evoloop/jobs.py`. On such a machine
   today, evoloop can still run designs as local processes inside one allocation you hold
   (`compute.scheduler: local`).
-- **Cloud and container platforms** (Kubernetes, batch services): not built in, for the same reason.
-- **Detection is a draft.** It reads what the scheduler reports and has only been tested against made-up
+- Cloud and container platforms (Kubernetes, batch services): not built in, for the same reason.
+- Detection is a draft. It reads what the scheduler reports and has only been tested against made-up
   scheduler output, not on a real cluster. Expect to correct it.
-- **Rules are text.** Only `forbid` is enforced by code; a rule such as "scratch goes under /scratch"
+- Rules are text. Only `forbid` is enforced by code; a rule such as "scratch goes under /scratch"
   is for you and the agent to follow.

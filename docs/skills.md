@@ -34,10 +34,10 @@ mysearch/
     model-distillation/skill.yaml     <- the run reads this one; edit it freely
 ```
 
-- **Edit it** to fit your problem: change the guidance, add a diagnosis from your own experience,
+- Edit it to fit your problem: change the guidance, add a diagnosis from your own experience,
   remove advice that does not apply.
-- **The library is untouched**, so another search starts from the original.
-- **An edit during a run is recorded.** The controller notices the change at its next turn, uses the
+- The library is untouched, so another search starts from the original.
+- An edit during a run is recorded. The controller notices the change at its next turn, uses the
   new text from then on, and writes a ledger entry with the file's digest before and after.
 - A copy that is already there is never overwritten.
 
@@ -50,12 +50,30 @@ run:
   skill: [model-distillation, model-size-frontier]     # a family of students, one for each size
 ```
 
-- **Settings** are laid one over the other in the order given. Where two skills set the same thing
+- Settings are laid one over the other in the order given. Where two skills set the same thing
   differently, the later one's value stands, and the plan says which.
-- **Guidance, diagnoses and stage advice** are joined, each part under the name of its skill.
-- **Needs** are added together.
+- Guidance, diagnoses and stage advice are joined, each part under the name of its skill.
+- Needs are added together.
 - A pair marked as conflicting (`settings-tuning` with any other skill, `model-size-frontier` with
   `model-efficiency`, `model-ensemble-members` with `model-efficiency`) still runs; the plan warns.
+For example, `model-efficiency` picks parents from a trade-off front and `model-size-frontier` keeps the best
+design per size band, so they disagree about the parent rule. With
+
+```yaml
+run:
+  skill: [model-efficiency, model-size-frontier]
+```
+
+`evoloop plan` uses the later one and says so:
+
+```
+Warnings:
+  - the skills model-efficiency and model-size-frontier are marked as not meant to be combined
+  - both model-efficiency and model-size-frontier set strategy.mechanism; the value of model-size-frontier stands ('archive', not 'pareto')
+```
+
+Swap the order and `pareto` stands instead.
+
 
 Combinations that make sense:
 
@@ -69,11 +87,11 @@ Combinations that make sense:
 
 ## Choosing and changing
 
-- **At setup.** The questions ask for the kind of optimization and suggest one from the words of your
+- At setup. The questions ask for the kind of optimization and suggest one from the words of your
   goal ("distil", "faster", "pipeline", "interpretable") and from the run type.
-- **During a run.** `evoloop set mysearch --name r1 run.skill=model-efficiency --by "Your Name"`. The
+- During a run. `evoloop set mysearch --name r1 run.skill=model-efficiency --by "Your Name"`. The
   new skill is copied in, and the ledger lists every setting that moved with it.
-- **With any run type and level of autonomy.** Where a skill and a run type or a level of autonomy set the same
+- With any run type and level of autonomy. Where a skill and a run type or a level of autonomy set the same
   thing, the skill's value stands,
   because it knows the problem.
 

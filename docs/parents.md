@@ -1,8 +1,9 @@
 # Who becomes a parent
 
 A local move needs one parent and a crossover needs two. Which designs are chosen is the search's
-*strategy*, and it matters more than any other setting: it decides whether the budget goes to the
-current best design or is spread over several different ones.
+*strategy*, or parent rule: it chooses which earlier designs get another chance. Under greedy selection one
+high-scoring design can receive several edits in a row; under the others the budget is shared between the
+current best and several different designs.
 
 Try it first. The figure is a toy: every possible design is laid out on a line, with similar designs
 close together, and a curve gives the true quality of each. The baseline starts on the lowest of three

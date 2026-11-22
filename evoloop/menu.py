@@ -486,7 +486,7 @@ def plans() -> Dict[str, Any]:
                         brief["run"]["skill"] = name
                     if level:
                         brief["harness"] = {"autonomy": level}
-                    s = form.resolve(brief)[0]
+                    s, sources = form.resolve(brief)
                     steps, everyone = form.rungs(s)
                     calls = {role: int(round(n[1])) for role, n in estimate.calls(s).items() if n[1] >= 0.5}
                     marks = []
@@ -505,11 +505,17 @@ def plans() -> Dict[str, Any]:
                         "strategist": s["strategist"]["mode"], "lineages": int(s["population"]["lineages"]),
                         "stop": ("ladder" if everyone else ("screen" if steps[0]["keep"] < 1 else "none")),
                         "rungs": [[r["at"], r["keep"]] for r in steps],
-                        "designs": int(round(budget / form.mean_charge(s))), "calls": calls, "warn": marks}
+                        "designs": int(round(budget / form.mean_charge(s))), "calls": calls, "warn": marks,
+                        # Where each of the values shown came from, so that the page never states one without its source.
+                        "from": {key: sources.get(path, "default") for key, path in (
+                            ("strategy", "strategy.mechanism"), ("space", "space.preset"), ("phases", "schedule.phases"),
+                            ("settings_by", "variation.settings_by"), ("level", "harness.level"),
+                            ("strategist", "strategist.mode"), ("proposals", "variation.proposals_per_slot"))}}
     return {"run_types": run_types, "skills": names, "levels": levels, "budgets": list(PLAN_BUDGETS),
             "about": {"run_types": RUN_TYPES, "skills": dict({"": "No skill: the run type and the defaults decide."}, **{
                 n: (skills.load(n)[0] or {}).get("objective", "") for n in skills.names()}),
-                "levels": dict({"": "Left to the run type."}, **AUTONOMY), "strategies": STRATEGIES, "spaces": SPACES},
+                "levels": dict({"": "Left to the run type."}, **AUTONOMY), "strategies": STRATEGIES, "spaces": SPACES,
+                "goals": {n: (skills.load(n)[0] or {}).get("goal", n) for n in skills.names()}},
             "warnings": warnings, "plans": rows}
 
 

@@ -1,12 +1,12 @@
 # Tune hyperparameters
 
-Skill `settings-tuning` · domain: settings · [the skill in full](../skill-library.md#settings-tuning)
-
 Tune the settings of fixed code (a model's learning rate, regularization, widths, schedule; or the parameters of any algorithm) with a Bayesian estimator in code. No structure changes and no agent calls.
 
-## Start here
+## What a good result looks like
 
-Put this in `brief.yaml` (or give the same answers to `evoloop setup`), then read `evoloop plan` before you confirm.
+The best row of the leaderboard holds the settings to use. Before trusting them, look at where they sit: a best value at the edge of its range means the range was wrong, and a score that barely moves across a setting means that setting does not matter. Re-fit the winner on new seeds.
+
+## Start here
 
 ```yaml
 run:
@@ -19,7 +19,7 @@ space:
     "fit.lr": [1e-05, 0.1]
 ```
 
-The budget, and any limits or ranges, are placeholders: put in your own.
+These lines go in `brief.yaml`. The budget, and any limits or ranges, are placeholders for your own. <a href="../../which-search/?goal=settings-tuning&run=settings_only#preview-your-search">Preview this search</a> to see what it will do, or [set up this search](../setting-up.md) on your project. The goal is the skill `settings-tuning`, shown in full in the [skill library](../skill-library.md#settings-tuning).
 
 ## Why this set-up
 
@@ -58,11 +58,9 @@ The skill sets these for you (anything you set in the brief wins):
 | the loss, optimizer or augmentation code should change, not only their numbers | [`model-training-recipe`](model-training-recipe.md) |
 | the model's structure may change | [`model-performance`](model-performance.md) |
 
-## Reading the result
+## Where to look
 
-The best row of the leaderboard holds the settings to use. Before trusting them, look at where they sit: a best value at the edge of its range means the range was wrong, and a score that barely moves across a setting means that setting does not matter. Re-fit the winner on new seeds.
-
-Where to look: `evoloop leaderboard`, `evoloop show`, and the report ([Files of a run](../records.md)). To change course while it runs: [Watch and steer a run](../steering.md).
+`evoloop leaderboard` for the ranking, `evoloop show` for one design, and the report for everything ([Files of a run](../records.md)). To change course while it runs: [Watch and steer a run](../steering.md).
 
 ## What the agents are told
 

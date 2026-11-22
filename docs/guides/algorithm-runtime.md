@@ -1,12 +1,12 @@
 # Make an algorithm faster
 
-Skill `algorithm-runtime` · domain: algorithm · [the skill in full](../skill-library.md#algorithm-runtime)
-
 Speed up a piece of code (or cut its memory) while its output stays correct. The score is a measured time; a design whose output is wrong is rejected, not scored.
 
-## Start here
+## What a good result looks like
 
-Put this in `brief.yaml` (or give the same answers to `evoloop setup`), then read `evoloop plan` before you confirm.
+Read the best design's time against the reference row for the original code, and count the designs rejected for a wrong output. Then run the winner on the inputs the search never saw: a gain that does not hold there was fitted to the benchmark.
+
+## Start here
 
 ```yaml
 run:
@@ -18,7 +18,7 @@ objective:
   direction: minimize
 ```
 
-The budget, and any limits or ranges, are placeholders: put in your own.
+These lines go in `brief.yaml`. The budget, and any limits or ranges, are placeholders for your own. <a href="../../which-search/?goal=algorithm-runtime&run=explore_then_exploit#preview-your-search">Preview this search</a> to see what it will do, or [set up this search](../setting-up.md) on your project. The goal is the skill `algorithm-runtime`, shown in full in the [skill library](../skill-library.md#algorithm-runtime).
 
 ## Why this set-up
 
@@ -51,11 +51,9 @@ The skill sets these for you (anything you set in the brief wins):
 
 It combines well with [`data-pipeline`](data-pipeline.md), [`bioinformatics-algorithm`](bioinformatics-algorithm.md) (`run.skill: [algorithm-runtime, ...]`).
 
-## Reading the result
+## Where to look
 
-Read the best design's time against the reference row for the original code, and count the designs rejected for a wrong output. Then run the winner on the inputs the search never saw: a gain that does not hold there was fitted to the benchmark.
-
-Where to look: `evoloop leaderboard`, `evoloop show`, and the report ([Files of a run](../records.md)). To change course while it runs: [Watch and steer a run](../steering.md).
+`evoloop leaderboard` for the ranking, `evoloop show` for one design, and the report for everything ([Files of a run](../records.md)). To change course while it runs: [Watch and steer a run](../steering.md).
 
 ## What the agents are told
 

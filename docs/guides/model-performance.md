@@ -1,12 +1,12 @@
 # Improve a model's score
 
-Skill `model-performance` · domain: model · [the skill in full](../skill-library.md#model-performance)
-
 Raise the validation score by whatever the open blocks allow. Size and speed are not weighed unless you set limits.
 
-## Start here
+## What a good result looks like
 
-Put this in `brief.yaml` (or give the same answers to `evoloop setup`), then read `evoloop plan` before you confirm.
+Read the leaderboard for the best design and its family, then "What each mode returned" to see whether new designs or local work produced the gains. A leader with a single fit is a candidate, not a result: fit it again on new seeds, and on the held-out set, before reporting it.
+
+## Start here
 
 ```yaml
 run:
@@ -16,7 +16,7 @@ budget:
   evaluations: 100
 ```
 
-The budget, and any limits or ranges, are placeholders: put in your own.
+These lines go in `brief.yaml`. The budget, and any limits or ranges, are placeholders for your own. <a href="../../which-search/?goal=model-performance&run=explore_then_exploit#preview-your-search">Preview this search</a> to see what it will do, or [set up this search](../setting-up.md) on your project. The goal is the skill `model-performance`, shown in full in the [skill library](../skill-library.md#model-performance).
 
 ## Why this set-up
 
@@ -40,11 +40,9 @@ Only the score. Nothing else is required.
 
 It combines well with [`model-training-recipe`](model-training-recipe.md) (`run.skill: [model-performance, ...]`).
 
-## Reading the result
+## Where to look
 
-Read the leaderboard for the best design and its family, then "What each mode returned" to see whether new designs or local work produced the gains. A leader with a single fit is a candidate, not a result: fit it again on new seeds, and on the held-out set, before reporting it.
-
-Where to look: `evoloop leaderboard`, `evoloop show`, and the report ([Files of a run](../records.md)). To change course while it runs: [Watch and steer a run](../steering.md).
+`evoloop leaderboard` for the ranking, `evoloop show` for one design, and the report for everything ([Files of a run](../records.md)). To change course while it runs: [Watch and steer a run](../steering.md).
 
 ## What the agents are told
 

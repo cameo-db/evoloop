@@ -350,8 +350,8 @@ def test_every_goal_has_a_guide_that_matches_its_skill(tmp_path):
         assert one["goal"] and one["why"] and one["reading"] and one["start"].get("run_type") in form.RUN_TYPES, name
         assert all(n in skill.names() for row in one["instead"] for n in skill.wanted(row["use"])), name
         page = skill.guide_markdown(name)
-        for part in ("## Start here", "skill: %s" % name, "## Why this set-up", "## What your evaluator must report",
-                     "## Reading the result", "## What the agents are told"):
+        for part in ("## What a good result looks like", "## Start here", "skill: %s" % name, "## Why this set-up", "## What your evaluator must report",
+                     "set up this search", "Preview this search", "## What the agents are told"):
             assert part in page, (name, part)
     with open(os.path.join(os.path.dirname(root), "..", "mkdocs.yml"), encoding="utf-8") as handle:
         nav = handle.read()

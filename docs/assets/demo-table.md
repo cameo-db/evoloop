@@ -1,4 +1,4 @@
-| Model | Design | Made by | Validation accuracy |
+| Evaluation | Design | Made by | Validation accuracy |
 |---|---|---|---|
 | 1 | C1 | the baseline | 0.5 |
 | 2 | C2 | a new design | 0.54 |

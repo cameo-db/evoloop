@@ -1,12 +1,12 @@
 # Distil a smaller student from a teacher
 
-Skill `model-distillation` · domain: model · [the skill in full](../skill-library.md#model-distillation)
-
 Train a smaller or faster student to match a teacher. The student's architecture and its training recipe (loss, optimizer, learning rate, regularization, augmentation) are both open.
 
-## Start here
+## What a good result looks like
 
-Put this in `brief.yaml` (or give the same answers to `evoloop setup`), then read `evoloop plan` before you confirm.
+Compare the best student with two reference rows: the teacher (how much was lost) and the student trained from scratch (how much the teacher added). A student that only matches its from-scratch twin has not been distilled. Check the size or speed column against what you needed.
+
+## Start here
 
 ```yaml
 run:
@@ -16,7 +16,7 @@ budget:
   evaluations: 100
 ```
 
-The budget, and any limits or ranges, are placeholders: put in your own.
+These lines go in `brief.yaml`. The budget, and any limits or ranges, are placeholders for your own. <a href="../../which-search/?goal=model-distillation&run=explore_then_exploit#preview-your-search">Preview this search</a> to see what it will do, or [set up this search](../setting-up.md) on your project. The goal is the skill `model-distillation`, shown in full in the [skill library](../skill-library.md#model-distillation).
 
 ## Why this set-up
 
@@ -46,15 +46,13 @@ The skill sets these for you (anything you set in the brief wins):
 | If | Use |
 |---|---|
 | there is no teacher, only a model to shrink | [`model-efficiency`](model-efficiency.md) |
-| you want students at several sizes | [`model-distillation`](model-distillation.md) with [`model-size-frontier`](model-size-frontier.md) |
+| you want students at several sizes | add [`model-size-frontier`](model-size-frontier.md) to this one |
 
 It combines well with [`model-size-frontier`](model-size-frontier.md), [`model-efficiency`](model-efficiency.md) (`run.skill: [model-distillation, ...]`).
 
-## Reading the result
+## Where to look
 
-Compare the best student with two reference rows: the teacher (how much was lost) and the student trained from scratch (how much the teacher added). A student that only matches its from-scratch twin has not been distilled. Check the size or speed column against what you needed.
-
-Where to look: `evoloop leaderboard`, `evoloop show`, and the report ([Files of a run](../records.md)). To change course while it runs: [Watch and steer a run](../steering.md).
+`evoloop leaderboard` for the ranking, `evoloop show` for one design, and the report for everything ([Files of a run](../records.md)). To change course while it runs: [Watch and steer a run](../steering.md).
 
 ## What the agents are told
 

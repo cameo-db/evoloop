@@ -10,7 +10,7 @@ more than it is.
   and search space midway, changing the run length, stopping and continuing, the study file, and one
   regression test for each defect that two independent reviews of the code reproduced.
 - A run on a real Slurm cluster of the example: seven CPU jobs, each its own job.
-- **The controller job script on a real Slurm cluster**: with a four-minute limit it stopped cleanly at the
+- The controller job script on a real Slurm cluster: with a four-minute limit it stopped cleanly at the
   signal, put itself back in the queue twice, and went on with the search each time it restarted.
 
 ## What has not been run
@@ -40,14 +40,14 @@ more than it is.
 - No limit on what an agent is sent. With large blocks, several parents and a leaderboard, the
   context, and its cost, can grow large.
 - The results are re-read every turn. Fine at hundreds of runs; slow at thousands.
-- **Working copies and checkpoints are never removed**, and the whole of `base/` is copied per run.
-- **A job that hits its time limit is started again**, up to `compute.infrastructure_retries` times,
+- Working copies and checkpoints are never removed, and the whole of `base/` is copied per run.
+- A job that hits its time limit is started again, up to `compute.infrastructure_retries` times,
   from its checkpoint if the evaluator keeps one and from scratch otherwise.
 - A design stopped part way keeps its part-way score as a provisional row: shown, marked with how far it ran,
   not ranked with full-length fits and never a parent.
-- **`objective.constraints`, `space.forbidden` and `space.must_keep` are text for the agents**, not
+- `objective.constraints`, `space.forbidden` and `space.must_keep` are text for the agents, not
   rules; only `space.forbidden_terms`, `limits` and the open blocks are enforced by code.
-- **A proposal's distance is measured on the code**; behaviour is known only after training, and only if the
+- A proposal's distance is measured on the code; behaviour is known only after training, and only if the
   evaluator reports `signature`.
 - One noise figure, given by you. The loop does not measure it.
 

@@ -5,7 +5,7 @@ the format of [CAMEO](https://cameo-db.github.io), a public database of models, 
 and how they performed, so a finished search can be deposited as one entry.
 
 
-**1. Write the file.**
+## 1. Write the file
 
 ```
 evoloop study mysearch --name r1
@@ -15,7 +15,9 @@ writes `mysearch/runs/r1/study.json` and prints the star the file is on course f
 the way of the next one. The same file is written automatically whenever a run stops or ends, so this
 command is for refreshing it after you have filled in more of the brief.
 
-**2. Fill in what the search cannot know.** These come from the brief, and they decide the star:
+## 2. Fill in what the search cannot know
+
+These come from the brief, and they decide the star:
 
 | In the brief | Why |
 |---|---|
@@ -35,7 +37,9 @@ And these come from your evaluator, in `result.json` (see [The evaluator contrac
 
 Run `evoloop study` again after any change; it rewrites the file from the run's records.
 
-**3. Check it with the CAMEO kit.** The kit is two files, kept in one folder:
+## 3. Check it with the CAMEO kit
+
+The kit is two files, kept in one folder:
 [`cameo.py`](https://cameo-db.github.io/kit/cameo.py) and
 [`rules.json`](https://cameo-db.github.io/kit/rules.json).
 
@@ -54,7 +58,9 @@ RESULT: ready to stage.
 
 A file with a "no" is still accepted, with a lower star. evoloop does not run this check itself.
 
-**4. Deposit it.** On the CAMEO site, choose
+## 4. Deposit it
+
+On the CAMEO site, choose
 [Deposit a study](https://cameo-db.github.io/#/deposit) and follow the steps there with your `study.json`. Datasets and trained weights
 stay outside the file; it links to them.
 

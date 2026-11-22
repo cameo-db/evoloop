@@ -112,6 +112,6 @@ is always one of the options, so the table also shows whether approaches help at
 
 ## Settings on this page
 
-`schedule.local_mix`, `variation.settings_by`, `space.ranges`, `variation.step_adaptation`,
-`crossover.kinds`, `variation.proposals_per_slot`, `variation.edit_format`, `agents.writer_mix`,
-`variation.approaches`. Each is described in [Brief fields](fields.md#variation).
+[`schedule.local_mix`](fields.md#schedule-local_mix), [`variation.settings_by`](fields.md#variation-settings_by), [`space.ranges`](fields.md#space-ranges), [`variation.step_adaptation`](fields.md#variation-step_adaptation),
+[`crossover.kinds`](fields.md#crossover-kinds), [`variation.proposals_per_slot`](fields.md#variation-proposals_per_slot), [`variation.edit_format`](fields.md#variation-edit_format), [`agents.writer_mix`](fields.md#agents-writer_mix),
+[`variation.approaches`](fields.md#variation-approaches).

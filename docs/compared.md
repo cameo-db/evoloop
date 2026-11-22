@@ -85,16 +85,16 @@ scorecard says whether each role earns its cost ([Audit the agents](auditing.md)
 
 ## Where it falls short of them
 
-- **Throughput.** There is no tier of cheap stand-in evaluations (a smaller dataset or model) with
+- Throughput. There is no tier of cheap stand-in evaluations (a smaller dataset or model) with
   promotion to the real task. The ladder stops weak designs early within the real task, which
   stretches a budget a few-fold, not a thousandfold.
-- **Scale of evidence.** FunSearch and AlphaEvolve have published results. evoloop has passed its tests
+- Scale of evidence. FunSearch and AlphaEvolve have published results. evoloop has passed its tests
   on a built-in example with stub agents; it has not yet been run with a real agent on a real training
   task. See [Status and limits](status.md).
-- **Novelty before training.** How different a proposal is from what has been tried is measured on its
+- Novelty before training. How different a proposal is from what has been tried is measured on its
   code. What a model does is known only after it is trained.
-- **Prompt evolution.** Only one line of the writer's instructions varies.
-- **Scope of an edit.** A writer changes marked blocks. It cannot restructure the frozen code around
+- Prompt evolution. Only one line of the writer's instructions varies.
+- Scope of an edit. A writer changes marked blocks. It cannot restructure the frozen code around
   them.
 
 ## Choosing settings that resemble a method

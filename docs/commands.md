@@ -8,7 +8,7 @@ running or finished search take `--name`, the name you gave it. Commands that ch
 |---|---|
 | [set up](#setting-up) | `init` · `example` · `setup` · `form` · `brief` · `plan` · `estimate` |
 | [look things up](#looking-things-up) | `skills` · `menu` · `guide` · `site` |
-| [run](#running) | `run` · `controller` |
+| [run, or resume](#running) | `run` · `controller` |
 | [watch](#watching) | `status` · `leaderboard` · `show` · `report` |
 | [steer](#steering) | `set` · `note` · `withdraw` · `steer` · `chat` · `force` · `stop` |
 | [answer the strategist](#the-strategist-and-the-agents) | `approve` · `decline` · `lineage` · `review` |
@@ -136,7 +136,8 @@ evoloop site --detect --write ~/.config/evoloop/site.yaml
 
 `evoloop run DIR --name N [--max-seconds S]`
 
-Starts a search, or continues one that stopped. It returns when the budget is spent, the search is
+Starts a search, or resumes one that stopped (after `evoloop stop`, a crash, or a preempted controller). It
+returns when the budget is spent, the search is
 stopped, or it pauses for a reason it prints.
 
 ```

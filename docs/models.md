@@ -64,11 +64,11 @@ million tokens as of 2026-11-03; they may have changed, and other platforms pric
 
 [The menu](menu.md#models) lists the earlier models too.
 
-- **Another model.** Any model id can be given. One that is not on the list is priced only if you give
+- Another model. Any model id can be given. One that is not on the list is priced only if you give
   `agents.prices`, and its effort is sent as you set it.
-- **Your own prices.** `agents.prices: {model: {input: x, output: y}}` always wins over the list. Use
+- Your own prices. `agents.prices: {model: {input: x, output: y}}` always wins over the list. Use
   it when prices have changed or you are on another platform's rates.
-- **Without a price** the spend cap cannot count a model's calls: the plan warns, and a capped run
+- Without a price the spend cap cannot count a model's calls: the plan warns, and a capped run
   pauses after three calls with no cost.
 
 ## Effort
@@ -114,10 +114,10 @@ The same search with another model for every role (agents.default_model; yours i
 
 Two cautions on reading it:
 
-- **The estimate does not count the model's reasoning.** The figures above are the same at every
+- The estimate does not count the model's reasoning. The figures above are the same at every
   effort; the real cost rises with effort. Once a run has made a few calls, `evoloop estimate --name`
   uses its measured cost per call, which includes the reasoning.
-- **The example's code is a few lines long.** A real model's blocks are far larger, and so is each call.
+- The example's code is a few lines long. A real model's blocks are far larger, and so is each call.
 
 See [Budget and cost](cost.md) for how the estimate is made and how far
 to trust it.

@@ -1,12 +1,12 @@
 # Find the best model at several sizes
 
-Skill `model-size-frontier` · domain: model · [the skill in full](../skill-library.md#model-size-frontier)
-
 Find the best model at each size (or speed), from very small to large, so that the result is a whole trade-off curve to choose from and not one winner.
 
-## Start here
+## What a good result looks like
 
-Put this in `brief.yaml` (or give the same answers to `evoloop setup`), then read `evoloop plan` before you confirm.
+Read the population table band by band: each row is the best design of one size band. Plot score against size to see where a fourfold increase stops paying. Bands with one or two designs are not yet explored; treat their best as provisional.
+
+## Start here
 
 ```yaml
 run:
@@ -20,7 +20,7 @@ limits:
     max: 50000000
 ```
 
-The budget, and any limits or ranges, are placeholders: put in your own.
+These lines go in `brief.yaml`. The budget, and any limits or ranges, are placeholders for your own. <a href="../../which-search/?goal=model-size-frontier&run=survey#preview-your-search">Preview this search</a> to see what it will do, or [set up this search](../setting-up.md) on your project. The goal is the skill `model-size-frontier`, shown in full in the [skill library](../skill-library.md#model-size-frontier).
 
 ## Why this set-up
 
@@ -50,15 +50,13 @@ The skill sets these for you (anything you set in the brief wins):
 | If | Use |
 |---|---|
 | one cheaper model at a fixed score is enough | [`model-efficiency`](model-efficiency.md) |
-| the sizes should be students of a teacher | [`model-distillation`](model-distillation.md) with [`model-size-frontier`](model-size-frontier.md) |
+| the sizes should be students of a teacher | add [`model-distillation`](model-distillation.md) to this one |
 
 It combines well with [`model-distillation`](model-distillation.md) (`run.skill: [model-size-frontier, ...]`).
 
-## Reading the result
+## Where to look
 
-Read the population table band by band: each row is the best design of one size band. Plot score against size to see where a fourfold increase stops paying. Bands with one or two designs are not yet explored; treat their best as provisional.
-
-Where to look: `evoloop leaderboard`, `evoloop show`, and the report ([Files of a run](../records.md)). To change course while it runs: [Watch and steer a run](../steering.md).
+`evoloop leaderboard` for the ranking, `evoloop show` for one design, and the report for everything ([Files of a run](../records.md)). To change course while it runs: [Watch and steer a run](../steering.md).
 
 ## What the agents are told
 

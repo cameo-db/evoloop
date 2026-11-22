@@ -1,12 +1,12 @@
 # Find a smaller or faster model
 
-Skill `model-efficiency` · domain: model · [the skill in full](../skill-library.md#model-efficiency)
-
 Make the model smaller or faster while holding its score. Designs are selected on the trade-off between the score and size (or speed), and removal is the commonest move.
 
-## Start here
+## What a good result looks like
 
-Put this in `brief.yaml` (or give the same answers to `evoloop setup`), then read `evoloop plan` before you confirm.
+Read the population table: it lists the designs on the trade-off front with their score and size. Pick the smallest whose score is within your tolerance of the reference row. A design is only an improvement if its loss in score is below the noise floor or acceptable to you.
+
+## Start here
 
 ```yaml
 run:
@@ -19,7 +19,7 @@ limits:
     max: 5000000
 ```
 
-The budget, and any limits or ranges, are placeholders: put in your own.
+These lines go in `brief.yaml`. The budget, and any limits or ranges, are placeholders for your own. <a href="../../which-search/?goal=model-efficiency&run=refine#preview-your-search">Preview this search</a> to see what it will do, or [set up this search](../setting-up.md) on your project. The goal is the skill `model-efficiency`, shown in full in the [skill library](../skill-library.md#model-efficiency).
 
 ## Why this set-up
 
@@ -53,11 +53,9 @@ The skill sets these for you (anything you set in the brief wins):
 
 It combines well with [`model-distillation`](model-distillation.md) (`run.skill: [model-efficiency, ...]`).
 
-## Reading the result
+## Where to look
 
-Read the population table: it lists the designs on the trade-off front with their score and size. Pick the smallest whose score is within your tolerance of the reference row. A design is only an improvement if its loss in score is below the noise floor or acceptable to you.
-
-Where to look: `evoloop leaderboard`, `evoloop show`, and the report ([Files of a run](../records.md)). To change course while it runs: [Watch and steer a run](../steering.md).
+`evoloop leaderboard` for the ranking, `evoloop show` for one design, and the report for everything ([Files of a run](../records.md)). To change course while it runs: [Watch and steer a run](../steering.md).
 
 ## What the agents are told
 

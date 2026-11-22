@@ -24,8 +24,8 @@ name. The same commands work on a search that has stopped.
 | answer something the strategist proposed | `evoloop approve mysearch --name r1 --id S14 --by "Me"` ([Working with the strategist](strategist.md)) |
 | talk to the agent running it | `evoloop chat mysearch --name r1 --by "Me"` |
 | stop one design | `evoloop stop mysearch --name r1 --run R12 --by "Me"` |
-| stop the search | `evoloop stop mysearch --name r1 --by "Me"` |
-| continue a stopped search | `evoloop run mysearch --name r1` |
+| stop the search | `evoloop stop mysearch --name r1 --by "Me"` ([stop and resume](#stop-and-resume-a-search)) |
+| resume a stopped search | `evoloop run mysearch --name r1` |
 
 The sections below explain each.
 
@@ -108,7 +108,7 @@ evoloop note mysearch --name r1 "No attention layers." --roles writer --by "Your
 evoloop withdraw mysearch --name r1 --id S4 --by "Your Name"
 ```
 
-A note is advice. Every agent it is addressed to reads it on every call from then on, and each call
+Every agent a note is addressed to reads it on every call from then on, and each call
 records which notes it was shown and which it says it followed. A withdrawn note is no longer shown;
 its record stays.
 
@@ -125,15 +125,16 @@ An agent turns your words into setting changes and notes, and the command prints
 with the sentence of yours it came from, and anything it could not express under "not covered".
 Nothing is changed. Running the same command again with `--yes` applies exactly what was printed.
 
-## Stopping
+## Stop and resume a search
 
 ```
 evoloop stop mysearch --name r1 --by "Your Name"            # start nothing more; end when the jobs do
 evoloop stop mysearch --name r1 --run R12 --by "Your Name"   # stop one run
 ```
 
-A stopped run is continued with `evoloop run mysearch --name r1`. To give an ended run more budget,
-`evoloop set ... budget.evaluations=N` and continue it.
+To resume a stopped search, run the same command that started it: `evoloop run mysearch --name r1`. It picks
+up from the files on disk, including jobs that were still training. To give a finished search more budget,
+raise it with `evoloop set mysearch --name r1 budget.evaluations=N --by "Your Name"` and resume.
 
 ## The evaluator's own knobs
 
@@ -172,7 +173,7 @@ on `examples_per_s` from its inference speed.
 evoloop set mysearch --name r1 'limits={"parameters": {"max": 20000000}, "examples_per_s": {"min": 500}}' --by "Your Name"
 ```
 
-- **A limit must be measurable.** If a result does not report a figure that a limit names, the design is rejected
+- A limit must be measurable. If a result does not report a figure that a limit names, the design is rejected
   and the run pauses, saying which figure is missing. Make the evaluator report it, or remove the
   limit, and continue the run. A limit is never skipped because its figure is absent. (Progress lines may lack
   it: only the final result must carry it.)
@@ -229,4 +230,4 @@ steering entries the run had.
 With `harness.conductor: agent` an agent is in charge of the course of the search, and `evoloop chat`
 talks to it: it explains, changes course within its bounds when you ask, and takes your yes or no. With
 `harness.conductor: code` (the default) the search is deterministic and you steer with the commands on
-this page. See [who runs the search](strategist.md#who-runs-the-search-code-or-an-agent-you-talk-to).
+this page. See [who runs the search](strategist.md#talking-to-it).

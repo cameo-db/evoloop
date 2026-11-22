@@ -55,6 +55,6 @@ score; the held-out score tells you afterwards whether the gain was real.
 
 ## Settings on this page
 
-`evaluation.noise`, `evaluation.recheck_every`, `evaluation.allowance`, `evaluation.on_length_change`,
-`evaluation.leaders_refit`, `evaluation.variables`, `data.fraction`. Each is described in
-[Brief fields](fields.md#evaluation).
+[`evaluation.noise`](fields.md#evaluation-noise), [`evaluation.recheck_every`](fields.md#evaluation-recheck_every), [`evaluation.allowance`](fields.md#evaluation-allowance), [`evaluation.on_length_change`](fields.md#evaluation-on_length_change),
+[`evaluation.leaders_refit`](fields.md#evaluation-leaders_refit), [`evaluation.variables`](fields.md#evaluation-variables), [`data.fraction`](fields.md#data-fraction).
+

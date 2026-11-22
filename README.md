@@ -2,222 +2,195 @@
 
 [![Documentation](https://readthedocs.org/projects/evoloop/badge/?version=latest)](https://evoloop.readthedocs.io/en/latest/)
 
-**Optimize the parts of your code you choose.**
+**An optimization loop for models, algorithms, and data pipelines.**
 
-Mark the code that may change and supply a scoring function. Agents propose code edits, or a built-in
-optimizer tunes fixed settings. evoloop evaluates the variants within your budget, and records every
-decision so you can steer the search while it runs.
+Give evoloop working code and a way to score it. You choose which parts may change. AI agents propose
+changes, evoloop evaluates each version, and the results guide what it tries next. For numerical
+settings, a built-in optimizer can propose the changes with no agent at all.
 
-<p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/demo-dark.svg">
-    <img src="docs/assets/demo-light.svg" alt="A toy model search: the validation accuracy of each of 40 models and the best so far, rising from a baseline of 0.50 to a selected model at 0.97" width="640">
-  </picture>
-</p>
-<p align="center"><sub>A toy model search: a small classifier on two spirals, 40 models, each really trained on a CPU. The proposals are scripted here, so this shows how a search proceeds, not what an agent would find.</sub></p>
+Use it to improve a model's accuracy, find a smaller model at a similar score, tune a training recipe,
+or make a pipeline faster while checking that its outputs stay correct.
 
-**[Documentation](https://evoloop.readthedocs.io)** · **[Run the CPU demo](#run-the-cpu-demo)** · **[Use your own project](#use-your-own-project)** · **[Status](#status)**
+Documentation: <https://evoloop.readthedocs.io>
 
-## Run the CPU demo
+## How it works
 
-A toy model search: no API key, no GPU, about half a minute. In a fresh Python environment (3.9 or later):
+```mermaid
+flowchart LR
+    P["<b>1. Propose a change</b><br>an agent edits the code,<br>or an optimizer picks values"] --> E["<b>2. Evaluate it</b><br>your script runs it<br>and reports a score"]
+    E --> C["<b>3. Choose what to try next</b><br>build on what scored well,<br>keep different ideas alive"]
+    C --> P
+```
+
+You mark the parts of your code that may change and write a script that scores one version. Everything
+else is frozen. The loop then repeats until the budget you set is spent, and writes down every design,
+score and decision as it goes.
+
+| Stage | What happens | Who does it |
+|---|---|---|
+| Propose a change | a new design, an edit to an earlier one, a combination of two, or new values for the settings | an agent; or, for settings, a built-in Bayesian optimizer or sampler |
+| Evaluate it | the design is checked, then run as its own job; your script writes its score | your code, on your machine or one Slurm job per design |
+| Choose what to try next | which earlier designs get built on, and how much of the budget goes to new ideas | evoloop's code, from the scores |
+
+An agent only ever returns text. evoloop's code decides what is tried next, enforces the budget and any
+limits you set, and refuses a design that touches code outside the marked parts.
+
+It is built for evaluations that are expensive and noisy, such as training runs: tens to hundreds of
+them, where two runs of the same design give slightly different scores. You say how large that
+variation is, and smaller differences are not counted as gains.
+
+## What you choose
+
+Two choices shape a search. Everything else has a default.
+
+**The goal: what you want.** Each goal comes with a guide, settings that suit it, and advice for the
+agents, all in a file you can edit.
+
+| Goal | For |
+|---|---|
+| [`model-performance`](https://evoloop.readthedocs.io/en/latest/guides/model-performance/) | the best score, with the architecture open |
+| [`model-training-recipe`](https://evoloop.readthedocs.io/en/latest/guides/model-training-recipe/) | a better score from the same architecture: the loss, optimizer, schedule, augmentation |
+| [`settings-tuning`](https://evoloop.readthedocs.io/en/latest/guides/settings-tuning/) | hyperparameters only, by a Bayesian optimizer, with no agent calls |
+| [`model-finetuning`](https://evoloop.readthedocs.io/en/latest/guides/model-finetuning/) | adapting a pretrained model |
+| [`model-efficiency`](https://evoloop.readthedocs.io/en/latest/guides/model-efficiency/) | one smaller or faster model at about the same score |
+| [`model-size-frontier`](https://evoloop.readthedocs.io/en/latest/guides/model-size-frontier/) | the best model at each of several sizes |
+| [`model-distillation`](https://evoloop.readthedocs.io/en/latest/guides/model-distillation/) | a small student that matches a large teacher |
+| [`model-ensemble-members`](https://evoloop.readthedocs.io/en/latest/guides/model-ensemble-members/) | several good models that fail differently |
+| [`model-mechanistic`](https://evoloop.readthedocs.io/en/latest/guides/model-mechanistic/) | an interpretable or biophysical model, improved without losing its meaning |
+| [`algorithm-runtime`](https://evoloop.readthedocs.io/en/latest/guides/algorithm-runtime/) | the same output from an algorithm, sooner |
+| [`bioinformatics-algorithm`](https://evoloop.readthedocs.io/en/latest/guides/bioinformatics-algorithm/) | a bioinformatics method that is more accurate against a truth set |
+| [`data-pipeline`](https://evoloop.readthedocs.io/en/latest/guides/data-pipeline/) | a data pipeline that is faster or cheaper, with its output checked |
+
+Goals can be combined, and you can write your own.
+
+**The run type: how the budget is spent.**
+
+| Run type | Spends the budget on |
+|---|---|
+| `explore_then_exploit` | new ideas first, then improving the best of them (the default) |
+| `refine` | improving a model that already works |
+| `survey` | many different ideas, each kept in play |
+| `discovery` | unusual designs, when evaluations are cheap |
+| `settings_only` | numerical settings and nothing else |
+
+[Which search should I run?](https://evoloop.readthedocs.io/en/latest/which-search/) puts a goal and a
+run type together and shows the search that results.
+
+Other things you can set, all with defaults and all changeable while a search runs:
+
+| | Options |
+|---|---|
+| Which earlier designs get built on | several families side by side, the best of each kind, a tournament among recent designs, a trade-off front on two metrics, or always the current best |
+| Stopping weak designs early | half of new designs stopped half way (the default), or a ladder of checks on every design |
+| Who writes the designs | one Claude model or a mix; whole blocks or small edits |
+| How much the agents decide | code runs the search and agents only write; or a strategist agent adjusts it within bounds; or an agent runs it and you talk to it |
+| Limits | a cap on evaluations, a cap on agent dollars, hard bounds on model size or speed |
+
+## Where the methods come from
+
+evoloop combines mechanisms that others introduced. Each is an option.
+
+| Mechanism | From | In evoloop |
+|---|---|---|
+| Evolve marked regions of a program with a language model | FunSearch, AlphaEvolve | `EVOLVE-BLOCK` markers; everything else frozen |
+| Separate populations that are reset from the best | FunSearch | `strategy.islands`, `strategy.reset_every` |
+| Keep the best of each kind of design | MAP-Elites, AlphaEvolve | `strategy.mechanism: archive` |
+| A fast model and a strong model writing together | AlphaEvolve | `agents.writer_mix` |
+| Edits returned as diffs | AlphaEvolve | `variation.edit_format: diff` |
+| Tournament selection with aging | Regularized evolution | `strategy.mechanism: tournament` |
+| New families protected while young | NEAT | `strategy.mechanism: lineage` (the default) |
+| A trade-off front on two objectives | multi-objective evolution | `strategy.mechanism: pareto` |
+| Stopping weak runs early by rank | successive halving, ASHA | `evaluation.ladder` |
+| Bayesian choice of hyperparameters | TPE (Optuna, Hyperopt) | `variation.settings_by: tpe` |
+
+What evoloop adds: every setting change during a search is recorded with who made it; scores from before
+and after a change that alters their meaning are kept apart; and the goal is chosen separately from the
+search method. [Compared with FunSearch and AlphaEvolve](docs/compared.md) covers each mechanism and
+where evoloop falls short of them.
+
+## Use it on your project
 
 ```
 git clone https://github.com/cameo-db/evoloop.git
 cd evoloop
-python -m pip install -e . numpy
+python -m pip install -e .
 
-evoloop example demo                        # copies the example to ./demo
-evoloop plan demo                           # what the search will do, the warnings, every setting
-evoloop brief demo --confirm "Your Name"    # your agreement to the plan
-evoloop run demo --name first
-evoloop report demo --name first
-```
-
-Install from this repository: the package named `evoloop` on PyPI is a different project.
-[What you should see](https://evoloop.readthedocs.io/en/latest/quickstart/).
-
-## Use your own project
-
-```
 evoloop init mysearch --source path/to/project
 ```
 
-1. **Mark the code** that may change, in the copy under `mysearch/base/`:
-   `# EVOLVE-BLOCK-START name=trunk kind=structure role=trunk` ... `# EVOLVE-BLOCK-END`.
-   Everything else is frozen, and your original project is never touched.
-2. **Write the evaluator**, `mysearch/adapter/run.py`: it runs one design and writes a `result.json`
+Install from this repository. The package named `evoloop` on PyPI is a different project.
+
+1. Mark the code that may change, in the copy under `mysearch/base/`, with a pair of comment lines:
+   `# EVOLVE-BLOCK-START name=trunk kind=structure role=trunk` and `# EVOLVE-BLOCK-END`.
+2. Write the scoring script, `mysearch/adapter/run.py`. It runs one design and writes a `result.json`
    with its score.
-3. **Answer the questions** with `evoloop setup mysearch`: one at a time, with choices and a suggested
-   answer where there is evidence for one.
-4. **Read the plan, then confirm.** `evoloop plan mysearch` leads with what the search will actually
-   do: who writes the designs, which agent roles run, how designs are selected, and what it will cost.
-5. **Run**: `evoloop run mysearch --name r1`, on your machine or as one Slurm job per design.
+3. Answer the set-up questions: `evoloop setup mysearch`.
+4. Read the plan, then confirm it: `evoloop plan mysearch`, then
+   `evoloop brief mysearch --confirm "Your Name"`.
+5. Run: `evoloop run mysearch --name r1`.
 
-[The full walk-through](https://evoloop.readthedocs.io/en/latest/setting-up/).
+A coding agent can do this with you. Open this repository in Claude Code, or another agent that can read
+files and run commands, and ask it to set up a search for your project; it follows [AGENTS.md](AGENTS.md).
+You decide what to optimize, what may change, how a design is scored, how much to spend, and any hard
+limits.
 
-**You do not have to do this by hand.** evoloop is built to be set up with a coding agent: open this repository in
-Claude Code (or another agent that can read files and run commands) and say *"set up an evoloop search for my
-project"*. Following [AGENTS.md](AGENTS.md), it marks the blocks, writes the evaluator, proposes an answer to each
-question with its reason, and asks you only what it cannot work out. Five decisions are yours: **what to
-optimize**, **what may change**, **how a design is scored**, **how much to spend**, and any **hard limits**.
-Everything else has a default that follows from those.
+[Set up your search](https://evoloop.readthedocs.io/en/latest/setting-up/) ·
+[Write the evaluator](https://evoloop.readthedocs.io/en/latest/evaluator/) ·
+[Run on a cluster](https://evoloop.readthedocs.io/en/latest/servers/)
 
-**On a cluster?** Describe the machine once, in a site file: `evoloop site --detect` drafts it from what the
-scheduler reports ([Adapting to your machine](docs/servers.md)).
-
-## What do you want to optimize?
-
-Each goal is a different search. Its guide gives a starting configuration, why it fits, what your
-evaluator must report, and how to read the result.
-
-| I want to | Guide |
-|---|---|
-| tune hyperparameters, with no agent calls | [`settings-tuning`](https://evoloop.readthedocs.io/en/latest/guides/settings-tuning/) |
-| improve a model's score | [`model-performance`](https://evoloop.readthedocs.io/en/latest/guides/model-performance/) |
-| train a fixed architecture better | [`model-training-recipe`](https://evoloop.readthedocs.io/en/latest/guides/model-training-recipe/) |
-| find one smaller or faster model | [`model-efficiency`](https://evoloop.readthedocs.io/en/latest/guides/model-efficiency/) |
-| find the best model at several sizes | [`model-size-frontier`](https://evoloop.readthedocs.io/en/latest/guides/model-size-frontier/) |
-| distil a student from a teacher | [`model-distillation`](https://evoloop.readthedocs.io/en/latest/guides/model-distillation/) |
-| find models that fail differently, for an ensemble | [`model-ensemble-members`](https://evoloop.readthedocs.io/en/latest/guides/model-ensemble-members/) |
-| adapt a pretrained model | [`model-finetuning`](https://evoloop.readthedocs.io/en/latest/guides/model-finetuning/) |
-| improve an interpretable or biophysical model | [`model-mechanistic`](https://evoloop.readthedocs.io/en/latest/guides/model-mechanistic/) |
-| make an algorithm faster | [`algorithm-runtime`](https://evoloop.readthedocs.io/en/latest/guides/algorithm-runtime/) |
-| improve a bioinformatics method | [`bioinformatics-algorithm`](https://evoloop.readthedocs.io/en/latest/guides/bioinformatics-algorithm/) |
-| make a data pipeline faster or cheaper | [`data-pipeline`](https://evoloop.readthedocs.io/en/latest/guides/data-pipeline/) |
-
-### The skill library
-
-Each row above is a **skill**: one file holding the settings that suit the task, guidance for the
-agents, "if the results show this, do that" diagnoses, and what your evaluator must report. evoloop
-comes with these twelve, and the library is meant to grow:
-
-- **Edit one.** Your search gets its own copy of every skill it uses, in `mysearch/skills/`.
-- **Combine them.** `run.skill: [model-distillation, model-size-frontier]` gives a family of students.
-- **Write your own.** `evoloop skills NAME --copy DIR` copies the nearest one to start from.
-- **Add it to the library.** A skill is a folder with one file, under `evoloop/skills/`; a pull request
-  adds it for everyone.
-
-```
-evoloop skills                      # the library, by domain
-evoloop skills --search "smaller"   # find a skill by what it is for
-evoloop skills model-efficiency     # one skill in full
-```
-
-[How skills work](docs/skills.md) · [Every skill in full](docs/skill-library.md)
-
-## How a search runs
-
-```mermaid
-flowchart LR
-    Slot["A job slot<br>is free"] --> Schedule["<b>Schedule</b><br>which kind of move?"]
-    Schedule --> Strategy["<b>Strategy</b><br>which parents?"]
-    Strategy --> Writer["<b>Writer</b><br>an agent, or code"]
-    Writer --> Checks{"<b>Checks</b><br>by code"}
-    Checks -- ok --> Job["<b>Job</b><br>run and score once"]
-    Checks -- refused --> Writer
-    Job --> Records[("Records")]
-    Records --> Slot
-```
-
-- **Agents write and judge; code decides and records.** The budget, the limits and the frozen code
-  are enforced by code, never by a prompt.
-- **Built for costly, noisy evaluations.** Tens to hundreds of training runs, not millions of cheap
-  tests: you state the noise floor, and a difference below it counts as no difference.
-- **Steerable.** Almost every setting can change during a run. Each change is recorded with who made
-  it, and scores from before and after a change that alters their meaning are never mixed.
-
-## Steering while it runs
+## Change a search while it runs
 
 ```
 evoloop status mysearch --name r1
 evoloop set    mysearch --name r1 schedule.novelty=0.6 budget.evaluations=300 --by "Your Name"
 evoloop note   mysearch --name r1 "No attention layers." --roles writer --by "Your Name"
-evoloop steer  mysearch --name r1 "more novelty from here, and keep models small" --by "Your Name"
-evoloop chat   mysearch --name r1 --by "Your Name"      # talk to the agent that runs the search
 evoloop stop   mysearch --name r1 --by "Your Name"
+evoloop run    mysearch --name r1            # resume
 ```
 
-## Save the study, and deposit it in CAMEO
+Each change is checked, applied from the next design on, and recorded with your name. The objective and
+the scheduler are fixed when a search starts.
+[Watch and steer a run](https://evoloop.readthedocs.io/en/latest/steering/).
 
-Every search ends with one JSON file holding every model, training recipe and run, in the format of
-[CAMEO](https://cameo-db.github.io), a public database of models, how they were trained, and how they
-performed.
+## A worked example
 
-```
-evoloop study mysearch --name r1        # writes mysearch/runs/r1/study.json and says which star it is on course for
-```
-
-Then check it with the CAMEO kit ([`cameo.py`](https://cameo-db.github.io/kit/cameo.py) and
-[`rules.json`](https://cameo-db.github.io/kit/rules.json), in one folder) and deposit it on the CAMEO site:
+The package carries a small search that runs on a laptop in half a minute, with no API key and no GPU.
+It trains small classifiers on a toy dataset, each one for real.
 
 ```
-python3 cameo.py check mysearch/runs/r1/study.json
+python -m pip install -e . numpy
+evoloop example demo
+evoloop brief demo --confirm "Your Name"
+evoloop run demo --name first
+evoloop leaderboard demo --name first
 ```
 
-[What goes in the file, what each star needs, and how to deposit](https://evoloop.readthedocs.io/en/latest/study/).
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/demo-dark.svg">
+    <img src="docs/assets/demo-light.svg" alt="The demo search: validation accuracy at each of 40 evaluations, and the best so far, rising from a baseline of 0.50 to a selected design at 0.97" width="640">
+  </picture>
+</p>
 
-<details>
-<summary><b>Everything you can choose</b></summary>
+40 training runs across 39 designs take validation accuracy from 0.50 to 0.97. The proposals in the demo
+are scripted, so it shows how a search proceeds and what it records, not what a language model would
+find. [Run the demo](https://evoloop.readthedocs.io/en/latest/quickstart/) walks through the output.
 
-| For | You choose |
-|---|---|
-| **The goal** | a skill from the library, several combined, or your own |
-| **How to search** | a run type: `explore_then_exploit`, `refine`, `survey`, `discovery`, `settings_only`, `custom` |
-| **Selection** | families kept alive side by side (`lineage`), the best of each kind on a grid (`archive`), a tournament among recent designs (`tournament`), a trade-off front on two figures (`pareto`), or the best so far (`greedy`); on islands if wanted, with resets |
-| **Exploration** | the shares of new designs, crossover and local moves by phase of the budget; a novelty dial; diversity by family and size or by what the trained model does |
-| **What may change** | settings only, one module, the architecture, the architecture and the training recipe, or your own list |
-| **Cost of an evaluation** | weak designs stopped early by a screen or a promotion ladder; a child trained from scratch or from its parent's weights |
-| **The writers** | which Claude model and effort for each role; several models by share; whole blocks or find-and-replace edits |
-| **Who decides** | code alone (deterministic), a strategist agent that may shift the course within bounds you set, or an agent that runs the search and that you talk to |
-| **Oversight** | caps on evaluations and on agent dollars; hard limits on size or speed; a scorecard of every agent |
+## What a search leaves behind
 
-[Which search should I run?](docs/which-search.md) · [Options and presets](docs/menu.md)
-
-</details>
-
-<details>
-<summary><b>Where the mechanisms come from</b></summary>
-
-| From | Taken |
-|---|---|
-| FunSearch | marked regions of a program; islands with resets; designs kept apart by what they do |
-| AlphaEvolve | an archive on islands; a fast and a strong model writing together; edits as diffs; an evaluation cascade; several objectives; instructions that evolve |
-| Regularized evolution | tournament selection with aging |
-| MAP-Elites | the best of each kind, on a grid |
-| NEAT | new families protected while young |
-| Successive halving, ASHA | weak runs stopped early by rank |
-| TPE (Optuna, Hyperopt) | Bayesian choice of settings |
-
-evoloop adds steering through a recorded ledger, comparison periods that keep unlike scores apart, a
-stated noise floor, skills, and an audit of the agents.
-[How it compares](docs/compared.md), including where it falls short.
-
-</details>
-
-<details>
-<summary><b>What a search leaves behind</b></summary>
-
-- A leaderboard and a report: the best designs beside the baseline, with how each score was reached.
-- Every design, with its code, where it came from, what its writer predicted and how it ended.
-- A ledger of every change to the search, by whom, at how many evaluations.
-- A scorecard of the agents: what each cost and whether its forecasts held.
-- A study file in the CAMEO entry format.
-
-[Files of a run](docs/records.md) · [Save and deposit the study](docs/study.md)
-
-</details>
+A leaderboard and a report; every design with its code, its parent and its score; a ledger of every
+change made during the search; a record of every agent call and what it cost; and `study.json`, the
+whole search in one file in the format of [CAMEO](https://cameo-db.github.io), a public database of
+models and how they were trained. [Save and deposit the study](docs/study.md).
 
 ## Status
 
-Version 0.2. It passes its tests on the two built-in examples with scripted proposals, and has run one of them on
-a Slurm cluster. **It has not yet been run with a real model on a real training task**, and no
-comparison of its search settings has been made. The guides give reasoned starting points, not measured
-ones. [Status and limits](docs/status.md) says exactly what has been run.
+Version 0.2. It passes its tests on two built-in examples with scripted proposals standing in for a
+language model, and has run one of them on a Slurm cluster. It has not yet been run with a real model
+on a real training task, and its search settings have not been compared against each other.
+[Status and limits](docs/status.md) lists what has been run.
 
 ## Documentation
-
-<https://evoloop.readthedocs.io>
 
 | | |
 |---|---|
@@ -225,14 +198,13 @@ ones. [Status and limits](docs/status.md) says exactly what has been run.
 | Choose a search | [Which search should I run?](docs/which-search.md) · [Edit or write a skill](docs/skills.md) |
 | Concepts | [One step of a search](docs/how-it-works.md) · [What gets tried next](docs/schedule.md) · [Who becomes a parent](docs/parents.md) · [Cheaper evaluations](docs/early-stopping.md) · [The agents](docs/agents.md) |
 | Run and steer | [Watch and steer a run](docs/steering.md) · [Budget and cost](docs/cost.md) · [Save and deposit the study](docs/study.md) |
-| Reference | [Commands](docs/commands.md) · [Brief fields](docs/fields.md) · [Evaluator interface](docs/project-contract.md) · [Glossary](docs/glossary.md) · [Status and limits](docs/status.md) |
-| For an agent helping someone | [AGENTS.md](AGENTS.md) |
+| Reference | [Commands](docs/commands.md) · [Brief fields](docs/fields.md) · [Evaluator interface](docs/project-contract.md) · [Glossary](docs/glossary.md) |
 
 ## Development
 
 ```
 python -m pip install -e ".[test]"
-pytest tests        # a few minutes on eight cores
+pytest tests
 ```
 
 MIT License. Copyright (c) 2026 Peter Koo.

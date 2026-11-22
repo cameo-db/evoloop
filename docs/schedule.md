@@ -18,7 +18,7 @@ With 100 evaluations and the default plan, the first 60 are shared 65% new, 10% 
 The last 40 are shared 15% new, 25% crossover, 60% local. So about 45 designs start new families and
 about 39 refine existing ones.
 
-The [run type](which-search.md#how-to-search-the-run-type) sets these shares, and you can set them
+The [run type](which-search.md#how-to-spend-the-budget-the-run-type) sets these shares, and you can set them
 yourself:
 
 ```yaml
@@ -74,6 +74,6 @@ You can also change them yourself at any time: `evoloop set mysearch --name r1 s
 
 ## Settings on this page
 
-`schedule.phases`, `schedule.novel_share`, `schedule.novelty`, `schedule.novelty_measure`,
-`schedule.adaptive`, `schedule.floor`, `schedule.founder_credit`, `variation.proposals_per_slot`. Each
-is described in [Brief fields](fields.md#schedule).
+[`schedule.phases`](fields.md#schedule-phases), [`schedule.novel_share`](fields.md#schedule-novel_share), [`schedule.novelty`](fields.md#schedule-novelty), [`schedule.novelty_measure`](fields.md#schedule-novelty_measure),
+[`schedule.adaptive`](fields.md#schedule-adaptive), [`schedule.floor`](fields.md#schedule-floor), [`schedule.founder_credit`](fields.md#schedule-founder_credit), [`variation.proposals_per_slot`](fields.md#variation-proposals_per_slot).
+

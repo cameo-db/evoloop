@@ -69,6 +69,6 @@ the report builds a scorecard for each role, and at points you choose an assesso
 
 ## Settings on this page
 
-`harness.autonomy`, `harness.level`, `harness.coordinator`, `harness.conductor`,
-`harness.analyst_every`, `strategist.mode`, `agents.default_model`, `agents.models`, `agents.effort`.
-Each is described in [Brief fields](fields.md#harness).
+[`harness.autonomy`](fields.md#harness-autonomy), [`harness.level`](fields.md#harness-level), [`harness.coordinator`](fields.md#harness-coordinator), [`harness.conductor`](fields.md#harness-conductor),
+[`harness.analyst_every`](fields.md#harness-analyst_every), [`strategist.mode`](fields.md#strategist-mode), [`agents.default_model`](fields.md#agents-default_model), [`agents.models`](fields.md#agents-models), [`agents.effort`](fields.md#agents-effort).
+

@@ -76,7 +76,7 @@ def draw(rows, higher, metric, colours, notes):
     for i in list(range(0, n, max(1, n // 7))):
         out.append('<text x="%.1f" y="%d" text-anchor="middle" font-size="12" %s fill="%s">%d</text>' % (
             x(i), H - BOTTOM + 18, FONT, c["soft"], i + 1))
-    out.append('<text x="%.1f" y="%d" text-anchor="middle" font-size="12" %s fill="%s">Model iteration</text>' % (
+    out.append('<text x="%.1f" y="%d" text-anchor="middle" font-size="12" %s fill="%s">Evaluation</text>' % (
         (LEFT + W - RIGHT) / 2, H - 8, FONT, c["soft"]))
     out.append('<text transform="translate(16 %.1f) rotate(-90)" text-anchor="middle" font-size="12" %s fill="%s">%s%s (%s is better)</text>' % (
         (TOP + H - BOTTOM) / 2, FONT, c["soft"], metric[:1].upper() + metric[1:], ", log scale" if logscale else "",
@@ -95,7 +95,7 @@ def draw(rows, higher, metric, colours, notes):
     path.append("H%.1f" % x(n - 1))
     out.append('<path d="%s" fill="none" stroke="%s" stroke-width="2" stroke-linejoin="round"/>' % (" ".join(path), c["series"]))
     for i, row in enumerate(rows):
-        note = "Model %d (%s): %s, %s" % (i + 1, row["design"], nice(row["score"]), row["move"])
+        note = "Evaluation %d (design %s): %s, %s" % (i + 1, row["design"], nice(row["score"]), row["move"])
         out.append('<circle cx="%.1f" cy="%.1f" r="4" fill="%s" stroke="%s" stroke-width="2">%s</circle>' % (
             x(i), y(row["score"]), c["dot"], c["surface"], "<title>%s</title>" % note if notes else ""))
         if notes:      # a larger target than the mark, for the pointer
@@ -105,17 +105,19 @@ def draw(rows, higher, metric, colours, notes):
         means.setdefault(row["design"], []).append(row["score"])
     pick = max if higher else min
     chosen = pick(sum(v) / len(v) for v in means.values())
-    out.append('<circle cx="%.1f" cy="%.1f" r="5" fill="%s" stroke="%s" stroke-width="2"/>' % (x(n - 1), y(best), c["series"], c["surface"]))
+    picked = next(d for d, v in means.items() if sum(v) / len(v) == chosen)
+    where = next(i for i, row in enumerate(rows) if row["design"] == picked)     # the evaluation that scored the selected design
+    out.append('<circle cx="%.1f" cy="%.1f" r="5.5" fill="%s" stroke="%s" stroke-width="2"/>' % (x(where), y(rows[where]["score"]), c["series"], c["surface"]))
     for label, value, at, bold in (("Baseline", base, y(base), False), ("Selected", chosen, y(best), True)):
         shift = 16 if (at < TOP + 30) else -8
         out.append('<text x="%d" y="%.1f" font-size="12" %s fill="%s">%s</text>' % (W - RIGHT + 12, at + shift, FONT, c["soft"], label))
         out.append('<text x="%d" y="%.1f" font-size="15" font-weight="600" %s fill="%s">%s</text>' % (
             W - RIGHT + 12, at + shift + 17, FONT, c["ink"], nice(value)))
-    lx, ly = (W - RIGHT - 196, H - BOTTOM - 34) if higher else (LEFT + 12, TOP + 12)      # the key sits where the points are not
+    lx, ly = (W - RIGHT - 330, H - BOTTOM - 34) if higher else (LEFT + 12, TOP + 12)      # the key sits where the points are not
     out.append('<circle cx="%d" cy="%d" r="4" fill="%s" stroke="%s" stroke-width="2"/>' % (lx, ly, c["dot"], c["surface"]))
-    out.append('<text x="%d" y="%d" font-size="12" %s fill="%s">each model</text>' % (lx + 10, ly + 4, FONT, c["soft"]))
-    out.append('<line x1="%d" y1="%d" x2="%d" y2="%d" stroke="%s" stroke-width="2"/>' % (lx + 86, ly, lx + 106, ly, c["series"]))
-    out.append('<text x="%d" y="%d" font-size="12" %s fill="%s">best so far</text>' % (lx + 112, ly + 4, FONT, c["soft"]))
+    out.append('<text x="%d" y="%d" font-size="12" %s fill="%s">each evaluation</text>' % (lx + 10, ly + 4, FONT, c["soft"]))
+    out.append('<line x1="%d" y1="%d" x2="%d" y2="%d" stroke="%s" stroke-width="2"/>' % (lx + 118, ly, lx + 138, ly, c["series"]))
+    out.append('<text x="%d" y="%d" font-size="12" %s fill="%s">best %s so far</text>' % (lx + 144, ly + 4, FONT, c["soft"], metric))
     out.append("</svg>")
     return "\n".join(out), base, chosen
 
@@ -131,7 +133,7 @@ def main(run_dir, out_dir):
     with open(os.path.join(out_dir, "demo-inline.html"), "w", encoding="utf-8") as handle:
         handle.write('<div class="evo-chart">\n%s\n</div>\n' % inline)
     with open(os.path.join(out_dir, "demo-table.md"), "w", encoding="utf-8") as handle:
-        handle.write("| Model | Design | Made by | %s |\n|---|---|---|---|\n" % (metric[:1].upper() + metric[1:]))
+        handle.write("| Evaluation | Design | Made by | %s |\n|---|---|---|---|\n" % (metric[:1].upper() + metric[1:]))
         for i, row in enumerate(rows):
             handle.write("| %d | %s | %s | %s |\n" % (i + 1, row["design"], row["move"], nice(row["score"])))
     print(json.dumps({"models": len(rows), "baseline": base, "selected": chosen, "higher_is_better": higher}))

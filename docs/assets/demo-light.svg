@@ -20,7 +20,7 @@
 <text x="350.5" y="302" text-anchor="middle" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="#52514e">26</text>
 <text x="408.2" y="302" text-anchor="middle" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="#52514e">31</text>
 <text x="465.8" y="302" text-anchor="middle" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="#52514e">36</text>
-<text x="287.0" y="322" text-anchor="middle" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="#52514e">Model iteration</text>
+<text x="287.0" y="322" text-anchor="middle" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="#52514e">Evaluation</text>
 <text transform="translate(16 152.0) rotate(-90)" text-anchor="middle" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="#52514e">Validation accuracy (higher is better)</text>
 <line x1="62" y1="284.0" x2="512" y2="284.0" stroke="#52514e" stroke-width="1.5" stroke-dasharray="5 4"/>
 <path d="M62.0 284.0 H73.5 V262.9 H96.6 V213.6 H108.2 V64.0 H142.8 V42.9 H177.4 V41.1 H212.0 V37.6 H246.6 V35.8 H512.0" fill="none" stroke="#2a78d6" stroke-width="2" stroke-linejoin="round"/>
@@ -64,13 +64,13 @@
 <circle cx="488.9" cy="37.6" r="4" fill="#8f8e88" stroke="#fcfcfb" stroke-width="2"></circle>
 <circle cx="500.5" cy="37.6" r="4" fill="#8f8e88" stroke="#fcfcfb" stroke-width="2"></circle>
 <circle cx="512.0" cy="41.1" r="4" fill="#8f8e88" stroke="#fcfcfb" stroke-width="2"></circle>
-<circle cx="512.0" cy="35.8" r="5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/>
+<circle cx="431.2" cy="35.8" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/>
 <text x="524" y="276.0" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="#52514e">Baseline</text>
 <text x="524" y="293.0" font-size="15" font-weight="600" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="#0b0b0b">0.5</text>
 <text x="524" y="51.8" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="#52514e">Selected</text>
 <text x="524" y="68.8" font-size="15" font-weight="600" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="#0b0b0b">0.97</text>
-<circle cx="316" cy="250" r="4" fill="#8f8e88" stroke="#fcfcfb" stroke-width="2"/>
-<text x="326" y="254" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="#52514e">each model</text>
-<line x1="402" y1="250" x2="422" y2="250" stroke="#2a78d6" stroke-width="2"/>
-<text x="428" y="254" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="#52514e">best so far</text>
+<circle cx="182" cy="250" r="4" fill="#8f8e88" stroke="#fcfcfb" stroke-width="2"/>
+<text x="192" y="254" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="#52514e">each evaluation</text>
+<line x1="300" y1="250" x2="320" y2="250" stroke="#2a78d6" stroke-width="2"/>
+<text x="326" y="254" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="#52514e">best validation accuracy so far</text>
 </svg>
