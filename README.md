@@ -7,9 +7,8 @@
 
 [![Documentation](https://readthedocs.org/projects/evoloop/badge/?version=latest)](https://evoloop.readthedocs.io/en/latest/)
 
-**evoloop improves code you can score.** You mark the parts of your code that may change and write a
-script that measures how good one version is. evoloop then runs an evolutionary search: LLM agents
-propose changes, your script scores each one, and the results decide what is tried next.
+**evoloop improves code by evolving it.** An LLM writes new versions of the parts you mark. Your script
+scores each one. The best become parents of the next.
 
 Use it to raise a model's validation score, train a smaller student from a teacher, tune
 hyperparameters, or make an algorithm or pipeline faster while its output stays the same.
