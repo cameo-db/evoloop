@@ -96,77 +96,78 @@ This is evolutionary search with an LLM as the mutation operator.
 By default the population is a set of **lineages**. A lineage is a family of versions descended from
 one new design.
 
-<svg class="evo-loop-svg" viewBox="0 0 1200 500" role="img" aria-label="Lineages over one search, as an illustration. New designs found lineages early. Each lineage is protected for its first two runs. A lineage that stops improving is retired. Later, most evaluations refine the best lineages, and a crossover of two lineages founds a new one." style="width:100%;max-width:940px;height:auto;display:block;margin:24px auto 8px;font-family:inherit">
-  <rect x="70" y="64" width="622" height="356" fill="#01796e" opacity="0.06"/>
-  <path d="M692 64 V420" stroke="#7d8790" stroke-width="2" stroke-dasharray="5 6"/>
-  <g font-size="18" font-weight="700" fill="currentColor"><text x="80" y="48">Explore: found new lineages</text><text x="704" y="48">Exploit: refine and cross the best</text></g>
-  <path d="M90 110 H560" stroke="#9aa3ab" stroke-width="3" fill="none"/>
-  <circle cx="90" cy="110" r="7" fill="#ffffff" stroke="#9aa3ab" stroke-width="3"/>
-  <circle cx="150" cy="110" r="7" fill="#ffffff" stroke="#9aa3ab" stroke-width="3"/>
-  <circle cx="230" cy="110" r="7" fill="#9aa3ab"/>
-  <circle cx="330" cy="110" r="7" fill="#9aa3ab"/>
-  <circle cx="440" cy="110" r="7" fill="#9aa3ab"/>
-  <circle cx="560" cy="110" r="7" fill="#9aa3ab"/>
-  <path d="M591 101 L609 119 M591 119 L609 101" stroke="#9aa3ab" stroke-width="3.5" fill="none"/>
-  <path d="M160 180 H1070" stroke="#01796e" stroke-width="3" fill="none"/>
-  <circle cx="160" cy="180" r="7" fill="#ffffff" stroke="#01796e" stroke-width="3"/>
-  <circle cx="220" cy="180" r="7" fill="#ffffff" stroke="#01796e" stroke-width="3"/>
-  <circle cx="300" cy="180" r="7" fill="#01796e"/>
-  <circle cx="420" cy="180" r="7" fill="#01796e"/>
-  <circle cx="540" cy="180" r="7" fill="#01796e"/>
-  <circle cx="650" cy="180" r="7" fill="#01796e"/>
-  <circle cx="720" cy="180" r="7" fill="#01796e"/>
-  <circle cx="770" cy="180" r="7" fill="#01796e"/>
-  <circle cx="820" cy="180" r="7" fill="#01796e"/>
-  <circle cx="870" cy="180" r="7" fill="#01796e"/>
-  <circle cx="920" cy="180" r="7" fill="#01796e"/>
-  <circle cx="970" cy="180" r="7" fill="#01796e"/>
-  <circle cx="1020" cy="180" r="7" fill="#01796e"/>
-  <circle cx="1070" cy="180" r="7" fill="#01796e"/>
-  <path d="M250 250 H430" stroke="#9aa3ab" stroke-width="3" fill="none"/>
-  <circle cx="250" cy="250" r="7" fill="#ffffff" stroke="#9aa3ab" stroke-width="3"/>
-  <circle cx="310" cy="250" r="7" fill="#ffffff" stroke="#9aa3ab" stroke-width="3"/>
-  <circle cx="390" cy="250" r="7" fill="#9aa3ab"/>
-  <circle cx="430" cy="250" r="7" fill="#9aa3ab"/>
-  <path d="M461 241 L479 259 M461 259 L479 241" stroke="#9aa3ab" stroke-width="3.5" fill="none"/>
-  <path d="M360 320 H760" stroke="#5f6b73" stroke-width="3" fill="none"/>
-  <circle cx="360" cy="320" r="7" fill="#ffffff" stroke="#5f6b73" stroke-width="3"/>
-  <circle cx="420" cy="320" r="7" fill="#ffffff" stroke="#5f6b73" stroke-width="3"/>
-  <circle cx="500" cy="320" r="7" fill="#5f6b73"/>
-  <circle cx="600" cy="320" r="7" fill="#5f6b73"/>
-  <circle cx="680" cy="320" r="7" fill="#5f6b73"/>
-  <circle cx="760" cy="320" r="7" fill="#5f6b73"/>
-  <path d="M791 311 L809 329 M791 329 L809 311" stroke="#9aa3ab" stroke-width="3.5" fill="none"/>
-  <path d="M720 180 Q760 185 800 245 M680 320 Q750 315 800 255" stroke="#5f6b73" stroke-width="3" fill="none"/>
-  <path d="M806 250 H1100" stroke="#5f6b73" stroke-width="3" fill="none"/>
-  <circle cx="806" cy="250" r="7" fill="#ffffff" stroke="#5f6b73" stroke-width="3"/>
-  <circle cx="850" cy="250" r="7" fill="#ffffff" stroke="#5f6b73" stroke-width="3"/>
-  <circle cx="900" cy="250" r="7" fill="#5f6b73"/>
-  <circle cx="950" cy="250" r="7" fill="#5f6b73"/>
-  <circle cx="1000" cy="250" r="7" fill="#5f6b73"/>
-  <circle cx="1050" cy="250" r="7" fill="#5f6b73"/>
-  <circle cx="1100" cy="250" r="7" fill="#5f6b73"/>
-  <path d="M880 390 H1080" stroke="#5f6b73" stroke-width="3" fill="none"/>
-  <circle cx="880" cy="390" r="7" fill="#ffffff" stroke="#5f6b73" stroke-width="3"/>
-  <circle cx="940" cy="390" r="7" fill="#ffffff" stroke="#5f6b73" stroke-width="3"/>
-  <circle cx="1010" cy="390" r="7" fill="#5f6b73"/>
-  <circle cx="1080" cy="390" r="7" fill="#5f6b73"/>
-  <circle cx="1070" cy="180" r="15" fill="none" stroke="#01796e" stroke-width="3"/>
+<svg class="evo-loop-svg" viewBox="0 0 1200 500" role="img" aria-label="An illustration of lineages in one search, as validation score against evaluations spent. The baseline CNN stops improving and is retired. A dilated CNN climbs steadily. A transformer starts below the others, is protected for its first two runs, and then climbs. A crossover of the dilated CNN and the transformer founds a new lineage that ends as the best version." style="width:100%;max-width:940px;height:auto;display:block;margin:24px auto 8px;font-family:inherit">
+  <rect x="80" y="64" width="620" height="356" fill="#01796e" opacity="0.06"/>
+  <path d="M700 64 V420" stroke="#7d8790" stroke-width="2" stroke-dasharray="5 6"/>
+  <path d="M80 64 V420 H1120" stroke="#7d8790" stroke-width="2" fill="none"/>
+  <g font-size="18" font-weight="700" fill="currentColor"><text x="92" y="48">Explore: try new designs</text><text x="712" y="48">Exploit: refine and cross the best</text></g>
+  <g font-size="15" fill="currentColor" opacity="0.8" text-anchor="end"><text x="70" y="425">0.60</text><text x="70" y="255">0.70</text><text x="70" y="85">0.80</text></g>
+  <path d="M100 386 L150 369 L210 360 L280 352 L350 352 L420 352 L480 352" stroke="#9aa3ab" stroke-width="3.5" fill="none" stroke-linejoin="round"/>
+  <circle cx="100" cy="386" r="7" fill="#ffffff" stroke="#9aa3ab" stroke-width="3"/>
+  <circle cx="150" cy="369" r="7" fill="#ffffff" stroke="#9aa3ab" stroke-width="3"/>
+  <circle cx="210" cy="360" r="7" fill="#9aa3ab"/>
+  <circle cx="280" cy="352" r="7" fill="#9aa3ab"/>
+  <circle cx="350" cy="352" r="7" fill="#9aa3ab"/>
+  <circle cx="420" cy="352" r="7" fill="#9aa3ab"/>
+  <circle cx="480" cy="352" r="7" fill="#9aa3ab"/>
+  <path d="M511 343 L529 361 M511 361 L529 343" stroke="#9aa3ab" stroke-width="3.5" fill="none"/>
+  <path d="M170 352 L230 318 L300 284 L380 250 L470 225 L560 208 L640 199 L720 191 L790 182 L860 182 L940 179 L1010 179" stroke="#5f6b73" stroke-width="3.5" fill="none" stroke-linejoin="round"/>
+  <circle cx="170" cy="352" r="7" fill="#ffffff" stroke="#5f6b73" stroke-width="3"/>
+  <circle cx="230" cy="318" r="7" fill="#ffffff" stroke="#5f6b73" stroke-width="3"/>
+  <circle cx="300" cy="284" r="7" fill="#5f6b73"/>
+  <circle cx="380" cy="250" r="7" fill="#5f6b73"/>
+  <circle cx="470" cy="225" r="7" fill="#5f6b73"/>
+  <circle cx="560" cy="208" r="7" fill="#5f6b73"/>
+  <circle cx="640" cy="199" r="7" fill="#5f6b73"/>
+  <circle cx="720" cy="191" r="7" fill="#5f6b73"/>
+  <circle cx="790" cy="182" r="7" fill="#5f6b73"/>
+  <circle cx="860" cy="182" r="7" fill="#5f6b73"/>
+  <circle cx="940" cy="179" r="7" fill="#5f6b73"/>
+  <circle cx="1010" cy="179" r="7" fill="#5f6b73"/>
+  <path d="M360 411 L420 386 L500 318 L580 259 L660 216 L740 199 L810 194 L880 193" stroke="#5f6b73" stroke-width="3.5" fill="none" stroke-linejoin="round"/>
+  <circle cx="360" cy="411" r="7" fill="#ffffff" stroke="#5f6b73" stroke-width="3"/>
+  <circle cx="420" cy="386" r="7" fill="#ffffff" stroke="#5f6b73" stroke-width="3"/>
+  <circle cx="500" cy="318" r="7" fill="#5f6b73"/>
+  <circle cx="580" cy="259" r="7" fill="#5f6b73"/>
+  <circle cx="660" cy="216" r="7" fill="#5f6b73"/>
+  <circle cx="740" cy="199" r="7" fill="#5f6b73"/>
+  <circle cx="810" cy="194" r="7" fill="#5f6b73"/>
+  <circle cx="880" cy="193" r="7" fill="#5f6b73"/>
+  <path d="M720 191 Q750 188 770 176 M660 216 Q730 205 768 178" stroke="#01796e" stroke-width="3" fill="none" stroke-dasharray="6 5"/>
+  <path d="M770 174 L820 157 L880 140 L940 123 L1000 111 L1060 100" stroke="#01796e" stroke-width="3.5" fill="none" stroke-linejoin="round"/>
+  <circle cx="770" cy="174" r="7" fill="#ffffff" stroke="#01796e" stroke-width="3"/>
+  <circle cx="820" cy="157" r="7" fill="#ffffff" stroke="#01796e" stroke-width="3"/>
+  <circle cx="880" cy="140" r="7" fill="#01796e"/>
+  <circle cx="940" cy="123" r="7" fill="#01796e"/>
+  <circle cx="1000" cy="111" r="7" fill="#01796e"/>
+  <circle cx="1060" cy="100" r="7" fill="#01796e"/>
+  <circle cx="1060" cy="100" r="15" fill="none" stroke="#01796e" stroke-width="3"/>
+  <g font-size="16" fill="currentColor">
+    <text x="540" y="334" font-weight="700">Baseline CNN</text>
+    <text x="540" y="356">retired: 6 tries, no gain</text>
+    <text x="1024" y="184" font-weight="700">Dilated CNN</text>
+    <text x="474" y="392" font-weight="700">Transformer</text>
+    <text x="474" y="413">a slow starter, protected at first</text>
+    <text x="714" y="88" font-weight="700">Dilated CNN &#215; Transformer</text>
+    <text x="714" y="110">a crossover: the best version</text>
+  </g>
   <g font-size="15.5" fill="currentColor" opacity="0.85">
-    <text x="90" y="88">a new design founds a lineage</text>
-    <text x="250" y="284">first 2 runs: protected</text>
-    <text x="470" y="142">retired: no gain in 6 tries</text>
-    <text x="826" y="296" >crossover of two lineages founds a third</text>
-    <text x="1070" y="148" text-anchor="middle" font-weight="700">best version</text>
-    <text x="70" y="448">evaluations spent &#8594;</text>
-    <text x="1130" y="448" text-anchor="end">each dot is one version, run and scored</text>
+    <text x="80" y="448">evaluations spent &#8594;</text>
+    <text x="1120" y="448" text-anchor="end">each dot is one version, trained and scored</text>
+    <text x="80" y="476">An illustration, not data from a run. Hollow dots are a lineage's protected first runs.</text>
+    <text transform="translate(24 300) rotate(-90)">validation score</text>
   </g>
 </svg>
 
-- **Founded** by a new design, or by a crossover of two lineages.
-- **Protected** for its first 2 runs, so a slow starter is not dropped before it has been tuned.
-- **Retired** after 6 changes in a row with no gain above the noise. A retired lineage can still be a
-  crossover partner.
+Read it left to right:
+
+- **A lineage is founded** by a new design. Here the search tries a dilated CNN, then a transformer.
+- **A new lineage is protected** for its first 2 runs. The transformer starts below everything else and
+  would be dropped on its first score; protected, it catches up.
+- **A lineage that stalls is retired**, after 6 changes in a row with no gain above the noise. The
+  baseline CNN goes this way, and its evaluations go to the others.
+- **Two lineages are crossed** to found a third. The cross of the dilated CNN and the transformer ends as
+  the best version.
 - Up to 8 lineages are active at once, and none takes more than 40% of the refinements.
 
 The schedule moves from exploring to exploiting. In the first 60% of the budget, 65% of the versions
