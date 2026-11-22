@@ -37,7 +37,7 @@ floor that is too low is the more costly mistake.
 Too low, and the search believes in gains that are luck. It keeps building on a design that scored well
 once, and the leaderboard's top is whichever designs were luckiest.
 
-Too high, and real gains are ignored. Families are retired for "not gaining" while they are improving
+Too high, and real gains are ignored. Lineages are retired for "not gaining" while they are improving
 slowly, and many designs are treated as tied.
 
 If your scores turn out noisier than the gains you are looking for, no setting fixes that. Train longer,

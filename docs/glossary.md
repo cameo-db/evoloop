@@ -27,7 +27,7 @@ cost.
 **Coordinator.** An optional agent that chooses the kind of move for each slot, in place of the
 schedule.
 
-**Crossover.** A design made from two parents of different families.
+**Crossover.** A design made from two parents of different lineages.
 
 **Design.** One candidate solution: a version of the marked blocks. The tool's files also call it a
 *candidate*, with ids like `C7`.

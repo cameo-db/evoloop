@@ -26,7 +26,7 @@ The strategy is the rule for step 2: which earlier designs are built on. Set it 
 
 | Strategy | Parents are chosen from | Method it follows | Code |
 |---|---|---|---|
-| `lineage` (default) | the best design of each of several families. A new family gets protected evaluations before it competes, and no family gets more than 40% of the local moves | speciation with protected niches, as in NEAT | [strategies/lineage.py](https://github.com/cameo-db/evoloop/blob/main/evoloop/strategies/lineage.py) |
+| `lineage` (default) | the best design of each of several lineages. A new lineage gets protected evaluations before it competes, and no lineage gets more than 40% of the local moves | speciation with protected niches, as in NEAT | [strategies/lineage.py](https://github.com/cameo-db/evoloop/blob/main/evoloop/strategies/lineage.py) |
 | `archive` | the best design in each cell of a grid. A cell is a family and a size band, or a group of models whose errors fall alike | MAP-Elites. With islands, the program database of AlphaEvolve | [strategies/archive.py](https://github.com/cameo-db/evoloop/blob/main/evoloop/strategies/archive.py) |
 | `tournament` | the best of 3 drawn from the 24 most recent designs. Older designs drop out | regularized (aging) evolution, Real et al. 2019 | [strategies/tournament.py](https://github.com/cameo-db/evoloop/blob/main/evoloop/strategies/tournament.py) |
 | `pareto` | designs not beaten on both the score and a second metric such as parameter count | non-dominated sorting, as in NSGA-II | [strategies/pareto.py](https://github.com/cameo-db/evoloop/blob/main/evoloop/strategies/pareto.py) |
@@ -88,7 +88,7 @@ A run type is a preset for the strategy, the harness and the schedule.
 | `run.type` | Strategy | Agents | New / crossover / local |
 |---|---|---|---|
 | `explore_then_exploit` (default) | `lineage` | full harness, strategist on | 65 / 10 / 25 for the first 60% of the budget, then 15 / 25 / 60 |
-| `refine` | `lineage`, 3 families | full harness, strategist on | 10 / 20 / 70 |
+| `refine` | `lineage`, 3 lineages | full harness, strategist on | 10 / 20 / 70 |
 | `survey` | `archive` | writer and analyst, strategist on | 75 / 10 / 15 |
 | `discovery` | `archive` | writer only | 60 / 15 / 25, novelty raised |
 | `settings_only` | `greedy` | writer only | hyperparameter moves only |

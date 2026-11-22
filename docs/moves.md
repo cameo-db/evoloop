@@ -1,7 +1,7 @@
 # Moves
 
-Once a slot has a kind of move and its parents, something has to write the design. This page lists
-every move, who makes it, and what it costs.
+Once a slot has a kind of move and its parents, the design has to be written. This page lists every
+move, who makes it, and whether it costs an agent call.
 
 | Move | Kind | Made by | Agent call |
 |---|---|---|---|
@@ -15,27 +15,27 @@ every move, who makes it, and what it costs.
 
 ## Local moves
 
-An **edit** makes one change to the parent's structure. One change, so that if the score moves you know
-why. When a family's recent edits have often gained, the writer is asked for bolder ones; when they
+An *edit* makes one change to the parent's structure. It is one change so that if the score moves you
+know why. When a lineage's recent edits have often gained, the writer is asked for bolder ones; when they
 rarely have, for smaller ones (`variation.step_adaptation`).
 
-An **ablation** removes one component and changes nothing else. It finds dead weight: if the score does
+An *ablation* removes one component and changes nothing else. It finds dead weight: if the score does
 not move, the component was not earning its place.
 
-A **settings move** changes only numbers: a learning rate, a width, a dropout rate. Settings live in
+A *settings move* changes only hyperparameters: a learning rate, a width, a dropout rate. Settings live in
 their own marked blocks, each a single dictionary, which is what lets code change them safely.
 
 By default local moves are shared 50% edits, 35% settings moves, 15% ablations (`schedule.local_mix`).
 
 ## Who makes a settings move
 
-Three options, set by `variation.settings_by`.
+There are three options, set by `variation.settings_by`.
 
-An **agent** reads the results and proposes values, with a reason. It costs a call.
+An agent reads the results and proposes values, with a reason. It costs a call.
 
-The **sampler** (`sampler`) nudges one or two values up or down by a random factor. No call.
+The sampler (`sampler`) nudges one or two values up or down by a random factor. No call.
 
-The **estimator** (`tpe`) is Bayesian optimization, the method Optuna uses by default. It splits the
+The estimator (`tpe`) is Bayesian optimization, the method Optuna uses by default. It splits the
 settings tried so far into the best quarter and the rest, works out which values are typical of the
 good ones and untypical of the others, and draws the next settings from there. The first eight designs
 are spread over the range. It makes no agent call. The
@@ -56,23 +56,23 @@ them.
 
 ## Crossover
 
-A crossover takes two designs from different families.
+A crossover takes two designs from different lineages.
 
-A **block swap** takes whole marked blocks from each: the trunk of one with the head of the other, or
+A *block swap* takes whole marked blocks from each: the trunk of one with the head of the other, or
 the model of one with the training recipe of the other. Code does it. In architectures the pieces
 often do not fit (the shapes disagree); the quick check catches those before any training.
 
-A **graft** takes the single change that gained most in one parent's history and has an agent apply it
+A *graft* takes the single change that gained most in one parent's history and has an agent apply it
 to the other parent.
 
-A **hybrid** has an agent write one design from both parents and say which part came from which.
+A *hybrid* has an agent write one design from both parents and say which part came from which.
 
 Only the kinds in `crossover.kinds` are used. If none is possible for a pair, the slot becomes a local
 move and the record says so.
 
-**Which two designs?** The first is chosen by the [strategy](parents.md). The second is the design
+Of the two parents, the first is chosen by the [strategy](parents.md). The second is the design
 whose errors fall least like the first one's, if your evaluator reports where each model's errors fall
-(`signature`); otherwise a design from another family. Two designs that fail in different places are
+(`signature`); otherwise it is a design from another lineage. Two designs that fail in different places are
 the pair worth combining.
 
 ## Several proposals for one slot
@@ -110,7 +110,7 @@ add more. Each slot is handed one approach, or none, and the report shows how of
 under each beat their parent. Approaches that do not pay are retired; yours never are. "No approach"
 is always one of the options, so the table also shows whether approaches help at all.
 
-## Settings on this page
+## Settings
 
 [`schedule.local_mix`](fields.md#schedule-local_mix), [`variation.settings_by`](fields.md#variation-settings_by), [`space.ranges`](fields.md#space-ranges), [`variation.step_adaptation`](fields.md#variation-step_adaptation),
 [`crossover.kinds`](fields.md#crossover-kinds), [`variation.proposals_per_slot`](fields.md#variation-proposals_per_slot), [`variation.edit_format`](fields.md#variation-edit_format), [`agents.writer_mix`](fields.md#agents-writer_mix),

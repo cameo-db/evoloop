@@ -30,12 +30,12 @@ A skill's settings override the run type's and the autonomy level's. Settings in
 |---|---|
 | [`report.columns`](../fields.md#report-columns) | `[speed]` |
 | [`space.preset`](../fields.md#space-preset) | `architecture_and_recipe` |
-| [`variation.approach_seeds`](../fields.md#variation-approach_seeds) | `['Change how the student is trained before changing the student: the loss against the teacher, the weight between teacher and measured targets, the augmentations the teacher labels.', 'Give the student inputs the measured data does not contain (perturbed, shuffled, synthetic) and let the teacher label them.', 'Match the student''s capacity to the gap: if it underfits the teacher, widen or deepen; if it matches the teacher on training inputs and not on held-out ones, regularize or add teacher-labelled data.', Train longer at a lower learning rate before concluding a student is too small.]` |
+| [`variation.approach_seeds`](../fields.md#variation-approach_seeds) | 1. Change how the student is trained before changing the student: the loss against the teacher, the weight between teacher and measured targets, the augmentations the teacher labels.<br>2. Give the student inputs the measured data does not contain (perturbed, shuffled, synthetic) and let the teacher label them.<br>3. Match the student's capacity to the gap: if it underfits the teacher, widen or deepen; if it matches the teacher on training inputs and not on held-out ones, regularize or add teacher-labelled data.<br>4. Train longer at a lower learning rate before concluding a student is too small. |
 | [`variation.approaches`](../fields.md#variation-approaches) | `fixed` |
 
 ## What it tells the agents
 
-This text is added to every call to the role named. It is the skill's file verbatim.
+This text is added to every call to the role named. It is taken from the skill's file.
 
 === "Every role"
 
@@ -46,6 +46,7 @@ This text is added to every call to the role named. It is the skill's file verba
 === "Writer"
 
     The recipe matters as much as the architecture here. What usually moves a student:
+
     - the target: the teacher's output in place of, or mixed with, the measured target. For classification, soft
       targets with a temperature. For regression, the teacher's mean prediction, which is less noisy than the data.
     - teacher-labelled augmentation: the teacher can label any input, so the student can train on perturbed and
@@ -55,6 +56,7 @@ This text is added to every call to the role named. It is the skill's file verba
       the teacher's targets are smoother than the data.
     - starting point: a student that starts from an already trained model of its own kind learns faster than one
       from random weights.
+
     Change the student's size only with a reason from the results. Do not copy the teacher's architecture at
     reduced width as the only idea; a different shape often distils better.
 
@@ -81,7 +83,7 @@ The writer and the analyst are also given these rules:
 
 And the writer is told, in the first half of the budget: "Find a recipe that works on one or two student shapes before varying the shape." In the second half: "Keep the recipe, and vary the student's size and shape around the best one to find the smallest that holds the score."
 
-## What your scoring script must report
+## What your evaluator must report
 
 - the training script must produce the teacher's outputs (or read stored ones) and train the student against them; the loss and augmentation blocks should be marked as open recipe blocks
 - to rank on speed or size, report `parameters` and `inference_speed.examples_per_s` in result.json; then `strategy.mechanism: pareto` or `limits` can use them

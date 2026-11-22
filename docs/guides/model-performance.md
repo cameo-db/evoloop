@@ -28,7 +28,7 @@ Nothing. This skill only supplies instructions; the run type and the defaults se
 
 ## What it tells the agents
 
-This text is added to every call to the role named. It is the skill's file verbatim.
+This text is added to every call to the role named. It is taken from the skill's file.
 
 === "Every role"
 
@@ -39,12 +39,14 @@ This text is added to every call to the role named. It is the skill's file verba
 
     Before adding to the leader, work out what limits it. There are three usual limits, and each calls for a
     different kind of change:
+
     - capacity: it cannot fit the training data. More width, depth, or a mechanism it lacks (a longer range, a
       different pooling, an interaction between parts).
     - optimization: it could fit but trains slowly or unstably. Normalisation, skip connections, initialisation,
       the learning-rate schedule, the batch size.
     - generalisation: it fits training data and not validation data. Regularisation, augmentation, less capacity,
       weight sharing, an inductive bias that matches the data.
+
     Make one change with one stated cause. A change that helped in one lineage is worth trying in another; a change
     that failed in two different lineages is not worth a third try without a new reason.
     Do not spend a slot on a change smaller than the noise floor can show.
@@ -72,7 +74,7 @@ The writer and the analyst are also given these rules:
 
 And the writer is told, in the first half of the budget: "Cover different families of design; a rough version of each idea is enough to learn whether it has promise." In the second half: "Work on the two or three best families. Combine what each does well, and remove what ablations show is dead weight."
 
-## What your scoring script must report
+## What your evaluator must report
 
 The score only.
 

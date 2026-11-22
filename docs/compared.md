@@ -23,18 +23,6 @@ the person can change course when the results call for it.
 
 ## What is taken from where
 
-```mermaid
-flowchart LR
-    FS["FunSearch"] --> E(("evoloop"))
-    AE["AlphaEvolve"] --> E
-    RE["Regularized evolution"] --> E
-    ME["MAP-Elites"] --> E
-    NE["NEAT"] --> E
-    SH["Successive halving, ASHA"] --> E
-    TP["TPE"] --> E
-    E --> Own["its own: steering ledger, periods,<br>noise floor, skills, strategist,<br>audit, two budgets"]
-```
-
 ### From FunSearch
 
 | Mechanism | In evoloop | How it differs here |
@@ -60,7 +48,7 @@ flowchart LR
 |---|---|---|---|
 | Regularized evolution | tournament selection with aging | `strategy.mechanism: tournament` | as published, at smaller scale |
 | MAP-Elites | the best of each kind, on a grid | `strategy.mechanism: archive` | the grid's axes are yours to choose |
-| NEAT | new species protected while young | `strategy.mechanism: lineage` | families of designs, not genomes; the default |
+| NEAT | new species protected while young | `strategy.mechanism: lineage` | lineages of designs, not genomes; the default |
 | Successive halving, ASHA | weak runs stopped by rank | `evaluation.ladder` | within one job, charged by the share of the run used |
 | TPE (Optuna, Hyperopt) | Bayesian choice of settings | `variation.settings_by: tpe` | a small implementation; each setting modelled alone |
 | Network morphism, weight sharing | a child starts from its parent's weights | `evaluation.inherit_weights` | the evaluator decides what to load |

@@ -33,7 +33,7 @@ A skill's settings override the run type's and the autonomy level's. Settings in
 
 ## What it tells the agents
 
-This text is added to every call to the role named. It is the skill's file verbatim.
+This text is added to every call to the role named. It is taken from the skill's file.
 
 === "Every role"
 
@@ -44,6 +44,7 @@ This text is added to every call to the role named. It is the skill's file verba
 === "Writer"
 
     Where such methods are usually improved:
+
     - the model of the data: the error or noise model, the background or null, how depth, bias and duplicates are
       handled, what is assumed independent;
     - the scoring and the thresholds: a calibrated score in place of a fixed cut-off, a local in place of a global
@@ -51,6 +52,7 @@ This text is added to every call to the role named. It is the skill's file verba
     - ambiguous cases, where much of the error lives: multi-mapping reads, low-complexity and repeated sequence,
       region boundaries, low coverage, indels near other variants;
     - the order of the steps: filter before or after, merge before or after.
+
     What must not change unless the task says so: the coordinate convention (0- or 1-based, half-open or closed),
     strand handling and reverse complements, the treatment of unknown bases and missing values, sort order, and the
     output format down to its columns. State in `hypothesis` which kind of error (false positives or false
@@ -79,7 +81,7 @@ The writer and the analyst are also given these rules:
 
 And the writer is told, in the first half of the budget: "Find which kind of case holds most of the error, and try different ways of modelling it." In the second half: "Refine the best method on the hard cases, and confirm each gain on every dataset."
 
-## What your scoring script must report
+## What your evaluator must report
 
 - score against a truth set with a standard comparison for the task, and report precision, recall and their combination under diagnostics; the score should be one number that does not reward trading one for the other at a single threshold
 - use more than one dataset (another sample, depth or organism), and keep one the search never sees under diagnostics.hidden

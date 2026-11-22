@@ -2,7 +2,7 @@
 
 The strategist is an agent that looks at a search as a whole and can change how the remaining budget is
 spent. It either advises you or acts on its own, and either way it works from a fixed list of actions
-inside limits that code enforces. [Agents](agents.md#why-have-a-strategist) explains why it exists.
+inside limits that code enforces. [Agents](agents.md#why-there-is-a-strategist) explains why it exists.
 
 ## Advice, or action
 
@@ -40,7 +40,7 @@ It may make up to two changes at a time, each of a different kind.
 | `local_mix` | the split between edits, settings moves and ablations | yes |
 | `crossover_kinds` | which kinds of crossover are used | yes |
 | `force` | makes the next few moves one particular kind | yes, up to 5 moves outstanding |
-| `retire`, `revive` | sets a family of designs aside, or brings one back | yes (lineage strategy only) |
+| `retire`, `revive` | retires a lineage, or brings one back | yes (lineage strategy only) |
 | `direction` | a line of advice to the writers | yes; at most three stand at once |
 | `strategy` | the parent rule itself | no: it waits for you |
 | `question` | asks you something | the search does not wait for the answer |
@@ -61,7 +61,7 @@ No more than five ordered moves can be outstanding at once (`strategist.force_ma
 It cannot override you. A decision that would change a setting you changed during the search waits for
 your approval.
 
-The family holding the best design cannot be retired. A family that is revived gets one more chance,
+The lineage holding the best design cannot be retired. A lineage that is revived gets one more chance,
 and is retired again if it does not gain.
 
 Anything listed in `strategist.ask_first` always waits for you. By default that is `strategy`.
@@ -85,7 +85,7 @@ designs lapses.
 Write a note addressed to it. It reads your notes every time it reviews the search.
 
 ```
-evoloop note mysearch --name r1 "Exploration is underdelivering. Try crossover between the top two families." --roles strategist --by "Your Name"
+evoloop note mysearch --name r1 "Exploration is underdelivering. Try crossover between the top two lineages." --roles strategist --by "Your Name"
 ```
 
 Where its advice to the writers conflicts with a note of yours, the writers are told to follow yours.
@@ -111,14 +111,14 @@ Each message costs one agent call. Turning this on switches the strategist to `a
 
 With `harness.conductor: code`, the default, no agent runs the search and there is nothing to talk to.
 
-## Retiring a family yourself
+## Retiring a lineage yourself
 
 ```
 evoloop lineage mysearch --name r1 --retire L4 --by "Your Name"
 evoloop lineage mysearch --name r1 --revive L4 --by "Your Name"
 ```
 
-Whoever spoke last about a family, you or the strategist, is the one obeyed.
+Whoever spoke last about a lineage, you or the strategist, is the one obeyed.
 
 ## Does it help?
 

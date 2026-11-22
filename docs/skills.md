@@ -106,11 +106,12 @@ skill is looked up by name in the search's `skills/` folder first, then as a pat
 
 What to put in it, most useful first:
 
-1. **Diagnoses.** "If the results show X, do Y." Write down the mistakes you have watched a search make.
-2. **An order of attack.** What to try first, and what is rarely worth an evaluation.
-3. **What must not change.** Conventions and constraints.
-4. **What to measure.** Under `needs`, so that a search missing a figure is told.
-5. **Settings.** Only where the task calls for them.
+1. Diagnoses of the form "if the results show X, do Y". Write down the mistakes you have watched a
+   search make.
+2. An order of attack: what to try first, and what is rarely worth an evaluation.
+3. What must not change: conventions and constraints.
+4. What to measure, under `needs`, so that a search missing a figure is told.
+5. Settings, only where the task calls for them.
 
 If you run without a skill and find yourself writing the same instructions into `task.md` and notes for
 each search, those instructions are the skill.

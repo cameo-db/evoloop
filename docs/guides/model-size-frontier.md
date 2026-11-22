@@ -40,7 +40,7 @@ A skill's settings override the run type's and the autonomy level's. Settings in
 
 ## What it tells the agents
 
-This text is added to every call to the role named. It is the skill's file verbatim.
+This text is added to every call to the role named. It is taken from the skill's file.
 
 === "Every role"
 
@@ -53,10 +53,12 @@ This text is added to every call to the role named. It is the skill's file verba
     `thin_cells`, when present, lists the size bands with the fewest designs: aim a new design at one of them and
     say in `predicted_effect` what size you expect it to have.
     Ways to move a design to another band without starting again:
+
     - scale it as a whole: width, depth and resolution together, in proportion, travel further than any one alone;
     - at the small end, change the kind of layer (separable or grouped convolutions, shared weights, a smaller
       head) before shrinking widths until nothing works;
     - at the large end, add capacity where the errors say it is missing, not evenly.
+
     What is best at one size is often not best at another: do not assume the largest design's shape, shrunk, is
     the best small one. A local move should stay in its parent's band; say so if you mean to leave it.
 
@@ -82,7 +84,7 @@ The writer and the analyst are also given these rules:
 
 And the writer is told, in the first half of the budget: "Put at least two designs in every band, by scaling a few good shapes up and down." In the second half: "Improve the best design in each band with local moves, and cross neighbours."
 
-## What your scoring script must report
+## What your evaluator must report
 
 - report `parameters` in result.json for every design; the bands are made from it
 - to band by speed instead, report `inference_speed.examples_per_s` and set strategy.descriptors to the name of that metric under diagnostics

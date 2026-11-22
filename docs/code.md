@@ -390,19 +390,19 @@ Skills: what kind of optimization a search is.
 | [`summaries()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skill.py#L322) |  |
 | [`missing(skill, view, references)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skill.py#L326) | What the skill needs and the run does not have yet: figures no result carries, rows the leaderboard lacks. |
 | [`library_markdown()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skill.py#L345) | The library as a page of the documentation (`evoloop skills --markdown`). |
-| [`guide_markdown(name)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skill.py#L399) | One skill as a page: how to use it, exactly what it sets, what it tells each agent, what the scoring script must report, and the file itself. |
-| [`write_guides(folder)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skill.py#L478) |  |
-| [`file_links(name)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skill.py#L492) | Where a library skill's file is: in the repository, and as a plain file to download. |
-| [`table_markdown()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skill.py#L498) | Every library skill with what it sets, read from the files: the table on the documentation's front page. |
-| [`file_of(name, folder)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skill.py#L530) |  |
-| [`state(value, folder)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skill.py#L543) | For each skill named: the file a search in `folder` reads, and whether it is the library's, the search's own unchanged copy of it, an edited copy, or a skill that is not in the library at all. |
-| [`differs(name, folder)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skill.py#L569) | The lines by which the search's copy of a skill differs from the library's: None when the library has no skill of that name, an empty list when the two are the same. |
-| [`sets(value, folder)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skill.py#L581) | `setting = value` for everything the named skills set, as one search would have them. |
-| [`merged_yaml(value, name, folder)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skill.py#L588) | Several skills written out as one skill file: (the text, None) or (None, why not). |
-| [`merge(value, name, folder)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skill.py#L619) | Write the named skills as one skill, `skills/NAME/skill.yaml` in the search folder: (the file, None) or (None, why not). |
-| [`write_edited(name, text, folder)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skill.py#L639) | Save an edited skill file (from the set-up form) as the search's copy. |
-| [`texts(folder)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skill.py#L658) | The file of every skill a search in `folder` could name (its own copies first), for the set-up form. |
-| [`told(skill)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skill.py#L668) | What a skill adds to the agent calls, role by role, as lines of a plan. |
+| [`guide_markdown(name)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skill.py#L422) | One skill as a page: how to use it, exactly what it sets, what it tells each agent, what the scoring script must report, and the file itself. |
+| [`write_guides(folder)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skill.py#L500) |  |
+| [`file_links(name)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skill.py#L514) | Where a library skill's file is: in the repository, and as a plain file to download. |
+| [`table_markdown()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skill.py#L520) | Every library skill with what it sets, read from the files: the table on the documentation's front page. |
+| [`file_of(name, folder)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skill.py#L552) |  |
+| [`state(value, folder)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skill.py#L565) | For each skill named: the file a search in `folder` reads, and whether it is the library's, the search's own unchanged copy of it, an edited copy, or a skill that is not in the library at all. |
+| [`differs(name, folder)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skill.py#L591) | The lines by which the search's copy of a skill differs from the library's: None when the library has no skill of that name, an empty list when the two are the same. |
+| [`sets(value, folder)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skill.py#L603) | `setting = value` for everything the named skills set, as one search would have them. |
+| [`merged_yaml(value, name, folder)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skill.py#L610) | Several skills written out as one skill file: (the text, None) or (None, why not). |
+| [`merge(value, name, folder)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skill.py#L641) | Write the named skills as one skill, `skills/NAME/skill.yaml` in the search folder: (the file, None) or (None, why not). |
+| [`write_edited(name, text, folder)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skill.py#L661) | Save an edited skill file (from the set-up form) as the search's copy. |
+| [`texts(folder)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skill.py#L680) | The file of every skill a search in `folder` could name (its own copies first), for the set-up form. |
+| [`told(skill)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skill.py#L690) | What a skill adds to the agent calls, role by role, as lines of a plan. |
 
 ## `interview.py` { #m-interview-py }
 

@@ -44,7 +44,7 @@ A skill's settings override the run type's and the autonomy level's. Settings in
 
 ## What it tells the agents
 
-This text is added to every call to the role named. It is the skill's file verbatim.
+This text is added to every call to the role named. It is taken from the skill's file.
 
 === "Every role"
 
@@ -53,6 +53,7 @@ This text is added to every call to the role named. It is the skill's file verba
 === "Writer"
 
     You are tuning hyperparameters. Read `recent` and the leaderboard as a table of trials before proposing.
+
     - Hyperparameters interact. Learning rate moves with batch size, warm-up and weight decay; width moves with
       depth and dropout. Change the ones that interact together and say which you treated as a group.
     - Move by factors until the best value is bracketed: 3x or 10x on a learning rate, 2x on a width. Small steps
@@ -61,6 +62,7 @@ This text is added to every call to the role named. It is the skill's file verba
       larger model that scores the same has not improved anything; say what the change does to the parameter count.
     - If the best trial sits at the edge of the values tried so far, go further in that direction next.
     - Do not repeat a setting within the noise floor of one already tried.
+
     State in `hypothesis` which hyperparameter you think limits the model now, and why the results say so.
 
 === "Analyst"
@@ -80,7 +82,7 @@ The writer and the analyst are also given these rules:
 
 And the writer is told, in the first half of the budget: "Bracket each hyperparameter with large moves, one group of interacting ones at a time." In the second half: "Refine around the best trial with small moves, and re-check the leader on a new seed."
 
-## What your scoring script must report
+## What your evaluator must report
 
 - every hyperparameter to tune must sit in a marked params block (one dict of numbers, true/false or text)
 - report the parameter count, so that a change of width or depth shows its cost

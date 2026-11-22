@@ -69,7 +69,7 @@ progress line, a design over the limit is stopped within seconds. A limit must b
 result does not report a figure that a limit names, the search pauses and says which
 ([Monitor and steer a search](steering.md#limits)).
 
-## Settings on this page
+## Settings
 
 [`evaluation.screen_fraction`](fields.md#evaluation-screen_fraction), [`evaluation.screen_keep`](fields.md#evaluation-screen_keep), [`evaluation.screen_min_pool`](fields.md#evaluation-screen_min_pool),
 [`evaluation.ladder`](fields.md#evaluation-ladder), [`evaluation.ladder_applies`](fields.md#evaluation-ladder_applies), [`evaluation.inherit_weights`](fields.md#evaluation-inherit_weights), [`limits`](fields.md#limits). Each is

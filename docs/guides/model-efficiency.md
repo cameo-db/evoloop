@@ -40,7 +40,7 @@ A skill's settings override the run type's and the autonomy level's. Settings in
 
 ## What it tells the agents
 
-This text is added to every call to the role named. It is the skill's file verbatim.
+This text is added to every call to the role named. It is taken from the skill's file.
 
 === "Every role"
 
@@ -52,6 +52,7 @@ This text is added to every call to the role named. It is the skill's file verba
 === "Writer"
 
     Design the student for efficiency; do not start from the teacher with pieces removed.
+
     - Pick operators that are cheap for the hardware: depthwise-separable or grouped convolutions, bottlenecks,
       early downsampling, shared weights, local attention in place of global where the context is short.
     - Size the student to the target. Decide the parameter or latency budget first, then spend it where the
@@ -60,6 +61,7 @@ This text is added to every call to the role named. It is the skill's file verba
       let the teacher label augmented or synthetic inputs: a small student needs more data than the measured set
       holds, and the teacher supplies it.
     - Give the student time. Students usually need a longer schedule and less regularization than the teacher had.
+
     State in `predicted_effect` the expected score and the expected size or speed. Do not propose a student
     larger than the teacher.
 
@@ -86,7 +88,7 @@ The writer and the analyst are also given these rules:
 
 And the writer is told, in the first half of the budget: "Try several efficient architectures at the target size, each trained against the teacher with one simple recipe." In the second half: "Take the two or three best students and work on how they are trained: targets, augmentation, schedule."
 
-## What your scoring script must report
+## What your evaluator must report
 
 - produce the teacher's outputs (run the original model, or read stored predictions) and train each student against them; mark the student's architecture and the distillation loss as open blocks
 - report `parameters` in result.json, and `inference_speed.examples_per_s` to rank on speed (then set strategy.second_metric to examples_per_s and strategy.second_direction to maximize)

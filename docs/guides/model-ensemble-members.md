@@ -36,7 +36,7 @@ A skill's settings override the run type's and the autonomy level's. Settings in
 
 ## What it tells the agents
 
-This text is added to every call to the role named. It is the skill's file verbatim.
+This text is added to every call to the role named. It is taken from the skill's file.
 
 === "Every role"
 
@@ -49,11 +49,13 @@ This text is added to every call to the role named. It is the skill's file verba
 
     Aim for a good model that reaches its answers a different way. Sources of real difference, roughly from
     strongest to weakest:
+
     - a different inductive bias: convolution against attention against recurrence, local against global, a
       different representation of the input;
     - a different view of the data: resolution, context length, features, augmentation;
     - a different objective or loss weighting;
     - a different size or depth.
+
     A different seed or a small change of settings gives little: do not spend a slot on it.
     In `hypothesis`, say on which kind of example you expect this design to differ from the leader.
 
@@ -78,7 +80,7 @@ The writer and the analyst are also given these rules:
 
 And the writer is told, in the first half of the budget: "Found as many different families as possible, each trained well enough to judge." In the second half: "Raise the score of the best design in each group without making it behave like the others."
 
-## What your scoring script must report
+## What your evaluator must report
 
 - report `signature` in result.json: a list of numbers saying where the model's errors fall (per class, per range of the target, or per held-out example); the groups are made from it
 - after the search, score the average of the best design of each group yourself; evoloop does not train or score ensembles

@@ -68,19 +68,19 @@ What can change:
 
 [Brief fields](fields.md) says for every field whether it can change.
 
-**What cannot change** is what defines the problem (the objective, the direction of the score, the
+What cannot change is what defines the problem (the objective, the direction of the score, the
 dataset's identity, the frozen code) and a few settings fixed when a run starts (the agent backend, the
 scheduler, the run command, the noise floor, the quick check). [Brief fields](fields.md) marks each. Such a
 request is refused with the reason, and the run goes on.
 
-**A change that moves other settings.** Changing `budget.evaluations` across a boundary of the
+Some changes move other settings with them. Changing `budget.evaluations` across a boundary of the
 guidance, or changing `run.type`, moves the settings that follow from it. The ledger entry lists every
 setting that moved with it.
 
 ## Changing the length of a run
 
 `evaluation.allowance` (and `evaluation.seed`, `data.fraction`) change what a score means: a model
-trained for 50 epochs is not comparable with one trained for 30. So a new **period** begins:
+trained for 50 epochs is not comparable with one trained for 30. So a new *period* begins:
 
 - The best design of each of the `evaluation.leaders_refit` leading lineages is trained under the new
   setting. These are the references for the new period.

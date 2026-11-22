@@ -355,7 +355,7 @@ def test_every_goal_has_a_guide_that_matches_its_skill(tmp_path):
         assert one["goal"] and one["why"] and one["reading"] and one["start"].get("run_type") in form.RUN_TYPES, name
         assert all(n in skill.names() for row in one["instead"] for n in skill.wanted(row["use"])), name
         page = skill.guide_markdown(name)
-        for part in ("## Use it", "skill: %s" % name, "## What it sets", "## What it tells the agents", "## What your scoring script must report",
+        for part in ("## Use it", "skill: %s" % name, "## What it sets", "## What it tells the agents", "## What your evaluator must report",
                      "## Reading the results", "## The file", "github.com/cameo-db/evoloop/blob/main/evoloop/skills/%s/skill.yaml" % name, "name: %s" % name):
             assert part in page, (name, part)
     with open(os.path.join(os.path.dirname(root), "..", "mkdocs.yml"), encoding="utf-8") as handle:

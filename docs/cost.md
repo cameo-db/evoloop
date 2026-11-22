@@ -39,20 +39,13 @@ the tokens they spend reasoning are not counted. It has not yet been checked aga
 
 ## What makes it cheaper or dearer
 
-**How much the agents decide.** For the same example: about $3.50 with `harnessed`, $6.20 with `guided`,
-$7.60 with `agentic` ([Agents](agents.md#how-much-to-let-them-decide)).
-
-**The model.** The plan shows the same search on each current model. A cheaper model for most designs
-and a strong one for some is `agents.writer_mix` ([Models and prices](models.md)).
-
-**How many designs.** A promotion ladder makes the same training budget cover more designs, and each
-design is written by an agent, so the agent cost rises with it.
-
-**Whether agents are needed at all.** Hyperparameter tuning can use the built-in Bayesian optimizer and
-make no agent call ([`settings-tuning-bayesian`](guides/settings-tuning-bayesian.md)).
-
-**The size of your blocks.** Returning local moves as edits (`variation.edit_format: diff`) cuts the
-output of those calls on large blocks.
+| What | Effect on agent cost |
+|---|---|
+| How much the agents decide | For the same example: about $3.50 with `harnessed`, $6.20 with `guided`, $7.60 with `agentic`. [Agents](agents.md#how-much-the-agents-decide) |
+| The model | The plan prices the same search on each current model. `agents.writer_mix` uses a cheaper model for most designs and a strong one for some. [Models and prices](models.md) |
+| How many designs | An early-stopping ladder makes the same training budget cover more designs. Each design is written by an agent, so agent cost rises with it. |
+| Whether agents are needed | Hyperparameter tuning can use the built-in Bayesian optimizer and make no agent call. [`settings-tuning-bayesian`](guides/settings-tuning-bayesian.md) |
+| The size of your blocks | Returning local moves as edits (`variation.edit_format: diff`) cuts the output of those calls on large blocks. |
 
 ## While it runs
 
@@ -84,14 +77,14 @@ analyst, the strategist, scheduled reviews and the coordinator stop, so that wha
 
 ## What the cap cannot see
 
-**A backend that reports no cost.** With the Anthropic API, give `agents.prices` for any model not on
+The cap counts dollars, so it needs prices. With the Anthropic API, give `agents.prices` for any model not on
 the built-in list. The plan warns when one is missing, and a capped search pauses after three calls with
 no cost.
 
-**Subscription limits.** A call refused for your account's limit pauses all agent calls until the limit
+A call refused for your account's subscription limit pauses all agent calls until the limit
 resets. It is not retried in a loop and not charged.
 
-## Settings on this page
+## Settings
 
 [`budget.evaluations`](fields.md#budget-evaluations), [`budget.model_dollars`](fields.md#budget-model_dollars), [`budget.model_calls`](fields.md#budget-model_calls), [`budget.wall_clock_hours`](fields.md#budget-wall_clock_hours),
 [`budget.spend_policy`](fields.md#budget-spend_policy), [`budget.reserve_share`](fields.md#budget-reserve_share), [`agents.prices`](fields.md#agents-prices).

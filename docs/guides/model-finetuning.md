@@ -33,7 +33,7 @@ A skill's settings override the run type's and the autonomy level's. Settings in
 
 ## What it tells the agents
 
-This text is added to every call to the role named. It is the skill's file verbatim.
+This text is added to every call to the role named. It is taken from the skill's file.
 
 === "Every role"
 
@@ -43,6 +43,7 @@ This text is added to every call to the role named. It is the skill's file verba
 === "Writer"
 
     The choices that matter, roughly in order:
+
     - what is trained: the head alone, the last layers, everything, or small added modules (adapters, low-rank
       updates) with the backbone frozen. Less data argues for training less.
     - the learning rates: a much lower rate for pretrained layers than for new ones, lower still for early
@@ -51,6 +52,7 @@ This text is added to every call to the role named. It is the skill's file verba
       not always the best one to read.
     - how long: fine-tuning overfits quickly; keep the best checkpoint, not the last.
     - the input: match the preprocessing the model was pretrained with before changing anything else.
+
     Compare every design with the cheapest baseline: the frozen backbone with a linear head.
 
 === "Analyst"
@@ -73,7 +75,7 @@ The writer and the analyst are also given these rules:
 
 And the writer is told, in the first half of the budget: "Establish the frozen-backbone baseline, then compare the broad options (head only, adapters, partial and full unfreezing)." In the second half: "Tune the learning rates and the schedule of the best option, and refine the head."
 
-## What your scoring script must report
+## What your evaluator must report
 
 - load the pretrained weights from a fixed path outside base/ (weights are not copied per design)
 - mark as open the head, the choice of what is frozen, and the optimizer settings; leave the backbone's definition closed

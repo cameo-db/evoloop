@@ -36,7 +36,7 @@ A skill's settings override the run type's and the autonomy level's. Settings in
 
 ## What it tells the agents
 
-This text is added to every call to the role named. It is the skill's file verbatim.
+This text is added to every call to the role named. It is taken from the skill's file.
 
 === "Every role"
 
@@ -46,6 +46,7 @@ This text is added to every call to the role named. It is the skill's file verba
 === "Writer"
 
     In a pipeline the time is usually in moving data, not computing on it. From the largest effect down:
+
     - do less: read only the columns, rows and files that are used; filter as early as possible; drop steps whose
       output nothing reads;
     - move data fewer times: fewer passes over the input, no intermediate files that are written and read once,
@@ -55,6 +56,7 @@ This text is added to every call to the role named. It is the skill's file verba
     - process in batches or vectorised operations in place of row by row;
     - parallelise the steps that are independent, sized to the machine, after the above;
     - memory: process in chunks, avoid copies, use narrower types.
+
     Keep exactly: the rows and their order where order is part of the output, the treatment of missing and
     malformed records, numeric precision, and the output's format. Say in `hypothesis` which step holds the cost
     now. Do not assume properties of the sample data (its size, that it is sorted, that it has no missing values)
@@ -82,7 +84,7 @@ The writer and the analyst are also given these rules:
 
 And the writer is told, in the first half of the budget: "Find which steps hold the cost, and try restructuring: fewer passes, earlier filters, another format." In the second half: "Tighten the remaining hot steps, then parallelise what is independent."
 
-## What your scoring script must report
+## What your evaluator must report
 
 - run the pipeline on fixed sample data and compare its output with a stored reference (a checksum of sorted records, or row counts with value checks); write `valid: false` with the reason when it differs
 - report the cost as the score with objective.direction minimize: wall time as a median of repeats, or a figure that combines time and memory if both matter

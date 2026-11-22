@@ -30,12 +30,12 @@ A skill's settings override the run type's and the autonomy level's. Settings in
 |---|---|
 | [`schedule.local_mix`](../fields.md#schedule-local_mix) | `{ablation: 0.3, edit: 0.45, settings: 0.25}` |
 | [`schedule.novelty`](../fields.md#schedule-novelty) | `0.2` |
-| [`space.must_keep`](../fields.md#space-must_keep) | `['Every learned parameter keeps a stated meaning (a motif, an interaction, a rate, an affinity, a concentration). Do not add a component whose parameters cannot be read this way, such as a dense network between the interpretable parts and the output.', 'Keep the constraints that make the parts readable: signs, non-negativity, normalisation, saturation, conservation, units.']` |
+| [`space.must_keep`](../fields.md#space-must_keep) | 1. Every learned parameter keeps a stated meaning (a motif, an interaction, a rate, an affinity, a concentration). Do not add a component whose parameters cannot be read this way, such as a dense network between the interpretable parts and the output.<br>2. Keep the constraints that make the parts readable: signs, non-negativity, normalisation, saturation, conservation, units. |
 | [`space.preset`](../fields.md#space-preset) | `template` |
 
 ## What it tells the agents
 
-This text is added to every call to the role named. It is the skill's file verbatim.
+This text is added to every call to the role named. It is taken from the skill's file.
 
 === "Every role"
 
@@ -46,6 +46,7 @@ This text is added to every call to the role named. It is the skill's file verba
 === "Writer"
 
     Ways to improve such a model without losing what it means:
+
     - the form of a term: a saturating or cooperative response in place of a linear one, a competition term, a
       distance or orientation dependence for an interaction, a different pooling over positions;
     - what is shared and what is free: tie parameters that should be the same thing (both strands, repeated
@@ -56,6 +57,7 @@ This text is added to every call to the role named. It is the skill's file verba
       regularisation toward known values, a fixed scale so that two parameters cannot trade off against each other;
     - initialisation and optimization, which matter more here than in a free network: constrained models have
       poor local optima, so a better start or a staged fit (parts first, interactions after) can be the whole gain.
+
     In `hypothesis`, name the mechanism the change stands for and what it should make true of the fitted
     parameters, not only of the score. Prefer the simpler of two designs that score within the noise floor.
     For a biophysical model, keep the equations dimensionally consistent and say what each new parameter is.
@@ -82,7 +84,7 @@ The writer and the analyst are also given these rules:
 
 And the writer is told, in the first half of the budget: "Find out which parts are doing work, with ablations, and get the optimization reliable across seeds." In the second half: "Change the form of the terms that matter, one at a time, and prefer the simpler design at equal score."
 
-## What your scoring script must report
+## What your evaluator must report
 
 - optional, and worth doing: report a figure of how well the parts match what is known (the share of filters matching known motifs, recovered interactions, parameters within physical ranges) under diagnostics; it can then be a leaderboard column, a speciality metric, or the second figure of the pareto strategy
 - report `signature` (where the errors fall) so that designs with the same failure are told apart from ones that fail differently

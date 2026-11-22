@@ -9,9 +9,9 @@ When you set up a search you say how much the score varies between two runs of t
 (`evaluation.noise`; [how to measure it](noise.md)). Suppose it is 0.005.
 
 From then on a difference smaller than 0.005 counts as no difference. A design at 0.912 does not beat
-its parent at 0.910. Two designs within 0.005 of each other are tied when a parent is chosen. A family
+its parent at 0.910. Two designs within 0.005 of each other are tied when a parent is chosen. A lineage
 that goes six local moves without gaining more than 0.005 is retired. A lesson the analyst writes
-counts as supported only if the same change gained in two different families.
+counts as supported only if the same change gained in two different lineages.
 
 Set it too low and the search treats noise as progress. Set it too high and real gains are ignored.
 
@@ -29,7 +29,7 @@ interval you set with `evaluation.recheck_every`. A re-check is charged like any
 Some changes during a search alter what a score measures. If you lengthen training from 30 epochs to
 50, a new design at 50 epochs is not comparable with an old one at 30.
 
-So such a change starts a new *period*. The best design of each of the four leading families is run
+So such a change starts a new *period*. The best design of each of the four leading lineages is run
 again under the new setting, and those become the references. Earlier scores stay in the records and
 still inform the agents' lessons, but they no longer decide which design is built on.
 
@@ -53,7 +53,7 @@ Your evaluator can report held-out results under `diagnostics.hidden`. They are 
 the study file, and never shown to an agent or used for selection. The search optimizes the validation
 score; the held-out score tells you afterwards whether the gain was real.
 
-## Settings on this page
+## Settings
 
 [`evaluation.noise`](fields.md#evaluation-noise), [`evaluation.recheck_every`](fields.md#evaluation-recheck_every), [`evaluation.allowance`](fields.md#evaluation-allowance), [`evaluation.on_length_change`](fields.md#evaluation-on_length_change),
 [`evaluation.leaders_refit`](fields.md#evaluation-leaders_refit), [`evaluation.variables`](fields.md#evaluation-variables), [`data.fraction`](fields.md#data-fraction).

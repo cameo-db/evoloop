@@ -396,6 +396,29 @@ def _brief(tree: Dict[str, Any], indent: int = 0) -> str:
 
 
 
+def _value(value: Any) -> str:
+    """A setting's value as a table cell: long lists of text one item to a line, anything else as YAML."""
+    if isinstance(value, list) and value and all(isinstance(v, str) for v in value) and max(len(v) for v in value) > 40:
+        return "<br>".join("%d. %s" % (i, _cell(v)) for i, v in enumerate(value, 1))
+    return "`%s`" % _cell(yaml.safe_dump(value, default_flow_style=True).strip().replace("\n...", ""))
+
+
+def _listed(text: str) -> str:
+    """A skill's text with blank lines around its dash lists, so that a page shows them as lists."""
+    out: List[str] = []
+    in_list = False
+    for line in text.split("\n"):
+        item = line.startswith("- ")
+        more = in_list and line.startswith("  ") and line.strip() != ""
+        if item and not in_list and out and out[-1].strip():
+            out.append("")
+        if in_list and not item and not more and line.strip():
+            out.append("")
+        in_list = item or more
+        out.append(line)
+    return "\n".join(out)
+
+
 def guide_markdown(name: str) -> str:
     """One skill as a page: how to use it, exactly what it sets, what it tells each agent, what the scoring script
     must report, and the file itself. Everything on the page is read from the skill's file."""
@@ -423,19 +446,18 @@ def guide_markdown(name: str) -> str:
     if sets:
         out += ["A skill's settings override the run type's and the autonomy level's. Settings in your brief override "
                 "the skill's.", "", "| Setting | Value |", "|---|---|"]
-        out += ["| [`%s`](../fields.md#%s) | `%s` |" % (path, path.replace(".", "-"), _cell(yaml.safe_dump(value, default_flow_style=True).strip().replace("\n...", "")))
-                for path, value in sorted(sets.items())]
+        out += ["| [`%s`](../fields.md#%s) | %s |" % (path, path.replace(".", "-"), _value(value)) for path, value in sorted(sets.items())]
         out.append("")
     else:
         out += ["Nothing. This skill only supplies instructions; the run type and the defaults set the search.", ""]
     out += ["## What it tells the agents", "",
-            "This text is added to every call to the role named. It is the skill's file verbatim.", ""]
+            "This text is added to every call to the role named. It is taken from the skill's file.", ""]
     labels = {"all": "Every role", "writer": "Writer", "analyst": "Analyst", "strategist": "Strategist",
               "coordinator": "Coordinator", "conductor": "Conductor"}
     for role in ROLES:
         if one["guidance"].get(role):
             out += ['=== "%s"' % labels[role], ""]
-            out += ["    " + line if line else "" for line in one["guidance"][role].split("\n")] + [""]
+            out += ["    " + line if line else "" for line in _listed(one["guidance"][role]).split("\n")] + [""]
     if one["diagnose"]:
         out += ["The writer and the analyst are also given these rules:", "", "| If the results show | Then |", "|---|---|"]
         out += ["| %s | %s |" % (_cell(d["see"]), _cell(d["do"])) for d in one["diagnose"]]
@@ -443,7 +465,7 @@ def guide_markdown(name: str) -> str:
     if one["stages"]:
         out += ["And the writer is told, in the first half of the budget: \"%s\" In the second half: \"%s\"" % (
             one["stages"].get("early", ""), one["stages"].get("late", "")), ""]
-    out += ["## What your scoring script must report", ""]
+    out += ["## What your evaluator must report", ""]
     needs = one["needs"]
     if needs["adapter"] or needs["figures"] or needs["references"]:
         out += ["- %s" % n for n in needs["adapter"]]

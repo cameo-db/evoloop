@@ -34,7 +34,7 @@ A skill's settings override the run type's and the autonomy level's. Settings in
 
 ## What it tells the agents
 
-This text is added to every call to the role named. It is the skill's file verbatim.
+This text is added to every call to the role named. It is taken from the skill's file.
 
 === "Every role"
 
@@ -44,6 +44,7 @@ This text is added to every call to the role named. It is the skill's file verba
 === "Writer"
 
     The parts of a recipe interact, so a change to one usually needs another to be re-set:
+
     - the loss decides what the model is asked for. Consider what it weighs (classes, ranges of the target,
       noisy examples), whether it matches the metric that is scored, and auxiliary terms.
     - the optimizer and schedule decide whether the model gets there. Warm-up, the peak rate, the decay, the
@@ -51,6 +52,7 @@ This text is added to every call to the role named. It is the skill's file verba
     - regularization and augmentation decide what it generalises to. Augmentations should be changes the answer
       is truly invariant to; ones it is not invariant to teach the wrong thing.
     - the loop: gradient clipping, mixed precision, averaging of weights, which checkpoint is kept.
+
     One change per design, with the settings it interacts with re-set in the same design and named.
 
 === "Analyst"
@@ -75,7 +77,7 @@ The writer and the analyst are also given these rules:
 
 And the writer is told, in the first half of the budget: "Try one substantial change in each part of the recipe, to find which part has room." In the second half: "Work on the parts that paid, and re-tune the settings they interact with."
 
-## What your scoring script must report
+## What your evaluator must report
 
 - mark the loss, optimizer, schedule and augmentation as blocks with those roles; the model blocks stay closed
 - report the training score beside the validation score under diagnostics, so that fitting and generalising can be told apart

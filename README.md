@@ -27,82 +27,87 @@ so that it does not converge on the first idea that works.
 
 <p align="center"><img src="docs/assets/lineages.svg" alt="Schematic of lineages in one search: three are founded while the search explores, the baseline is retired, and a crossover of two founds a hybrid that ends up best." width="820"></p>
 
-> **Recommended: run it through [Claude Code](https://claude.com/claude-code).** Open this repository in Claude Code and
-> say what you want to improve. It sets up the search with you by asking the questions one at a time, starts the run
-> when you confirm the plan, and watches it: it reports progress, reads the results with you, and turns your feedback
-> into changes to the running search.
+## How it works
 
-## Three ways to run it
+A search repeats four steps until its budget of training runs is spent. The *writer* agent proposes a
+design: an edit to a parent, a crossover of two parents, or something new. Your training script, the
+*evaluator*, trains it as a job alongside others. The design is scored on your validation metric and
+ranked. Every few designs the *analyst* agent summarizes what has and has not worked, and the writer
+reads those lessons before its next proposal. A *strategist* agent can shift effort between new designs
+and refinement.
 
-| | What you do |
-|---|---|
-| **Let an agent run it** | Open this repository in Claude Code or another coding agent and say what you want to improve. The agent asks you the setup questions one at a time, marks the code and writes the scoring script with you, shows you the plan, and starts the search when you confirm. It follows [AGENTS.md](AGENTS.md). |
-| **Answer the questions yourself** | `evoloop setup` asks the same questions in the terminal; `evoloop form` gives them as a web page. |
-| **Edit the files** | Everything is a plain file: the brief (`brief.yaml`), the task description the agents read, and the skill files. |
+Code decides which designs become parents. It also rejects any proposal that edits code you did not
+mark, stops weak training runs early, and keeps test-set results away from the agents.
 
-Every search starts the same way: a short list of questions, a plan that states what will run and what
-it is likely to cost, and your confirmation. Nothing is spent before you confirm.
+Lineages are one of five selection strategies. The others are a MAP-Elites archive, tournament
+selection as in regularized evolution, a Pareto front over the score and a second measure such as model
+size, and greedy hill climbing. Any of them can run as islands, as in FunSearch.
 
-It is a general search. Two things configure it: the search strategy and how much of the search agents
-decide. An optional skill sets those choices for a particular goal and tells the agents how to approach
-it.
+One setting controls how much the agents decide. At one end the controller plans every step and the
+agents only write code. At the other, agents also choose what kind of change to make and adjust the
+schedule. At every level the controller holds the budget, your limits, and the rule that only marked
+code can change.
 
-## One iteration
+[How it works](https://evoloop.readthedocs.io/en/latest/how-it-works/) ·
+[Parent selection](https://evoloop.readthedocs.io/en/latest/parents/) ·
+[Agents](https://evoloop.readthedocs.io/en/latest/agents/)
 
-| Step | What happens | Decided by | Code |
-|---|---|---|---|
-| 1 | Pick the kind of move: a new design, a crossover of two, or a local move on one (an edit, a hyperparameter change, an ablation) | the schedule, in code; optionally a coordinator agent | [`schedule.py`](evoloop/schedule.py) |
-| 2 | Pick the parent design or designs | the search strategy, in code | [`strategies/`](evoloop/strategies) |
-| 3 | Write the candidate: new contents for the marked blocks | a writer agent (LLM) | [`design.py`](evoloop/design.py), prompts in [`agents.py`](evoloop/agents.py) |
-| 4 | Check it: only marked blocks changed, it parses, it is not a copy | code | [`space.py`](evoloop/space.py) |
-| 5 | Run your evaluator on it as its own job, locally or on Slurm | your script | [`jobs.py`](evoloop/jobs.py) |
-| 6 | Record the design, its parent, its score and the agent's forecast | code | [`store.py`](evoloop/store.py) |
+## Get started
 
-## Search strategies
+The simplest way is from [Claude Code](https://claude.com/claude-code). Open this repository there and say
+what you want to optimize. It marks the code with you, writes the evaluator, asks the setup questions,
+and shows you a plan with a cost estimate. Nothing is spent until you approve the plan. Claude Code then
+launches the search, reports on it, and turns your feedback into changes to the running search. It
+follows [AGENTS.md](AGENTS.md).
 
-The strategy is the rule for step 2. Set it with `strategy.mechanism`.
+By hand:
 
-| Strategy | Parents are chosen from | Method it follows | Code |
-|---|---|---|---|
-| `lineage` (default) | the best design of each of several families; new families get protected evaluations | speciation with protected niches, as in NEAT | [`lineage.py`](evoloop/strategies/lineage.py) |
-| `archive` | the best design in each cell of a grid (family and size, or error pattern) | MAP-Elites; with islands, AlphaEvolve's program database | [`archive.py`](evoloop/strategies/archive.py) |
-| `tournament` | the best of 3 drawn from the 24 most recent designs | regularized evolution (Real et al. 2019) | [`tournament.py`](evoloop/strategies/tournament.py) |
-| `pareto` | designs not beaten on both the score and a second metric | non-dominated sorting, as in NSGA-II | [`pareto.py`](evoloop/strategies/pareto.py) |
-| `greedy` | the single best design | hill climbing | [`greedy.py`](evoloop/strategies/greedy.py) |
+```
+git clone https://github.com/cameo-db/evoloop.git
+cd evoloop && python -m pip install -e .
 
-Any strategy can run as separate populations that are restarted from the best one
-(`strategy.islands`, `strategy.reset_every`), as in FunSearch.
+evoloop init mysearch --source path/to/your/project    # copy your project into a search folder
+evoloop setup mysearch                                 # answer the setup questions
+evoloop plan mysearch                                  # read what will run and what it should cost
+evoloop brief mysearch --confirm "Your Name"           # approve the plan
+evoloop run mysearch --name r1                         # run the search
+```
 
-| Other mechanism | Setting | Method it follows |
-|---|---|---|
-| Marked regions of a program evolved by an LLM | `EVOLVE-BLOCK` markers | FunSearch, AlphaEvolve |
-| Stop weak candidates part way through training | `evaluation.ladder` | successive halving, ASHA |
-| A cheap model for most candidates, a strong one for some | `agents.writer_mix` | AlphaEvolve |
-| Candidates returned as diffs | `variation.edit_format: diff` | AlphaEvolve |
-| Hyperparameters from a Bayesian optimizer, no agent | `variation.settings_by: tpe` | TPE (Optuna, Hyperopt) |
+Install from this repository. The package named `evoloop` on PyPI is a different project. Before
+`setup`, mark the code that may change with `# EVOLVE-BLOCK-START` and `# EVOLVE-BLOCK-END` comment
+lines and write the evaluator, `mysearch/adapter/run.py`.
+[Set up a search](https://evoloop.readthedocs.io/en/latest/setting-up/) goes through each step.
 
-## Harness and autonomy
+Training runs on a workstation or a Slurm cluster, one job per design. The agents need an Anthropic API
+key or a Claude Code login.
 
-`harness.autonomy` sets how much the agents decide. More autonomy costs more LLM calls.
+To watch a search run first, the built-in example trains small classifiers on a toy dataset in about
+half a minute, with no API key and no GPU:
 
-| | `harnessed` | `guided` | `agentic` |
-|---|---|---|---|
-| Kind of move for each slot | schedule (code) | schedule (code) | a coordinator agent |
-| Parents | strategy (code) | strategy (code) | strategy (code) |
-| Strategist agent that can shift the schedule | off | on, within limits | on, wider limits |
-| Hyperparameter moves | random sampler (code) | writer agent | writer agent |
-| LLM calls for 100 designs, estimated | about 110 | about 140 | about 270 |
+```
+python -m pip install -e . numpy
+evoloop example demo
+evoloop brief demo --confirm "Your Name"
+evoloop run demo --name first
+evoloop leaderboard demo --name first
+```
 
-Under every level, code enforces the budget, any limits you set, and the checks in step 4.
+While a search runs you can change it:
+
+```
+evoloop status mysearch --name r1
+evoloop set    mysearch --name r1 schedule.novelty=0.6 budget.evaluations=300 --by "Your Name"
+evoloop note   mysearch --name r1 "No attention layers." --roles writer --by "Your Name"
+evoloop stop   mysearch --name r1 --by "Your Name"
+```
+
+[Monitor and steer a search](https://evoloop.readthedocs.io/en/latest/steering/)
 
 ## Skills
 
-Skills are optional. Without one, the settings come from the run type and the agents see only your task
-description. A skill adapts the general search to one goal, so you supply less yourself. It is a YAML file with
-settings for the choices above, text added to every agent call, and the measurements your evaluator
-must report. You name it in the brief (`run.skill: model-efficiency`); evoloop copies the file into your
-search folder when you choose it. You can edit the copy during setup, or merge several skills into one
-file (`evoloop skills --merge`).
+A skill is a file of search settings and agent guidance for one goal. evoloop runs without one. With
+one, you supply less yourself. The one you choose is copied into your search folder, where you can edit
+it, and several can be merged into one file.
 
 | Skill | Goal |
 |---|---|
@@ -120,110 +125,23 @@ file (`evoloop skills --merge`).
 | [`bioinformatics-algorithm`](evoloop/skills/bioinformatics-algorithm/skill.yaml) | improve a bioinformatics method against a truth set |
 | [`data-pipeline`](evoloop/skills/data-pipeline/skill.yaml) | make a data pipeline faster or cheaper |
 
-The links open the files. The [documentation](https://evoloop.readthedocs.io/en/latest/which-search/)
-has a page for each, showing what it sets and what it tells the agents.
+[Choose a skill](https://evoloop.readthedocs.io/en/latest/which-search/) ·
+[Edit, merge or write a skill](https://evoloop.readthedocs.io/en/latest/skills/)
 
-## Use it on your project
+## CAMEO
 
-```
-git clone https://github.com/cameo-db/evoloop.git
-cd evoloop
-python -m pip install -e .
+[CAMEO](https://cameo-db.github.io) is a public database of trained models with their code and
+scores. A search can start from designs in CAMEO (`evoloop import --from-study`), and every search is
+saved as `study.json` in CAMEO's format so that it can be deposited there.
 
-evoloop init mysearch --source path/to/project
-```
-
-Install from this repository. The package named `evoloop` on PyPI is a different project.
-
-1. Mark the code that may change, in the copy under `mysearch/base/`, with a pair of comment lines:
-   `# EVOLVE-BLOCK-START name=trunk kind=structure role=trunk` and `# EVOLVE-BLOCK-END`.
-2. Write the scoring script, `mysearch/adapter/run.py`. It runs one design and writes a `result.json`
-   with its score.
-3. Answer the set-up questions: `evoloop setup mysearch`.
-4. Read the plan, then confirm it: `evoloop plan mysearch`, then
-   `evoloop brief mysearch --confirm "Your Name"`.
-5. Run: `evoloop run mysearch --name r1`.
-
-A coding agent can do this with you. Open this repository in Claude Code, or another agent that can read
-files and run commands, and ask it to set up a search for your project; it follows [AGENTS.md](AGENTS.md).
-You decide what to optimize, what may change, how a design is scored, how much to spend, and any hard
-limits.
-
-[Set up your search](https://evoloop.readthedocs.io/en/latest/setting-up/) ·
-[Write the evaluator](https://evoloop.readthedocs.io/en/latest/evaluator/) ·
-[Run on a cluster](https://evoloop.readthedocs.io/en/latest/servers/)
-
-## Change a search while it runs
-
-```
-evoloop status mysearch --name r1
-evoloop set    mysearch --name r1 schedule.novelty=0.6 budget.evaluations=300 --by "Your Name"
-evoloop note   mysearch --name r1 "No attention layers." --roles writer --by "Your Name"
-evoloop stop   mysearch --name r1 --by "Your Name"
-evoloop run    mysearch --name r1            # resume
-```
-
-Each change is checked, applied from the next design on, and recorded with your name. The objective and
-the scheduler are fixed when a search starts.
-[Monitor and steer a search](https://evoloop.readthedocs.io/en/latest/steering/).
-
-## A worked example
-
-The package carries a small search that runs on a laptop in half a minute, with no API key and no GPU.
-It trains small classifiers on a toy dataset, each one for real.
-
-```
-python -m pip install -e . numpy
-evoloop example demo
-evoloop brief demo --confirm "Your Name"
-evoloop run demo --name first
-evoloop leaderboard demo --name first
-```
-
-<p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/demo-dark.svg">
-    <img src="docs/assets/demo-light.svg" alt="The demo search: validation accuracy at each of 40 evaluations, and the best so far, rising from a baseline of 0.50 to a selected design at 0.97" width="640">
-  </picture>
-</p>
-
-40 training runs across 39 designs take validation accuracy from 0.50 to 0.97. The proposals in the demo
-are scripted, so it shows how a search proceeds and what it records, not what a language model would
-find. [Worked example](https://evoloop.readthedocs.io/en/latest/quickstart/) walks through the output.
-
-## What a search leaves behind
-
-A leaderboard and a report; every design with its code, its parent and its score; a ledger of every
-change made during the search; a record of every agent call and what it cost; and `study.json`, the
-whole search in one file in the format of [CAMEO](https://cameo-db.github.io), a public database of
-models and how they were trained. [Save and deposit the study](docs/study.md).
-
-## CAMEO: start from other searches, and add yours
-
-evoloop reads and writes the CAMEO format.
-
-- **In:** `evoloop import --from-study FILE` takes designs from a CAMEO study file. Designs from the same project
-  are trained in your search. Designs from other data are shown to the agents as ideas to adapt.
-- **Out:** every search writes `study.json`, ready to deposit in CAMEO.
-
-[Start from earlier designs](docs/warm-start.md)
+[Start from earlier designs](https://evoloop.readthedocs.io/en/latest/warm-start/) ·
+[Save and deposit the study](https://evoloop.readthedocs.io/en/latest/study/)
 
 ## Status
 
-Version 0.2. It passes its tests on two built-in examples with scripted proposals standing in for a
-language model, and has run one of them on a Slurm cluster. It has not yet been run with a real model
-on a real training task, and its search settings have not been compared against each other.
-[Status and limits](docs/status.md) lists what has been run.
-
-## Documentation
-
-| | |
-|---|---|
-| Start | [Worked example](docs/quickstart.md) · [Set up your search](docs/setting-up.md) · [Write the evaluator](docs/evaluator.md) · [Measure your noise](docs/noise.md) · [Run on a cluster](docs/servers.md) |
-| Choose a search | [Choose a skill and a run type](docs/which-search.md) · [Edit, merge or write a skill](docs/skills.md) |
-| Concepts | [How it works](docs/how-it-works.md) · [Schedule](docs/schedule.md) · [Parent selection](docs/parents.md) · [Early stopping](docs/early-stopping.md) · [Agents](docs/agents.md) |
-| Run and steer | [Monitor and steer a search](docs/steering.md) · [Budget and cost](docs/cost.md) · [Save and deposit the study](docs/study.md) |
-| Reference | [Commands](docs/commands.md) · [Brief fields](docs/fields.md) · [Evaluator interface](docs/project-contract.md) · [Glossary](docs/glossary.md) |
+evoloop is at version 0.2. Its test suite runs complete searches with scripted stand-ins for the LLM,
+and one of them has run on a Slurm cluster. It has not yet been validated with an LLM on a real training
+task. [Status and limits](https://evoloop.readthedocs.io/en/latest/status/)
 
 ## Development
 

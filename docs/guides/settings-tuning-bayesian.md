@@ -47,7 +47,7 @@ A skill's settings override the run type's and the autonomy level's. Settings in
 
 ## What it tells the agents
 
-This text is added to every call to the role named. It is the skill's file verbatim.
+This text is added to every call to the role named. It is taken from the skill's file.
 
 === "Every role"
 
@@ -75,7 +75,7 @@ The writer and the analyst are also given these rules:
 
 And the writer is told, in the first half of the budget: "The first designs cover the ranges evenly; nothing is concluded from them one by one." In the second half: "The draws concentrate near the best settings; narrow the ranges if the best values are well inside them."
 
-## What your scoring script must report
+## What your evaluator must report
 
 - every setting to tune must sit in a marked params block (one dict of numbers, true/false or text)
 - give bounds for settings that must stay in a range with `space.ranges`, e.g. {"fit.lr": [0.00001, 0.1]}; without one a setting may move a hundredfold either way

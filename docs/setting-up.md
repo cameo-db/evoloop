@@ -1,15 +1,8 @@
 # Set up a search
 
-Five steps take a project to a running search. A coding agent can do most of them with you; the steps
-are the same either way, and this page is also how to check what an agent did.
-
-```mermaid
-flowchart LR
-    A["<b>1</b> Mark what<br>may change"] --> B["<b>2</b> Write the<br>evaluator"]
-    B --> C["<b>3</b> Answer the<br>questions"]
-    C --> D["<b>4</b> Read the plan,<br>confirm"]
-    D --> E["<b>5</b> Dry-run,<br>then run"]
-```
+Five steps take a project to a running search: mark what may change, write the evaluator, answer the
+questions, read and confirm the plan, then dry-run and run. A coding agent can do most of them with
+you. The steps are the same either way, and this page is also how to check what an agent did.
 
 ## With an agent
 
@@ -19,7 +12,7 @@ it at your project, and ask it to set up a search. It follows
 writes the evaluator, suggests an answer to each question with its reason, and asks you only what it
 cannot work out.
 
-Five decisions are yours whoever does the typing: what to optimize, what may change, how a design is
+Five decisions are yours either way: what to optimize, what may change, how a design is
 scored and how noisy that score is, how much to spend, and any hard limits. The rest have defaults.
 
 ## Before you start

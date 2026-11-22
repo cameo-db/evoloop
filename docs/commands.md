@@ -270,7 +270,7 @@ Answers a decision of the strategist that is waiting for you.
 
 `evoloop lineage DIR --name N --retire L4 --by NAME` (or `--revive L4`)
 
-Sets a family of designs aside, or brings one back. Lineage strategy only.
+Retires a lineage, or brings one back. Lineage strategy only.
 
 ### review
 

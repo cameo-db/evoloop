@@ -36,7 +36,7 @@ A skill's settings override the run type's and the autonomy level's. Settings in
 
 ## What it tells the agents
 
-This text is added to every call to the role named. It is the skill's file verbatim.
+This text is added to every call to the role named. It is taken from the skill's file.
 
 === "Every role"
 
@@ -47,12 +47,14 @@ This text is added to every call to the role named. It is the skill's file verba
 === "Writer"
 
     Work from the largest effect down:
+
     - the algorithm: a better complexity class, an index or a hash in place of a scan, sorting once in place of
       searching many times, pruning work that cannot change the answer, stopping early;
     - repeated work: caching, hoisting out of loops, incremental updates in place of recomputation;
     - the data's layout: contiguous arrays in place of objects, fewer allocations, fewer copies, access in order;
     - the machine: vectorised operations, batches, a compiled inner loop;
     - only then constant factors.
+
     Do not make the code faster on the benchmark's inputs by recognising them: sizes, seeds and particular values
     must not be special-cased, and a held-out benchmark will show it. Keep behaviour on edge cases (empty input,
     one element, duplicates, extreme values) exactly as it was. Say in `hypothesis` where the time goes now and why
@@ -80,7 +82,7 @@ The writer and the analyst are also given these rules:
 
 And the writer is told, in the first half of the budget: "Try different algorithms and data structures; a rough version shows whether the idea is in a better class." In the second half: "Tighten the best design: remove repeated work, then improve its layout and inner loops."
 
-## What your scoring script must report
+## What your evaluator must report
 
 - compare every design's output with a stored reference output and write `valid: false` with `rejected: "output differs"` when it does not match (exactly, or within a stated tolerance)
 - time the run several times on a quiet machine with a fixed number of threads, and report the median as the score with objective.direction minimize; set evaluation.noise from the spread of repeats

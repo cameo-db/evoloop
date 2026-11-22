@@ -5,7 +5,7 @@ more than it is.
 
 ## What has been run
 
-- Over 190 tests on the two built-in examples with stub agents (no model call, no GPU). They cover the brief,
+- Over 200 tests on the two built-in examples with stub agents (no model call, no GPU). They cover the brief,
   every strategy, islands, the crossover kinds, steering during a run, changing the strategy, harness
   and search space midway, changing the run length, stopping and continuing, the study file, and one
   regression test for each defect that two independent reviews of the code reproduced.
@@ -27,13 +27,16 @@ more than it is.
 - The skills. Thirteen templates load, merge and reach the agents; whether their guidance makes a real
   model search better is not known. The settings estimator beats random draws on a made-up function; it has
   not tuned a real model.
-- **Several models writing, find-and-replace edits, approaches and weight inheritance with a real agent or a
-  real adapter.** The stub returns whole-block edits and one fixed approach; the example adapter ignores the
+- Several models writing, find-and-replace edits, approaches and weight inheritance with a real agent or a
+  real evaluator. The stub returns whole-block edits and one fixed approach; the example adapter ignores the
   parent's checkpoint. Whether a real model writes edits that apply, or approaches worth keeping, is not known.
 - The ladder, the trade-off front, behaviour groups and island resets on a real task. They are tested on
   the example and on made-up results; whether early progress predicts the final score on your task is not known.
 - On Slurm: GPU jobs, a preempted job being requeued, the QoS list, a time limit being hit.
 - Continuing a run from a checkpoint after the run length is raised.
+- Importing a study file downloaded from CAMEO. The import is tested on study files evoloop wrote and on a
+  hand-made file from another project.
+- Detecting a site file on a real cluster. Detection is tested on made-up scheduler output.
 
 ## Known limits
 

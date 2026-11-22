@@ -67,7 +67,7 @@ combined (`skill: [model-distillation, model-size-frontier]`) or merged into one
 | Stage | What the skill supplies |
 |---|---|
 | Propose a change | instructions shown to the agent on every call: what to try first, what to avoid, what a given result means |
-| Evaluate it | the measurements your script must report (score, and for some skills size, speed or an error profile) |
+| Evaluate it | the measurements your evaluator must report (score, and for some skills size, speed or an error profile) |
 | Choose what to try next | the parent rule and the mix of moves, for example a score-versus-size front for `model-efficiency` |
 
 ## Run types
@@ -86,7 +86,7 @@ Where a skill and a run type set the same thing, the skill's value is used.
 
 `budget.evaluations` counts full training runs. Some defaults scale with it.
 
-| Evaluations | Families of designs kept | Proposals per slot |
+| Evaluations | Lineages kept | Proposals per slot |
 |---|---|---|
 | about 30 | 3 | 4 |
 | about 100 | 6 | 3 |

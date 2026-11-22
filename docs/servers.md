@@ -1,16 +1,10 @@
 # Run on a cluster
 
-A search has two halves. The **brief** says what to optimize and how to search; it should move between
-machines unchanged. The **site file** says what is particular to one machine: its scheduler, its
-queues, its GPUs, how an environment is activated, what is not allowed there. Every cluster differs in
-these, even two that both run Slurm.
-
-```mermaid
-flowchart LR
-    Site["<b>Site file</b><br>once per machine<br>scheduler, partitions, QoS,<br>setup lines, rules"] --> Plan
-    Brief["<b>Brief</b><br>once per search<br>goal, budget, what may change"] --> Plan["evoloop plan<br>what will run, and where"]
-    Plan --> Jobs["One job per design"]
-```
+A search is described in two files. The *brief* says what to optimize and how to search, and should
+move between machines unchanged. The *site file* says what is particular to one machine: its
+scheduler, its queues, its GPUs, how an environment is activated, and what is not allowed there. Every
+cluster differs in these, even two that both run Slurm. `evoloop plan` combines the two and shows what
+will run and where.
 
 ## Write the site file once
 

@@ -164,3 +164,7 @@
 .md-typeset .evo-figure { width: min(50rem, calc(100vw - 2.4rem)); max-width: none; margin: 2.4rem 0 1.4rem 50%; transform: translateX(-50%); overflow-x: auto; }
 .evo-figure svg { width: 100%; min-width: 640px; height: auto; display: block; font-family: inherit; }
 .md-typeset .evo-home p.evo-more { font-size: 0.8rem; font-weight: 600; margin-top: -0.2rem; }
+
+/* Inner pages: prose at a readable width. Tables, code and figures may use the full column. */
+.md-content__inner > p, .md-content__inner > ul, .md-content__inner > ol, .md-content__inner > dl, .md-content__inner > blockquote { max-width: 38rem; }
+.md-typeset img[src$="loop.svg"], .md-typeset img[src$="lineages.svg"] { display: block; max-width: min(100%, 44rem); margin: 1.4rem 0; border-radius: 10px; }

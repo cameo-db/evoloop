@@ -6,13 +6,6 @@ their code and their scores from other people's searches. The exchange goes both
 search writes a `study.json` in the CAMEO format, so what you find can be [deposited](study.md) and used
 to start someone else's search.
 
-```mermaid
-flowchart LR
-    C[("CAMEO<br>studies as JSON")] -- "evoloop import --from-study" --> S["Your search"]
-    S -- "study.json, written by every search" --> C
-    E["An earlier run<br>of your own"] -- "evoloop import --from-run" --> S
-```
-
 ## What happens to an imported design
 
 It depends on whether its code can run in your project.
