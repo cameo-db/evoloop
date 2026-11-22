@@ -8,7 +8,7 @@ search:
 The evaluator is the one script you write for evoloop. It lives at `adapter/run.py`, trains one design,
 and writes that design's score to a file. The search runs it once per design, as a separate job.
 
-## The shortest one that works
+## Minimal evaluator
 
 ```python
 """adapter/run.py: train one design and write its score."""
@@ -34,7 +34,7 @@ It reads three variables (where to write, how long to train, the seed) and write
 `valid` and `score`. `train.fit_and_validate` stands for whatever your project calls to train a model
 and return its validation score.
 
-## Check it by hand
+## Testing by hand
 
 Run it on your unchanged code, the way a job would, before starting any search:
 
@@ -48,7 +48,7 @@ cat out/result.json
 If that prints a score, the search can run it. The working copy has the contents of `base/` at its top
 level and your `adapter/` folder beside them, which is why `import train` works.
 
-## A fuller one: progress, early stopping, checkpoints
+## Full example
 
 Reporting progress lets the search stop a weak design part way. Reporting the parameter count and a
 held-out score puts them on the leaderboard and lets limits use them.
@@ -114,7 +114,7 @@ with open(os.path.join(out, "result.json"), "w") as handle:
 The demo's evaluator does the same in NumPy and is known to run:
 `evoloop/examples/tiny_classifier/adapter/run.py`.
 
-## Where it runs
+## Working directory
 
 For each design, evoloop makes a working copy of `base/` with that design's blocks in place, puts your
 `adapter/` folder beside it, and starts the script there. `base/` itself is never modified.
@@ -122,7 +122,7 @@ For each design, evoloop makes a working copy of `base/` with that design's bloc
 All of `base/` is copied for every design. Keep datasets and pretrained weights outside it and refer to
 them by absolute path.
 
-## Then dry-run the search
+## Dry run
 
 Once the script runs by hand, run a four-design search with scripted proposals. It costs nothing and
 shows that jobs start and finish on your machine.
@@ -150,7 +150,7 @@ through it. A design that fails is dropped in seconds without being trained.
 A limit names something the result does not report. If `limits` mentions `examples_per_s` and
 `result.json` lacks it, the search pauses and says so.
 
-## What else a result can carry
+## Optional result fields
 
 | In `result.json` | Used for |
 |---|---|

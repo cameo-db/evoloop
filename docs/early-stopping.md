@@ -4,7 +4,7 @@ Most designs a search tries are not improvements. Stopping the weak ones early l
 budget for the rest. Both methods here need your evaluator to report progress as it trains
 ([Evaluator interface](project-contract.md#progress-and-stopping)).
 
-## The default: half of new designs stop halfway
+## Default screen
 
 Say a training run is 30 epochs. A new design's score at epoch 15 is ranked against the earlier new
 designs at epoch 15. If it is in the bottom half, by more than the noise, it stops there and is charged
@@ -16,7 +16,7 @@ moves and crossovers run to the end.
 This kills slow starters. If your models tend to overtake late, move the point later
 (`evaluation.screen_fraction: 0.7`) or switch it off (`evaluation.screen_keep: 1`).
 
-## A ladder: every design, at several points
+## Ladder
 
 For a search that needs many more designs than it can afford full runs, set a ladder:
 
@@ -40,13 +40,13 @@ rung and a generous share kept.
 More designs also means more agent calls, since each design is written by an agent. `evoloop plan`
 counts them in its cost estimate.
 
-## What happens to a stopped design
+## Stopped designs
 
 It keeps the score it had when it stopped, marked as provisional. It is listed at the bottom of the
 leaderboard with how far it ran (`stopped at 10%`), is not ranked against full-length runs, and is
 never used as a parent.
 
-## Starting from the parent's weights
+## Weight inheritance
 
 With `evaluation.inherit_weights: true`, a design that has a parent is given the folder holding the
 parent's checkpoint. Your evaluator decides what to load: typically every tensor whose name and shape
@@ -56,7 +56,7 @@ The catch is comparability. A warm-started child has had more training than a de
 scratch, so its score is not a fair comparison with theirs, and evoloop does not correct for that.
 Retrain from scratch any design you mean to report.
 
-## Limits: not training what you could never use
+## Limits
 
 A limit rejects a design that is too large or too slow:
 

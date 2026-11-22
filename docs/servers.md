@@ -6,7 +6,7 @@ scheduler, its queues, its GPUs, how an environment is activated, and what is no
 cluster differs in these, even two that both run Slurm. `evoloop plan` combines the two and shows what
 will run and where.
 
-## Write the site file once
+## The site file
 
 ```
 evoloop site --detect                                          # prints a draft from what this machine reports
@@ -55,7 +55,7 @@ Where it is looked for, in order:
 ("Runs on: Slurm, one job per design, partition gpu, qos normal, low, 8 at once (site file:
 our-cluster)") and lists the site's rules.
 
-## What differs between machines, and where it goes
+## Machine-specific settings
 
 | What differs | Where it goes |
 |---|---|
@@ -76,7 +76,7 @@ An agent helping you can do this for you: ask it to run `evoloop site --detect`,
 you, and ask you only for what the machine cannot report (the account, the environment, the queues to
 avoid). Once the file exists, the agent sees the site's rules in every plan.
 
-## What is not supported
+## Not supported
 
 - Schedulers other than Slurm. PBS, LSF and Grid Engine are not built in. `evoloop site --detect`
   says so when it finds `qsub` or `bsub`. Adding one means writing a backend with three operations

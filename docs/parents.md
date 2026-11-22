@@ -11,7 +11,7 @@ them, and so decides which earlier designs get built on.
 | `pareto` | designs not beaten on both the score and a second metric | non-dominated sorting, as in NSGA-II | you care about score and size or speed together |
 | `greedy` | the single best design | hill climbing | the budget is about 30 |
 
-## Try it
+## Interactive comparison
 
 The figure is a toy. Every possible design is laid out on a line, with similar designs close together,
 and a curve gives the true quality of each. The baseline starts on the lowest of three peaks. The

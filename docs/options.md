@@ -52,7 +52,7 @@ To search in the manner of FunSearch: `archive` with `strategy.descriptors: [beh
 `strategy.islands: 4`, `strategy.reset_every: 40`. In the manner of AlphaEvolve: `archive` on
 `strategy.islands: 3` with `agents.writer_mix`, `variation.edit_format: diff` and
 `evaluation.ladder`. These are approximations.
-[Comparison with FunSearch and AlphaEvolve](compared.md) lists the differences.
+[Comparison with other AutoResearch methods](compared.md) lists the differences.
 
 ## Harness and autonomy
 

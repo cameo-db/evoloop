@@ -3,7 +3,7 @@
 Everything a run knows is in its folder, `runs/<name>/`, as plain files. The controller can be stopped
 at any point and started again from them.
 
-## The stores
+## Stores
 
 One JSON-lines file per store; a later line with the same `id` updates the earlier one.
 
@@ -39,7 +39,7 @@ Beside them:
 
 Working copies and checkpoints are not cleaned up; remove `work/` when a run has ended if space is short.
 
-## A run's history
+## History of a run
 
 Every run records how it came about: its lineage, its parent (and second parent, for a crossover), the
 mode and the move, the hypothesis and predicted effect the writer gave, its forecast, why the slot

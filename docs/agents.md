@@ -3,7 +3,7 @@
 An agent in evoloop is one LLM call with a fixed role. The controller decides when each role is
 called and what it is sent. Roles never call each other.
 
-## The roles
+## Roles
 
 | Role | Called | Sent | Returns |
 |---|---|---|---|
@@ -20,7 +20,7 @@ Only the writer is required. A search can run with the writer alone, and the
 The *controller* is not an agent. It is the Python process that runs the search. The *conductor* is
 the strategist when you have chosen to talk to it with `evoloop chat`.
 
-## How much the agents decide
+## Autonomy levels
 
 `harness.autonomy` sets this in one step. More autonomy means more LLM calls, so it is also a choice
 about cost. `evoloop plan` shows the estimate for each level before you commit.
@@ -41,7 +41,7 @@ your limits. Left unset, the run type decides the level, and most run types beha
 `standard` adds the analyst. `full`, the default, also retrains the leading design on a new seed every
 20 designs, to check that its score holds.
 
-## Why there is a strategist
+## The strategist
 
 The schedule keeps to the shares you set, whatever the results say. If thirty new designs in a row go
 nowhere, it still asks for new designs. A schedule that adapts to past gains has little to go on with
@@ -57,13 +57,13 @@ what it proposes.
 
 Every role runs on `claude-opus-5-5` at medium effort by default, and the writer at high effort. You
 can change the model for all roles (`agents.default_model`) or for one (`agents.models`), or
-[share the writing between several models](moves.md#more-than-one-model-writing).
+[share the writing between several models](moves.md#writer-model-mix).
 [Models and prices](models.md)
 
 The LLM is reached through the Anthropic API or the Claude Code command (`agents.backend`). For a dry
 run it can be replaced by a script (`stub`).
 
-## Checking the agents
+## Auditing
 
 Every call is recorded with what the agent was sent, what it forecast, and what happened. From that
 record the report builds a scorecard for each role, and the assessor reviews each role at the points

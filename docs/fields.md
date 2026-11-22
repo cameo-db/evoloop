@@ -4,7 +4,7 @@ Every field of `brief.yaml`: its default, the values it accepts, and whether it 
 
 A field you leave empty takes its value from the first of these that has one: a change made during the search, the brief, the skill, the level of autonomy, the run type, the guidance for the size of the budget, the default. `evoloop plan` shows which, for every field.
 
-Fields marked **asked** have no default and are asked during set-up. In the third column, *yes* means the field can be changed during a search; *yes, and a new period begins* that changing it also starts a new comparison period ([why](comparable.md#changing-what-a-score-means)), and *no* that it is fixed once a search starts.
+Fields marked **asked** have no default and are asked during set-up. In the third column, *yes* means the field can be changed during a search; *yes, and a new period begins* that changing it also starts a new comparison period ([why](comparable.md#periods)), and *no* that it is fixed once a search starts.
 
 Jump to: [objective](#objective) · [run](#run) · [space](#space) · [strategy](#strategy) · [schedule](#schedule) · [population](#population) · [crossover](#crossover) · [variation](#variation) · [harness](#harness) · [strategist](#strategist) · [evaluation](#evaluation) · [budget](#budget) · [baseline](#baseline) · [compute](#compute) · [run_command](#run_command) · [audit](#audit) · [agents](#agents) · [data](#data) · [depositor](#depositor) · [license](#license) · [report](#report) · [limits](#limits)
 
@@ -277,7 +277,7 @@ Explained in [study](study.md).
 
 ## report
 
-Explained in [steering](steering.md#watching).
+Explained in [steering](steering.md#monitoring).
 
 | Field | Default | Changes in a search | What it is |
 |---|---|---|---|
@@ -286,7 +286,7 @@ Explained in [steering](steering.md#watching).
 
 ## limits
 
-Explained in [early stopping](early-stopping.md#limits-not-training-what-you-could-never-use).
+Explained in [early stopping](early-stopping.md#limits).
 
 | Field | Default | Changes in a search | What it is |
 |---|---|---|---|

@@ -3,7 +3,7 @@
 Which model the agents run on, and how hard it reasons, are settings with defaults. You can change
 them when you set a search up and while it runs, for every role at once or role by role.
 
-## The defaults
+## Defaults
 
 | Setting | Default | Meaning |
 |---|---|---|
@@ -19,7 +19,7 @@ matters most, at high effort, and the analyst, strategist, coordinator and asses
 `evoloop plan` shows the model and effort of each role beside what it is likely to cost, and what the
 same search would cost on each current model.
 
-## Changing them
+## Changing models
 
 At setup, in `brief.yaml` or by answer:
 
@@ -46,11 +46,11 @@ agents:
   efforts: {writer: high, strategist: medium}
 ```
 To use several models for the writer, `agents.writer_mix` shares the writer calls between models, for instance a
-fast one for most designs and a strong one for a fifth of them; see [the writers](moves.md#more-than-one-model-writing).
+fast one for most designs and a strong one for a fifth of them; see [the writers](moves.md#writer-model-mix).
 The cost estimate prices an average writer call by the shares.
 
 
-## The models
+## Available models
 
 `evoloop menu models` prints this list. Prices are Anthropic's first-party API rates in dollars per
 million tokens as of 2026-11-03; they may have changed, and other platforms price separately.
@@ -93,7 +93,7 @@ Whether more effort finds better designs on your problem is not known in advance
 the writer's forecasts against outcomes and what each move returned, before and after a change of
 effort or model, since the ledger records when it changed.
 
-## What it does to the cost
+## Effect on cost
 
 The built-in formula example at 100 designs, with the defaults, as `evoloop plan` prints it:
 
@@ -122,7 +122,7 @@ Two cautions on reading it:
 See [Budget and cost](cost.md) for how the estimate is made and how far
 to trust it.
 
-## The backends
+## Backends
 
 | `agents.backend` | Model and effort are sent as | Cost comes from |
 |---|---|---|

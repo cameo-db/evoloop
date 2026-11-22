@@ -10,13 +10,13 @@ called the direction right and whether its confident forecasts gained more than 
 
 There are three levels of checking. The first two cost nothing.
 
-## The records
+## Call records
 
 `calls.jsonl` has one line for every agent call: which role, what it was shown, which of your notes it
 saw, its reasoning in a few sentences, its cost and how long it took. The full reply, including the code
 of proposals that were not chosen, is in `replies/`.
 
-## The scorecard
+## Scorecard
 
 Every report includes figures worked out from those records:
 
@@ -60,7 +60,7 @@ evoloop note mysearch --name r1 "State the parameter count of every proposal." -
 The next review of that role is shown the notes adopted from earlier reviews, so it can say whether
 they worked.
 
-## Changing the model behind a role
+## Changing a role's model
 
 ```
 evoloop set mysearch --name r1 'agents.models={"writer": "claude-sonnet-5-5"}' --by "Your Name"

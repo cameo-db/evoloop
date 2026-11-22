@@ -4,7 +4,7 @@ A complete search you can run in half a minute on a laptop. It looks for a small
 separates two interleaved spirals. Each design is trained for real, in NumPy. The proposals come from a
 script, not an LLM, so it costs nothing and needs no API key.
 
-## Run it
+## Run
 
 Python 3.9 or later, with Git:
 
@@ -170,7 +170,7 @@ the ceiling. Your run may order tied designs differently.
 
 40 training runs, 39 designs. Hover over a point to see the design and the move that produced it.
 
-## How it got there
+## Search history
 
 These are the evaluations that raised the best score.
 
@@ -190,7 +190,7 @@ The other 32 evaluations did not improve on the best at the time. That ratio is 
 Evaluation 23 retrained design C17 on a new seed and got 0.967. A design with two runs is ranked by
 their mean, which is why C17 is second on the leaderboard and C32, a later variant, is first.
 
-## The code that changed
+## Code changes
 
 The search can only change code between the markers. The model block at the start:
 
@@ -217,7 +217,7 @@ def features(x):
 
 `evoloop show demo C32 --name first` prints a design's code, its parent, and how it scored.
 
-## Where the skill came in
+## The skill
 
 The example's brief names a skill:
 
@@ -232,7 +232,7 @@ Each time a design was written, the writer was sent the skill's instructions alo
 code and the results so far. In this example the writer is a script and ignores them. With an LLM
 backend the same file is what tells the agent how to approach the task, and you can edit it.
 
-## Change the search while it runs
+## Steering
 
 ```
 evoloop brief demo --answer budget.evaluations=120 --confirm "Your Name"
@@ -250,7 +250,7 @@ length and stops ranking new scores against old ones. Both changes are listed in
 Designs here train in a fraction of a second, so the search may finish before a command arrives. If so,
 run `evoloop run demo --name second` again and the change is applied then.
 
-## What this example does not show
+## Limits of the example
 
 The proposals are scripted: a fixed list of new designs and simple edits. The example shows the
 mechanics (the loop, the records, steering) on real training runs. It says nothing about what an LLM

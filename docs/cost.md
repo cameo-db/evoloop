@@ -15,7 +15,7 @@ the calls then in progress.
 GPU time is not counted in dollars. Bound it with the number of evaluations and, if you like, with
 `budget.wall_clock_hours`.
 
-## What the agents will cost
+## Agent cost estimate
 
 `evoloop plan` estimates it before you confirm. For the built-in formula example at 100 designs, with
 the default model (Claude Opus 5.5, at the prices of 2026-11-03):
@@ -37,17 +37,17 @@ Treat the estimate as right to within about a factor of two. The number of calls
 settings and is fairly sure. The size of a call is a guess: models differ in how much they write, and
 the tokens they spend reasoning are not counted. It has not yet been checked against a real bill.
 
-## What makes it cheaper or dearer
+## Cost factors
 
 | What | Effect on agent cost |
 |---|---|
-| How much the agents decide | For the same example: about $3.50 with `harnessed`, $6.20 with `guided`, $7.60 with `agentic`. [Agents](agents.md#how-much-the-agents-decide) |
+| How much the agents decide | For the same example: about $3.50 with `harnessed`, $6.20 with `guided`, $7.60 with `agentic`. [Agents](agents.md#autonomy-levels) |
 | The model | The plan prices the same search on each current model. `agents.writer_mix` uses a cheaper model for most designs and a strong one for some. [Models and prices](models.md) |
 | How many designs | An early-stopping ladder makes the same training budget cover more designs. Each design is written by an agent, so agent cost rises with it. |
 | Whether agents are needed | Hyperparameter tuning can use the built-in Bayesian optimizer and make no agent call. [`settings-tuning-bayesian`](guides/settings-tuning-bayesian.md) |
 | The size of your blocks | Returning local moves as edits (`variation.edit_format: diff`) cuts the output of those calls on large blocks. |
 
-## While it runs
+## Cost during a run
 
 ```
 evoloop estimate mysearch --name r1
@@ -57,7 +57,7 @@ Once a role has made a few calls, its real cost per call replaces the guess and 
 is projected from that. `evoloop status` and the report show the spend so far, the cost per design over
 the last twenty, and the total the search is heading for.
 
-## Keeping inside the cap
+## The spend cap
 
 With a dollar cap set, evoloop checks every ten scored designs whether the search is heading past it.
 If so, it takes one step to make the search cheaper and records what it did:
@@ -75,7 +75,7 @@ It only ever makes the search cheaper. If you raise the cap and want proposals b
 The last 15% of the cap is kept for writing designs (`budget.reserve_share`). When it is reached, the
 analyst, the strategist, scheduled reviews and the coordinator stop, so that what is left buys designs.
 
-## What the cap cannot see
+## Limits of the cap
 
 The cap counts dollars, so it needs prices. With the Anthropic API, give `agents.prices` for any model not on
 the built-in list. The plan warns when one is missing, and a capped search pauses after three calls with

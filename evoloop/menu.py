@@ -402,8 +402,8 @@ def menu_markdown() -> str:
 CONCEPT = {"schedule": "schedule.md", "strategy": "parents.md", "population": "parents.md#lineage", "crossover": "moves.md#crossover",
            "variation": "moves.md", "harness": "agents.md", "strategist": "strategist.md", "evaluation": "comparable.md",
            "budget": "cost.md", "compute": "servers.md", "agents": "models.md", "space": "setting-up.md#1-mark-what-may-change",
-           "limits": "early-stopping.md#limits-not-training-what-you-could-never-use", "run": "which-search.md",
-           "data": "study.md", "depositor": "study.md", "audit": "auditing.md", "report": "steering.md#watching"}
+           "limits": "early-stopping.md#limits", "run": "which-search.md",
+           "data": "study.md", "depositor": "study.md", "audit": "auditing.md", "report": "steering.md#monitoring"}
 
 
 def anchor(path: str) -> str:
@@ -420,7 +420,7 @@ def fields_markdown() -> str:
            "budget, the default. `evoloop plan` shows which, for every field.", "",
            "Fields marked **asked** have no default and are asked during set-up. In the third column, *yes* means the "
            "field can be changed during a search; *yes, and a new period begins* that changing it also starts a new comparison period "
-           "([why](comparable.md#changing-what-a-score-means)), and *no* that it is fixed once a search starts.", "",
+           "([why](comparable.md#periods)), and *no* that it is fixed once a search starts.", "",
            "Jump to: " + " · ".join("[%s](#%s)" % (g, g) for g in dict.fromkeys(p.split(".")[0] for p in form.flatten(form.DEFAULTS)))]
     group = None
     for path, default in form.flatten(form.DEFAULTS).items():

@@ -27,12 +27,12 @@ evoloop brief mysearch --answer evaluation.noise=0.003
 
 Shorter training runs are usually noisier, so measure at the length the search will use.
 
-## If you cannot afford five runs
+## With fewer runs
 
 Run two and take the difference between them. It is a rough figure; err on the high side, since a noise
 floor that is too low is the more costly mistake.
 
-## What goes wrong at each extreme
+## Effect of a wrong value
 
 Too low, and the search believes in gains that are luck. It keeps building on a design that scored well
 once, and the leaderboard's top is whichever designs were luckiest.
@@ -43,7 +43,7 @@ slowly, and many designs are treated as tied.
 If your scores turn out noisier than the gains you are looking for, no setting fixes that. Train longer,
 evaluate on more data, or average several seeds inside your evaluator and report the mean.
 
-## Is my evaluator's seed doing anything?
+## Checking the seed
 
 If all five scores are identical, the seed is not reaching your training code. Check that the script
 reads `EVO_SEED` and uses it for the weight initialisation and the data order. A deterministic

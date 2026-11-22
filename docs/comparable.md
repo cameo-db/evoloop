@@ -15,7 +15,7 @@ counts as supported only if the same change gained in two different lineages.
 
 Set it too low and the search treats noise as progress. Set it too high and real gains are ignored.
 
-## Re-checking the leader
+## Re-checks of the leader
 
 The best of many single runs is partly the luckiest. So at intervals the leader is trained again on a
 new seed, and its score becomes the mean of its runs. In the built-in demo, a design reached 0.970, was
@@ -24,7 +24,7 @@ trained again, scored 0.967, and dropped to second place.
 This happens every 20 designs when the full set of agent roles is on (`harness.level: full`), or at the
 interval you set with `evaluation.recheck_every`. A re-check is charged like any evaluation.
 
-## Changing what a score means
+## Periods
 
 Some changes during a search alter what a score measures. If you lengthen training from 30 epochs to
 50, a new design at 50 epochs is not comparable with an old one at 30.
@@ -45,9 +45,9 @@ and 20 more epochs at that rate teach little.
 ## Stopped designs
 
 A design stopped part way has a score for the part it ran. It is shown as provisional and is not ranked
-against full-length runs ([Early stopping](early-stopping.md#what-happens-to-a-stopped-design)).
+against full-length runs ([Early stopping](early-stopping.md#stopped-designs)).
 
-## What the test set is for
+## The test set
 
 Your evaluator can report held-out results under `diagnostics.hidden`. They are stored and written to
 the study file, and never shown to an agent or used for selection. The search optimizes the validation

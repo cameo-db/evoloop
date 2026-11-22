@@ -98,7 +98,7 @@ There are other ways to answer the same questions. `evoloop form mysearch` write
 page to fill in; save the answers file it gives you and run `evoloop brief mysearch --import
 PATH/TO/answers.json`. Or edit `brief.yaml` directly: [Brief fields](fields.md) lists every field.
 
-### The skill, if you chose one
+### Skill files
 
 Choosing a skill copies its file to `mysearch/skills/NAME/skill.yaml`. That copy is what the search
 reads. `evoloop setup` shows what it sets and offers to open it in your editor (`e`) or, with several
@@ -157,7 +157,7 @@ evoloop run mysearch --name r1
 On a cluster, each design is its own job, and the search itself can run as a small job too.
 [Run on a cluster](servers.md) covers describing your machine once so that every search uses it.
 
-## Where a setting gets its value
+## Setting precedence
 
 You answer a few questions and evoloop fills in the rest, from the first of these that has a value:
 

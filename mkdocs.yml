@@ -12,6 +12,7 @@ theme:
     - navigation.tabs.sticky
     - navigation.sections
     - navigation.top
+    - navigation.footer
     - navigation.indexes
     - toc.follow
     - search.suggest
@@ -53,7 +54,7 @@ nav:
       - Moves: moves.md
       - Early stopping: early-stopping.md
       - Comparing scores: comparable.md
-      - Comparison with FunSearch and AlphaEvolve: compared.md
+      - Comparison with other AutoResearch methods: compared.md
       - Search options on one page: options.md
   - Run:
       - Monitor and steer a search: steering.md

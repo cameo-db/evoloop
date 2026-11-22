@@ -8,7 +8,7 @@ jobs. The *run folder* holds everything the search knows, as files.
 
 This page follows one design through the loop and then describes each part.
 
-## One design, start to finish
+## Example trace
 
 Take the built-in demo, a search for a small classifier, after 16 designs have been scored. A job
 finishes, so a slot is free.
@@ -117,7 +117,7 @@ These hold under every setting, because they are checks in code and not instruct
 - At least 10% of evaluations go to new designs while a strategist is adjusting the schedule.
 - Every design, score, agent call and setting change is appended to files in the run folder.
 
-## In the code
+## Source files
 
 | Part | File |
 |---|---|

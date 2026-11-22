@@ -27,7 +27,7 @@ their own marked blocks, each a single dictionary, which is what lets code chang
 
 By default local moves are shared 50% edits, 35% settings moves, 15% ablations (`schedule.local_mix`).
 
-## Who makes a settings move
+## Settings moves
 
 There are three options, set by `variation.settings_by`.
 
@@ -75,22 +75,22 @@ whose errors fall least like the first one's, if your evaluator reports where ea
 (`signature`); otherwise it is a design from another lineage. Two designs that fail in different places are
 the pair worth combining.
 
-## Several proposals for one slot
+## Multiple proposals per slot
 
 With `variation.proposals_per_slot` above 1 (three at about 100 evaluations, four at about 30), a writer
 returns several different
 proposals, each with a forecast. Only one is trained: the one with the best forecast plus a bonus for
-being unlike what has been tried ([the novelty dial](schedule.md#the-novelty-dial)). A bold idea gets
+being unlike what has been tried ([the novelty dial](schedule.md#novelty)). A bold idea gets
 its chance on paper, before a training run is spent on it.
 
-## Returning a change as edits
+## Diff edits
 
 By default a writer returns the whole of each block it changes. With `variation.edit_format: diff`, a
 local move may come back as find-and-replace edits instead. Code applies an edit only if its text
 occurs exactly once in the block, so a change cannot land in the wrong place; otherwise the proposal is
 refused. On large blocks this cuts the output of a local move to a fraction.
 
-## More than one model writing
+## Writer model mix
 
 `agents.writer_mix` shares the writer calls between models, for instance a fast one for most designs
 and a strong one for a fifth of them:

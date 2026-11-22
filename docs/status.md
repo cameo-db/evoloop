@@ -3,7 +3,7 @@
 Version 0.2. This page says what has been run and what has not, so that nobody takes a feature for
 more than it is.
 
-## What has been run
+## Tested
 
 - Over 200 tests on the two built-in examples with stub agents (no model call, no GPU). They cover the brief,
   every strategy, islands, the crossover kinds, steering during a run, changing the strategy, harness
@@ -13,7 +13,7 @@ more than it is.
 - The controller job script on a real Slurm cluster: with a four-minute limit it stopped cleanly at the
   signal, put itself back in the queue twice, and went on with the search each time it restarted.
 
-## What has not been run
+## Not tested
 
 - The strategist with a real agent. Its bounds, its record and the commands to approve or decline are
   tested with a stub that follows a fixed rule. Whether a real model decides well is not known.
@@ -54,7 +54,7 @@ more than it is.
   evaluator reports `signature`.
 - One noise figure, given by you. The loop does not measure it.
 
-## Not built
+## Not implemented
 
 Things people running searches have needed that are not here yet:
 

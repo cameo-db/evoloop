@@ -4,7 +4,7 @@ A search does not need a restart to change. Every command below leaves a request
 the search reads it within a few seconds, checks it, and records it as applied or refused, with your
 name. The same commands work on a search that has stopped.
 
-## I want to…
+## Quick reference
 
 | I want to | Command |
 |---|---|
@@ -29,7 +29,7 @@ name. The same commands work on a search that has stopped.
 
 The sections below explain each.
 
-## Watching
+## Monitoring
 
 ```
 evoloop status mysearch --name r1          # a few lines: budget, best, what is held up, what waits for you
@@ -115,7 +115,7 @@ its record stays.
 A note is not a rule: an agent can set it aside. What must hold has to be a setting that code enforces,
 such as `space.forbidden_terms` or `space.roles`.
 
-## In your own words
+## Plain-language steering
 
 ```
 evoloop steer mysearch --name r1 "more novelty from here, and keep the models small" --by "Your Name"
@@ -136,7 +136,7 @@ To resume a stopped search, run the same command that started it: `evoloop run m
 up from the files on disk, including jobs that were still training. To give a finished search more budget,
 raise it with `evoloop set mysearch --name r1 budget.evaluations=N --by "Your Name"` and resume.
 
-## The evaluator's own knobs
+## Evaluator variables
 
 `evaluation.variables` is passed to every job as environment variables. Use it for what your evaluator
 reads beside the run length: the patience of its early stopping, a minimum gain, a batch size.
@@ -149,7 +149,7 @@ Like the run length, these change what a score means, so a change begins a new p
 trained again under the new values and earlier scores stop deciding selection. Every run records the
 values it ran with.
 
-## Fixing the evaluator or the frozen code during a run
+## Changing frozen code during a run
 
 Everything outside the marked blocks, and `adapter/`, is frozen: a run checks it at every start and once
 a minute. If it has changed, nothing new is started (jobs already training go on) and the run comes to
@@ -185,7 +185,7 @@ evoloop set mysearch --name r1 'limits={"parameters": {"max": 20000000}, "exampl
   same way.
 - The writers are shown the limits, and each rejected design with its reason.
 
-## Ordering slots yourself
+## Forcing moves
 
 ```
 evoloop force mysearch --name r1 --mode cross --kind graft --count 3 --by "Your Name"
@@ -197,7 +197,7 @@ The next slots go where you say, ahead of the schedule, and the writers of those
 instruction as an order for that slot. Unlike a note, it is not standing advice: it applies to those
 slots and no others.
 
-## Designs from an earlier run, and models to compare with
+## Imports and reference rows
 
 ```
 evoloop import mysearch --name r2 --from-run mysearch/runs/r1 --top 5 --by "Your Name"
@@ -219,15 +219,15 @@ evoloop reference mysearch --name r2 --from-run mysearch/runs/r1 --top 3 --by "Y
 
 Reference rows are shown and marked as such; they take no part in selection.
 
-## A steered run
+## Record of steering
 
 A run that was steered is not a clean test of one fixed strategy. The report lists every entry of the
 ledger with the number of evaluations at which it took effect, and the study file says how many
 steering entries the run had.
 
-## Talking to the agent that runs the search
+## Chat
 
 With `harness.conductor: agent` an agent is in charge of the course of the search, and `evoloop chat`
 talks to it: it explains, changes course within its bounds when you ask, and takes your yes or no. With
 `harness.conductor: code` (the default) the search is deterministic and you steer with the commands on
-this page. See [who runs the search](strategist.md#talking-to-it).
+this page. See [who runs the search](strategist.md#chat).

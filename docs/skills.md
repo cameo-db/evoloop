@@ -6,7 +6,7 @@ your evaluator must report. [The file format](skill-format.md) lists every entry
 The files that come with evoloop are a [library](skill-library.md) of starting points. A search never
 reads the library's file. It reads its own copy, which you can change.
 
-## During setup
+## Editing during setup
 
 When you choose a skill, evoloop copies it into the search folder straight away:
 
@@ -53,7 +53,7 @@ run:
 
 Each skill stays a separate file in `mysearch/skills/`, and you can edit each one.
 
-### Merge them into one file
+### Merging into one file
 
 To work on a combination as a single skill:
 
@@ -86,7 +86,7 @@ Combinations in the library that are meant to go together:
 A pair marked as conflicting (for example `settings-tuning` with any other skill) still runs; the plan
 warns.
 
-## During a run
+## Editing during a run
 
 - Edit the search's copy at any time. The controller notices at its next turn, uses the new text from
   then on, and records the change in the ledger with the file's digest before and after.

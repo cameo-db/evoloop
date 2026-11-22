@@ -76,7 +76,7 @@ What the stars mean:
 | Bronze | model code, results and a link to the dataset |
 | none | no link to the dataset, or no model code |
 
-## What is in the file
+## File contents
 
 
 `study.json` is written when a run stops or ends, and by `evoloop study`. It is one JSON file in the CAMEO entry

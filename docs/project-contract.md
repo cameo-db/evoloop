@@ -7,7 +7,7 @@ search:
 
 This is the contract between the loop and the code it runs.
 
-## Where a design runs
+## Working directory
 
 Each training run gets its own working copy: `base/` with the design's blocks spliced in, and
 `adapter/` beside it. The run command (`run_command`, `python adapter/run.py` by default) starts
@@ -16,7 +16,7 @@ there. `base/` itself is never modified.
 The whole of `base/` is copied for every run. Keep data and weights out of it: point to them by
 absolute path from the evaluator.
 
-## Variables the job is given
+## Environment variables
 
 | Variable | Meaning |
 |---|---|
@@ -35,7 +35,7 @@ absolute path from the evaluator.
 Variables whose names look like credentials (KEY, TOKEN, SECRET, PASSWORD, CREDENTIAL) are removed from the job's
 environment, because designs are model-written code.
 
-## What the job writes
+## Output files
 
 `result.json`, in `EVO_OUT_DIR`:
 
@@ -84,7 +84,7 @@ Exit 76 says the design is too large for the GPU it was given. If `compute.large
 then told so through `EVO_LARGER_GPU`), the run is submitted again on that type, uncharged, once. Otherwise it
 is recorded as failed with that reason.
 
-## Starting from the parent's weights
+## Parent checkpoint
 
 With `evaluation.inherit_weights: true` (and `evaluation.keep_checkpoints: true`), the job of a design
 that has a parent is given `EVO_PARENT_CHECKPOINT_DIR`: the folder where the parent's run kept its
@@ -133,7 +133,7 @@ stops cleanly, puts itself back in the queue, and finds its training jobs again 
 restarts. It requeues itself only at the time limit: not after the search has ended, paused or stalled,
 and not after a crash.
 
-## What the agents see
+## Agent inputs
 
 `task.md`, the open blocks of the parents and of the designs shown beside them, the visible
 diagnostics, the leaderboard, the lessons and your notes. They do not see the rest of your code, and

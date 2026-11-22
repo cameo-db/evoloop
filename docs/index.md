@@ -16,7 +16,7 @@ changes. Each proposal is trained as a job on your GPUs and scored, and the prop
 become the parents of the next ones.
 
 The agents propose and advise. Everything else is deterministic code: choosing the parents, checking
-each edit, scheduling the jobs, enforcing the budget. The method follows FunSearch and AlphaEvolve,
+each edit, scheduling the jobs, enforcing the budget. The method follows [FunSearch and AlphaEvolve](compared.md),
 adapted to searches in which every evaluation is a full training run and the researcher wants to steer.
 
 [Get started](setting-up.md){ .md-button .md-button--primary }

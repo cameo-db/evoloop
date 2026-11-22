@@ -6,7 +6,7 @@ their code and their scores from other people's searches. The exchange goes both
 search writes a `study.json` in the CAMEO format, so what you find can be [deposited](study.md) and used
 to start someone else's search.
 
-## What happens to an imported design
+## Imported designs
 
 It depends on whether its code can run in your project.
 
@@ -17,7 +17,7 @@ It depends on whether its code can run in your project.
 
 Scores from another study are never compared with scores in yours.
 
-## From a study file
+## Import from a study file
 
 Download a study's JSON from CAMEO, or use the `study.json` of any evoloop search. A link works in
 place of a path.
@@ -32,7 +32,7 @@ evoloop import mysearch --name r1 --from-study downloads/study.json --top 5 --as
 shows them all to the writers. The command reports which were queued for training and which were kept
 as ideas, and the ledger records both.
 
-## From an earlier run of your own
+## Import from an earlier run
 
 ```
 evoloop import mysearch --name r2 --from-run mysearch/runs/r1 --top 5 --by "Your Name"
@@ -41,7 +41,7 @@ evoloop import mysearch --name r2 --from-run mysearch/runs/r1 --top 5 --by "Your
 The designs are trained again in the new run. Use this to continue from a finished search with a
 different budget, strategy or data fraction.
 
-## Starting from trained weights
+## Trained weights
 
 Importing brings in a design's code, and it is trained from the start. To have each new design begin
 from its parent's trained weights instead, set `evaluation.inherit_weights: true`; your evaluator then

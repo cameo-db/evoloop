@@ -2,9 +2,9 @@
 
 The strategist is an agent that looks at a search as a whole and can change how the remaining budget is
 spent. It either advises you or acts on its own, and either way it works from a fixed list of actions
-inside limits that code enforces. [Agents](agents.md#why-there-is-a-strategist) explains why it exists.
+inside limits that code enforces. [Agents](agents.md#the-strategist) explains why it exists.
 
-## Advice, or action
+## Modes
 
 `strategist.mode` has three values.
 
@@ -20,7 +20,7 @@ wait for you. Three run types (`explore_then_exploit`, `refine`, `survey`) turn 
 evoloop set mysearch --name r1 strategist.mode=advise --by "Your Name"
 ```
 
-## When it looks at the search
+## Review timing
 
 Every 15 scored designs, and whenever 12 designs have passed without the best score rising by more than
 the noise. During a plateau it looks again every 6.
@@ -29,7 +29,7 @@ It is shown facts that code has worked out: how long since the best score rose, 
 has gained, how varied the recent designs are, the budget left, what the agents have cost, its own
 earlier decisions and what followed them, and your notes.
 
-## What it can do
+## Actions
 
 It may make up to two changes at a time, each of a different kind.
 
@@ -46,7 +46,7 @@ It may make up to two changes at a time, each of a different kind.
 | `question` | asks you something | the search does not wait for the answer |
 | `stay` | nothing | |
 
-## The limits
+## Bounds
 
 Code checks each decision before applying it. A decision outside these limits either waits for you or
 is refused, and either way it is recorded.
@@ -66,7 +66,7 @@ and is retired again if it does not gain.
 
 Anything listed in `strategist.ask_first` always waits for you. By default that is `strategy`.
 
-## Answering what it proposes
+## Approving and declining
 
 ```
 evoloop report  mysearch --name r1                           # the strategist's section lists what is waiting
@@ -80,7 +80,7 @@ When you approve one, it is checked against the search as it stands then. If thi
 it no longer fits inside the limits, it is refused with the reason. A proposal left unanswered for 30
 designs lapses.
 
-## Telling it what you want
+## Notes to the strategist
 
 Write a note addressed to it. It reads your notes every time it reviews the search.
 
@@ -90,7 +90,7 @@ evoloop note mysearch --name r1 "Exploration is underdelivering. Try crossover b
 
 Where its advice to the writers conflicts with a note of yours, the writers are told to follow yours.
 
-## Talking to it
+## Chat
 
 With `harness.conductor: agent`, the strategist also answers you.
 
@@ -120,7 +120,7 @@ evoloop lineage mysearch --name r1 --revive L4 --by "Your Name"
 
 Whoever spoke last about a lineage, you or the strategist, is the one obeyed.
 
-## Does it help?
+## Evaluating the strategist
 
 Each decision is recorded with the gain the strategist expected. Fifteen designs later, code records
 how much the best score actually rose, and the report sets the two side by side.

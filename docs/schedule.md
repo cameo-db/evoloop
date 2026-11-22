@@ -12,7 +12,7 @@ New designs explore. Local moves exploit: they improve what has already been fou
 on new designs finds many mediocre ideas and polishes none; one spent only on local moves polishes the
 first idea it had.
 
-## The default: explore first, then exploit
+## Default schedule
 
 With 100 evaluations and the default plan, the first 60 are shared 65% new, 10% crossover, 25% local.
 The last 40 are shared 15% new, 25% crossover, 60% local. So about 45 designs found new lineages and
@@ -37,14 +37,14 @@ needs two scored lineages, a local move needs one scored design), its turn passe
 Try `refine` against `survey` above: the same budget, spent on depth or on breadth. The figure is
 drawn from the tool's own settings code, and `evoloop plan` prints the same for your search.
 
-## Two kinds of new design
+## New and novel designs
 
 A third of the new designs are *novel* designs (`schedule.novel_share`). An ordinary new design is
 asked to cover a kind of design the search has not tried. A novel one is shown a few designs that have rarely
 been built on, wherever they rank, and asked for something unlike the leader. It is the search's way of
 going back to ideas it passed over.
 
-## The novelty dial
+## Novelty
 
 `schedule.novelty`, from 0 to 1, says how much a design far from everything tried is favoured. It acts
 in two places. When a writer returns several proposals for one slot, the one trained is the one with
@@ -54,11 +54,11 @@ the least-visited.
 
 How different is a proposal? Before training, only its code can be compared: the share of short token
 sequences it has in common with earlier designs. After training, behavior can be compared too, if your
-evaluator reports where a model's errors fall ([signature](project-contract.md#what-the-job-writes)).
+evaluator reports where a model's errors fall ([signature](project-contract.md#output-files)).
 Two designs whose errors fall in the same places count as the same behavior however differently they
 are written.
 
-## Letting the results move the shares
+## Adaptive shares
 
 Two things can change the shares during a search.
 
