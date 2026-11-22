@@ -5,15 +5,18 @@ spends its budget chasing luck. Three mechanisms deal with it.
 
 ## Noise floor
 
-When you set up a search you say how much the score varies between two runs of the same design
-(`evaluation.noise`; [how to measure it](noise.md)). Suppose it is 0.005.
+When you set up a search you give a noise floor (`evaluation.noise`): the difference in score that
+counts as no difference. You can set a small value or estimate it from a few runs
+([Noise floor](noise.md)). Suppose it is 0.005.
 
-From then on a difference smaller than 0.005 counts as no difference. A design at 0.912 does not beat
-its parent at 0.910. Two designs within 0.005 of each other are tied when a parent is chosen. A lineage
+From then on a difference smaller than 0.005 counts as no difference. A design at 0.912 does not
+raise the bar of a lineage whose best is 0.910. Two designs within 0.005 of each other are tied when a parent is chosen. A lineage
 that goes six local moves without gaining more than 0.005 is retired. A lesson the analyst writes
 counts as supported only if the same change gained in two different lineages.
 
-Set it too low and the search treats noise as progress. Set it too high and real gains are ignored.
+The floor is there so that one lucky score does not become a bar its lineage can never beat. It does
+not decide whether a gain is real: a lineage that keeps improving has improved, and small gains count
+once together they exceed the floor.
 
 ## Leader re-checks
 

@@ -78,7 +78,7 @@ QUESTIONS: List[Dict[str, Any]] = [
      "why": "It is passed to every job."},
     {"field": "evaluation.noise", "section": "Training runs", "title": "Noise of the score", "kind": "number",
      "question": "How much does the score differ between two fits of the same model?",
-     "why": "A difference smaller than this is treated as no difference. A measured seed-to-seed spread is best."},
+     "why": "A difference smaller than this is treated as no difference. Set a small value, or estimate it from a few runs of the baseline."},
     {"field": "baseline.mode", "section": "Training runs", "title": "Baseline", "kind": "choice",
      "question": "What should be done about the baseline?", "why": "It is the reference every gain is measured against.",
      "choices": [{"value": "train", "label": "train", "description": "Fit the code as it stands, inside the search, as the first run."},

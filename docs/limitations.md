@@ -39,7 +39,7 @@ measured on its text. What a model does is known only after it is trained, and o
 reports where its errors fall.
 - Early stopping assumes early progress predicts the final score. Where it does not, designs that
 start slowly are lost. [Early stopping](early-stopping.md)
-- The noise floor is yours to supply. evoloop does not measure it. Too low and noise is taken for
-progress; too high and real gains are ignored. [Measure the noise floor](noise.md)
+- The noise floor is a setting. evoloop does not measure the variation between runs. You set a small
+value or estimate one. [Noise floor](noise.md)
 - Agent cost grows with the size of the marked code. A writer is sent the parents' code and returns
 what it changes. The cost estimate in the plan is approximate. [Budget and cost](cost.md)

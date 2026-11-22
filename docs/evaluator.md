@@ -132,23 +132,12 @@ evoloop brief mysearch --answer agents.backend=stub --answer budget.evaluations=
 evoloop run mysearch --name dry
 ```
 
-## Common mistakes
+## Quick check
 
-The score goes the wrong way. `objective.direction` says whether higher or lower is better. A loss
-reported under `maximize` sends the search after the worst model.
-
-The score is the test score. The search optimizes whatever is in `score`, and agents are shown it.
-Report validation there and put held-out results under `diagnostics.hidden`.
-
-The seed does nothing. If two runs with different `EVO_SEED` give identical scores, your training code
-is ignoring it. [Measure the noise floor](noise.md) shows how to check.
-
-Designs crash with shape errors. Agents write designs that do not fit, and that is expected. Add a quick
-check (`evaluation.quick_check: python adapter/check.py`) that builds the model and passes one batch
-through it. A design that fails is dropped in seconds without being trained.
-
-A limit names something the result does not report. If `limits` mentions `examples_per_s` and
-`result.json` lacks it, the search pauses and says so.
+Agents sometimes write a design whose shapes do not fit. A quick check catches these before any
+training. Set `evaluation.quick_check: python adapter/check.py` to a script that builds the model and
+passes one batch through it. A design that fails is dropped in seconds and costs no evaluation.
+[Evaluator interface](project-contract.md#quick-check)
 
 ## Optional result fields
 

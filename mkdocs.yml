@@ -44,7 +44,7 @@ nav:
       - Worked example: quickstart.md
       - Set up a search: setting-up.md
       - Write the evaluator: evaluator.md
-      - Measure the noise floor: noise.md
+      - Noise floor: noise.md
       - Run on a cluster: servers.md
   - How it works:
       - Overview: how-it-works.md

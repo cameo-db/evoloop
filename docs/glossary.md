@@ -62,7 +62,7 @@ one family, but the two are different things: the family is a label, the lineage
 strategist's setting, `strategist.mode`: off, advise or act.)
 
 **Noise floor.** How much the score differs between two runs of the same design. A difference smaller
-than this counts as none. [Measure the noise floor](noise.md).
+than this counts as none. [Noise floor](noise.md).
 
 **Period.** A stretch of a search in which scores are comparable. Changing the training length starts a
 new one. [When two scores can be compared](comparable.md).

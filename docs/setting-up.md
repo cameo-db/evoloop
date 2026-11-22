@@ -88,7 +88,7 @@ default and must be answered:
 | How should the search spend its evaluations? | the run type: [Choose a skill and a run type](which-search.md) |
 | How many designs may be trained in all? | the budget, in evaluations |
 | How long is one training run? | in your evaluator's own unit: epochs, steps |
-| How much does the score vary between two runs of the same design? | The spread between seeds. If you do not know it, train your baseline twice and take the difference. [Measure the noise floor](noise.md) |
+| How much does the score vary between two runs of the same design? | The noise floor. Set a small value, or estimate it from a few runs of your baseline. [Noise floor](noise.md) |
 | Train the baseline, import its score, or skip it? | training it inside the search is the usual choice |
 | How many designs may train at once? | |
 | Which agent backend? | the Anthropic API, Claude Code, or scripted proposals for a dry run |
