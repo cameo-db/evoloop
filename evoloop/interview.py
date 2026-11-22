@@ -204,7 +204,7 @@ def record(brief: Dict[str, Any], field: str, value: Any) -> Optional[str]:
 def merge(brief: Dict[str, Any], answers: Dict[str, Any]) -> Tuple[List[str], List[str]]:
     """Answers from a file (the HTML form's, or any nested mapping of fields) into the brief: (set, refused)."""
     done, refused = [], []
-    for field, value in form.flatten({k: v for k, v in answers.items() if k != "status"}).items():
+    for field, value in form.flatten({k: v for k, v in answers.items() if k not in ("status", "skill_files")}).items():
         if value in form.EMPTY:
             continue
         fault = record(brief, field, value)
@@ -237,7 +237,54 @@ def card(q: Dict[str, Any]) -> List[str]:
     return lines
 
 
-def run(folder: str, ask: Callable[[str], str], say: Callable[[str], None]) -> bool:
+def skill_step(folder: str, brief: Dict[str, Any], ask: Callable[[str], str], say: Callable[[str], None],
+               edit: Optional[Callable[[str], bool]] = None) -> None:
+    """After the skill is chosen: give the search its own copies, show what they set, and let the person edit
+    them, or merge several into one file, before going on."""
+    from . import skill as skills
+    while True:
+        chosen = form.given(brief).get("run.skill")
+        skills.checkout(chosen, folder)
+        rows = skills.state(chosen, folder)
+        if not rows:
+            return
+        say("")
+        say("  This search has its own copy of %s, yours to edit:" % ("the skill" if len(rows) == 1 else "each skill"))
+        for row in rows:
+            say("    %s   (%s)" % (row["file"] or row["name"], skills.KINDS[row["kind"]]))
+            if row["fault"]:
+                say("      NOT USABLE: %s" % row["fault"])
+        lines = skills.sets(chosen, folder)
+        say("  It sets: %s" % ("; ".join(lines) if lines else "no settings; it only adds text to the agent calls"))
+        found, _ = skills.combine(chosen, folder)
+        for note in (found or {}).get("warnings") or []:
+            say("  Note: %s" % note)
+        say("  Enter = go on    e = edit %s now%s" % (
+            "it" if len(rows) == 1 else "them", "    m = merge them into one file" if len(rows) > 1 else ""))
+        reply = ask("> ").strip().lower()
+        if reply == "e":
+            for row in rows:
+                if row["file"] and not (edit and edit(row["file"])):
+                    say("  No editor could be opened (set EDITOR). Edit %s in another window, then press Enter." % row["file"])
+                    ask("> ")
+            continue
+        if reply == "m" and len(rows) > 1:
+            name = ask("  A name for the merged skill (lower case, hyphens; for instance my-students) > ").strip()
+            file, fault = skills.merge(chosen, name, folder)
+            if file is None:
+                say("  Not merged: %s" % fault)
+                continue
+            record(brief, "run.skill", name)
+            form.save_brief(folder, brief)
+            say("  Merged into %s; the search now uses that one file." % file)
+            continue
+        if any(row["fault"] for row in rows):
+            say("  A skill above cannot be used as it is. Fix the file (e), or go back (b at the next question) and choose another.")
+        return
+
+
+def run(folder: str, ask: Callable[[str], str], say: Callable[[str], None],
+        edit: Optional[Callable[[str], bool]] = None) -> bool:
     """The terminal walk-through. Returns True when every question has been dealt with."""
     brief = form.load_brief(folder)
     say("Setting up the search in %s. Enter keeps the default; b goes back; q saves and stops." % folder)
@@ -274,6 +321,8 @@ def run(folder: str, ask: Callable[[str], str], say: Callable[[str], None]) -> b
         back.append(q["field"])
         position = None
         form.save_brief(folder, brief)
+        if q["field"] == "run.skill":
+            skill_step(folder, brief, ask, say, edit)
     form.save_brief(folder, brief)
     say("")
     say("All %d questions are done. Next: `evoloop plan %s`, then `evoloop brief %s --confirm \"Your Name\"`." % (
@@ -281,7 +330,7 @@ def run(folder: str, ask: Callable[[str], str], say: Callable[[str], None]) -> b
     return True
 
 
-def payload(brief: Dict[str, Any]) -> Dict[str, Any]:
+def payload(brief: Dict[str, Any], folder: Optional[str] = None) -> Dict[str, Any]:
     """What the HTML form needs: every question (the form itself decides which apply as answers change),
     the current answers, the defaults, and the schedule each kind of search runs."""
     settings, sources = form.resolve(brief)
@@ -298,8 +347,9 @@ def payload(brief: Dict[str, Any]) -> Dict[str, Any]:
         questions.append(dict(copy.deepcopy(q), required=required,
                               suggested=None if field in stated else ((brief.get("status") or {}).get("suggested") or {}).get(field),
                               default=None if required and field not in stated else form.get(settings, field)))
+    from . import skill as skills
     return {"questions": questions, "answers": {f: stated[f] for f in FIELDS if f in stated}, "sections": SECTIONS,
-            "phases": shares, "goal": settings["objective"]["goal"] or ""}
+            "phases": shares, "goal": settings["objective"]["goal"] or "", "skills": skills.texts(folder)}
 
 
 def as_json(value: Any) -> str:

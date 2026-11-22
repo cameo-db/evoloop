@@ -2,7 +2,7 @@
 
 Skill `algorithm-runtime`. Speed up a piece of code (or cut its memory) while its output stays correct. The score is a measured time; a design whose output is wrong is rejected, not scored.
 
-File: [`evoloop/skills/algorithm-runtime/skill.yaml`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skills/algorithm-runtime/skill.yaml) ([raw](https://raw.githubusercontent.com/cameo-db/evoloop/main/evoloop/skills/algorithm-runtime/skill.yaml)). A search copies this file to `mysearch/skills/algorithm-runtime/skill.yaml` and reads that copy, which you can edit.
+File: [`evoloop/skills/algorithm-runtime/skill.yaml`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skills/algorithm-runtime/skill.yaml) ([raw](https://raw.githubusercontent.com/cameo-db/evoloop/main/evoloop/skills/algorithm-runtime/skill.yaml)). A search copies this file to `mysearch/skills/algorithm-runtime/skill.yaml` when you choose the skill, and reads that copy. [Edit it during setup](../skills.md).
 
 ## Use it
 

@@ -138,6 +138,42 @@ def cmd_example(args: Any) -> int:
     return 0
 
 
+def skill_files(folder: str, brief: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """The skill files a search in `folder` reads, for each skill its brief names."""
+    from . import skill as skills
+    return skills.state(form.given(brief).get("run.skill"), folder)
+
+
+def skill_copies(folder: str, brief: Dict[str, Any], tell: bool = False) -> List[str]:
+    """Give the search its own copy of each skill its brief names, as soon as one is named, so that the copy can
+    be edited before the plan is read and confirmed. Returns what to tell the person."""
+    from . import skill as skills
+    chosen = form.given(brief).get("run.skill")
+    copied = skills.checkout(chosen, folder)
+    rows = skills.state(chosen, folder)
+    if not rows or not (copied or tell):
+        return []
+    lines = ["skill files of this search (yours to edit before you confirm; `evoloop plan` shows the effect):"]
+    lines += ["  %s   (%s)%s" % (r["file"] or r["name"], skills.KINDS[r["kind"]], "   NOT USABLE: %s" % r["fault"] if r["fault"] else "")
+              for r in rows]
+    if len(rows) > 1:
+        lines.append("  to work on them as one file: evoloop skills --merge %s --name NEW-NAME --dir %s" % (
+            ",".join(r["name"] for r in rows), folder))
+    return lines
+
+
+def open_editor(path: str) -> bool:
+    """Open a file in the person's editor ($VISUAL, then $EDITOR). False when there is none to open it with."""
+    import subprocess
+    editor = os.environ.get("VISUAL") or os.environ.get("EDITOR")
+    if not editor or not sys.stdin.isatty():
+        return False
+    try:
+        return subprocess.call(shlex.split(editor) + [path]) == 0
+    except OSError:
+        return False
+
+
 def cmd_brief(args: Any) -> int:
     folder = os.path.abspath(args.dir)
     brief = form.load_brief(folder)
@@ -165,6 +201,10 @@ def cmd_brief(args: Any) -> int:
             raise SystemExit("%s does not hold a mapping of answers" % args.importing)
         done, refused = interview.merge(brief, answers)
         form.save_brief(folder, brief)
+        from . import skill as skills
+        for name, text in sorted((answers.get("skill_files") or {}).items()):      # skills edited in the form
+            fault = skills.write_edited(name, str(text), folder)
+            (refused if fault else done).append(fault or "skills/%s/skill.yaml (as you edited it)" % name)
         out("recorded: %s" % (", ".join(done) or "nothing"))
         for item in refused:
             out("not accepted: %s" % item)
@@ -185,6 +225,10 @@ def cmd_brief(args: Any) -> int:
             if fault:
                 raise SystemExit(fault)
         form.save_brief(folder, brief)
+    touched = set(parse_pairs(args.answer or [])) | set(args.keep or []) | ({"run.skill"} if args.importing else set())
+    for line in skill_copies(folder, brief, tell="run.skill" in touched):
+        if not args.next:      # --next prints JSON only; the files are in it as skill_files
+            out(line)
     if args.next:
         now = interview.state(brief)
         q = now["next"]
@@ -192,6 +236,7 @@ def cmd_brief(args: Any) -> int:
                         "question": None if q is None else {k: q[k] for k in (
                             "field", "number", "of", "section", "title", "question", "why", "kind", "choices", "default", "suggested",
                             "default_from", "required") if k in q},
+                        "skill_files": skill_files(folder, brief),
                         "how_to_answer": "evoloop brief DIR --answer FIELD=VALUE, or --keep FIELD to leave the default; then --next again"
                         if q else "all done: evoloop plan DIR, then evoloop brief DIR --confirm NAME"}, indent=1, default=str))
         return 0
@@ -201,11 +246,8 @@ def cmd_brief(args: Any) -> int:
         except form.BriefError as exc:
             raise SystemExit(str(exc))
         out("confirmed by %s" % args.confirm)
-        from . import skill as skills
-        copied = skills.checkout(form.given(form.load_brief(folder)).get("run.skill"), folder)
-        if copied:
-            out("the search now has its own copy of: %s (in %s). The run reads these files, and they are yours to edit."
-                % (", ".join(copied), os.path.join(folder, "skills")))
+        for line in skill_copies(folder, form.load_brief(folder), tell=True):
+            out(line)
         return 0
     asks = form.questions(brief, everything=args.all)
     if args.questions:
@@ -232,7 +274,7 @@ def cmd_setup(args: Any) -> int:
         brief = form.load_brief(folder)
         interview.infer(folder, brief)
         form.save_brief(folder, brief)
-        interview.run(folder, input, out)
+        interview.run(folder, input, out, edit=open_editor)
     except (EOFError, KeyboardInterrupt):
         out("\nStopped. What you answered is saved; run `evoloop setup` again to go on.")
     return 0
@@ -247,8 +289,8 @@ def cmd_form(args: Any) -> int:
     interview.infer(folder, seeded)
     form.save_brief(folder, seeded)
     with open(path, "w", encoding="utf-8") as handle:
-        handle.write(formpage.fragment(form.load_brief(folder), download=False) if args.fragment
-                     else formpage.document(form.load_brief(folder)))
+        handle.write(formpage.fragment(form.load_brief(folder), download=False, folder=folder) if args.fragment
+                     else formpage.document(form.load_brief(folder), folder))
     out("wrote %s" % path)
     out("Open it in a browser (copy it to your own machine if this is a server), answer, save the answers file it gives "
         "you as answers.json, then: evoloop brief %s --import PATH/TO/answers.json" % args.dir)
@@ -338,6 +380,22 @@ def cmd_skills(args: Any) -> int:
     if args.markdown:
         sys.stdout.write(skills.library_markdown())
         return 0
+    if args.merge:
+        if not args.dir or not args.name:
+            raise SystemExit("to merge skills into one file, give the search folder and a name for it: "
+                             "evoloop skills --merge A,B --name NEW-NAME --dir DIR")
+        folder = os.path.abspath(args.dir)
+        skills.checkout(args.merge, folder)
+        file, fault = skills.merge(args.merge, args.name, folder)
+        if file is None:
+            raise SystemExit(fault)
+        found, _ = skills.combine(args.merge, folder)
+        out("written: %s" % file)
+        for note in (found or {}).get("warnings") or []:
+            out("  note: %s" % note)
+        out("It holds the settings and the agent text of %s as one file. Edit it, then use it with:" % " + ".join(skills.wanted(args.merge)))
+        out("  evoloop brief %s --answer run.skill=%s" % (args.dir, args.name))
+        return 0
     if args.search or args.json or not args.skill:
         rows = skills.search(args.search, args.dir) if args.search else skills.index(args.dir)
         if args.json:
@@ -367,6 +425,28 @@ def cmd_skills(args: Any) -> int:
             raise SystemExit("%s exists already" % args.copy)
         shutil.copytree(found["path"], args.copy)
         out("written to %s; edit skill.yaml there (give it a name of its own) and set run.skill to that path" % args.copy)
+        return 0
+    if args.edit:
+        if not args.dir:
+            raise SystemExit("give the search whose copy to edit: evoloop skills %s --edit --dir DIR" % args.skill)
+        folder = os.path.abspath(args.dir)
+        skills.checkout(args.skill, folder)
+        file = skills.file_of(args.skill, folder)
+        if not open_editor(file):
+            out("no editor to open it with (set EDITOR); the file to edit is:")
+            out("  %s" % file)
+            return 0
+        _, fault = skills.load(args.skill, folder)
+        out("NOT USABLE as edited: %s" % fault if fault else "saved: %s. `evoloop plan %s` shows what the search will now do." % (file, args.dir))
+        return 1 if fault else 0
+    if args.diff:
+        lines = skills.differs(args.skill, args.dir and os.path.abspath(args.dir))
+        if lines is None:
+            out("%s is not a skill of the library, so there is nothing to compare it with" % args.skill)
+        elif not lines:
+            out("%s: the same as the library's" % args.skill)
+        for line in lines or []:
+            out(line)
         return 0
     with open(os.path.join(found["path"], "skill.yaml"), "r", encoding="utf-8") as handle:
         sys.stdout.write(handle.read())
@@ -861,7 +941,11 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--markdown", action="store_true", help="the library as a page of the documentation")
     p.add_argument("--guides", metavar="DIR", help="write a guide page for every skill into DIR (the documentation's guides)")
     p.add_argument("--table", action="store_true", help="the table of skills and what each sets, for the documentation")
-    p.add_argument("--dir", default=None, help="the search folder, to find a skill of your own by a relative path")
+    p.add_argument("--edit", action="store_true", help="open the search's copy of the skill in your editor (with --dir)")
+    p.add_argument("--diff", action="store_true", help="how the search's copy differs from the library's (with --dir)")
+    p.add_argument("--merge", metavar="A,B", help="write several skills as one skill file in the search folder (with --name and --dir)")
+    p.add_argument("--name", default=None, help="the name of the merged skill")
+    p.add_argument("--dir", default=None, help="the search folder: its own copies of skills are read first")
     p = add("guide", cmd_guide, "guidance by size of budget")
     p.add_argument("evaluations", nargs="?", type=int)
     p = add("menu", cmd_menu, "every choice a run can make, the presets, and every field of the brief")

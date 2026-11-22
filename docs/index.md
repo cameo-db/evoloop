@@ -117,12 +117,13 @@ a YAML file with three parts: settings for the choices in the tables above, text
 every agent call, and the list of measurements your evaluator must report.
 
 You name a skill in the brief (`run.skill: model-efficiency`). evoloop copies its file into your search
-folder and reads that copy, so you can edit it. This table is generated from the files.
+folder as soon as you choose it and reads that copy. You can [edit it during setup](skills.md), or merge
+several into one file. This table is generated from the files.
 
 --8<-- "generated/skills-table.md"
 
 Each skill's page shows its settings, the exact text it sends to each agent, and the file.
-[Write or edit a skill](skills.md) · [Skill file format](skill-format.md)
+[Edit, merge or write a skill](skills.md) · [Skill file format](skill-format.md)
 
 ## Status
 

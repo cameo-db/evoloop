@@ -2,7 +2,7 @@
 
 Skill `settings-tuning-bayesian`. A built-in Bayesian optimizer (TPE) draws each set of hyperparameters from the results of earlier trials. No agent is called, so the search costs compute only.
 
-File: [`evoloop/skills/settings-tuning-bayesian/skill.yaml`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skills/settings-tuning-bayesian/skill.yaml) ([raw](https://raw.githubusercontent.com/cameo-db/evoloop/main/evoloop/skills/settings-tuning-bayesian/skill.yaml)). A search copies this file to `mysearch/skills/settings-tuning-bayesian/skill.yaml` and reads that copy, which you can edit.
+File: [`evoloop/skills/settings-tuning-bayesian/skill.yaml`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skills/settings-tuning-bayesian/skill.yaml) ([raw](https://raw.githubusercontent.com/cameo-db/evoloop/main/evoloop/skills/settings-tuning-bayesian/skill.yaml)). A search copies this file to `mysearch/skills/settings-tuning-bayesian/skill.yaml` when you choose the skill, and reads that copy. [Edit it during setup](../skills.md).
 
 ## Use it
 

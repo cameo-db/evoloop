@@ -48,8 +48,15 @@ answer only when they leave it or pick it. Do not suggest where you have no evid
 Two of the questions decide most of the rest: the kind of search (`run.type`, how to search) and the kind of
 optimization (`run.skill`: a better score, a distilled student, tuned settings, a smaller or faster model, or an
 interpretable model improved, a faster algorithm or pipeline). `evoloop skills` lists the library and
-`evoloop skills --search WORDS` finds one; suggest what the person's goal describes. Skills can be combined, and the
-search gets its own editable copy of each when the brief is confirmed.
+`evoloop skills --search WORDS` finds one; suggest what the person's goal describes. A skill is optional.
+
+**When a skill is chosen, go through it with the person before going on.** Choosing one copies its file to
+`DIR/skills/NAME/skill.yaml`, and that copy is what the search reads (`evoloop brief DIR --next` lists the files
+under `skill_files`). Show them what it sets and what it tells the agents (`evoloop skills NAME --dir DIR`), and
+ask what does not fit their problem. Edit the copy as they say; add what they know from earlier searches as
+`diagnose` entries. With several skills, offer to merge them into one file
+(`evoloop skills --merge A,B --name NEW --dir DIR`, then `--answer run.skill=NEW`). `evoloop skills NAME --diff
+--dir DIR` shows the changes, and `evoloop plan DIR` shows their effect.
 
 Then get the next question with
 

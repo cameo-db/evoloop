@@ -2,7 +2,7 @@
 
 Skill `model-mechanistic`. Improve a model that is interpretable by design, where the parameters stand for something (motifs in filters, a graph of interactions, rates and affinities in a biophysical model). The structure that carries the meaning is kept.
 
-File: [`evoloop/skills/model-mechanistic/skill.yaml`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skills/model-mechanistic/skill.yaml) ([raw](https://raw.githubusercontent.com/cameo-db/evoloop/main/evoloop/skills/model-mechanistic/skill.yaml)). A search copies this file to `mysearch/skills/model-mechanistic/skill.yaml` and reads that copy, which you can edit.
+File: [`evoloop/skills/model-mechanistic/skill.yaml`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skills/model-mechanistic/skill.yaml) ([raw](https://raw.githubusercontent.com/cameo-db/evoloop/main/evoloop/skills/model-mechanistic/skill.yaml)). A search copies this file to `mysearch/skills/model-mechanistic/skill.yaml` when you choose the skill, and reads that copy. [Edit it during setup](../skills.md).
 
 ## Use it
 

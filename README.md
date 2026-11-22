@@ -76,7 +76,8 @@ Skills are optional. Without one, the settings come from the run type and the ag
 description. A skill adapts the general search to one goal, so you supply less yourself. It is a YAML file with
 settings for the choices above, text added to every agent call, and the measurements your evaluator
 must report. You name it in the brief (`run.skill: model-efficiency`); evoloop copies the file into your
-search folder, where you can edit it.
+search folder when you choose it. You can edit the copy during setup, or merge several skills into one
+file (`evoloop skills --merge`).
 
 | Skill | Goal |
 |---|---|
@@ -184,7 +185,7 @@ on a real training task, and its search settings have not been compared against 
 | | |
 |---|---|
 | Start | [Run the demo](docs/quickstart.md) · [Set up your search](docs/setting-up.md) · [Write the evaluator](docs/evaluator.md) · [Measure your noise](docs/noise.md) · [Run on a cluster](docs/servers.md) |
-| Choose a search | [Which search should I run?](docs/which-search.md) · [Edit or write a skill](docs/skills.md) |
+| Choose a search | [Which search should I run?](docs/which-search.md) · [Edit, merge or write a skill](docs/skills.md) |
 | Concepts | [One step of a search](docs/how-it-works.md) · [What gets tried next](docs/schedule.md) · [Who becomes a parent](docs/parents.md) · [Cheaper evaluations](docs/early-stopping.md) · [The agents](docs/agents.md) |
 | Run and steer | [Watch and steer a run](docs/steering.md) · [Budget and cost](docs/cost.md) · [Save and deposit the study](docs/study.md) |
 | Reference | [Commands](docs/commands.md) · [Brief fields](docs/fields.md) · [Evaluator interface](docs/project-contract.md) · [Glossary](docs/glossary.md) |

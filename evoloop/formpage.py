@@ -79,6 +79,9 @@ td .dflt { color: var(--muted) }
 .scroll { overflow-x: auto }
 pre, .out { font: 12.5px/1.45 var(--mono) }
 .out { min-height: 200px }
+.skills details { margin: 8px 0 }
+.skills summary { cursor: pointer; font-weight: 600 }
+.skills details .out { min-height: 320px; margin: 6px 0 }
 .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center }
 button.act { font: inherit; font-weight: 600; padding: 8px 16px; border-radius: 5px; border: 1px solid var(--accent); background: var(--accent);
   color: var(--accent-ink); cursor: pointer }
@@ -118,9 +121,9 @@ const DATA = __DATA__;
 const DOWNLOAD = __DOWNLOAD__;
 const KEY = "evoloop-setup-draft";
 const STEPS = DATA.sections.concat(["Review and save"]);
-let answers = Object.assign({}, DATA.answers), seen = {}, step = 0, flagged = false;
-try { const d = JSON.parse(localStorage.getItem(KEY) || "null"); if (d && d.goal === DATA.goal) { answers = d.answers; seen = d.seen; step = Math.min(d.step || 0, STEPS.length - 1); } } catch (e) {}
-const save = () => { try { localStorage.setItem(KEY, JSON.stringify({goal: DATA.goal, answers, seen, step})); } catch (e) {} };
+let answers = Object.assign({}, DATA.answers), seen = {}, step = 0, flagged = false, edits = {};
+try { const d = JSON.parse(localStorage.getItem(KEY) || "null"); if (d && d.goal === DATA.goal) { answers = d.answers; seen = d.seen; edits = d.edits || {}; step = Math.min(d.step || 0, STEPS.length - 1); } } catch (e) {}
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify({goal: DATA.goal, answers, seen, step, edits})); } catch (e) {} };
 const byField = Object.fromEntries(DATA.questions.map(q => [q.field, q]));
 const hint = q => (!(q.field in answers) && q.suggested) ? q.suggested : null;
 const current = f => (f in answers ? answers[f] : (hint(byField[f]) ? byField[f].suggested.value : byField[f].default));
@@ -149,6 +152,31 @@ function phases(type) {
   const lg = el("div", {class: "legend"});
   [["new designs", "--seg-new"], ["crossover", "--seg-cross"], ["local moves", "--seg-local"]].forEach(([t, c]) => { const s = el("span"); const i = el("i"); i.style.background = "var(" + c + ")"; s.append(i, t); lg.append(s); });
   box.append(lg);
+  return box;
+}
+function chosenSkills() {
+  const v = current("run.skill");
+  const list = Array.isArray(v) ? v : (typeof v === "string" ? v.split(/[,+]/) : []);
+  return list.map(s => String(s).trim()).filter(s => s && s !== "none");
+}
+function skillFiles() {
+  const names = chosenSkills();
+  if (!names.length) return null;
+  const box = el("div", {class: "skills"});
+  box.append(el("p", {class: "why", text: "A skill is a file: settings for the search, and text shown to the agents. Open one to read it or change it. What you change is saved with your answers and becomes this search's own copy."}));
+  names.forEach(name => {
+    const original = (DATA.skills || {})[name];
+    if (original === undefined) { box.append(el("div", {class: "hint", text: name + ": not a skill of the library. If it is your own, edit its file in the search folder."})); return; }
+    const label = () => name + (name in edits ? "  (edited)" : "");
+    const head = el("summary", {text: label()});
+    const area = el("textarea", {class: "out", "aria-label": "The skill file of " + name, spellcheck: "false"});
+    area.value = name in edits ? edits[name] : original;
+    area.addEventListener("change", () => { if (area.value === original) delete edits[name]; else edits[name] = area.value; save(); head.textContent = label(); });
+    const reset = el("button", {type: "button", class: "act ghost", text: "Undo my changes to this file"});
+    reset.addEventListener("click", () => { delete edits[name]; area.value = original; save(); head.textContent = label(); });
+    box.append(el("details", {}, [head, area, reset]));
+  });
+  if (names.length > 1) box.append(el("div", {class: "hint", text: "Several skills: settings are laid over each other in the order given (the later one stands), and the agents see the text of each. To work on them as one file, run: evoloop skills --merge " + names.join(",") + " --name NEW-NAME --dir DIR"}));
   return box;
 }
 function question(q, n, of) {
@@ -180,6 +208,7 @@ function question(q, n, of) {
     }
     card.append(opts);
     if (q.field === "run.type" && value) { const p = phases(value); if (p) card.append(p); }
+    if (q.field === "run.skill") { const s = skillFiles(); if (s) card.append(s); }
   } else {
     const input = q.kind === "number" ? el("input", {type: "number", id: id(q.field), step: "any", min: "0", inputmode: "decimal"}) : (q.field === "objective.goal" || q.field === "run.description" ? el("textarea", {id: id(q.field), rows: "3"}) : el("input", {type: "text", id: id(q.field)}));
     input.setAttribute("aria-labelledby", id(q.field) + "-h");
@@ -199,6 +228,9 @@ function nested() {
   for (const q of live()) if (q.field in answers) { const parts = q.field.split("."); let node = out; parts.slice(0, -1).forEach(p => node = node[p] = node[p] || {}); node[parts[parts.length - 1]] = answers[q.field]; }
   const kept = live().filter(q => !(q.field in answers) && seen[q.field]).map(q => q.field);
   if (kept.length) out.status = {asked: kept};
+  const mine = {};
+  chosenSkills().forEach(n => { if (n in edits) mine[n] = edits[n]; });
+  if (Object.keys(mine).length) out.skill_files = mine;
   return out;
 }
 function review() {
@@ -260,15 +292,15 @@ frame();
 """
 
 
-def fragment(brief: Dict[str, Any], download: bool) -> str:
+def fragment(brief: Dict[str, Any], download: bool, folder: Any = None) -> str:
     """The page without its outer document tags (a host that wraps pages supplies those)."""
-    data = json.dumps(interview.payload(brief), default=str).replace("</", "<\\/")
+    data = json.dumps(interview.payload(brief, folder), default=str).replace("</", "<\\/")
     return PAGE.replace("__DATA__", data).replace("__DOWNLOAD__", "true" if download else "false")
 
 
-def document(brief: Dict[str, Any]) -> str:
+def document(brief: Dict[str, Any], folder: Any = None) -> str:
     """The form as a complete file to open in a browser."""
-    page = fragment(brief, download=True)
+    page = fragment(brief, download=True, folder=folder)
     head, body = page.split("</style>\n", 1)
     return ("<!doctype html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n"
             "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n" + head + "</style>\n</head>\n<body>\n"

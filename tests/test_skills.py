@@ -278,7 +278,7 @@ def test_a_search_gets_its_own_copy_of_each_skill_and_reads_that(tmp_path, capsy
     form.save_brief(folder, brief)
     assert main(["brief", folder, "--confirm", "Ada"]) == 0
     said = capsys.readouterr().out
-    assert "its own copy of: model-efficiency, model-distillation" in said
+    assert "skill files of this search" in said and "model-distillation" in said and "skills --merge model-efficiency,model-distillation" in said
     own = os.path.join(folder, "skills", "model-efficiency", "skill.yaml")
     assert os.path.isfile(own) and os.path.isfile(os.path.join(folder, "skills", "model-distillation", "skill.yaml"))
     assert skill.checkout("model-efficiency", folder) == []                       # never copied over an edited one
@@ -412,3 +412,104 @@ def test_the_front_page_table_of_skills_is_read_from_the_files():
         assert os.path.isfile(os.path.join(root, "evoloop", "strategies", "%s.py" % mechanism))
     for level in form.CHOICES["harness.autonomy"]:
         assert "`%s`" % level in front
+
+
+# --- editing skills during set-up -----------------------------------------------------------------
+def test_a_skill_is_copied_into_the_search_when_it_is_chosen_and_the_plan_reads_the_edit(tmp_path, capsys):
+    folder = search(tmp_path)
+    assert main(["brief", folder, "--answer", "run.skill=model-efficiency"]) == 0
+    said = capsys.readouterr().out
+    own = os.path.join(folder, "skills", "model-efficiency", "skill.yaml")
+    assert os.path.isfile(own) and own in said and "yours to edit before you confirm" in said
+    assert skill.state("model-efficiency", folder)[0]["kind"] == "copy"
+    assert skill.differs("model-efficiency", folder) == []
+    with open(own, encoding="utf-8") as handle:
+        text = handle.read()
+    with open(own, "w", encoding="utf-8") as handle:
+        handle.write(text.replace("mechanism: pareto", "mechanism: tournament"))
+    assert skill.state("model-efficiency", folder)[0]["kind"] == "edited"
+    lines = skill.differs("model-efficiency", folder)
+    assert "-    mechanism: pareto" in lines and "+    mechanism: tournament" in lines
+    assert main(["plan", folder]) == 0
+    plan = capsys.readouterr().out
+    assert "your search's copy, edited" in plan and own in plan
+    assert 'strategy.mechanism = "tournament"' in plan                          # the plan shows what the edit does
+    assert main(["skills", "model-efficiency", "--dir", folder, "--diff"]) == 0
+    assert "+    mechanism: tournament" in capsys.readouterr().out
+    with open(own, "w", encoding="utf-8") as handle:                            # an edit that cannot be used is said, not run
+        handle.write(text.replace("mechanism: pareto", "mechanism: nonesuch"))
+    assert skill.state("model-efficiency", folder)[0]["fault"]
+    assert main(["plan", folder]) == 0
+    assert "cannot be used" in capsys.readouterr().out
+
+
+def test_several_skills_merge_into_one_file_that_does_what_the_combination_did(tmp_path, capsys):
+    folder = search(tmp_path)
+    both = "model-distillation, model-size-frontier"
+    before, _ = skill.combine(both, folder)
+    assert main(["skills", "--merge", both, "--name", "my-students", "--dir", folder]) == 0
+    said = capsys.readouterr().out
+    file = os.path.join(folder, "skills", "my-students", "skill.yaml")
+    assert os.path.isfile(file) and "run.skill=my-students" in said
+    one, fault = skill.combine("my-students", folder)
+    assert fault is None and one["settings"] == before["settings"] and one["needs"] == before["needs"]
+    for role in ("all", "writer", "analyst", "strategist"):
+        assert one["guidance"][role] == before["guidance"][role]                 # the agents are shown the same text
+    assert [(d["see"], d["do"]) for d in one["diagnose"]] == [(d["see"], d["do"]) for d in before["diagnose"]]
+    assert skill.state("my-students", folder)[0]["kind"] == "own"
+    with open(file, encoding="utf-8") as handle:
+        text = handle.read()
+    assert text.startswith("# my-students: merged from model-distillation + model-size-frontier") and "  writer: |" in text
+    # A clash is settled as the combination settles it, and the file says how.
+    assert main(["skills", "--merge", "model-efficiency,model-size-frontier", "--name", "small_family", "--dir", folder]) == 0
+    with open(os.path.join(folder, "skills", "small_family", "skill.yaml"), encoding="utf-8") as handle:
+        clash = handle.read()
+    assert "strategy.mechanism: 'archive' (model-size-frontier), not 'pareto' (model-efficiency)" in clash
+    assert skill.combine("small_family", folder)[0]["settings"]["strategy"]["mechanism"] == "archive"
+    assert "exists already" in skill.merge(both, "my-students", folder)[1]
+    assert "name of its own" in skill.merge(both, "model-efficiency", folder)[1]
+    assert "at least two" in skill.merge("model-efficiency", "solo-one", folder)[1]
+
+
+def test_the_terminal_set_up_offers_to_edit_or_merge_the_skills(tmp_path):
+    folder = search(tmp_path)
+    brief = form.load_brief(folder)
+    form.put(brief, "run.skill", "model-distillation, model-size-frontier")
+    form.save_brief(folder, brief)
+    said, opened = [], []
+    replies = iter(["e", "m", "my-family", ""])
+
+    def edit(path):
+        opened.append(path)
+        with open(path, encoding="utf-8") as handle:
+            text = handle.read()
+        with open(path, "w", encoding="utf-8") as handle:
+            handle.write(text.replace("This search trains a student", "No recurrent layers. This search trains a student"))
+        return True
+
+    interview.skill_step(folder, brief, lambda prompt: next(replies), said.append, edit)
+    text = "\n".join(said)
+    assert [os.path.basename(os.path.dirname(p)) for p in opened] == ["model-distillation", "model-size-frontier"]
+    assert "yours to edit" in text and "e = edit them now" in text and "m = merge them into one file" in text
+    assert "your search's copy, edited" in text                                  # after the edit, the state is shown again
+    assert form.given(form.load_brief(folder))["run.skill"] == "my-family"       # merged: the search now names the one file
+    merged = skill.combine("my-family", folder)[0]
+    assert "No recurrent layers." in merged["guidance"]["all"]                   # the merge was made from the edited copies
+    assert "e = edit it now" in said[-1] and "merge" not in said[-1]
+
+
+def test_skills_edited_in_the_form_come_back_with_the_answers(tmp_path, capsys):
+    import json
+    folder = search(tmp_path)
+    page = interview.payload(form.load_brief(folder), folder)
+    assert page["skills"]["model-efficiency"].startswith("name: model-efficiency")
+    text = page["skills"]["model-efficiency"].replace("mechanism: pareto", "mechanism: greedy")
+    answers = os.path.join(str(tmp_path), "answers.json")
+    with open(answers, "w", encoding="utf-8") as handle:
+        json.dump({"run": {"skill": "model-efficiency"}, "skill_files": {"model-efficiency": text, "model-distillation": "settings: [1"}}, handle)
+    assert main(["brief", folder, "--import", answers]) == 0
+    said = capsys.readouterr().out
+    assert "skills/model-efficiency/skill.yaml (as you edited it)" in said and "not valid YAML" in said
+    assert skill.state("model-efficiency", folder)[0]["kind"] == "edited"
+    assert form.resolve(form.load_brief(folder), [], folder)[0]["strategy"]["mechanism"] == "greedy"
+    assert not os.path.exists(os.path.join(folder, "skills", "model-distillation"))

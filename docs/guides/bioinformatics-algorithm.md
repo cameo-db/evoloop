@@ -2,7 +2,7 @@
 
 Skill `bioinformatics-algorithm`. Improve a method that analyses biological data (an aligner, a caller, a peak finder, a quantifier, a scoring function) against a truth set, without breaking the conventions of the formats and coordinates it works in.
 
-File: [`evoloop/skills/bioinformatics-algorithm/skill.yaml`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skills/bioinformatics-algorithm/skill.yaml) ([raw](https://raw.githubusercontent.com/cameo-db/evoloop/main/evoloop/skills/bioinformatics-algorithm/skill.yaml)). A search copies this file to `mysearch/skills/bioinformatics-algorithm/skill.yaml` and reads that copy, which you can edit.
+File: [`evoloop/skills/bioinformatics-algorithm/skill.yaml`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skills/bioinformatics-algorithm/skill.yaml) ([raw](https://raw.githubusercontent.com/cameo-db/evoloop/main/evoloop/skills/bioinformatics-algorithm/skill.yaml)). A search copies this file to `mysearch/skills/bioinformatics-algorithm/skill.yaml` when you choose the skill, and reads that copy. [Edit it during setup](../skills.md).
 
 ## Use it
 

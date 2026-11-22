@@ -53,9 +53,10 @@ and the file itself, with a link to it in the repository.
     | [`model-mechanistic`](guides/model-mechanistic.md) | improve an interpretable or biophysical model | the form of each term, with every parameter keeping its meaning |
     | [`settings-tuning-bayesian`](guides/settings-tuning-bayesian.md) | tune hyperparameters with no agent calls | nothing: a built-in Bayesian optimizer (TPE) picks the values |
 
-Skills are plain files. When you confirm a brief, the skills it names are copied to `mysearch/skills/`
-and the search reads those copies, so you can edit them. Two skills can be combined
-(`skill: [model-distillation, model-size-frontier]`). [Write or edit a skill](skills.md).
+Skills are plain files. When you choose one during setup, it is copied to `mysearch/skills/`, and the
+search reads that copy. You can edit it before you confirm, and at any time after. Two skills can be
+combined (`skill: [model-distillation, model-size-frontier]`) or merged into one file.
+[Edit, merge or write a skill](skills.md).
 
 ### What a skill changes in the loop
 

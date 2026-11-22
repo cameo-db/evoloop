@@ -1,45 +1,41 @@
-# Write or edit a skill
+# Edit, merge or write a skill
 
-A skill is what evoloop knows about one kind of optimization goal: the settings that suit it, advice
-for the agents, and what your evaluator has to report. Each [goal guide](which-search.md) is a skill.
-This page is about changing one, combining them, and writing your own.
+A skill is one YAML file: settings for the search, text added to every agent call, and the measurements
+your evaluator must report. [The file format](skill-format.md) lists every entry. Skills are optional.
 
-```mermaid
-flowchart LR
-    Lib[("Skill library<br>templates in the package")] -- "copied when you confirm" --> Own["mysearch/skills/<br>your copies, yours to edit"]
-    Yours["A skill you wrote"] --> Own
-    Own --> Settings["Settings<br>laid over the run type's<br>and the autonomy level's"]
-    Own --> Guidance["Guidance, diagnoses, stage advice<br>shown to the agents on every call"]
-    Own --> Needs["Needs<br>checked in the plan and the report"]
-```
+The files that come with evoloop are a [library](skill-library.md) of starting points. A search never
+reads the library's file. It reads its own copy, which you can change.
 
-## The library
+## During setup
 
-The skills that come with evoloop are a library of templates. The [skill library](skill-library.md)
-page shows each in full; `evoloop skills` lists them and `evoloop skills --search WORDS` finds them by
-what they are for.
-
-There are twelve, listed by goal in [Which search should I run?](which-search.md). Their names follow one
-pattern, *what* then *goal*, in lower case with hyphens (`model-size-frontier`, `algorithm-runtime`), which
-leaves room for the next one (`model-calibration`, `algorithm-memory`).
-
-## Your search gets its own copy
-
-A search never runs on the library's file. When you confirm the brief, each skill it names is copied
-into the search's own folder:
+When you choose a skill, evoloop copies it into the search folder straight away:
 
 ```
 mysearch/
   skills/
-    model-distillation/skill.yaml     <- the run reads this one; edit it freely
+    model-distillation/skill.yaml     <- the search reads this file
 ```
 
-- Edit it to fit your problem: change the guidance, add a diagnosis from your own experience,
-  remove advice that does not apply.
-- The library is untouched, so another search starts from the original.
-- An edit during a run is recorded. The controller notices the change at its next turn, uses the
-  new text from then on, and writes a ledger entry with the file's digest before and after.
-- A copy that is already there is never overwritten.
+You can edit the copy before you read the plan and before you confirm. Each way of setting up has a
+place to do it:
+
+| Setting up with | How to edit the skill |
+|---|---|
+| `evoloop setup` | After the skill question it shows the file and what it sets. `e` opens the file in `$EDITOR`; `m` merges several skills into one file; Enter goes on. |
+| `evoloop form` | Under the skill question, each chosen skill opens as an editable text box. Your edits are saved in the answers file, and `evoloop brief --import` writes them to the search folder. |
+| an agent | `evoloop brief DIR --next` lists the files under `skill_files`. The agent shows you what the skill sets and tells the agents, and edits the copy as you ask. |
+| the commands | `evoloop skills NAME --edit --dir mysearch`, or open the file in any editor. |
+
+Then check the result:
+
+```
+evoloop plan mysearch                               # what the search will do with the file as it is now
+evoloop skills model-distillation --diff --dir mysearch     # your changes against the library's version
+```
+
+The plan names each skill file and says whether it is unchanged, edited, or your own. A file that
+cannot be read, or that sets something a skill may not set, is reported there and the search does not
+start with it.
 
 ## Combining skills
 
@@ -47,53 +43,55 @@ Give several, as a list or separated by commas:
 
 ```yaml
 run:
-  skill: [model-distillation, model-size-frontier]     # a family of students, one for each size
+  skill: [model-distillation, model-size-frontier]
 ```
 
-- Settings are laid one over the other in the order given. Where two skills set the same thing
-  differently, the later one's value stands, and the plan says which.
-- Guidance, diagnoses and stage advice are joined, each part under the name of its skill.
-- Needs are added together.
-- A pair marked as conflicting (`settings-tuning` with any other skill, `model-size-frontier` with
-  `model-efficiency`, `model-ensemble-members` with `model-efficiency`) still runs; the plan warns.
-For example, `model-efficiency` picks parents from a trade-off front and `model-size-frontier` keeps the best
-design per size band, so they disagree about the parent rule. With
+- Settings are laid over each other in the order given. Where two skills set the same thing, the later
+  one's value stands, and the plan says which.
+- The agents see the text of each, under the name of its skill.
+- The measurements they need are added together.
 
-```yaml
-run:
-  skill: [model-efficiency, model-size-frontier]
-```
+Each skill stays a separate file in `mysearch/skills/`, and you can edit each one.
 
-`evoloop plan` uses the later one and says so:
+### Merge them into one file
+
+To work on a combination as a single skill:
 
 ```
-Warnings:
-  - the skills model-efficiency and model-size-frontier are marked as not meant to be combined
-  - both model-efficiency and model-size-frontier set strategy.mechanism; the value of model-size-frontier stands ('archive', not 'pareto')
+evoloop skills --merge model-distillation,model-size-frontier --name my-students --dir mysearch
+evoloop brief mysearch --answer run.skill=my-students
 ```
 
-Swap the order and `pareto` stands instead.
+This writes `mysearch/skills/my-students/skill.yaml`. It holds the same settings and the same agent
+text as the combination did, so the search behaves the same until you edit it. Where the skills
+disagreed, the file's first lines say which value was kept:
 
+```
+# small-family: merged from model-efficiency + model-size-frontier. This file is yours to edit.
+# Where two of them set the same thing, the later one's value was kept:
+#   strategy.mechanism: 'archive' (model-size-frontier), not 'pareto' (model-efficiency)
+```
 
-Combinations that make sense:
+The merge is made from the search's copies, so edits you already made are carried over.
+
+Combinations in the library that are meant to go together:
 
 | Combine | For |
 |---|---|
 | `model-distillation` + `model-size-frontier` | a family of students across sizes |
 | `model-distillation` + `model-efficiency` | the smallest student that holds the teacher's score |
-| `model-finetuning` + `model-training-recipe` | adapting a pretrained model, with the recipe fully open |
+| `model-finetuning` + `model-training-recipe` | adapting a pretrained model, with the recipe open |
 | `bioinformatics-algorithm` + `algorithm-runtime` | a method that is both more accurate and faster |
-| `model-ensemble-members`, then `model-distillation` | members first; then a student of their average, in a second search |
 
-## Choosing and changing
+A pair marked as conflicting (for example `settings-tuning` with any other skill) still runs; the plan
+warns.
 
-- At setup. The questions ask for the kind of optimization and suggest one from the words of your
-  goal ("distil", "faster", "pipeline", "interpretable") and from the run type.
-- During a run. `evoloop set mysearch --name r1 run.skill=model-efficiency --by "Your Name"`. The
-  new skill is copied in, and the ledger lists every setting that moved with it.
-- With any run type and level of autonomy. Where a skill and a run type or a level of autonomy set the same
-  thing, the skill's value stands,
-  because it knows the problem.
+## During a run
+
+- Edit the search's copy at any time. The controller notices at its next turn, uses the new text from
+  then on, and records the change in the ledger with the file's digest before and after.
+- Change skill: `evoloop set mysearch --name r1 run.skill=model-efficiency --by "Your Name"`. The new
+  skill is copied in, and the ledger lists every setting that moved with it.
 
 ## Writing your own
 
@@ -103,35 +101,28 @@ Start from the nearest one:
 evoloop skills model-efficiency --copy mysearch/skills/edge-device
 ```
 
-Edit `mysearch/skills/edge-device/skill.yaml`, give it a name of its own, and set
-`run.skill: edge-device`. A skill is found by name in the search's `skills/` folder first, then as a
-path, then in the library.
+Edit `mysearch/skills/edge-device/skill.yaml`, change its `name`, and set `run.skill: edge-device`. A
+skill is looked up by name in the search's `skills/` folder first, then as a path, then in the library.
 
-What makes a skill useful, from most to least:
+What to put in it, most useful first:
 
-1. **Diagnoses.** "If you see X, do Y" is the knowledge an expert has and a general model lacks. Write
-   down the mistakes you have watched a search make.
-2. **An order of attack.** What to try first, and what is rarely worth a slot.
-3. **What must not change.** Conventions, constraints, things that look like improvements and are not.
-4. **What to measure.** A skill that needs a figure should say so under `needs`, so that a search
-   missing it is told.
-5. **Settings.** Only where the task clearly calls for them; most of a skill's value is in its words.
+1. **Diagnoses.** "If the results show X, do Y." Write down the mistakes you have watched a search make.
+2. **An order of attack.** What to try first, and what is rarely worth an evaluation.
+3. **What must not change.** Conventions and constraints.
+4. **What to measure.** Under `needs`, so that a search missing a figure is told.
+5. **Settings.** Only where the task calls for them.
 
-`evoloop skills NAME` prints any skill in full, and `evoloop plan` shows what yours sets.
+If you run without a skill and find yourself writing the same instructions into `task.md` and notes for
+each search, those instructions are the skill.
 
 ## Adding a skill to the library
 
-To add a skill to the library, add its folder under `evoloop/skills/` in the repository and open a pull
-request. The tests check that every library skill loads and is complete: a specific name, a title, a summary, an
-objective, tags, a note on when to choose it; guidance for every role, for the writer and for the analyst; at
-least four diagnoses; advice for both stages; and the guide fields (`goal`, `start`, `why`, `reading`). After
-adding one, regenerate the pages built from the library (`evoloop skills --markdown > docs/skill-library.md` and
-`evoloop skills --guides docs/guides`), add its guide to the navigation in `mkdocs.yml`, and add its name to the
-list in `tests/test_skills.py`.
+Add its folder under `evoloop/skills/` in the repository and open a pull request. The tests check that
+every library skill loads and is complete. After adding one, regenerate the pages built from the
+library (`evoloop skills --markdown > docs/skill-library.md`, `evoloop skills --guides docs/guides`,
+`evoloop skills --table > docs/generated/skills-table.md`), add its guide to the navigation in
+`mkdocs.yml`, and add its name to the list in `tests/test_skills.py`.
 
-Every skill carries the same record: a name, a title, a domain, an objective, tags, a version, authors,
-what it sets, what it needs, and a digest of its contents. `evoloop skills --json` prints the library
-as a list of those records, which is the form a searchable website or a shared registry would hold.
-That registry does not exist yet: today the library is the folder in the repository and the
-[skill library](skill-library.md) page built from it.
-
+`evoloop skills --json` prints the library as a list of records (name, title, domain, objective, tags,
+version, authors, what it sets, what it needs, a digest). There is no online registry yet; the library
+is the folder in the repository.

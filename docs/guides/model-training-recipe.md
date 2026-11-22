@@ -2,7 +2,7 @@
 
 Skill `model-training-recipe`. The architecture is fixed; the training recipe is open (the loss, the optimizer, the learning-rate schedule, regularization, augmentation). Between tuning numbers and changing the model.
 
-File: [`evoloop/skills/model-training-recipe/skill.yaml`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skills/model-training-recipe/skill.yaml) ([raw](https://raw.githubusercontent.com/cameo-db/evoloop/main/evoloop/skills/model-training-recipe/skill.yaml)). A search copies this file to `mysearch/skills/model-training-recipe/skill.yaml` and reads that copy, which you can edit.
+File: [`evoloop/skills/model-training-recipe/skill.yaml`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skills/model-training-recipe/skill.yaml) ([raw](https://raw.githubusercontent.com/cameo-db/evoloop/main/evoloop/skills/model-training-recipe/skill.yaml)). A search copies this file to `mysearch/skills/model-training-recipe/skill.yaml` when you choose the skill, and reads that copy. [Edit it during setup](../skills.md).
 
 ## Use it
 

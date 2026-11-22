@@ -223,7 +223,7 @@ run:
   skill: model-performance
 ```
 
-When you confirmed the brief, evoloop copied that skill to `demo/skills/model-performance/skill.yaml`.
+evoloop copied that skill to `demo/skills/model-performance/skill.yaml` when you confirmed the brief.
 Each time a design was written, the writer was sent the skill's instructions along with the parent's
 code and the results so far. In this example the writer is a script and ignores them. With an LLM
 backend the same file is what tells the agent how to approach the task, and you can edit it.

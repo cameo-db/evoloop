@@ -100,6 +100,14 @@ There are other ways to answer the same questions. `evoloop form mysearch` write
 page to fill in; save the answers file it gives you and run `evoloop brief mysearch --import
 PATH/TO/answers.json`. Or edit `brief.yaml` directly: [Brief fields](fields.md) lists every field.
 
+### The skill, if you chose one
+
+Choosing a skill copies its file to `mysearch/skills/NAME/skill.yaml`. That copy is what the search
+reads. `evoloop setup` shows what it sets and offers to open it in your editor (`e`) or, with several
+skills, to merge them into one file (`m`). The form shows each chosen skill as an editable text box.
+Change the settings or the text the agents are given, then read the plan: it shows the effect.
+[Edit, merge or write a skill](skills.md).
+
 ## 4. Read the plan, then confirm
 
 ```

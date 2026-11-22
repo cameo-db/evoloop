@@ -2,7 +2,7 @@
 
 Skill `model-finetuning`. Start from a pretrained model and search over how to adapt it (what to freeze, what to add, the learning rates by layer, how long to train).
 
-File: [`evoloop/skills/model-finetuning/skill.yaml`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skills/model-finetuning/skill.yaml) ([raw](https://raw.githubusercontent.com/cameo-db/evoloop/main/evoloop/skills/model-finetuning/skill.yaml)). A search copies this file to `mysearch/skills/model-finetuning/skill.yaml` and reads that copy, which you can edit.
+File: [`evoloop/skills/model-finetuning/skill.yaml`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skills/model-finetuning/skill.yaml) ([raw](https://raw.githubusercontent.com/cameo-db/evoloop/main/evoloop/skills/model-finetuning/skill.yaml)). A search copies this file to `mysearch/skills/model-finetuning/skill.yaml` when you choose the skill, and reads that copy. [Edit it during setup](../skills.md).
 
 ## Use it
 

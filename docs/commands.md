@@ -61,7 +61,7 @@ Reads and writes the brief. With no option it lists the questions still open.
 |---|---|
 | `--answer FIELD=VALUE` | records an answer; repeatable; the value is read as YAML |
 | `--confirm NAME` | records your agreement to the plan; refused while a required answer is missing |
-| `--import FILE` | reads an answers file from the form, or any mapping of fields |
+| `--import FILE` | reads an answers file from the form, or any mapping of fields; skills edited in the form are written to the search folder |
 | `--next` | the next question as JSON, for an agent to ask |
 | `--keep FIELD` | accepts the suggestion or default for one question |
 | `--infer` | suggests answers from the machine, the folder and the answers so far |
@@ -91,15 +91,26 @@ search's own calls.
 
 ### skills
 
-`evoloop skills [NAME] [--search WORDS] [--copy DIR] [--json]`
+`evoloop skills [NAME] [--dir DIR] [--search WORDS] [--edit] [--diff] [--merge A,B --name NEW] [--copy DIR] [--json]`
 
-With nothing, lists the skill library by domain. With a name, prints that skill in full.
+With nothing, lists the skill library by domain. With a name, prints that skill in full; with `--dir`,
+the search's own copy of it.
+
+| Option | Does |
+|---|---|
+| `--search WORDS` | finds skills by what they are for |
+| `--edit --dir DIR` | opens the search's copy in `$EDITOR`, then checks it can be used |
+| `--diff --dir DIR` | shows how the search's copy differs from the library's |
+| `--merge A,B --name NEW --dir DIR` | writes several skills as one file, `DIR/skills/NEW/skill.yaml` |
+| `--copy DIR` | writes one skill out as a folder, to start a skill of your own |
 
 ```
 evoloop skills --search "smaller"
-evoloop skills model-efficiency
-evoloop skills model-efficiency --copy mysearch/skills/edge-device
+evoloop skills model-efficiency --edit --dir mysearch
+evoloop skills --merge model-distillation,model-size-frontier --name my-students --dir mysearch
 ```
+
+[Edit, merge or write a skill](skills.md).
 
 `--json` prints the library as records. `--markdown` and `--guides DIR` write the documentation's skill
 pages.

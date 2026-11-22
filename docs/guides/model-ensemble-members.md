@@ -2,7 +2,7 @@
 
 Skill `model-ensemble-members`. Find models that are each good and that make different errors from one another, so that averaging them gains more than averaging copies of the best one.
 
-File: [`evoloop/skills/model-ensemble-members/skill.yaml`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skills/model-ensemble-members/skill.yaml) ([raw](https://raw.githubusercontent.com/cameo-db/evoloop/main/evoloop/skills/model-ensemble-members/skill.yaml)). A search copies this file to `mysearch/skills/model-ensemble-members/skill.yaml` and reads that copy, which you can edit.
+File: [`evoloop/skills/model-ensemble-members/skill.yaml`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skills/model-ensemble-members/skill.yaml) ([raw](https://raw.githubusercontent.com/cameo-db/evoloop/main/evoloop/skills/model-ensemble-members/skill.yaml)). A search copies this file to `mysearch/skills/model-ensemble-members/skill.yaml` when you choose the skill, and reads that copy. [Edit it during setup](../skills.md).
 
 ## Use it
 

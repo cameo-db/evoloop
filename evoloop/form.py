@@ -696,7 +696,11 @@ def plan_lines(brief: Dict[str, Any], star: Optional[str] = None, folder: Option
     out = ["Plan for: %s" % (settings["objective"]["goal"] or "(no goal yet)"), "", "At a glance"]
     out += at_a_glance(settings)
     if settings.get("_skill"):
+        from . import skill as skills
         out += ["", "Skill: %s. %s" % (settings["_skill"]["name"], settings["_skill"]["summary"])]
+        out += ["  file: %s   (%s)" % (row["file"], skills.KINDS[row["kind"]])
+                for row in skills.state(settings["run"].get("skill") or settings["_skill"].get("parts") or [], folder) if row["file"]]
+        out.append("  Edit a file to change what the skill sets or tells the agents; this plan then shows the effect.")
     notes = warnings(settings)
     if notes:
         out += ["", "Warnings:"] + ["  - " + note for note in notes]

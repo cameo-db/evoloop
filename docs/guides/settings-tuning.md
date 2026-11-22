@@ -2,7 +2,7 @@
 
 Skill `settings-tuning`. An agent tunes the hyperparameters of a fixed model, the architecture's (depth, widths, kernel sizes) and the training's (learning rate, weight decay, schedule), reading the results of earlier trials before choosing the next.
 
-File: [`evoloop/skills/settings-tuning/skill.yaml`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skills/settings-tuning/skill.yaml) ([raw](https://raw.githubusercontent.com/cameo-db/evoloop/main/evoloop/skills/settings-tuning/skill.yaml)). A search copies this file to `mysearch/skills/settings-tuning/skill.yaml` and reads that copy, which you can edit.
+File: [`evoloop/skills/settings-tuning/skill.yaml`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skills/settings-tuning/skill.yaml) ([raw](https://raw.githubusercontent.com/cameo-db/evoloop/main/evoloop/skills/settings-tuning/skill.yaml)). A search copies this file to `mysearch/skills/settings-tuning/skill.yaml` when you choose the skill, and reads that copy. [Edit it during setup](../skills.md).
 
 ## Use it
 

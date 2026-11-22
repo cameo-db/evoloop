@@ -2,7 +2,7 @@
 
 Skill `model-size-frontier`. Find the best model at each size (or speed), from very small to large, so that the result is a whole trade-off curve to choose from and not one winner.
 
-File: [`evoloop/skills/model-size-frontier/skill.yaml`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skills/model-size-frontier/skill.yaml) ([raw](https://raw.githubusercontent.com/cameo-db/evoloop/main/evoloop/skills/model-size-frontier/skill.yaml)). A search copies this file to `mysearch/skills/model-size-frontier/skill.yaml` and reads that copy, which you can edit.
+File: [`evoloop/skills/model-size-frontier/skill.yaml`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skills/model-size-frontier/skill.yaml) ([raw](https://raw.githubusercontent.com/cameo-db/evoloop/main/evoloop/skills/model-size-frontier/skill.yaml)). A search copies this file to `mysearch/skills/model-size-frontier/skill.yaml` when you choose the skill, and reads that copy. [Edit it during setup](../skills.md).
 
 ## Use it
 

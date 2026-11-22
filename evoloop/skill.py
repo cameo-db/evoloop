@@ -42,6 +42,7 @@ and the plan says so; guidance, diagnoses and needs are joined."""
 from __future__ import annotations
 
 import hashlib
+import json
 import os
 import re
 import shutil
@@ -57,7 +58,7 @@ FIELDS = ("name", "title", "summary", "domain", "objective", "tags", "version", 
 ALIASES = {"performance": "model-performance", "distillation": "model-distillation", "tuning": "settings-tuning",
            "efficiency": "model-efficiency", "mechanistic": "model-mechanistic"}
 NAME = re.compile(r"[a-z][a-z0-9]*(-[a-z0-9]+)+")
-_cache: Dict[str, Tuple[float, Any]] = {}
+_cache: Dict[str, Tuple[Any, Any]] = {}
 
 
 def names() -> List[str]:
@@ -161,7 +162,8 @@ def load(name: Any, folder: Optional[str] = None) -> Tuple[Optional[Dict[str, An
             name, ", ".join(names()))
     file = os.path.join(path, "skill.yaml")
     try:
-        stamp = os.path.getmtime(file)
+        info = os.stat(file)
+        stamp = (info.st_mtime_ns, info.st_size)      # the size too: two edits within one tick of the clock
         if file in _cache and _cache[file][0] == stamp:
             return _cache[file][1]
         with open(file, "r", encoding="utf-8") as handle:
@@ -408,8 +410,8 @@ def guide_markdown(name: str) -> str:
         one["name"], brief["run"]["type"])
     out = ["# %s" % one["goal"], "",
            "Skill `%s`. %s" % (one["name"], one["summary"]), "",
-           "File: %s. A search copies this file to `mysearch/skills/%s/skill.yaml` and reads that copy, which you "
-           "can edit." % (file_links(one["name"]), one["name"]), "",
+           "File: %s. A search copies this file to `mysearch/skills/%s/skill.yaml` when you choose the skill, and "
+           "reads that copy. [Edit it during setup](../skills.md)." % (file_links(one["name"]), one["name"]), "",
            "## Use it", "", "```yaml", _brief(brief).rstrip(), "```", "",
            "Put these lines in `brief.yaml`. The budget and any limits or ranges are placeholders. %s." % preview, ""]
     if one["when"]:
@@ -505,3 +507,157 @@ def table_markdown() -> str:
             "`%s`" % sets["space.preset"] if "space.preset" in sets else "not set",
             ", ".join("`%s`" % k for k in other) or "none", REPO, name))
     return "\n".join(out) + "\n"
+
+
+# --- the search's own copies: what is there, how it differs from the library, several merged into one ------------
+
+class _Block(yaml.SafeDumper):
+    """Writes text of several lines as a block, so that a merged skill reads like one written by hand."""
+
+
+def _text(dumper: yaml.Dumper, value: str) -> Any:
+    if "\n" in value:
+        value = "\n".join(line.rstrip() for line in value.split("\n"))
+        return dumper.represent_scalar("tag:yaml.org,2002:str", value, style="|")
+    return dumper.represent_scalar("tag:yaml.org,2002:str", value)
+
+
+_Block.add_representer(str, _text)
+
+
+def file_of(name: str, folder: Optional[str] = None) -> Optional[str]:
+    path = find(name, folder)
+    return os.path.join(path, "skill.yaml") if path else None
+
+
+def _read(path: Optional[str]) -> Optional[str]:
+    try:
+        with open(path or "", "r", encoding="utf-8") as handle:
+            return handle.read()
+    except OSError:
+        return None
+
+
+def state(value: Any, folder: Optional[str] = None) -> List[Dict[str, Any]]:
+    """For each skill named: the file a search in `folder` reads, and whether it is the library's, the search's own
+    unchanged copy of it, an edited copy, or a skill that is not in the library at all."""
+    out = []
+    for name in wanted(value):
+        file = file_of(name, folder)
+        library = _read(os.path.join(HERE, os.path.basename(name), "skill.yaml"))
+        mine = _read(file)
+        if file is None:
+            kind = "missing"
+        elif os.path.abspath(os.path.dirname(file)) == os.path.abspath(os.path.join(HERE, os.path.basename(name))):
+            kind = "library"
+        elif library is None:
+            kind = "own"
+        else:
+            kind = "copy" if mine == library else "edited"
+        _, fault = load(name, folder)
+        out.append({"name": name, "file": file, "kind": kind, "fault": fault})
+    return out
+
+
+KINDS = {"library": "the library's file; your search gets its own copy when you choose the skill",
+         "copy": "your search's copy, the same as the library's", "edited": "your search's copy, edited",
+         "own": "your own skill", "missing": "not found"}
+
+
+def differs(name: str, folder: Optional[str] = None) -> Optional[List[str]]:
+    """The lines by which the search's copy of a skill differs from the library's: None when the library has no
+    skill of that name, an empty list when the two are the same."""
+    import difflib
+    library = _read(os.path.join(HERE, os.path.basename(ALIASES.get(name, name)), "skill.yaml"))
+    mine = _read(file_of(name, folder))
+    if library is None or mine is None:
+        return None
+    return [line.rstrip("\n") for line in difflib.unified_diff(
+        library.splitlines(), mine.splitlines(), "library", "yours", lineterm="", n=1)]
+
+
+def sets(value: Any, folder: Optional[str] = None) -> List[str]:
+    """`setting = value` for everything the named skills set, as one search would have them."""
+    from . import form
+    found, _ = combine(value, folder)
+    return ["%s = %s" % (k, json.dumps(v, default=str)) for k, v in sorted(form.flatten((found or {}).get("settings") or {}).items())]
+
+
+def merged_yaml(value: Any, name: str, folder: Optional[str] = None) -> Tuple[Optional[str], Optional[str]]:
+    """Several skills written out as one skill file: (the text, None) or (None, why not). A search run with the
+    merged file has the settings and shows the agents the text that it would have with the skills combined."""
+    found, fault = combine(value, folder)
+    if found is None:
+        return None, fault or "name the skills to merge"
+    if len(found["parts"]) < 2:
+        return None, "name at least two skills to merge; to edit one, edit the search's copy of it"
+    parts = [load(n, folder)[0] for n in found["parts"]]
+    union = lambda key: [x for i, x in enumerate(sum((p[key] for p in parts), [])) if x not in sum((p[key] for p in parts), [])[:i]]
+    raw: Dict[str, Any] = {
+        "name": name, "title": found["title"], "summary": found["summary"], "domain": parts[0]["domain"],
+        "objective": "; ".join(p["objective"] for p in parts if p["objective"]), "tags": union("tags"), "version": 1,
+        "authors": union("authors"), "when": "\n".join("%s: %s" % (p["name"], p["when"]) for p in parts if p["when"]),
+        "settings": found["settings"], "guidance": found["guidance"],
+        "diagnose": [{"see": d["see"], "do": d["do"]} for d in found["diagnose"]], "stages": found["stages"],
+        "needs": found["needs"], "conflicts": [c for c in union("conflicts") if c not in found["parts"]]}
+    raw = {k: v for k, v in raw.items() if v not in (None, "", [], {})}
+    fault = check(raw)
+    if fault:
+        return None, fault
+    head = ["# %s: merged from %s. This file is yours to edit." % (name, " + ".join(found["parts"]))]
+    if found["clashes"]:
+        head.append("# Where two of them set the same thing, the later one's value was kept:")
+        head += ["#   %s: %r (%s), not %r (%s)" % (c["setting"], c["to"], c["stands"], c["value"], c["from"]) for c in found["clashes"]]
+    return "\n".join(head) + "\n" + yaml.dump(raw, Dumper=_Block, sort_keys=False, width=110, allow_unicode=True), None
+
+
+OWN_NAME = re.compile(r"[a-z0-9][a-z0-9_-]*")
+
+
+def merge(value: Any, name: str, folder: str) -> Tuple[Optional[str], Optional[str]]:
+    """Write the named skills as one skill, `skills/NAME/skill.yaml` in the search folder: (the file, None) or
+    (None, why not). Nothing that is there already is written over."""
+    if not OWN_NAME.fullmatch(name or ""):
+        return None, "give the merged skill a name in lower case, with digits, hyphens or underscores (for instance my-students)"
+    if name in names() or name in ALIASES:
+        return None, "%s is a skill of the library; give the merged skill a name of its own" % name
+    target = os.path.join(folder, "skills", name)
+    if os.path.exists(target):
+        return None, "%s exists already" % target
+    text, fault = merged_yaml(value, name, folder)
+    if text is None:
+        return None, fault
+    os.makedirs(target)
+    file = os.path.join(target, "skill.yaml")
+    with open(file, "w", encoding="utf-8") as handle:
+        handle.write(text)
+    return file, None
+
+
+def write_edited(name: str, text: str, folder: str) -> Optional[str]:
+    """Save an edited skill file (from the set-up form) as the search's copy. Returns why not, or None."""
+    name = ALIASES.get(name, name)
+    if not OWN_NAME.fullmatch(name or ""):
+        return "%r is not the name of a skill" % name
+    try:
+        raw = yaml.safe_load(text)
+    except yaml.YAMLError as exc:
+        return "the edited skill %s is not valid YAML: %s" % (name, exc)
+    fault = check(raw)
+    if fault:
+        return "the edited skill %s cannot be used: %s" % (name, fault)
+    target = os.path.join(folder, "skills", name)
+    os.makedirs(target, exist_ok=True)
+    with open(os.path.join(target, "skill.yaml"), "w", encoding="utf-8") as handle:
+        handle.write(text if text.endswith("\n") else text + "\n")
+    return None
+
+
+def texts(folder: Optional[str] = None) -> Dict[str, str]:
+    """The file of every skill a search in `folder` could name (its own copies first), for the set-up form."""
+    out = {}
+    for row in index(folder):
+        text = _read(file_of(row["name"], folder))
+        if text:
+            out[row["name"]] = text
+    return out

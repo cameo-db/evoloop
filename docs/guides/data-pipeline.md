@@ -2,7 +2,7 @@
 
 Skill `data-pipeline`. Speed up a multi-step data pipeline (reading, transforming, joining, writing) or cut its memory and cost, with its output unchanged.
 
-File: [`evoloop/skills/data-pipeline/skill.yaml`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skills/data-pipeline/skill.yaml) ([raw](https://raw.githubusercontent.com/cameo-db/evoloop/main/evoloop/skills/data-pipeline/skill.yaml)). A search copies this file to `mysearch/skills/data-pipeline/skill.yaml` and reads that copy, which you can edit.
+File: [`evoloop/skills/data-pipeline/skill.yaml`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skills/data-pipeline/skill.yaml) ([raw](https://raw.githubusercontent.com/cameo-db/evoloop/main/evoloop/skills/data-pipeline/skill.yaml)). A search copies this file to `mysearch/skills/data-pipeline/skill.yaml` when you choose the skill, and reads that copy. [Edit it during setup](../skills.md).
 
 ## Use it
 

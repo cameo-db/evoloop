@@ -63,7 +63,7 @@ nav:
           - Ensemble members: guides/model-ensemble-members.md
           - Interpretable or biophysical models: guides/model-mechanistic.md
           - Bayesian tuning without agents: guides/settings-tuning-bayesian.md
-      - Write or edit a skill: skills.md
+      - Edit, merge or write a skill: skills.md
   - How it works:
       - Overview: how-it-works.md
       - Schedule: schedule.md
