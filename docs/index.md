@@ -16,60 +16,28 @@ hyperparameters, or make an algorithm or pipeline faster while its output stays 
 [Explore the search options](options.md){ .md-button }
 [Source on GitHub](https://github.com/cameo-db/evoloop){ .md-button }
 
-<div class="evo-map" markdown="0">
-  <div class="evo-map-side">
-    <h4>You provide</h4>
-    <ul>
-      <li><b>Your code</b>with the parts that may change marked</li>
-      <li><b>A scoring script</b>that measures one version</li>
-      <li><b>A budget</b>evaluations, and dollars for the agents</li>
-    </ul>
-  </div>
-  <div class="evo-map-loop">
-    <h4>The loop, repeated until the budget is spent</h4>
-    <div class="evo-map-steps">
-      <div class="evo-step">
-        <div class="evo-step-top"><span class="evo-step-n">1</span><span class="evo-step-name">Choose</span>
-          <p class="evo-step-what">Pick which earlier versions to build on, and what kind of change to try.</p>
-          <span class="evo-who">evoloop's code</span></div>
-        <div class="evo-step-choice"><span>Your choice</span><b>Search strategy</b>Keep several families alive, keep the best of each size, or follow the single best. <a href="parents/">Five strategies</a></div>
-      </div>
-      <div class="evo-step">
-        <div class="evo-step-top"><span class="evo-step-n">2</span><span class="evo-step-name">Propose</span>
-          <p class="evo-step-what">Write the new version: new contents for the marked parts.</p>
-          <span class="evo-who agent">an LLM agent</span></div>
-        <div class="evo-step-choice"><span>Your choice</span><b>What may change</b>Hyperparameters only, the training recipe, or the whole architecture. <a href="moves/">Moves</a></div>
-      </div>
-      <div class="evo-step">
-        <div class="evo-step-top"><span class="evo-step-n">3</span><span class="evo-step-name">Score</span>
-          <p class="evo-step-what">Run your script on the new version, as its own job.</p>
-          <span class="evo-who">your script</span></div>
-        <div class="evo-step-choice"><span>Your choice</span><b>What is measured</b>Your metric, on your data. Weak versions can be stopped part way. <a href="evaluator/">Evaluator</a></div>
-      </div>
-      <div class="evo-step">
-        <div class="evo-step-top"><span class="evo-step-n">4</span><span class="evo-step-name">Record</span>
-          <p class="evo-step-what">Keep the version, its parent and its score. Compare it with the rest.</p>
-          <span class="evo-who">evoloop's code</span></div>
-        <div class="evo-step-choice"><span>Your choice</span><b>Limits</b>Hard bounds, such as a largest model size, that no version may break. <a href="cost/">Budget and limits</a></div>
-      </div>
-    </div>
-    <div class="evo-map-back">&#8634; each result changes what is chosen next</div>
-  </div>
-  <div class="evo-map-side">
-    <h4>You get</h4>
-    <ul>
-      <li><b>A leaderboard</b>the best versions, beside your baseline</li>
-      <li><b>Every version tried</b>with its code, parent and score</li>
-      <li><b>One JSON file</b>the whole search, ready for CAMEO</li>
-    </ul>
-  </div>
-  <div class="evo-map-across">
-    <div class="evo-across"><b>How much the agents decide</b>From code planning every move to agents choosing the moves and adjusting the schedule. <a href="agents/">Agents</a></div>
-    <div class="evo-across"><b>A skill, if you want one</b>Settings and agent guidance for one goal, such as distillation. Editable. <a href="which-search/">Skills</a></div>
-    <div class="evo-across"><b>Where to start from</b>Your baseline, an earlier search, or designs from CAMEO. <a href="warm-start/">Start from earlier designs</a></div>
-    <div class="evo-across"><b>Steering while it runs</b>Change settings, send the agents a note, or stop. <a href="steering/">Monitor and steer</a></div>
-  </div>
+<style>
+.evo-flow { display: flex; flex-wrap: wrap; align-items: stretch; gap: 10px; margin: 28px 0 8px; }
+.evo-flow > div { flex: 1 1 150px; border: 1px solid #9aa5a3; border-radius: 12px; padding: 16px 14px; }
+.evo-flow > div.evo-flow-step { border: 2px solid #01796e; }
+.evo-flow .evo-flow-arrow { flex: 0 0 auto; border: 0; padding: 0; align-self: center; font-size: 26px; color: #01796e; }
+.evo-flow b { display: block; font-size: 20px; margin-bottom: 6px; }
+.evo-flow span { display: block; font-size: 14px; line-height: 1.4; }
+.evo-flow em { display: block; font-style: normal; font-size: 13px; line-height: 1.4; margin-top: 10px; padding-top: 10px; border-top: 1px dashed #9aa5a3; }
+.evo-flow-note { text-align: center; font-size: 14px; margin: 0 0 24px; }
+</style>
+<div class="evo-flow">
+  <div><b>You provide</b><span>Code with the parts that may change marked, and a script that scores one version.</span></div>
+  <div class="evo-flow-arrow">&rarr;</div>
+  <div class="evo-flow-step"><b>1. Choose</b><span>evoloop's code picks which earlier version to build on.</span><em>You choose the search strategy.</em></div>
+  <div class="evo-flow-arrow">&rarr;</div>
+  <div class="evo-flow-step"><b>2. Propose</b><span>An LLM agent writes a changed version.</span><em>You choose what may change and how much the agents decide.</em></div>
+  <div class="evo-flow-arrow">&rarr;</div>
+  <div class="evo-flow-step"><b>3. Score</b><span>Your script runs on it, as a job.</span><em>You choose the metric and the budget.</em></div>
+  <div class="evo-flow-arrow">&rarr;</div>
+  <div><b>You get</b><span>A leaderboard, every version with its score, and the search as one JSON file.</span></div>
 </div>
+<p class="evo-flow-note">Steps 1 to 3 repeat, many versions at a time. Each result changes what is chosen next.</p>
 
 Agents write the changes. Code does everything that must be trusted: it picks what to build on, checks
 that only the marked parts changed, runs the jobs, enforces the budget and your limits, and keeps the
