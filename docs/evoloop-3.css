@@ -171,7 +171,7 @@
 
 /* Previous and next page: drawn as part of the page, where the reading ends, not inside the dark footer. */
 .md-footer { background-color: var(--md-default-bg-color); color: var(--md-default-fg-color); }
-.md-footer__inner { border-top: 1px solid var(--md-default-fg-color--lightest); padding: 0.8rem 0.6rem 1rem; gap: 0.8rem; }
+.md-footer__inner { border-top: 1px solid var(--md-default-fg-color--lightest); padding: 0.8rem 0.6rem 2.6rem; gap: 0.8rem; }
 .md-footer__link { border: 1px solid var(--md-default-fg-color--lighter); border-radius: 10px; margin: 0; padding: 0.5rem 0.4rem; opacity: 1; flex: 1 1 0; max-width: 24rem; }
 .md-footer__link--next { margin-left: auto; }
 .md-footer__link:hover, .md-footer__link:focus { border-color: var(--evo-teal); opacity: 1; }

@@ -42,8 +42,8 @@ Other mechanisms, each an option:
 |---|---|---|
 | Marked regions of a program evolved by an LLM | `EVOLVE-BLOCK` markers in your code | FunSearch, AlphaEvolve |
 | Explore first, then exploit: shares of new designs, crossover and local moves by phase of the budget | `schedule.phases` | |
-| Stop weak candidates part way through training | `evaluation.ladder` | successive halving, ASHA |
-| A cheap model for most candidates and a strong one for some | `agents.writer_mix` | AlphaEvolve |
+| Stop weak designs part way through training | `evaluation.ladder` | successive halving, ASHA |
+| A cheap model for most designs and a strong one for some | `agents.writer_mix` | AlphaEvolve |
 | Candidates returned as diffs | `variation.edit_format: diff` | AlphaEvolve |
 | Hyperparameters drawn by a Bayesian optimizer, with no agent | `variation.settings_by: tpe` | TPE (Optuna, Hyperopt) |
 | Designs grouped by where their errors fall | `strategy.descriptors: [behaviour]` | FunSearch's signature clusters |
