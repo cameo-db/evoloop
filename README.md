@@ -63,32 +63,31 @@ code can change.
 
 ## Get started
 
-The simplest way is from [Claude Code](https://claude.com/claude-code). Open this repository there and say
-what you want to optimize. It marks the code with you, writes the evaluator, asks the setup questions,
-and shows you a plan with a cost estimate. Nothing is spent until you approve the plan. Claude Code then
-launches the search, reports on it, and turns your feedback into changes to the running search. It
-follows [AGENTS.md](AGENTS.md).
+The way to use evoloop is through a coding agent. You say what you want to improve, the agent sets the
+search up with you, and nothing is spent until you approve a plan. You do not need to read the code or
+learn the commands.
 
-By hand:
+Clone evoloop and open it in [Claude Code](https://claude.com/claude-code):
 
 ```
 git clone https://github.com/cameo-db/evoloop.git
-cd evoloop && python -m pip install -e .
-
-evoloop init mysearch --source path/to/your/project    # copy your project into a search folder
-evoloop setup mysearch                                 # answer the setup questions
-evoloop plan mysearch                                  # read what will run and what it should cost
-evoloop brief mysearch --confirm "Your Name"           # approve the plan
-evoloop run mysearch --name r1                         # run the search
+cd evoloop
+claude
 ```
 
-Install from this repository. The package named `evoloop` on PyPI is a different project. Before
-`setup`, mark the code that may change with `# EVOLVE-BLOCK-START` and `# EVOLVE-BLOCK-END` comment
-lines and write the evaluator, `mysearch/adapter/run.py`.
-[Set up a search](https://evoloop.readthedocs.io/en/latest/setting-up/) goes through each step.
+Then say what you want, in your own words. For example:
 
-Training runs on a workstation or a Slurm cluster, one job per design. The agents need an Anthropic API
-key or a Claude Code login.
+> Set up an evoloop search for my project in ~/projects/mymodel. I want a higher validation accuracy
+> without making the model larger.
+
+The agent follows [AGENTS.md](AGENTS.md). It asks you what to optimize, what may change, how a version
+is scored, how much to spend and whether there are hard limits. It marks the code, writes the
+evaluator, proves the setup with a dry run, and shows you the plan. After you approve, it starts the
+search, watches it, and turns your feedback into changes to the running search.
+
+You need an Anthropic API key or a Claude Code login for the agents, and a workstation or a Slurm
+cluster to run on. Install from this repository; the package named `evoloop` on PyPI is a different
+project.
 
 To watch a search run first, the built-in example trains small classifiers on a toy dataset in about
 half a minute, with no API key and no GPU:
@@ -101,15 +100,9 @@ evoloop run demo --name first
 evoloop leaderboard demo --name first
 ```
 
-While a search runs you can change it:
-
-```
-evoloop status mysearch --name r1
-evoloop set    mysearch --name r1 schedule.novelty=0.6 budget.evaluations=300 --by "Your Name"
-evoloop note   mysearch --name r1 "No attention layers." --roles writer --by "Your Name"
-evoloop stop   mysearch --name r1 --by "Your Name"
-```
-
+Everything the agent does is a command or a plain file, and can be done by hand.
+[Get started](https://evoloop.readthedocs.io/en/latest/get-started/) ·
+[Manual setup](https://evoloop.readthedocs.io/en/latest/setting-up/) ·
 [Monitor and steer a search](https://evoloop.readthedocs.io/en/latest/steering/)
 
 ## Skills

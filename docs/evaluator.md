@@ -5,8 +5,11 @@ search:
 
 # Write the evaluator
 
-The evaluator is the one script you write for evoloop. It lives at `adapter/run.py`, trains one design,
+The evaluator is the script that scores one design. It lives at `adapter/run.py`, trains one design,
 and writes that design's score to a file. The search runs it once per design, as a separate job.
+
+An agent normally writes the evaluator with you ([Get started](get-started.md)). This page is for
+checking what it wrote, or for writing one yourself.
 
 ## Minimal evaluator
 

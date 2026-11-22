@@ -1,19 +1,9 @@
-# Set up a search
+# Set up a search by hand
 
-Five steps take a project to a running search: mark what may change, write the evaluator, answer the
-questions, read and confirm the plan, then dry-run and run. A coding agent can do most of them with
-you. The steps are the same either way, and this page is also how to check what an agent did.
-
-## With an agent
-
-Open the evoloop repository in Claude Code, or another agent that can read files and run commands, point
-it at your project, and ask it to set up a search. It follows
-[AGENTS.md](https://github.com/cameo-db/evoloop/blob/main/AGENTS.md): it proposes which code to mark,
-writes the evaluator, suggests an answer to each question with its reason, and asks you only what it
-cannot work out.
-
-Five decisions are yours either way: what to optimize, what may change, how a design is
-scored and how noisy that score is, how much to spend, and any hard limits. The rest have defaults.
+An agent normally does this for you: see [Get started](get-started.md). This page is the same
+procedure step by step, for checking an agent's work or setting a search up yourself. There are five
+steps: mark what may change, write the evaluator, answer the questions, read and confirm the plan, then
+dry-run and run.
 
 ## Search folder
 

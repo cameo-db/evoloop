@@ -304,4 +304,4 @@ would propose or how good the result would be on a real task.
 A second example searches for a formula that fits a dataset, where a lower score is better:
 `evoloop example demo2 --kind formula`.
 
-Next: [Set up a project](setting-up.md).
+Next: [Get started](get-started.md) with your own project.

@@ -20,7 +20,7 @@ same loop works on any code that a script can score, such as an algorithm or a d
 You stay in charge of a search. You decide what may change and how much may be spent, you approve the
 plan before anything runs, and you can redirect the search while it is running.
 
-[Get started](setting-up.md){ .md-button .md-button--primary }
+[Get started](get-started.md){ .md-button .md-button--primary }
 [How it works](how-it-works.md){ .md-button }
 [GitHub](https://github.com/cameo-db/evoloop){ .md-button }
 
@@ -226,7 +226,7 @@ command you can run yourself.
 Training runs on a workstation or a Slurm cluster, one job per design. The agents need an Anthropic API
 key or a Claude Code login.
 
-[Set up a search →](setting-up.md) · [Monitor and steer a search →](steering.md) · [Budget and cost →](cost.md)
+[Get started →](get-started.md) · [Monitor and steer a search →](steering.md) · [Budget and cost →](cost.md)
 
 ## CAMEO
 

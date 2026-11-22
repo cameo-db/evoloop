@@ -11,7 +11,7 @@ a setting of your own. The rest is a small module with a short interface.
 | The goal and the guidance the agents get | a custom skill | [Write a skill](custom-skills.md) |
 | How the budget is spent | `run.type: custom` with your own `schedule.phases` | below |
 | What is optimized | your evaluator: any script that writes a score | [Write the evaluator](evaluator.md) |
-| What may change | your own marked blocks and roles, opened with `space.roles` | [Set up a search](setting-up.md#1-mark-the-editable-code) |
+| What may change | your own marked blocks and roles, opened with `space.roles` | [Set up a search by hand](setting-up.md#1-mark-the-editable-code) |
 | The second objective | `strategy.second_metric`: any metric your evaluator reports | below |
 | What counts as a kind of design | `strategy.descriptors`: any metric your evaluator reports | below |
 | Hard limits | `limits` on any metric your evaluator reports | [Early stopping](early-stopping.md#limits) |

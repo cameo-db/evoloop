@@ -3,6 +3,7 @@
 Two training runs of the same design give different scores. The noise floor, `evaluation.noise`, is
 the difference in score that evoloop treats as no difference. You set it once, when you set up a
 search. There are two reasonable ways to choose it: set a small value, or estimate it from a few runs.
+An agent setting up a search suggests a value and says why.
 
 ## Uses
 

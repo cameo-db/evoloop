@@ -41,11 +41,8 @@ validation:
 nav:
   - Home: index.md
   - Get started:
+      - Get started: get-started.md
       - Worked example: quickstart.md
-      - Set up a search: setting-up.md
-      - Write the evaluator: evaluator.md
-      - Noise floor: noise.md
-      - Run on a cluster: servers.md
   - How it works:
       - Overview: how-it-works.md
       - Agents: agents.md
@@ -87,6 +84,11 @@ nav:
           - Write a skill: custom-skills.md
           - Edit or merge a skill: skills.md
           - Skill file format: skill-format.md
+  - Manual setup:
+      - Set up a search by hand: setting-up.md
+      - Write the evaluator: evaluator.md
+      - Noise floor: noise.md
+      - Run on a cluster: servers.md
   - Reference:
       - reference.md
       - Commands: commands.md
