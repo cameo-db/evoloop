@@ -45,7 +45,7 @@ scores each one. The best become parents of the next.
     <text x="600" y="322" fill="currentColor" font-size="22">Lineages</text>
   </g>
   <g text-anchor="middle" font-size="17">
-    <text x="600" y="122" fill="#ffffff">writer agent</text>
+    <text x="600" y="122" fill="#ffffff">writer agent: mutate or cross</text>
     <text x="1010" y="372" fill="#1c2326">your script, many at once</text>
     <text x="600" y="628" fill="#1c2326">your metric</text>
     <text x="190" y="372" fill="#ffffff">analyst + strategist agents</text>
@@ -80,7 +80,7 @@ scores each one. The best become parents of the next.
 </svg>
 
 <ol class="evo-loop-list">
-<li><b>Propose.</b> The writer agent rewrites a parent.</li>
+<li><b>Propose.</b> The writer agent mutates a parent or crosses two.</li>
 <li><b>Train.</b> Your script trains or runs it.</li>
 <li><b>Score.</b> Code reads your metric and ranks it.</li>
 <li><b>Analyze.</b> The analyst and strategist agents pass lessons to the writer.</li>
@@ -88,7 +88,7 @@ scores each one. The best become parents of the next.
 
 | Step | Who | What happens |
 |---|---|---|
-| **Propose** | writer agent | Rewrites a parent, or combines two. |
+| **Propose** | writer agent | Mutates one parent, or crosses two (crossover). |
 | **Train** | your script | Trains or runs the new version. Many run at once. |
 | **Score** | code | Reads your metric and ranks the version. A version that breaks your limits is rejected. |
 | **Analyze** | analyst and strategist agents | The analyst tells the writer what has worked. The strategist decides what to try more of. Both are optional. |
@@ -168,10 +168,11 @@ once.
     <text x="200" y="384" font-weight="700">Baseline CNN</text>
     <text x="200" y="406">retired: 6 tries, no gain</text>
     <text x="1024" y="184" font-weight="700">Dilated CNN</text>
+    <text x="778" y="236" font-weight="700" fill="#01796e">crossover</text>
     <text x="866" y="263" font-weight="700">Transformer</text>
     <text x="866" y="285">slow start, protected for 2 runs</text>
     <text x="714" y="88" font-weight="700">Dilated CNN &#215; Transformer</text>
-    <text x="714" y="110">a cross of the two, ends up best</text>
+    <text x="714" y="110">crossover of the two, ends up best</text>
   </g>
   <g font-size="15.5" fill="currentColor" opacity="0.85">
     <text x="80" y="448">evaluations spent &#8594;</text>
@@ -185,7 +186,8 @@ once.
 - **Its first 2 runs are protected.** The transformer starts at the bottom and would have been dropped.
   It gets time to catch up.
 - **Six tries with no gain and a lineage is retired.** The baseline CNN goes this way.
-- **Two lineages can be crossed.** Here the cross ends up best.
+- **Crossover combines two lineages.** The writer takes a parent from each and merges them into a new
+  lineage. Here the crossover of the dilated CNN and the transformer ends up best.
 
 Early in the budget most versions are new designs. Later most are refinements and crosses of the best
 lineages. Where the switch happens, and every number above, is a setting.
