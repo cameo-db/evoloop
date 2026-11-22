@@ -9,40 +9,65 @@ hide:
 script that measures how good one version is. evoloop then runs an evolutionary search: LLM agents
 propose changes, your script scores each one, and the results decide what is tried next.
 
-<style>
-.evo-ring { display: grid; grid-template-columns: minmax(0, 1fr) 56px minmax(0, 1fr); gap: 10px; margin: 28px auto 14px; max-width: 980px; }
-.evo-ring .box { border: 2px solid #8a9694; border-radius: 14px; padding: 18px 18px 16px; }
-.evo-ring .box.agent, .evo-others .box.agent { border-color: #01796e; background: #01796e; color: #fff; }
-.evo-ring .box b { display: block; font-size: 22px; margin-bottom: 6px; }
-.evo-ring .box span, .evo-others .box span { display: block; font-size: 15px; line-height: 1.45; }
-.evo-ring .tag, .evo-others .tag { display: inline-block; font-size: 12px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; border: 1px solid currentColor; border-radius: 999px; padding: 2px 10px; margin-bottom: 10px; }
-.evo-ring .arrow { display: flex; align-items: center; justify-content: center; font-size: 34px; color: #01796e; }
-.evo-ring .mid { display: flex; align-items: center; justify-content: center; text-align: center; font-size: 14px; line-height: 1.4; padding: 6px 0; grid-column: 1 / -1; }
-.evo-ring .mid div { border: 1px dashed #8a9694; border-radius: 12px; padding: 10px 18px; max-width: 520px; }
-.evo-ring .updown { display: flex; justify-content: space-around; grid-column: 1 / -1; font-size: 34px; color: #01796e; line-height: 1; }
-.evo-others { display: flex; flex-wrap: wrap; gap: 10px; margin: 0 auto 10px; max-width: 980px; }
-.evo-others .box { flex: 1 1 200px; border: 2px solid #01796e; border-radius: 14px; padding: 14px 16px; }
-.evo-others .box b { display: block; font-size: 17px; margin-bottom: 4px; }
-.evo-key { max-width: 980px; margin: 0 auto 26px; font-size: 14px; }
-.evo-key i { display: inline-block; width: 14px; height: 14px; border-radius: 4px; vertical-align: -2px; margin: 0 6px 0 14px; border: 2px solid #8a9694; }
-.evo-key i.a { background: #01796e; border-color: #01796e; margin-left: 0; }
-</style>
-<div class="evo-ring">
-  <div class="box"><span class="tag">Code</span><b>1. Choose</b><span>The search strategy picks which earlier version to build on, and the schedule picks the kind of change.</span></div>
-  <div class="arrow">&rarr;</div>
-  <div class="box agent"><span class="tag">Agent: writer</span><b>2. Propose</b><span>An LLM writes the changed version, with a reason and a forecast of its effect.</span></div>
-  <div class="updown"><span>&uarr;</span><span>&darr;</span></div>
-  <div class="box"><span class="tag">Code</span><b>4. Record</b><span>The version, its parent, its score and the forecast are written to the search's files. Budget and limits are enforced.</span></div>
-  <div class="arrow">&larr;</div>
-  <div class="box"><span class="tag">Code + your script</span><b>3. Check and score</b><span>Code checks that only the marked parts changed, then runs your scoring script on the version as a job.</span></div>
-</div>
-<div class="evo-others">
-  <div class="box agent"><span class="tag">Agent &middot; on by default</span><b>Analyst</b><span>Every 8 versions, reads the results and writes lessons the writer is given.</span></div>
-  <div class="box agent"><span class="tag">Agent &middot; on in most run types</span><b>Strategist</b><span>Every 15 versions or on a plateau, may shift the schedule within bounds you set.</span></div>
-  <div class="box agent"><span class="tag">Agent &middot; optional</span><b>Coordinator</b><span>Picks the kind of change at step 1, in place of the schedule.</span></div>
-  <div class="box agent"><span class="tag">Agent &middot; on by default</span><b>Assessor</b><span>Part way through, reviews how the other agents are doing, for you.</span></div>
-</div>
-<p class="evo-key"><i class="a"></i>an LLM agent<i></i>deterministic code, or your own script. Only the writer is required. You can steer at any point, yourself or through Claude Code.</p>
+<svg viewBox="0 0 1220 690" role="img" aria-label="The evoloop loop: LLM agents propose a change, code runs and scores it, agents analyze the results, and the lessons go into the next proposal. Every version and score is recorded." style="width:100%;max-width:920px;height:auto;display:block;margin:24px auto 8px;font-family:inherit">
+  <defs>
+    <marker id="evo-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#8c95a1"/></marker>
+    <marker id="evo-b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker>
+  </defs>
+  <g fill="none" stroke="#8c95a1" stroke-width="3.5">
+    <path d="M756 148 Q920 160 978 282" marker-end="url(#evo-a)"/>
+    <path d="M980 406 Q930 530 772 544" marker-end="url(#evo-a)"/>
+    <path d="M468 544 Q300 532 248 410" marker-end="url(#evo-a)"/>
+    <path d="M245 286 Q300 160 464 148" marker-end="url(#evo-a)"/>
+  </g>
+  <g fill="none" stroke="currentColor" stroke-width="3.5">
+    <path d="M240 102 H464" marker-end="url(#evo-b)"/>
+    <path d="M756 590 H976" marker-end="url(#evo-b)"/>
+  </g>
+  <g stroke-width="3">
+    <rect x="60" y="50" width="174" height="105" rx="16" fill="#f1f3f5" stroke="#9aa3ad"/>
+    <rect x="988" y="538" width="174" height="105" rx="16" fill="#f1f3f5" stroke="#9aa3ad"/>
+    <rect x="475" y="72" width="275" height="106" rx="16" fill="#e6eefb" stroke="#2a5db0"/>
+    <rect x="122" y="293" width="247" height="106" rx="16" fill="#e6eefb" stroke="#2a5db0"/>
+    <rect x="856" y="293" width="248" height="106" rx="16" fill="#e7f2ea" stroke="#3a7d4b"/>
+    <rect x="475" y="514" width="275" height="106" rx="16" fill="#e7f2ea" stroke="#3a7d4b"/>
+  </g>
+  <g text-anchor="middle" font-weight="700" font-size="23">
+    <text x="147" y="90" fill="#1c1f23" font-size="20">Your code</text>
+    <text x="1075" y="578" fill="#1c1f23" font-size="20">Best</text>
+    <text x="612" y="114" fill="#2a5db0">Propose</text>
+    <text x="245" y="335" fill="#2a5db0">Analyze</text>
+    <text x="980" y="335" fill="#3a7d4b">Run</text>
+    <text x="612" y="556" fill="#3a7d4b">Score</text>
+    <text x="612" y="332" fill="currentColor" font-size="20">Record</text>
+  </g>
+  <g text-anchor="middle" font-size="17" fill="#1c1f23">
+    <text x="147" y="131">+ a scoring script</text>
+    <text x="1075" y="619">versions</text>
+    <text x="612" y="157">a writer agent</text>
+    <text x="245" y="378">analyst · strategist</text>
+    <text x="980" y="378">jobs, in parallel</text>
+    <text x="612" y="598">your script</text>
+  </g>
+  <g text-anchor="middle" font-size="17" fill="currentColor" opacity="0.7">
+    <text x="612" y="374">every version and score</text>
+    <g font-style="italic">
+      <text x="838" y="241">new version</text>
+      <text x="838" y="462">finished runs</text>
+      <text x="388" y="462">results</text>
+      <text x="388" y="241">lessons</text>
+    </g>
+  </g>
+  <g font-size="17" fill="currentColor">
+    <rect x="42" y="651" width="32" height="23" rx="6" fill="#e6eefb" stroke="#2a5db0" stroke-width="2.5"/>
+    <text x="87" y="668">LLM agents</text>
+    <rect x="235" y="651" width="32" height="23" rx="6" fill="#e7f2ea" stroke="#3a7d4b" stroke-width="2.5"/>
+    <text x="280" y="668">code</text>
+  </g>
+</svg>
+
+Agents propose changes and learn from the results. Code runs every version, scores it with your script,
+keeps the record, and decides which versions are built on.
 
 Use it to raise a model's validation score, train a smaller student from a teacher, tune
 hyperparameters, or make an algorithm or pipeline faster while its output stays the same.
@@ -51,10 +76,9 @@ hyperparameters, or make an algorithm or pipeline faster while its output stays 
 [Explore the search options](options.md){ .md-button }
 [Source on GitHub](https://github.com/cameo-db/evoloop){ .md-button }
 
-Agents propose and advise. Code does everything that must be trusted: it picks what to build on, checks
-each version, runs the jobs, enforces the budget and your limits, and keeps the record. How much the
-agents decide is a setting, from writing only to choosing the moves. [Agents](agents.md). The search runs
-on a laptop or on a Slurm cluster.
+How much the agents decide is a setting, from writing each version only to also choosing the moves.
+Code always enforces the budget and your limits. [Agents](agents.md) · [How it works](how-it-works.md).
+The search runs on a laptop or on a Slurm cluster.
 
 !!! tip "Recommended: run it through Claude Code"
     Open the evoloop repository in [Claude Code](https://claude.com/claude-code) and say what you want to improve.
