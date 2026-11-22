@@ -7,12 +7,10 @@
 
 [![Documentation](https://readthedocs.org/projects/evoloop/badge/?version=latest)](https://evoloop.readthedocs.io/en/latest/)
 
-**An open-source, general-purpose AutoResearch loop, driven by AI agents.**
-
-evoloop is an open-source, general-purpose AutoResearch loop. You give it code and a way to score that
-code. AI agents propose changes, every change is evaluated automatically, and the results decide what
-is tried next. A search runs for hundreds of experiments and keeps a record of every one. It is MIT
-licensed, and the source is on [GitHub](https://github.com/cameo-db/evoloop).
+**evoloop is an open-source, general-purpose AutoResearch loop driven by AI agents.** You give it code
+and a way to score that code. AI agents propose changes, every change is evaluated automatically, and
+the results decide what is tried next. A search runs for hundreds of experiments and keeps a record of
+every one. It is MIT licensed.
 
 It was built for machine-learning research, where it searches for better architectures, tunes training
 recipes, distils large models into smaller ones, and maps the trade-off between accuracy and size. The
