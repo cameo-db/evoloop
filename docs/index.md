@@ -13,86 +13,83 @@ propose changes, your script scores each one, and the results decide what is tri
 .evo-loop-list { display: none; }
 @media screen and (max-width: 620px) { .evo-loop-svg { display: none !important; } .evo-loop-list { display: block; } }
 </style>
-<svg class="evo-loop-svg" viewBox="0 0 1200 720" role="img" aria-label="The evoloop loop. Code picks a version to improve, an LLM agent writes a change to it, your script runs and scores it, and code adds it to the leaderboard. Every few versions, optional LLM agents review the results and advise the writer and the picking rule." style="width:100%;max-width:940px;height:auto;display:block;margin:24px auto 8px;font-family:inherit">
+<svg class="evo-loop-svg" viewBox="0 0 1200 720" role="img" aria-label="The evoloop loop. The writer agent proposes new code. Your script trains or runs it as parallel jobs. Code scores and ranks it. The analyst and strategist agents analyze the results, and their lessons go into the next proposal. In the middle, code keeps the lineages: it selects each parent and retires lineages that stall." style="width:100%;max-width:940px;height:auto;display:block;margin:24px auto 8px;font-family:inherit">
   <defs>
     <marker id="evo-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#7d8790"/></marker>
-    <marker id="evo-t" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#01796e"/></marker>
   </defs>
   <g fill="none" stroke="#7d8790" stroke-width="3.5">
-    <path d="M190 284 Q220 105 436 92" marker-end="url(#evo-a)"/>
     <path d="M760 92 Q985 100 1020 262" marker-end="url(#evo-a)"/>
     <path d="M1010 404 Q980 575 772 592" marker-end="url(#evo-a)"/>
     <path d="M440 592 Q220 575 190 410" marker-end="url(#evo-a)"/>
-    <path d="M100 568 V410" marker-end="url(#evo-a)"/>
-    <path d="M100 134 V276" marker-end="url(#evo-a)" stroke-dasharray="3 6"/>
+    <path d="M190 284 Q220 105 436 100" marker-end="url(#evo-a)"/>
+    <path d="M244 60 H436" marker-end="url(#evo-a)"/>
     <path d="M760 626 H936" marker-end="url(#evo-a)"/>
-  </g>
-  <g fill="none" stroke="#01796e" stroke-width="3" stroke-dasharray="9 7">
-    <path d="M600 538 V408" marker-end="url(#evo-t)"/>
-    <path d="M600 288 V160" marker-end="url(#evo-t)"/>
-    <path d="M468 342 H354" marker-end="url(#evo-t)"/>
+    <path d="M100 574 V410" marker-end="url(#evo-a)" stroke-dasharray="3 6"/>
   </g>
   <g stroke-width="3">
-    <rect x="40" y="290" width="300" height="106" rx="16" fill="#f1f3f4" stroke="#5f6b73"/>
     <rect x="450" y="40" width="300" height="106" rx="16" fill="#01796e" stroke="#01796e"/>
+    <rect x="40" y="290" width="300" height="106" rx="16" fill="#01796e" stroke="#01796e"/>
     <rect x="876" y="274" width="300" height="106" rx="16" fill="#f1f3f4" stroke="#aab2b8"/>
     <rect x="868" y="282" width="300" height="106" rx="16" fill="#f1f3f4" stroke="#8a949b"/>
     <rect x="860" y="290" width="300" height="106" rx="16" fill="#f1f3f4" stroke="#5f6b73"/>
     <rect x="450" y="546" width="300" height="106" rx="16" fill="#f1f3f4" stroke="#5f6b73"/>
-    <rect x="470" y="294" width="260" height="100" rx="16" fill="#dff1ee" stroke="#01796e" stroke-dasharray="9 7"/>
   </g>
-  <g text-anchor="middle" font-weight="700" font-size="21">
-    <text x="190" y="334" fill="#1c2326">1. Select a parent</text>
-    <text x="600" y="84" fill="#ffffff">2. Evolve it</text>
-    <text x="1010" y="334" fill="#1c2326">3. Evaluate</text>
-    <text x="600" y="590" fill="#1c2326">4. Keep or retire</text>
-    <text x="600" y="336" fill="#0f3f39">Review the results</text>
+  <g text-anchor="middle" font-weight="700" font-size="24">
+    <text x="600" y="84" fill="#ffffff">Propose</text>
+    <text x="1010" y="334" fill="#1c2326">Train</text>
+    <text x="600" y="590" fill="#1c2326">Score</text>
+    <text x="190" y="334" fill="#ffffff">Analyze</text>
+    <text x="600" y="322" fill="currentColor" font-size="22">Lineages</text>
   </g>
   <g text-anchor="middle" font-size="17">
-    <text x="190" y="372" fill="#1c2326">code, from the lineages still alive</text>
-    <text x="600" y="122" fill="#ffffff">an LLM agent mutates or crosses it</text>
-    <text x="1010" y="372" fill="#1c2326">code checks it, your script scores it</text>
-    <text x="600" y="628" fill="#1c2326">code updates the lineages</text>
-    <text x="600" y="370" fill="#0f3f39">LLM agents, every few versions</text>
+    <text x="600" y="122" fill="#ffffff">the writer agent</text>
+    <text x="1010" y="372" fill="#1c2326">your script, as parallel jobs</text>
+    <text x="600" y="628" fill="#1c2326">your metric, ranked by code</text>
+    <text x="190" y="372" fill="#ffffff">the analyst and strategist agents</text>
+    <text x="600" y="354" fill="currentColor">code selects each parent and</text>
+    <text x="600" y="378" fill="currentColor">retires lineages that stall</text>
   </g>
-  <g font-size="16.5" font-style="italic" fill="currentColor" opacity="0.8">
-    <text x="614" y="218">what worked and</text>
-    <text x="614" y="240">what did not</text>
-    <text x="411" y="306" text-anchor="middle">what to try</text>
-    <text x="411" y="328" text-anchor="middle">more of</text>
+  <g font-size="16.5" font-style="italic" fill="currentColor" opacity="0.8" text-anchor="middle">
+    <text x="872" y="212">new code</text>
+    <text x="872" y="486">results</text>
+    <text x="330" y="486">scores</text>
+    <text x="330" y="212">lessons</text>
   </g>
   <g font-size="17" fill="currentColor">
-    <text x="30" y="62" font-weight="700">You steer, at any time</text>
-    <text x="30" y="86">change a setting, or send</text>
-    <text x="30" y="108">the agents a note</text>
-    <text x="100" y="598" text-anchor="middle" font-weight="700">You provide</text>
-    <text x="100" y="622" text-anchor="middle">code, a scoring script,</text>
-    <text x="100" y="644" text-anchor="middle">a budget</text>
+    <text x="30" y="52" font-weight="700">You provide</text>
+    <text x="30" y="76">code, a scoring script,</text>
+    <text x="30" y="98">a budget</text>
+    <text x="30" y="606" font-weight="700">You steer, at any time</text>
+    <text x="30" y="630">a note to the agents,</text>
+    <text x="30" y="652">or a changed setting</text>
     <text x="948" y="620" font-weight="700">You get</text>
     <text x="948" y="644">the best versions, and</text>
     <text x="948" y="666">every version tried</text>
   </g>
   <g font-size="16" fill="currentColor">
     <rect x="40" y="690" width="30" height="20" rx="5" fill="#01796e"/>
-    <text x="80" y="706">LLM agent</text>
-    <rect x="195" y="690" width="30" height="20" rx="5" fill="#f1f3f4" stroke="#5f6b73" stroke-width="2.5"/>
-    <text x="235" y="706">code, no LLM</text>
-    <path d="M370 700 H412" stroke="#01796e" stroke-width="3" stroke-dasharray="9 7"/>
-    <text x="424" y="706">optional</text>
+    <text x="80" y="706">LLM agents</text>
+    <rect x="205" y="690" width="30" height="20" rx="5" fill="#f1f3f4" stroke="#5f6b73" stroke-width="2.5"/>
+    <text x="245" y="706">code, no LLM</text>
   </g>
 </svg>
 
 <ol class="evo-loop-list">
-<li><b>Select a parent.</b> Code, from the lineages still alive.</li>
-<li><b>Evolve it.</b> An LLM agent mutates it or crosses it with another.</li>
-<li><b>Evaluate.</b> Code checks the change, then your script scores it. Several run at once.</li>
-<li><b>Keep or retire.</b> Code updates the lineages.</li>
-<li><b>Review the results</b> (optional). LLM agents, every few versions, advise steps 1 and 2.</li>
+<li><b>Propose.</b> The writer agent writes new code from a parent.</li>
+<li><b>Train.</b> Your script trains or runs it, as parallel jobs.</li>
+<li><b>Score.</b> Your metric, ranked by code.</li>
+<li><b>Analyze.</b> The analyst and strategist agents read the results and pass lessons to the writer.</li>
 </ol>
 
-This is evolutionary search with an LLM as the mutation operator. Code selects a parent, an LLM agent
-mutates it or crosses it with another, your script scores the result, and code decides what stays in
-the population. Before step 3, code refuses any change that touches code you did not mark.
+This is evolutionary search with an LLM as the mutation operator.
+
+| Step | Who | What happens |
+|---|---|---|
+| **Propose** | the **writer** agent | Writes new code from a parent: a mutation of it, or a crossover with another. |
+| **Train** | your script | Trains or runs the new code, as a job. Code first refuses any change outside the parts you marked. |
+| **Score** | code | Reads your metric, enforces your limits, and ranks the version. |
+| **Analyze** | the **analyst** and **strategist** agents | The analyst writes lessons for the writer. The strategist can shift the schedule and retire or revive a lineage. Both are optional. |
+| **Lineages** | code | Selects each parent and retires lineages that stop improving. |
 
 ## Lineages: how the search explores and exploits
 
@@ -178,7 +175,7 @@ these numbers are settings.
 
 Every version has a parent, so the history is a family tree, but this is not tree search. Nothing is
 expanded systematically and no values are backed up the tree, as in Monte Carlo tree search. It is a
-population that changes over time. Lineages are the default rule for step 1; four other rules are
+population that changes over time. Lineages are the default rule for selecting parents; four other rules are
 below.
 
 Use it to raise a model's validation score, train a smaller student from a teacher, tune
