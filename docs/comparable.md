@@ -45,7 +45,7 @@ and 20 more epochs at that rate teach little.
 ## Stopped designs
 
 A design stopped part way has a score for the part it ran. It is shown as provisional and is not ranked
-against full-length runs ([Cheaper evaluations](early-stopping.md#what-happens-to-a-stopped-design)).
+against full-length runs ([Early stopping](early-stopping.md#what-happens-to-a-stopped-design)).
 
 ## What the test set is for
 

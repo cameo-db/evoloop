@@ -70,7 +70,7 @@ With the [strategist](strategist.md) on, an agent reviews the search every 15 de
 plateaus, and may shift the shares within bounds you set.
 
 You can also change them yourself at any time: `evoloop set mysearch --name r1 schedule.novelty=0.6
---by "Your Name"` ([Watch and steer a run](steering.md)).
+--by "Your Name"` ([Monitor and steer a search](steering.md)).
 
 ## Settings on this page
 

@@ -4,7 +4,7 @@ The words evoloop uses in a particular sense, in plain terms. Where the docs and
 different words for one thing, both are given.
 
 **Agent.** A language model called for one job: writing a design, analysing results, reviewing the
-search. See [The agents](agents.md).
+search. See [Agents](agents.md).
 
 **Allowance.** The length of one training run, in whatever unit your evaluator uses (epochs, steps).
 The setting is `evaluation.allowance`; the docs usually say *training length*.

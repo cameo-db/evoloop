@@ -71,14 +71,14 @@ Four things are not in the methods above.
 
 You can change a search while it runs. Most settings can be changed without a restart, each change is
 recorded with who made it, and because a strategy keeps no state, even the strategy can change
-([Watch and steer a run](steering.md)).
+([Monitor and steer a search](steering.md)).
 
 Scores are only compared when they mean the same thing. You state how noisy your score is, and a
 difference below that counts as none. Lengthening training starts a new comparison period, so old and
 new scores are never ranked together ([When two scores can be compared](comparable.md)).
 
 What kind of problem a search is, is chosen apart from how to search. A skill carries the settings and
-the advice for one kind of goal, and can be edited ([Which search should I run?](which-search.md)).
+the advice for one kind of goal, and can be edited ([Choose a skill and a run type](which-search.md)).
 
 The agents are audited. Every call is recorded with what the agent forecast and what happened, and a
 scorecard says whether each role earns its cost ([Audit the agents](auditing.md)).

@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" font-family="Helvetica, Arial, sans-serif" viewBox="0 0 1000 410" role="img" aria-label="Schematic of lineages in one search, as validation score against evaluations. In the explore phase three lineages are founded: a CNN baseline, a dilated CNN and a transformer. The first runs of each are protected. The baseline stops improving and is retired. In the exploit phase a crossover of the dilated CNN and the transformer founds a hybrid lineage, which ends with the best score.">
+  <rect width="1000" height="410" fill="#ffffff"/>
+  <rect x="70" y="50" width="534" height="290" fill="#3a7d4b" opacity="0.07"/>
+  <path d="M604 50 V340" stroke="#8c95a1" stroke-width="1.5" stroke-dasharray="5 6"/>
+  <path d="M70 44 V340 H966" stroke="#8c95a1" stroke-width="2" fill="none"/>
+  <path d="M64 54 L70 42 L76 54 M954 334 L966 340 L954 346" stroke="#8c95a1" stroke-width="2" fill="none"/>
+  <g font-size="17" font-weight="700" fill="#1c1f23"><text x="82" y="34">Explore</text><text x="616" y="34">Exploit</text></g>
+  <path d="M90 313 L135 294 L180 286 L225 286 L270 286 L315 286 L360 286 L405 286 L450 286" stroke="#a3abb3" stroke-width="3" fill="none" stroke-linejoin="round"/>
+  <circle cx="90" cy="313" r="6" fill="#ffffff" stroke="#a3abb3" stroke-width="2.5"/>
+  <circle cx="135" cy="294" r="6" fill="#ffffff" stroke="#a3abb3" stroke-width="2.5"/>
+  <circle cx="180" cy="286" r="6" fill="#a3abb3"/>
+  <circle cx="225" cy="286" r="6" fill="#a3abb3"/>
+  <circle cx="270" cy="286" r="6" fill="#a3abb3"/>
+  <circle cx="315" cy="286" r="6" fill="#a3abb3"/>
+  <circle cx="360" cy="286" r="6" fill="#a3abb3"/>
+  <circle cx="405" cy="286" r="6" fill="#a3abb3"/>
+  <circle cx="450" cy="286" r="6" fill="#a3abb3"/>
+  <path d="M481 277 L499 295 M481 295 L499 277" stroke="#a3abb3" stroke-width="3" fill="none"/>
+  <path d="M150 281 L200 251 L255 227 L315 205 L380 189 L445 178 L510 170 L570 165 L640 159 L710 159 L780 156 L850 156" stroke="#5f6b73" stroke-width="3" fill="none" stroke-linejoin="round"/>
+  <circle cx="150" cy="281" r="6" fill="#ffffff" stroke="#5f6b73" stroke-width="2.5"/>
+  <circle cx="200" cy="251" r="6" fill="#ffffff" stroke="#5f6b73" stroke-width="2.5"/>
+  <circle cx="255" cy="227" r="6" fill="#5f6b73"/>
+  <circle cx="315" cy="205" r="6" fill="#5f6b73"/>
+  <circle cx="380" cy="189" r="6" fill="#5f6b73"/>
+  <circle cx="445" cy="178" r="6" fill="#5f6b73"/>
+  <circle cx="510" cy="170" r="6" fill="#5f6b73"/>
+  <circle cx="570" cy="165" r="6" fill="#5f6b73"/>
+  <circle cx="640" cy="159" r="6" fill="#5f6b73"/>
+  <circle cx="710" cy="159" r="6" fill="#5f6b73"/>
+  <circle cx="780" cy="156" r="6" fill="#5f6b73"/>
+  <circle cx="850" cy="156" r="6" fill="#5f6b73"/>
+  <path d="M430 332 L480 308 L535 259 L590 232 L645 213 L705 202 L765 200" stroke="#5f6b73" stroke-width="3" fill="none" stroke-linejoin="round"/>
+  <circle cx="430" cy="332" r="6" fill="#ffffff" stroke="#5f6b73" stroke-width="2.5"/>
+  <circle cx="480" cy="308" r="6" fill="#ffffff" stroke="#5f6b73" stroke-width="2.5"/>
+  <circle cx="535" cy="259" r="6" fill="#5f6b73"/>
+  <circle cx="590" cy="232" r="6" fill="#5f6b73"/>
+  <circle cx="645" cy="213" r="6" fill="#5f6b73"/>
+  <circle cx="705" cy="202" r="6" fill="#5f6b73"/>
+  <circle cx="765" cy="200" r="6" fill="#5f6b73"/>
+  <path d="M640 159 Q668 158 686 153 M645 213 Q682 200 688 156" stroke="#2a5db0" stroke-width="2.5" fill="none" stroke-dasharray="6 5"/>
+  <path d="M690 151 L740 135 L795 119 L850 105 L905 94 L950 86" stroke="#2a5db0" stroke-width="3" fill="none" stroke-linejoin="round"/>
+  <circle cx="690" cy="151" r="6" fill="#ffffff" stroke="#2a5db0" stroke-width="2.5"/>
+  <circle cx="740" cy="135" r="6" fill="#ffffff" stroke="#2a5db0" stroke-width="2.5"/>
+  <circle cx="795" cy="119" r="6" fill="#2a5db0"/>
+  <circle cx="850" cy="105" r="6" fill="#2a5db0"/>
+  <circle cx="905" cy="94" r="6" fill="#2a5db0"/>
+  <circle cx="950" cy="86" r="6" fill="#2a5db0"/>
+  <circle cx="950" cy="86" r="13" fill="none" stroke="#2a5db0" stroke-width="2.5"/>
+  <g font-size="16" font-weight="700" fill="#1c1f23">
+    <text x="196" y="310">CNN baseline</text>
+    <text x="862" y="161">Dilated CNN</text>
+    <text x="777" y="205">Transformer</text>
+    <text x="748" y="100" fill="#2a5db0">Hybrid</text>
+  </g>
+  <text x="706" y="183" font-size="14" font-style="italic" fill="#2a5db0">crossover</text>
+  <g font-size="14" fill="#1c1f23" opacity="0.85">
+    <text x="70" y="366">evaluations</text>
+    <text transform="translate(52 250) rotate(-90)">validation score</text>
+    <circle cx="610" cy="361" r="6" fill="#ffffff" stroke="#5f6b73" stroke-width="2.5"/><text x="624" y="366">protected run</text>
+    <path d="M740 355 l12 12 m-12 0 l12 -12" stroke="#a3abb3" stroke-width="3" fill="none"/><text x="762" y="366">retired</text>
+    <path d="M836 361 h30" stroke="#2a5db0" stroke-width="2.5" stroke-dasharray="6 5"/><text x="874" y="366">crossover</text>
+  </g>
+</svg>

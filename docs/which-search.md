@@ -1,8 +1,12 @@
 # Choose a skill and a run type
 
-A search needs a run type. A skill is optional. `run.skill` says what you are optimizing, and brings settings and
-instructions for that goal so that you do not have to write them yourself.
-`run.type` says how the evaluations are spent.
+Two choices shape a search.
+
+- **The skill** says what you are optimizing: a higher score, a distilled student, a faster algorithm.
+  It brings settings and agent guidance for that goal, so you do not have to write them yourself. It is
+  optional. In the brief it is `run.skill`.
+- **The run type** says how the training runs are spent: exploring widely, refining one design, or
+  exploring first and refining later. Every search has one. In the brief it is `run.type`.
 
 ```yaml
 run:

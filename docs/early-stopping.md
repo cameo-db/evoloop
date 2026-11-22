@@ -67,7 +67,7 @@ limits: {parameters: {max: 20000000}, examples_per_s: {min: 500}}
 A rejected design gets no score and is not charged. If the evaluator writes the figure in its first
 progress line, a design over the limit is stopped within seconds. A limit must be measurable: if a
 result does not report a figure that a limit names, the search pauses and says which
-([Watch and steer a run](steering.md#limits)).
+([Monitor and steer a search](steering.md#limits)).
 
 ## Settings on this page
 

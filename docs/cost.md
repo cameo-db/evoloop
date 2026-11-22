@@ -40,7 +40,7 @@ the tokens they spend reasoning are not counted. It has not yet been checked aga
 ## What makes it cheaper or dearer
 
 **How much the agents decide.** For the same example: about $3.50 with `harnessed`, $6.20 with `guided`,
-$7.60 with `agentic` ([The agents](agents.md#how-much-to-let-them-decide)).
+$7.60 with `agentic` ([Agents](agents.md#how-much-to-let-them-decide)).
 
 **The model.** The plan shows the same search on each current model. A cheaper model for most designs
 and a strong one for some is `agents.writer_mix` ([Models and prices](models.md)).

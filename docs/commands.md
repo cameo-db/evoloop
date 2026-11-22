@@ -201,7 +201,7 @@ Rewrites and prints the report from the search's files as they are now.
 ## Steering
 
 All of these take effect within seconds on a running search, and are recorded with your name.
-[Watch and steer a run](steering.md) explains each.
+[Monitor and steer a search](steering.md) explains each.
 
 ### set
 

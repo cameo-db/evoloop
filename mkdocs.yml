@@ -47,19 +47,19 @@ nav:
       - Run on a cluster: servers.md
   - How it works:
       - Overview: how-it-works.md
-      - Search options on one page: options.md
-      - Schedule: schedule.md
+      - Agents: agents.md
       - Parent selection: parents.md
+      - Schedule: schedule.md
       - Moves: moves.md
       - Early stopping: early-stopping.md
       - Comparing scores: comparable.md
-      - Agents: agents.md
       - Comparison with FunSearch and AlphaEvolve: compared.md
+      - Search options on one page: options.md
   - Run:
       - Monitor and steer a search: steering.md
-      - Budget and cost: cost.md
       - Working with the strategist: strategist.md
       - Audit the agents: auditing.md
+      - Budget and cost: cost.md
       - Start from earlier designs: warm-start.md
       - Save and deposit the study: study.md
   - Skills:

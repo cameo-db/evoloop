@@ -52,9 +52,14 @@ PARAMS = {"lr": 3e-4, "batch_size": 128}
 # EVOLVE-BLOCK-END
 ```
 
-A `structure` block is code an agent rewrites. A `params` block is one dictionary of settings, which
-code can also change. The `role` is your own word for the part: `trunk`, `head`, `loss`, `optimizer`,
-`augmentation`.
+Each start line has three labels:
+
+- `name` identifies the block. It must be unique.
+- `kind` is `structure` or `params`. A `structure` block is code that an agent rewrites. A `params` block
+  is one dictionary of hyperparameters; an agent can change its values, and so can a sampler with no
+  agent involved.
+- `role` is your own word for what the block is (`trunk`, `head`, `loss`, `optimizer`, `augmentation`).
+  Several blocks can share a role. The brief opens or closes blocks by role.
 
 Mark generously, once. The brief then says which roles are open in a given search, so the same
 marked-up project serves a search over settings only, over one module, or over the whole architecture.
@@ -90,7 +95,7 @@ default and must be answered:
 | How should the search spend its evaluations? | the run type: [Choose a skill and a run type](which-search.md) |
 | How many designs may be trained in all? | the budget, in evaluations |
 | How long is one training run? | in your evaluator's own unit: epochs, steps |
-| How much does the score vary between two runs of the same design? | [Measure your noise](noise.md) |
+| How much does the score vary between two runs of the same design? | The spread between seeds. If you do not know it, train your baseline twice and take the difference. [Measure your noise](noise.md) |
 | Train the baseline, import its score, or skip it? | training it inside the search is the usual choice |
 | How many designs may train at once? | |
 | Which agent backend? | the Anthropic API, Claude Code, or scripted proposals for a dry run |
@@ -175,4 +180,4 @@ You answer a few questions and evoloop fills in the rest, from the first of thes
 
 ## Next
 
-[Watch and steer a run](steering.md) once it is going.
+[Monitor and steer a search](steering.md) once it is going.

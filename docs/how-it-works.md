@@ -1,7 +1,74 @@
 # How it works
 
-evoloop is a controller process, a set of agent roles it calls, and a folder of files it writes. This
-page describes each, with the code that implements it.
+evoloop is a controller process, a set of LLM agent roles it calls, and a folder of files it writes.
+This page first follows one design through the loop, then describes each part with the code that
+implements it.
+
+## One design, traced
+
+???+ note "A local move from the built-in example, step by step"
+
+    Take the built-in demo, a search for a small classifier, after 16 designs have been scored. A job
+    finishes and a slot is free.
+
+    **1. What kind of move?** The search is 40% through its budget, where the plan gives 65% of
+    evaluations to new designs, 10% to crossover and 25% to local moves. So far local moves are furthest
+    behind their share, so this slot is a local move. [Schedule](schedule.md) explains the
+    shares.
+
+    **2. Which parents?** The search keeps several families of designs. The family built on inputs that
+    vary along the radius leads, at 0.967, and its best design is chosen as the parent.
+    [Parent selection](parents.md) explains how.
+
+    **3. Write it.** A local move is an edit, a settings move or an ablation. This one is an edit: the
+    writer is sent the parent's code, the leaderboard, recent results and the lessons so far, and asked for
+    one change. It adds a second hidden layer.
+
+    ```python
+    HIDDEN = [12]        ->        HIDDEN = [12, 8]
+    ```
+
+    In the demo the writer is a script. In a real search it is an agent, and the exchange looks like this:
+
+    ??? note "The request and the reply (abridged)"
+        The request:
+
+        ```json
+        {"request": {"mode": "local", "move": "structural_change", "step": "normal",
+                     "instruction": "ONE attributable change to the parent's structure..."},
+         "blocks_you_may_change": {"model": {"kind": "structure", "role": "network"},
+                                   "fit": {"kind": "params", "role": "optimizer"}},
+         "parents": [{"candidate": "C14", "score": 0.967, "family": "periodic features",
+                      "blocks": {"model": "HIDDEN = [12]\nACTIVATION = \"tanh\"\n\ndef features(x): ..."}}],
+         "leaderboard": ["..."], "recent": ["..."], "lessons": ["..."]}
+        ```
+
+        The reply, with the new code and a forecast:
+
+        ```json
+        {"proposals": [{"name": "a second layer", "family": "periodic features",
+                        "hypothesis": "A second layer lets the network combine the radial waves with the coordinates.",
+                        "expected_gain": {"gain": 0.8, "probability_better": 0.4},
+                        "change_summary": "added a narrower layer on top",
+                        "blocks": {"model": "HIDDEN = [12, 8]\nACTIVATION = \"tanh\"\n\ndef features(x): ..."}}]}
+        ```
+
+
+    Some moves need no agent: a block swap between two parents, and settings drawn by a sampler, are made
+    in code. [Moves](moves.md) lists them.
+
+    **4. Check it.** Before anything is trained, Python checks that only the marked blocks changed, that
+    the code parses, that no forbidden term appears, and that the design is not a copy of one already
+    tried. A design that fails goes back to step 3 or is dropped; it costs nothing.
+
+    **5. Run and score it.** The design runs as its own job: your evaluator trains it and writes a
+    `result.json` with the score. Here it scores 0.970. If the evaluator reports progress, a design that is
+    clearly behind can be stopped part way ([Early stopping](early-stopping.md)).
+
+    **6. Record.** The design, its code, its parent, the agent's forecast and the result are appended to
+    the run's files. The next slot is chosen from those files, and so is everything an agent is shown
+    later.
+
 
 ## The controller
 
@@ -21,7 +88,7 @@ spent:
 The controller keeps no state that is not on disk. If it stops, `evoloop run` with the same name
 continues from the files, including jobs that were still running.
 
-## Starting one candidate
+## Starting one design
 
 | Step | What happens | Code |
 |---|---|---|
@@ -67,18 +134,18 @@ required metric or reference row is missing.
 
 ## Where a setting's value comes from
 
-Later entries override earlier ones. `evoloop plan` prints the source of every value.
+The first source in this list that sets a value wins. `evoloop plan` prints the source of every value.
 
-| Order | Source |
+| Priority | Source |
 |---|---|
-| 1 | built-in default |
-| 2 | site file for this machine (compute settings only) |
-| 3 | defaults for the size of the budget |
-| 4 | run type |
-| 5 | autonomy level |
-| 6 | skill |
-| 7 | your brief |
-| 8 | changes you make while the search runs |
+| 1 | changes you make while the search runs |
+| 2 | your brief |
+| 3 | skill |
+| 4 | autonomy level |
+| 5 | run type |
+| 6 | defaults for the size of the budget |
+| 7 | site file for this machine (compute settings only) |
+| 8 | built-in default |
 
 ## What code enforces
 
@@ -95,72 +162,6 @@ These hold under every setting, because they are checks in code and not instruct
 A run's folder holds `runs.jsonl`, `models.jsonl`, `calls.jsonl`, `ledger.jsonl` and others, one JSON
 object per line. [Files of a run](records.md) lists them. The search state is rebuilt from these files
 on every turn ([store.py](https://github.com/cameo-db/evoloop/blob/main/evoloop/store.py)).
-
-## One candidate, traced
-
-??? note "A local move from the built-in example, step by step"
-
-    Take the built-in demo, a search for a small classifier, after 16 designs have been scored. A job
-    finishes and a slot is free.
-
-    **1. What kind of move?** The search is 40% through its budget, where the plan gives 65% of
-    evaluations to new designs, 10% to crossover and 25% to local moves. So far local moves are furthest
-    behind their share, so this slot is a local move. [What gets tried next](schedule.md) explains the
-    shares.
-
-    **2. Which parents?** The search keeps several families of designs. The family built on inputs that
-    vary along the radius leads, at 0.967, and its best design is chosen as the parent.
-    [Who becomes a parent](parents.md) explains how.
-
-    **3. Write it.** A local move is an edit, a settings move or an ablation. This one is an edit: the
-    writer is sent the parent's code, the leaderboard, recent results and the lessons so far, and asked for
-    one change. It adds a second hidden layer.
-
-    ```python
-    HIDDEN = [12]        ->        HIDDEN = [12, 8]
-    ```
-
-    In the demo the writer is a script. In a real search it is an agent, and the exchange looks like this:
-
-    ??? note "The request and the reply (abridged)"
-        The request:
-
-        ```json
-        {"request": {"mode": "local", "move": "structural_change", "step": "normal",
-                     "instruction": "ONE attributable change to the parent's structure..."},
-         "blocks_you_may_change": {"model": {"kind": "structure", "role": "network"},
-                                   "fit": {"kind": "params", "role": "optimizer"}},
-         "parents": [{"candidate": "C14", "score": 0.967, "family": "periodic features",
-                      "blocks": {"model": "HIDDEN = [12]\nACTIVATION = \"tanh\"\n\ndef features(x): ..."}}],
-         "leaderboard": ["..."], "recent": ["..."], "lessons": ["..."]}
-        ```
-
-        The reply, with the new code and a forecast:
-
-        ```json
-        {"proposals": [{"name": "a second layer", "family": "periodic features",
-                        "hypothesis": "A second layer lets the network combine the radial waves with the coordinates.",
-                        "expected_gain": {"gain": 0.8, "probability_better": 0.4},
-                        "change_summary": "added a narrower layer on top",
-                        "blocks": {"model": "HIDDEN = [12, 8]\nACTIVATION = \"tanh\"\n\ndef features(x): ..."}}]}
-        ```
-
-
-    Some moves need no agent: a block swap between two parents, and settings drawn by a sampler, are made
-    in code. [Edits, crossover and settings moves](moves.md) lists them.
-
-    **4. Check it.** Before anything is trained, Python checks that only the marked blocks changed, that
-    the code parses, that no forbidden term appears, and that the design is not a copy of one already
-    tried. A design that fails goes back to step 3 or is dropped; it costs nothing.
-
-    **5. Run and score it.** The design runs as its own job: your evaluator trains it and writes a
-    `result.json` with the score. Here it scores 0.970. If the evaluator reports progress, a design that is
-    clearly behind can be stopped part way ([Cheaper evaluations](early-stopping.md)).
-
-    **6. Record.** The design, its code, its parent, the agent's forecast and the result are appended to
-    the run's files. The next slot is chosen from those files, and so is everything an agent is shown
-    later.
-
 
 ## More detail
 

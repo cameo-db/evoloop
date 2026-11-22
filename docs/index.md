@@ -1,216 +1,236 @@
 ---
 hide:
   - navigation
+  - toc
 ---
+
+<div class="evo-home" markdown>
 
 # evoloop
 
-## Summary
+<p class="evo-tagline">Evolutionary search over machine-learning code, with LLM agents writing the candidates.</p>
 
-**evoloop is an open-source tool for LLM-driven evolutionary search over machine-learning code:
-architectures, training recipes and hyperparameters.**
+You mark the parts of your code that may change, such as an architecture, a loss or a training recipe,
+and provide a script that trains one model and reports its validation score. A writer agent proposes
+changes. Each proposal is trained as a job on your GPUs and scored, and the proposals that score best
+become the parents of the next ones.
 
-You give it a codebase with the editable regions marked and a script that trains and scores one
-candidate. It then runs a population-based search. LLM agents write every candidate, as a mutation of
-an earlier one, a crossover of two, or a new design. Deterministic code does the rest: it selects the
-parents, validates each candidate, schedules the training jobs, and enforces the budget.
+The agents propose and advise. Everything else is deterministic code: choosing the parents, checking
+each edit, scheduling the jobs, enforcing the budget. The method follows FunSearch and AlphaEvolve,
+adapted to searches in which every evaluation is a full training run and the researcher wants to steer.
 
-It belongs to the same family as FunSearch and AlphaEvolve. It differs in what it is built for: ML
-research on a lab's own GPUs, where one evaluation is a full training run and a researcher wants to
-watch and redirect the search.
+[Get started](setting-up.md){ .md-button .md-button--primary }
+[How it works](how-it-works.md){ .md-button }
+[GitHub](https://github.com/cameo-db/evoloop){ .md-button }
 
-| | |
-|---|---|
-| **Searches over** | Model architecture, training recipe, hyperparameters, or all three. Distillation of a teacher into smaller students. Any other code a script can score, such as an algorithm or a data pipeline. |
-| **Search method** | Evolutionary. By default the population is a set of lineages with an explore-then-exploit schedule. MAP-Elites archive, tournament, Pareto and greedy selection are alternatives. |
-| **Agents** | A writer proposes candidates. An analyst distils results into lessons for the writer. A strategist reallocates the search. How much the agents decide is configurable. |
-| **Enforced by code** | Only the marked regions can change. The budget and any hard limits (model size, speed) hold. The test set is never shown to an agent. Every candidate, score and decision is logged. |
-| **Researcher control** | You approve a plan with a cost estimate before anything is spent. During the run you can change settings, send the agents notes, or stop. Runs from Claude Code or the command line. |
-| **Skills** | Thirteen editable presets, one per goal: raising a score, distillation, an accuracy-size frontier, fine-tuning, and others. Each sets the search and briefs the agents. Optional. |
-| **CAMEO** | Reads and writes [CAMEO](https://cameo-db.github.io) study files. A search can start from designs in the database, and its full record can be deposited there. |
-| **Runs on** | A workstation or a Slurm cluster. One GPU job per candidate, many in parallel. |
-| **Status** | Version 0.2. The test suite passes with scripted agents. It has not yet been validated with an LLM on a real training task. |
-
-[Set up a search](setting-up.md){ .md-button .md-button--primary }
-[Source on GitHub](https://github.com/cameo-db/evoloop){ .md-button }
-
-## How it works
-
-<style>
-.evo-loop-list { display: none; }
-@media screen and (max-width: 620px) { .evo-loop-svg { display: none !important; } .evo-loop-list { display: block; } }
-</style>
-<svg class="evo-loop-svg" viewBox="0 0 1200 724" role="img" aria-label="The evoloop loop. The writer agent proposes candidate code by mutation, crossover or a new design. Your script trains candidates as parallel jobs, with weak runs stopped early. Code scores each on the validation metric, with the test set held out. The analyst agent turns scores into lessons for the writer, and the strategist agent adjusts the schedule. In the centre, code keeps the lineages: it selects the parents and retires stalled lineages. Inputs are a brief and a baseline, optionally a skill and designs from CAMEO. Outputs are a leaderboard and study.json." style="width:100%;max-width:940px;height:auto;display:block;margin:28px auto 12px;font-family:inherit">
+<figure class="evo-figure">
+<svg class="evo-fig" viewBox="0 0 1000 600" role="img" aria-label="Overview of evoloop. The researcher supplies a brief and baseline code. The writer agent proposes new code. Your training script trains each proposal as a parallel job. The validation metric scores it. The analyst and strategist agents analyze the results and return lessons to the writer. In the centre are the lineages, from which code chooses the parents. Skills and CAMEO are optional inputs. The outputs are a leaderboard and a study file for CAMEO. The researcher can steer during the run.">
   <defs>
-    <marker id="evo-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#7d8790"/></marker>
-    <marker id="evo-k" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker>
+    <marker id="evo-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#8c95a1"/></marker>
+    <marker id="evo-k" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#4a5059"/></marker>
   </defs>
-  <g fill="none" stroke="#7d8790" stroke-width="3.5">
-    <path d="M760 100 Q990 104 1022 258" marker-end="url(#evo-a)"/>
-    <path d="M1010 420 Q985 595 762 606" marker-end="url(#evo-a)"/>
-    <path d="M440 606 Q215 595 190 422" marker-end="url(#evo-a)"/>
-    <path d="M190 276 Q215 108 438 104" marker-end="url(#evo-a)"/>
+  <g fill="none" stroke="#8c95a1" stroke-width="3">
+    <path d="M638 100 Q800 108 842 222" marker-end="url(#evo-a)"/>
+    <path d="M842 338 Q800 470 640 486" marker-end="url(#evo-a)"/>
+    <path d="M362 486 Q200 470 160 338" marker-end="url(#evo-a)"/>
+    <path d="M160 222 Q200 108 360 100" marker-end="url(#evo-a)"/>
   </g>
-  <g fill="none" stroke="currentColor" stroke-width="3.5">
-    <path d="M258 68 H438" marker-end="url(#evo-k)"/>
-    <path d="M760 644 H940" marker-end="url(#evo-k)"/>
+  <g fill="none" stroke="#4a5059" stroke-width="3">
+    <path d="M238 56 H360" marker-end="url(#evo-k)"/>
+    <path d="M762 56 H640" marker-end="url(#evo-k)"/>
+    <path d="M638 522 H760" marker-end="url(#evo-k)"/>
+    <path d="M82 112 V222" marker-end="url(#evo-k)" stroke-dasharray="7 6"/>
   </g>
-  <g stroke-width="3">
-    <rect x="40" y="24" width="210" height="104" rx="16" fill="#f1f3f4" stroke="#9aa3ad"/>
-    <rect x="950" y="578" width="210" height="104" rx="16" fill="#f1f3f4" stroke="#9aa3ad"/>
-    <rect x="450" y="36" width="300" height="124" rx="16" fill="#01796e" stroke="#01796e"/>
-    <rect x="40" y="286" width="300" height="124" rx="16" fill="#01796e" stroke="#01796e"/>
-    <rect x="876" y="270" width="300" height="124" rx="16" fill="#e9eef0" stroke="#aab2b8"/>
-    <rect x="868" y="278" width="300" height="124" rx="16" fill="#e9eef0" stroke="#8a949b"/>
-    <rect x="860" y="286" width="300" height="124" rx="16" fill="#e9eef0" stroke="#5f6b73"/>
-    <rect x="450" y="546" width="300" height="124" rx="16" fill="#e9eef0" stroke="#5f6b73"/>
+  <g stroke-width="2.5">
+    <rect x="30" y="20" width="200" height="84" rx="14" fill="#f1f3f5" stroke="#9aa3ad"/>
+    <rect x="770" y="20" width="200" height="84" rx="14" fill="#f1f3f5" stroke="#9aa3ad" stroke-dasharray="7 6"/>
+    <rect x="770" y="496" width="200" height="84" rx="14" fill="#f1f3f5" stroke="#9aa3ad"/>
+    <rect x="370" y="30" width="260" height="96" rx="14" fill="#e6eefb" stroke="#2a5db0"/>
+    <rect x="30" y="232" width="260" height="96" rx="14" fill="#e6eefb" stroke="#2a5db0" stroke-dasharray="7 6"/>
+    <rect x="710" y="232" width="260" height="96" rx="14" fill="#e7f2ea" stroke="#3a7d4b"/>
+    <rect x="370" y="434" width="260" height="96" rx="14" fill="#e7f2ea" stroke="#3a7d4b"/>
   </g>
-  <g text-anchor="middle" font-weight="700" font-size="26">
-    <text x="600" y="78" fill="#ffffff">Propose</text>
-    <text x="1010" y="328" fill="#1c2326">Train</text>
-    <text x="600" y="588" fill="#1c2326">Score</text>
-    <text x="190" y="328" fill="#ffffff">Analyze</text>
-    <text x="600" y="326" fill="currentColor" font-size="23">Lineages</text>
-    <text x="145" y="60" fill="#1c2326" font-size="19">Brief + baseline</text>
-    <text x="1055" y="614" fill="#1c2326" font-size="19">Leaderboard</text>
+  <g text-anchor="middle" font-weight="700" font-size="24">
+    <text x="500" y="72" fill="#2a5db0">Propose</text>
+    <text x="160" y="274" fill="#2a5db0">Analyze</text>
+    <text x="840" y="274" fill="#3a7d4b">Train</text>
+    <text x="500" y="476" fill="#3a7d4b">Score</text>
+    <text x="500" y="276" fill="currentColor" font-size="22">Lineages</text>
+    <text x="130" y="56" fill="#1c1f23" font-size="19">Researcher</text>
+    <text x="870" y="56" fill="#1c1f23" font-size="19">Skills · CAMEO</text>
+    <text x="870" y="532" fill="#1c1f23" font-size="19">Leaderboard</text>
   </g>
-  <g text-anchor="middle" font-size="17">
-    <text x="600" y="118" fill="#ffffff">writer agent</text>
-    <text x="600" y="136" fill="#ffffff"></text>
-    <text x="1010" y="368" fill="#1c2326">parallel jobs</text>
-    <text x="600" y="628" fill="#1c2326">validation</text>
-    <text x="190" y="368" fill="#ffffff">analyst · strategist</text>
-    <text x="600" y="358" fill="currentColor">selection, by code</text>
-    <text x="145" y="96" fill="#1c2326" font-size="16">skill · CAMEO</text>
-    <text x="1055" y="646" fill="#1c2326" font-size="16">study.json</text>
+  <g text-anchor="middle" font-size="16" fill="#1c1f23">
+    <text x="500" y="103">writer</text>
+    <text x="160" y="305">analyst · strategist</text>
+    <text x="840" y="305">your training script, in parallel</text>
+    <text x="500" y="507">validation metric</text>
+    <text x="130" y="84">brief · baseline code</text>
+    <text x="870" y="84">guidance · prior designs</text>
+    <text x="870" y="560">study file for CAMEO</text>
   </g>
-  <g font-size="16.5" font-style="italic" fill="currentColor" opacity="0.8" text-anchor="middle">
-    <text x="868" y="206">code</text>
-    <text x="872" y="500">models</text>
-    <text x="328" y="500">scores</text>
-    <text x="336" y="206">lessons</text>
+  <text x="500" y="304" text-anchor="middle" font-size="16" fill="currentColor" opacity="0.75">parents chosen by code</text>
+  <g font-size="15" font-style="italic" fill="currentColor" opacity="0.75" text-anchor="middle">
+    <text x="756" y="180">new code</text>
+    <text x="722" y="414">trained models</text>
+    <text x="262" y="414">results</text>
+    <text x="238" y="172">lessons</text>
+    <text x="122" y="172">steering</text>
   </g>
-  <g font-size="16" fill="currentColor">
-    <rect x="40" y="694" width="30" height="20" rx="5" fill="#01796e"/>
-    <text x="80" y="710">LLM agents</text>
-    <rect x="200" y="694" width="30" height="20" rx="5" fill="#e9eef0" stroke="#5f6b73" stroke-width="2.5"/>
-    <text x="240" y="710">deterministic code</text>
+  <g font-size="14" fill="currentColor">
+    <rect x="30" y="566" width="28" height="18" rx="5" fill="#e6eefb" stroke="#2a5db0" stroke-width="2"/>
+    <text x="66" y="580">LLM agents</text>
+    <rect x="166" y="566" width="28" height="18" rx="5" fill="#e7f2ea" stroke="#3a7d4b" stroke-width="2"/>
+    <text x="202" y="580">code</text>
+    <rect x="262" y="566" width="28" height="18" rx="5" fill="none" stroke="#9aa3ad" stroke-width="2" stroke-dasharray="5 4"/>
+    <text x="298" y="580">optional</text>
   </g>
 </svg>
+</figure>
 
-<p class="evo-loop-list"><b>Propose</b> &rarr; <b>Train</b> &rarr; <b>Score</b> &rarr; <b>Analyze</b> &rarr; back to Propose.</p>
+## The loop
 
-The loop runs until the evaluation budget is spent, with as many candidates in training as you have
-GPUs.
+A search repeats four steps until its budget of training runs is spent. The *writer* agent proposes a
+design: an edit to a parent, a crossover of two parents, or something new. Your training script, the
+*evaluator*, trains it as a job alongside others. The design is scored on your validation metric and
+ranked. Every few designs the *analyst* agent summarizes what has and has not worked, and the writer
+reads those lessons before its next proposal. A *strategist* agent can shift effort between new designs
+and refinement.
 
-| Step | Done by | Detail |
-|---|---|---|
-| **Propose** | writer agent | Code selects one or two parents and the kind of move. The writer returns new code for the marked regions, with a hypothesis and a predicted effect. Code rejects a candidate that edits anything else, fails to parse, or duplicates an earlier one. |
-| **Train** | your script | Each candidate trains as its own job. By default a new design in the bottom half of its peers at 50% of the run is stopped there. |
-| **Score** | code | Reads the validation metric your script reports. Candidates outside a hard limit are rejected. Test-set metrics are recorded but withheld from every agent. |
-| **Analyze** | analyst and strategist agents | Every 8 candidates the analyst writes lessons, which the writer sees on its next call. Every 15, or on a plateau, the strategist may shift the schedule or retire a lineage, within bounds you set. Both are optional. |
-| **Lineages** | code | The population. Code selects parents from it and retires lineages that stop improving. |
+Code decides which designs become parents. It also rejects any proposal that edits code you did not
+mark, stops weak training runs early, and keeps test-set results away from the agents.
 
-[How it works, in detail](how-it-works.md) · [Agents](agents.md)
+[How it works →](how-it-works.md)
 
 ## Lineages
 
-Greedy search, which always edits the current best, converges on the first workable design. evoloop's
-default keeps several lineages in play. A lineage is one founding design and its descendants.
+Editing only the current best design tends to converge on the first idea that works. By default
+evoloop keeps several *lineages* going. A lineage is one founding design and its descendants.
 
-<svg class="evo-loop-svg" viewBox="0 0 1200 500" role="img" aria-label="An illustration of lineages in one search, as validation score against evaluations spent. The baseline CNN stops improving and is retired. A dilated CNN climbs steadily. A transformer starts below the others, is protected for its first two runs, and then climbs. A crossover of the dilated CNN and the transformer founds a new lineage that ends as the best version." style="width:100%;max-width:940px;height:auto;display:block;margin:24px auto 8px;font-family:inherit">
-  <rect x="80" y="64" width="620" height="356" fill="#01796e" opacity="0.06"/>
-  <path d="M700 64 V420" stroke="#7d8790" stroke-width="2" stroke-dasharray="5 6"/>
-  <path d="M80 64 V420 H1120" stroke="#7d8790" stroke-width="2" fill="none"/>
-  <g font-size="18" font-weight="700" fill="currentColor"><text x="92" y="48">Explore</text><text x="712" y="48">Exploit</text></g>
-  <g font-size="15" fill="currentColor" opacity="0.8" text-anchor="end"><text x="70" y="425">0.60</text><text x="70" y="255">0.70</text><text x="70" y="85">0.80</text></g>
-  <path d="M100 386 L150 369 L210 360 L280 352 L350 352 L420 352 L480 352" stroke="#9aa3ab" stroke-width="3.5" fill="none" stroke-linejoin="round"/>
-  <circle cx="100" cy="386" r="7" fill="#ffffff" stroke="#9aa3ab" stroke-width="3"/>
-  <circle cx="150" cy="369" r="7" fill="#ffffff" stroke="#9aa3ab" stroke-width="3"/>
-  <circle cx="210" cy="360" r="7" fill="#9aa3ab"/>
-  <circle cx="280" cy="352" r="7" fill="#9aa3ab"/>
-  <circle cx="350" cy="352" r="7" fill="#9aa3ab"/>
-  <circle cx="420" cy="352" r="7" fill="#9aa3ab"/>
-  <circle cx="480" cy="352" r="7" fill="#9aa3ab"/>
-  <path d="M511 343 L529 361 M511 361 L529 343" stroke="#9aa3ab" stroke-width="3.5" fill="none"/>
-  <path d="M170 352 L230 318 L300 284 L380 250 L470 225 L560 208 L640 199 L720 191 L790 182 L860 182 L940 179 L1010 179" stroke="#5f6b73" stroke-width="3.5" fill="none" stroke-linejoin="round"/>
-  <circle cx="170" cy="352" r="7" fill="#ffffff" stroke="#5f6b73" stroke-width="3"/>
-  <circle cx="230" cy="318" r="7" fill="#ffffff" stroke="#5f6b73" stroke-width="3"/>
-  <circle cx="300" cy="284" r="7" fill="#5f6b73"/>
-  <circle cx="380" cy="250" r="7" fill="#5f6b73"/>
-  <circle cx="470" cy="225" r="7" fill="#5f6b73"/>
-  <circle cx="560" cy="208" r="7" fill="#5f6b73"/>
-  <circle cx="640" cy="199" r="7" fill="#5f6b73"/>
-  <circle cx="720" cy="191" r="7" fill="#5f6b73"/>
-  <circle cx="790" cy="182" r="7" fill="#5f6b73"/>
-  <circle cx="860" cy="182" r="7" fill="#5f6b73"/>
-  <circle cx="940" cy="179" r="7" fill="#5f6b73"/>
-  <circle cx="1010" cy="179" r="7" fill="#5f6b73"/>
-  <path d="M440 411 L500 386 L570 335 L640 301 L710 276 L780 262 L850 257" stroke="#5f6b73" stroke-width="3.5" fill="none" stroke-linejoin="round"/>
-  <circle cx="440" cy="411" r="7" fill="#ffffff" stroke="#5f6b73" stroke-width="3"/>
-  <circle cx="500" cy="386" r="7" fill="#ffffff" stroke="#5f6b73" stroke-width="3"/>
-  <circle cx="570" cy="335" r="7" fill="#5f6b73"/>
-  <circle cx="640" cy="301" r="7" fill="#5f6b73"/>
-  <circle cx="710" cy="276" r="7" fill="#5f6b73"/>
-  <circle cx="780" cy="262" r="7" fill="#5f6b73"/>
-  <circle cx="850" cy="257" r="7" fill="#5f6b73"/>
-  <path d="M720 191 Q750 188 770 176 M710 276 Q760 250 768 180" stroke="#01796e" stroke-width="3" fill="none" stroke-dasharray="6 5"/>
-  <path d="M770 174 L820 157 L880 140 L940 123 L1000 111 L1060 100" stroke="#01796e" stroke-width="3.5" fill="none" stroke-linejoin="round"/>
-  <circle cx="770" cy="174" r="7" fill="#ffffff" stroke="#01796e" stroke-width="3"/>
-  <circle cx="820" cy="157" r="7" fill="#ffffff" stroke="#01796e" stroke-width="3"/>
-  <circle cx="880" cy="140" r="7" fill="#01796e"/>
-  <circle cx="940" cy="123" r="7" fill="#01796e"/>
-  <circle cx="1000" cy="111" r="7" fill="#01796e"/>
-  <circle cx="1060" cy="100" r="7" fill="#01796e"/>
-  <circle cx="1060" cy="100" r="15" fill="none" stroke="#01796e" stroke-width="3"/>
-  <g font-size="16" fill="currentColor">
-    <text x="200" y="384" font-weight="700">Baseline CNN</text>
-    <text x="1024" y="184" font-weight="700">Dilated CNN</text>
-    <text x="866" y="263" font-weight="700">Transformer</text>
-    <text x="714" y="88" font-weight="700">Dilated CNN &#215; Transformer</text>
+<figure class="evo-figure">
+<svg class="evo-fig" viewBox="0 0 1000 410" role="img" aria-label="Schematic of lineages in one search, as validation score against evaluations. In the explore phase three lineages are founded: a CNN baseline, a dilated CNN and a transformer. The first runs of each are protected. The baseline stops improving and is retired. In the exploit phase a crossover of the dilated CNN and the transformer founds a hybrid lineage, which ends with the best score.">
+  <rect x="70" y="50" width="534" height="290" fill="#3a7d4b" opacity="0.07"/>
+  <path d="M604 50 V340" stroke="#8c95a1" stroke-width="1.5" stroke-dasharray="5 6"/>
+  <path d="M70 44 V340 H966" stroke="#8c95a1" stroke-width="2" fill="none"/>
+  <path d="M64 54 L70 42 L76 54 M954 334 L966 340 L954 346" stroke="#8c95a1" stroke-width="2" fill="none"/>
+  <g font-size="17" font-weight="700" fill="currentColor"><text x="82" y="34">Explore</text><text x="616" y="34">Exploit</text></g>
+  <path d="M90 313 L135 294 L180 286 L225 286 L270 286 L315 286 L360 286 L405 286 L450 286" stroke="#a3abb3" stroke-width="3" fill="none" stroke-linejoin="round"/>
+  <circle cx="90" cy="313" r="6" fill="#ffffff" stroke="#a3abb3" stroke-width="2.5"/>
+  <circle cx="135" cy="294" r="6" fill="#ffffff" stroke="#a3abb3" stroke-width="2.5"/>
+  <circle cx="180" cy="286" r="6" fill="#a3abb3"/>
+  <circle cx="225" cy="286" r="6" fill="#a3abb3"/>
+  <circle cx="270" cy="286" r="6" fill="#a3abb3"/>
+  <circle cx="315" cy="286" r="6" fill="#a3abb3"/>
+  <circle cx="360" cy="286" r="6" fill="#a3abb3"/>
+  <circle cx="405" cy="286" r="6" fill="#a3abb3"/>
+  <circle cx="450" cy="286" r="6" fill="#a3abb3"/>
+  <path d="M481 277 L499 295 M481 295 L499 277" stroke="#a3abb3" stroke-width="3" fill="none"/>
+  <path d="M150 281 L200 251 L255 227 L315 205 L380 189 L445 178 L510 170 L570 165 L640 159 L710 159 L780 156 L850 156" stroke="#5f6b73" stroke-width="3" fill="none" stroke-linejoin="round"/>
+  <circle cx="150" cy="281" r="6" fill="#ffffff" stroke="#5f6b73" stroke-width="2.5"/>
+  <circle cx="200" cy="251" r="6" fill="#ffffff" stroke="#5f6b73" stroke-width="2.5"/>
+  <circle cx="255" cy="227" r="6" fill="#5f6b73"/>
+  <circle cx="315" cy="205" r="6" fill="#5f6b73"/>
+  <circle cx="380" cy="189" r="6" fill="#5f6b73"/>
+  <circle cx="445" cy="178" r="6" fill="#5f6b73"/>
+  <circle cx="510" cy="170" r="6" fill="#5f6b73"/>
+  <circle cx="570" cy="165" r="6" fill="#5f6b73"/>
+  <circle cx="640" cy="159" r="6" fill="#5f6b73"/>
+  <circle cx="710" cy="159" r="6" fill="#5f6b73"/>
+  <circle cx="780" cy="156" r="6" fill="#5f6b73"/>
+  <circle cx="850" cy="156" r="6" fill="#5f6b73"/>
+  <path d="M430 332 L480 308 L535 259 L590 232 L645 213 L705 202 L765 200" stroke="#5f6b73" stroke-width="3" fill="none" stroke-linejoin="round"/>
+  <circle cx="430" cy="332" r="6" fill="#ffffff" stroke="#5f6b73" stroke-width="2.5"/>
+  <circle cx="480" cy="308" r="6" fill="#ffffff" stroke="#5f6b73" stroke-width="2.5"/>
+  <circle cx="535" cy="259" r="6" fill="#5f6b73"/>
+  <circle cx="590" cy="232" r="6" fill="#5f6b73"/>
+  <circle cx="645" cy="213" r="6" fill="#5f6b73"/>
+  <circle cx="705" cy="202" r="6" fill="#5f6b73"/>
+  <circle cx="765" cy="200" r="6" fill="#5f6b73"/>
+  <path d="M640 159 Q668 158 686 153 M645 213 Q682 200 688 156" stroke="#2a5db0" stroke-width="2.5" fill="none" stroke-dasharray="6 5"/>
+  <path d="M690 151 L740 135 L795 119 L850 105 L905 94 L950 86" stroke="#2a5db0" stroke-width="3" fill="none" stroke-linejoin="round"/>
+  <circle cx="690" cy="151" r="6" fill="#ffffff" stroke="#2a5db0" stroke-width="2.5"/>
+  <circle cx="740" cy="135" r="6" fill="#ffffff" stroke="#2a5db0" stroke-width="2.5"/>
+  <circle cx="795" cy="119" r="6" fill="#2a5db0"/>
+  <circle cx="850" cy="105" r="6" fill="#2a5db0"/>
+  <circle cx="905" cy="94" r="6" fill="#2a5db0"/>
+  <circle cx="950" cy="86" r="6" fill="#2a5db0"/>
+  <circle cx="950" cy="86" r="13" fill="none" stroke="#2a5db0" stroke-width="2.5"/>
+  <g font-size="16" font-weight="700" fill="currentColor">
+    <text x="196" y="310">CNN baseline</text>
+    <text x="862" y="161">Dilated CNN</text>
+    <text x="777" y="205">Transformer</text>
+    <text x="748" y="100" fill="#2a5db0">Hybrid</text>
   </g>
-  <g font-size="15.5" fill="currentColor" opacity="0.85">
-    <text x="80" y="448">evaluations &#8594;</text>
-    <g text-anchor="start"><circle cx="560" cy="443" r="6" fill="#ffffff" stroke="#5f6b73" stroke-width="2.5"/><text x="574" y="448">protected</text><path d="M676 437 l12 12 m-12 0 l12 -12" stroke="#9aa3ab" stroke-width="3" fill="none"/><text x="698" y="448">retired</text><path d="M780 443 h34" stroke="#01796e" stroke-width="3" stroke-dasharray="6 5"/><text x="824" y="448">crossover</text><text x="940" y="448">(schematic)</text></g>
-    <text transform="translate(24 300) rotate(-90)">validation score</text>
+  <text x="706" y="183" font-size="14" font-style="italic" fill="#2a5db0">crossover</text>
+  <g font-size="14" fill="currentColor" opacity="0.85">
+    <text x="70" y="366">evaluations</text>
+    <text transform="translate(52 250) rotate(-90)">validation score</text>
+    <circle cx="610" cy="361" r="6" fill="#ffffff" stroke="#5f6b73" stroke-width="2.5"/><text x="624" y="366">protected run</text>
+    <path d="M740 355 l12 12 m-12 0 l12 -12" stroke="#a3abb3" stroke-width="3" fill="none"/><text x="762" y="366">retired</text>
+    <path d="M836 361 h30" stroke="#2a5db0" stroke-width="2.5" stroke-dasharray="6 5"/><text x="874" y="366">crossover</text>
   </g>
 </svg>
+</figure>
 
-| Rule | Default |
-|---|---|
-| Founding | a new design or a crossover starts a lineage |
-| Protected trial | first 2 runs |
-| Retirement | 6 local moves without a gain above the noise floor |
-| Population | 8 active lineages; at most 40% of local moves to any one |
-| Schedule | first 60% of budget: 65% new designs; then 60% local moves, 25% crossover |
+In this schematic three lineages are founded while the search explores. A new lineage's first runs are
+protected from comparison with the others, so the transformer survives a poor start. The baseline stops
+improving and is retired. Later the search exploits what it has found: it refines the leading lineages
+and crosses two of them, and the hybrid ends up best.
 
-Every number is a setting. [Parent selection](parents.md) covers the other four strategies.
-[Comparison with FunSearch and AlphaEvolve](compared.md)
+Lineages are one of five selection strategies. The others are a MAP-Elites archive, tournament
+selection as in regularized evolution, a Pareto front over the score and a second measure such as model
+size, and greedy hill climbing. Any of them can run as islands, as in FunSearch.
 
-## Getting started
+[Parent selection →](parents.md) · [Schedule →](schedule.md)
 
-!!! tip "Recommended: run it from Claude Code"
-    Open the evoloop repository in [Claude Code](https://claude.com/claude-code) and say what you want to optimize.
-    It marks the code with you, writes the scoring adapter, asks the setup questions one at a time, and
-    shows you the plan. After you approve, it launches the search, monitors it, and applies your feedback
-    as steering.
+## Agents and autonomy
 
-The same steps by hand: [Set up a search](setting-up.md). Each run needs:
+Only the writer is required. The analyst and the strategist run in the default configuration and can
+be turned off. An assessor reviews, for you, how well the other agents are doing. A coordinator, which
+chooses the kind of change for each proposal, is off unless you ask for more autonomy.
 
-1. **Editable regions**, marked in your code with a pair of comment lines.
-2. **An adapter**: a script that trains one candidate and writes its validation score.
-3. **A brief**: the objective, the budget, and the search settings. `evoloop setup` asks for them.
-   A [skill](which-search.md) fills in most of them for a given goal.
+One setting controls how much the agents decide. At one end the controller plans every step and the
+agents only write code. At the other, agents also choose what kind of change to make and adjust the
+schedule. At every level the controller holds the budget, your limits, and the rule that only marked
+code can change.
 
-To start from existing designs, import them from an earlier run or a CAMEO study:
-[Start from earlier designs](warm-start.md). To deposit your results: [Save and deposit the study](study.md).
+[Agents →](agents.md)
 
-## Documentation
+## Skills
 
-| | |
-|---|---|
-| **Get started** | [Set up a search](setting-up.md) · [Write the evaluator](evaluator.md) · [Run on a cluster](servers.md) · [Worked example](quickstart.md) |
-| **How it works** | [Overview](how-it-works.md) · [Schedule](schedule.md) · [Parent selection](parents.md) · [Moves](moves.md) · [Early stopping](early-stopping.md) · [Agents](agents.md) |
-| **Run** | [Monitor and steer](steering.md) · [Budget and cost](cost.md) · [Start from earlier designs](warm-start.md) · [Deposit the study](study.md) |
-| **Skills** | [Choose a skill](which-search.md) · [Edit, merge or write a skill](skills.md) |
-| **Reference** | [Commands](commands.md) · [Brief fields](fields.md) · [All options](options.md) · [Code map](code.md) · [Status and limits](status.md) |
+A skill is a file of search settings and agent guidance for one goal: raising a score, distilling a
+teacher into a student, mapping an accuracy-size frontier, fine-tuning, speeding up an algorithm.
+evoloop runs without one. With one, you supply less yourself. The library has thirteen, and the one you
+choose is copied into your search folder, where you can edit it.
+
+[Choose a skill →](which-search.md) · [Edit, merge or write a skill →](skills.md)
+
+## Running a search
+
+The simplest way is from Claude Code. Open the repository there and say what you want to optimize. It
+marks the code with you, writes the evaluator, asks the setup questions, and shows you a plan with a
+cost estimate. Nothing is spent until you approve the plan. Claude Code then launches the search,
+reports on it, and turns your feedback into changes to the running search. Every step is also a
+command you can run yourself.
+
+Training runs on a workstation or a Slurm cluster, one job per design. The agents need an Anthropic API
+key or a Claude Code login.
+
+[Set up a search →](setting-up.md) · [Monitor and steer a search →](steering.md) · [Budget and cost →](cost.md)
+
+## CAMEO
+
+[CAMEO](https://cameo-db.github.io) is a public database of trained models with their code and
+scores. A search can start from designs in CAMEO, and every search is saved in CAMEO's format so that
+it can be deposited there.
+
+[Start from earlier designs →](warm-start.md) · [Save and deposit the study →](study.md)
+
+## Status
+
+evoloop is at version 0.2. Its test suite runs complete searches with scripted stand-ins for the LLM.
+It has not yet been validated with an LLM on a real training task.
+
+[Status and limits →](status.md)
+
+</div>

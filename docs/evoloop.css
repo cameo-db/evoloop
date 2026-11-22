@@ -148,3 +148,19 @@
 .evo-map { --evo-line: var(--md-default-fg-color--lighter); --evo-surface: var(--md-default-bg-color); }
 [data-md-color-scheme="slate"] .evo-map .evo-who.agent, [data-md-color-scheme="slate"] .evo-map .evo-step-n { color: #fff; }
 [data-md-color-scheme="slate"] .evo-map h4, [data-md-color-scheme="slate"] .evo-step-choice span, [data-md-color-scheme="slate"] .evo-map-back { color: #5fd0c1; }
+
+/* Headings: heavier and darker than the theme's thin grey defaults. */
+.md-typeset h1 { font-weight: 700; letter-spacing: -0.01em; color: var(--md-default-fg-color); }
+.md-typeset h2 { font-weight: 600; color: var(--md-default-fg-color); }
+.md-typeset h3 { font-weight: 600; }
+
+/* Home: one readable column of text, with the figures a little wider than the text. */
+.evo-home { max-width: 37rem; margin: 0 auto; }
+.md-typeset .evo-home h1 { font-size: 2.7rem; margin: 1.2rem 0 0.5rem; }
+.md-typeset .evo-tagline { font-size: 1.15rem; line-height: 1.4; color: var(--md-default-fg-color--light); margin: 0 0 1.6rem; }
+.md-typeset .evo-home > p { font-size: 0.84rem; line-height: 1.7; }
+.md-typeset .evo-home h2 { margin: 2.8rem 0 0.8rem; font-size: 1.35rem; }
+.md-typeset .evo-home .md-button { margin: 0.6rem 0.4rem 0.2rem 0; }
+.md-typeset .evo-figure { width: min(50rem, calc(100vw - 2.4rem)); max-width: none; margin: 2.4rem 0 1.4rem 50%; transform: translateX(-50%); overflow-x: auto; }
+.evo-figure svg { width: 100%; min-width: 640px; height: auto; display: block; font-family: inherit; }
+.md-typeset .evo-home p.evo-more { font-size: 0.8rem; font-weight: 600; margin-top: -0.2rem; }

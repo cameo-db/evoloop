@@ -2,7 +2,7 @@
 
 The strategist is an agent that looks at a search as a whole and can change how the remaining budget is
 spent. It either advises you or acts on its own, and either way it works from a fixed list of actions
-inside limits that code enforces. [The agents](agents.md#why-have-a-strategist) explains why it exists.
+inside limits that code enforces. [Agents](agents.md#why-have-a-strategist) explains why it exists.
 
 ## Advice, or action
 

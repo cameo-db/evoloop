@@ -7,43 +7,25 @@
 
 [![Documentation](https://readthedocs.org/projects/evoloop/badge/?version=latest)](https://evoloop.readthedocs.io/en/latest/)
 
-**evoloop improves code by evolving it.** An LLM writes new versions of the parts you mark. Your script
-scores each one. The best become parents of the next.
+**Evolutionary search over machine-learning code, with LLM agents writing the candidates.**
 
-Use it to raise a model's validation score, train a smaller student from a teacher, tune
-hyperparameters, or make an algorithm or pipeline faster while its output stays the same.
+You mark the parts of your code that may change, such as an architecture, a loss or a training recipe,
+and provide a script that trains one model and reports its validation score. A writer agent proposes
+changes. Each proposal is trained as a job on your GPUs and scored, and the proposals that score best
+become the parents of the next ones.
+
+The agents propose and advise. Everything else is deterministic code: choosing the parents, checking
+each edit, scheduling the jobs, enforcing the budget. The method follows FunSearch and AlphaEvolve,
+adapted to searches in which every evaluation is a full training run and the researcher wants to steer.
 
 Documentation: <https://evoloop.readthedocs.io>
 
-```mermaid
-flowchart LR
-    subgraph you ["You provide"]
-        direction TB
-        A["Code, with the parts<br>that may change marked"]
-        B["A script that scores<br>one version"]
-        C["A budget"]
-    end
-    subgraph loop ["evoloop repeats, many versions at once"]
-        direction LR
-        P["<b>1. Choose</b><br>which earlier version<br>to build on<br><i>evoloop's code</i>"]
-        W["<b>2. Propose</b><br>a change to it<br><i>an LLM agent</i>"]
-        S["<b>3. Score</b><br>the new version<br><i>your script, as a job</i>"]
-        R["<b>4. Record</b><br>the result and compare<br><i>evoloop's code</i>"]
-        P --> W --> S --> R
-        R -- "next version" --> P
-    end
-    subgraph get ["You get"]
-        direction TB
-        L["A leaderboard"]
-        D["Every version tried, with<br>its code, parent and score"]
-        J["The whole search<br>in one file"]
-    end
-    you --> loop --> get
-```
+<p align="center"><img src="docs/assets/loop.svg" alt="The evoloop loop: the writer agent proposes new code, your training script trains it, the validation metric scores it, and the analyst and strategist agents return lessons to the writer. Code chooses the parents from the lineages." width="820"></p>
 
-Agents write the changes. Code does everything that must be trusted: it picks what to build on, checks
-that only the marked parts changed, runs the jobs, enforces the budget and your limits, and keeps the
-record.
+By default the search keeps several lineages, families of designs descended from one founding design,
+so that it does not converge on the first idea that works.
+
+<p align="center"><img src="docs/assets/lineages.svg" alt="Schematic of lineages in one search: three are founded while the search explores, the baseline is retired, and a crossover of two founds a hybrid that ends up best." width="820"></p>
 
 > **Recommended: run it through [Claude Code](https://claude.com/claude-code).** Open this repository in Claude Code and
 > say what you want to improve. It sets up the search with you by asking the questions one at a time, starts the run
@@ -183,7 +165,7 @@ evoloop run    mysearch --name r1            # resume
 
 Each change is checked, applied from the next design on, and recorded with your name. The objective and
 the scheduler are fixed when a search starts.
-[Watch and steer a run](https://evoloop.readthedocs.io/en/latest/steering/).
+[Monitor and steer a search](https://evoloop.readthedocs.io/en/latest/steering/).
 
 ## A worked example
 
@@ -207,7 +189,7 @@ evoloop leaderboard demo --name first
 
 40 training runs across 39 designs take validation accuracy from 0.50 to 0.97. The proposals in the demo
 are scripted, so it shows how a search proceeds and what it records, not what a language model would
-find. [Run the demo](https://evoloop.readthedocs.io/en/latest/quickstart/) walks through the output.
+find. [Worked example](https://evoloop.readthedocs.io/en/latest/quickstart/) walks through the output.
 
 ## What a search leaves behind
 
@@ -237,10 +219,10 @@ on a real training task, and its search settings have not been compared against 
 
 | | |
 |---|---|
-| Start | [Run the demo](docs/quickstart.md) · [Set up your search](docs/setting-up.md) · [Write the evaluator](docs/evaluator.md) · [Measure your noise](docs/noise.md) · [Run on a cluster](docs/servers.md) |
-| Choose a search | [Which search should I run?](docs/which-search.md) · [Edit, merge or write a skill](docs/skills.md) |
-| Concepts | [One step of a search](docs/how-it-works.md) · [What gets tried next](docs/schedule.md) · [Who becomes a parent](docs/parents.md) · [Cheaper evaluations](docs/early-stopping.md) · [The agents](docs/agents.md) |
-| Run and steer | [Watch and steer a run](docs/steering.md) · [Budget and cost](docs/cost.md) · [Save and deposit the study](docs/study.md) |
+| Start | [Worked example](docs/quickstart.md) · [Set up your search](docs/setting-up.md) · [Write the evaluator](docs/evaluator.md) · [Measure your noise](docs/noise.md) · [Run on a cluster](docs/servers.md) |
+| Choose a search | [Choose a skill and a run type](docs/which-search.md) · [Edit, merge or write a skill](docs/skills.md) |
+| Concepts | [How it works](docs/how-it-works.md) · [Schedule](docs/schedule.md) · [Parent selection](docs/parents.md) · [Early stopping](docs/early-stopping.md) · [Agents](docs/agents.md) |
+| Run and steer | [Monitor and steer a search](docs/steering.md) · [Budget and cost](docs/cost.md) · [Save and deposit the study](docs/study.md) |
 | Reference | [Commands](docs/commands.md) · [Brief fields](docs/fields.md) · [Evaluator interface](docs/project-contract.md) · [Glossary](docs/glossary.md) |
 
 ## Development

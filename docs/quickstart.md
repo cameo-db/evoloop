@@ -24,7 +24,7 @@ Install from the repository. The `evoloop` package on PyPI is an unrelated proje
 
 | Command | What it does |
 |---|---|
-| `example` | copies the example into `./demo`: the code to optimize, a scoring script, and a brief |
+| `example` | copies the example into `./demo`: the code to optimize, an evaluator (the scoring script), and a brief (the settings) |
 | `plan` | prints what the search will do |
 | `brief --confirm` | records that you agree to the plan; nothing runs without it |
 | `run` | runs the search until 40 evaluations are spent |
@@ -40,6 +40,10 @@ Install from the repository. The `evoloop` package on PyPI is an unrelated proje
 ...
 | baseline | C1    | L1      | baseline          | 0.5     | full  | 300    | 1    | 3          |
 ```
+
+`lineage` is the line of descent a design belongs to, and `family` is the label the writer gave that kind
+of design. `state` says whether the run went its full `length` (300 training steps here) or was stopped
+early. `fits` is how many times the design was trained.
 
 Validation accuracy went from 0.50 for the baseline, a linear classifier, to 0.97. The held-out test
 accuracy of the selected design is 0.96. Four labels in a hundred are wrong on purpose, so 0.96 is about
