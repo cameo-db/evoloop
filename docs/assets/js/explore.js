@@ -40,7 +40,7 @@
     "model-performance": {name: "Improve a model",
       propose: "The agent is told to work out what limits the current best model (capacity, optimization or generalization) and to make one change that addresses it.",
       evaluate: "Your script trains the design and reports its validation score.",
-      choose: "Several families of designs are kept. The best ones get more edits, and new families keep being started."},
+      choose: "Several lineages are kept. The best ones get more edits, and new lineages keep being founded."},
     "settings-tuning": {name: "Tune hyperparameters",
       propose: "The agent reads the earlier trials and picks the next hyperparameters, changing the ones that interact (learning rate with batch size, width with depth) together.",
       evaluate: "Your script trains the same model with those values and reports the score and the parameter count.",
@@ -74,7 +74,7 @@
   var RUN_LABEL = {explore_then_exploit: "Explore, then refine", refine: "Refine what works", survey: "Explore broadly",
                    discovery: "Look for something unusual", settings_only: "Settings only", custom: "Your own"};
   var WORDS = {
-    strategy: {lineage: "Several families of designs are kept going side by side", archive: "The best design of each kind is kept",
+    strategy: {lineage: "Several lineages are kept going side by side", archive: "The best design of each kind is kept",
                tournament: "The best of a few recent designs", pareto: "Designs on the trade-off between two metrics", greedy: "Always the current best design"},
     space: {settings_only: "Numbers only", module: "One part of the model", template: "The model, keeping its overall shape",
             open_architecture: "The whole model", architecture_and_recipe: "The model and how it is trained", custom: "The parts the goal names"},
@@ -147,8 +147,8 @@
     goalPick.addEventListener("change", function () { state.skill = goalPick.value; render(); });
     clear(root);
     root.appendChild(el("div", {"class": "evo-controls"}, [
-      el("div", {"class": "evo-row"}, [el("span", {"class": "evo-label", text: "Skill"}), goalPick]),
       chipRow("Run type", data.run_types.map(function (r) { return [r, RUN_LABEL[r] || r, data.about.run_types[r], r]; }), state.run, function (v) { state.run = v; render(); }),
+      el("div", {"class": "evo-row"}, [el("span", {"class": "evo-label", text: "Skill (optional)"}), goalPick]),
       chipRow("Budget", data.budgets.map(function (b) { return [b, b + " evaluations"]; }), state.budget, function (v) { state.budget = v; render(); }),
       chipRow("How much the agents decide", data.levels.map(function (l) { return [l, l || "run type default", data.about.levels[l]]; }), state.level, function (v) { state.level = v; render(); })
     ]));
