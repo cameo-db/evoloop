@@ -79,6 +79,7 @@ nav:
       - Budget and cost: cost.md
       - Working with the strategist: strategist.md
       - Audit the agents: auditing.md
+      - Start from earlier designs: warm-start.md
       - Save and deposit the study: study.md
   - Reference:
       - reference.md

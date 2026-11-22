@@ -725,11 +725,43 @@ def cmd_force(args: Any) -> int:
 
 
 def cmd_import(args: Any) -> int:
+    if args.study:
+        return import_study(args)
+    if not args.source:
+        raise SystemExit("give --from-run PATH (an earlier run of evoloop) or --from-study FILE (a study.json, for instance from CAMEO)")
     source = os.path.abspath(args.source)
     if not os.path.isfile(os.path.join(source, "runs.jsonl")):
         raise SystemExit("%s is not a run folder (give the path that holds runs.jsonl, e.g. DIR/runs/NAME)" % source)
     request(args, {"kind": "import", "source": source, "candidates": args.designs or None, "top": args.top})
     out("requested: %s of %s, to be fitted in this run" % (", ".join(args.designs) if args.designs else "the top %d" % args.top, source))
+    return 0
+
+
+def import_study(args: Any) -> int:
+    """Designs from a study file: a path, or a link to one (a study.json downloaded from CAMEO, or another search's)."""
+    from . import study
+    source = args.study
+    if source.startswith(("http://", "https://")):
+        import urllib.request
+        folder = os.path.join(run_dir(args), "imports")
+        os.makedirs(folder, exist_ok=True)
+        path = os.path.join(folder, "study_%d.json" % int(time.time()))
+        with urllib.request.urlopen(source, timeout=60) as reply, open(path, "wb") as handle:
+            handle.write(reply.read())
+        source = path
+    source = os.path.abspath(source)
+    try:
+        loaded = study.load(source)
+    except (OSError, ValueError) as exc:
+        raise SystemExit(str(exc))
+    models, origin = study.ranked(loaded), study.about(loaded)
+    if not models:
+        raise SystemExit("%s holds no model with a finished run and its code" % source)
+    request(args, {"kind": "import", "study": source, "candidates": args.designs or None, "top": args.top, "as_ideas": args.as_ideas})
+    out("requested: %s of the study %s (data: %s; %d models with code)." % (
+        ", ".join(args.designs) if args.designs else "the top %d" % args.top, origin["study"] or source, origin["data"] or "not stated", len(models)))
+    out("A design that carries this project's marked blocks is fitted here. Any other is kept as an idea and shown to the "
+        "writers of new designs to adapt.")
     return 0
 
 
@@ -993,7 +1025,9 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--count", type=int, default=1)
     p.add_argument("--instruction", help="what the writers of those slots must do")
     p = add("import", cmd_import, "bring designs from an earlier run into this one, to be fitted here", named=True, by=True)
-    p.add_argument("--from-run", dest="source", required=True, metavar="PATH", help="the earlier run's folder (DIR/runs/NAME)")
+    p.add_argument("--from-run", dest="source", metavar="PATH", help="the earlier run's folder (DIR/runs/NAME)")
+    p.add_argument("--from-study", dest="study", metavar="FILE", help="a study.json (this loop's, or one from CAMEO): a path or a link")
+    p.add_argument("--as-ideas", action="store_true", help="with --from-study: fit none here; show them to the writers as ideas")
     p.add_argument("--top", type=int, default=3)
     p.add_argument("--designs", nargs="*", metavar="ID", help="these designs (C12 ...) in place of the top ones")
     p = add("reference", cmd_reference, "add a model to compare with to the leaderboard", named=True, by=True)

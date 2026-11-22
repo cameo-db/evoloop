@@ -282,7 +282,12 @@ Has the assessor review the agents now.
 
 ### import
 
-`evoloop import DIR --name N --from-run PATH [--top 3 | --designs C12 ...] --by NAME`
+`evoloop import DIR --name N (--from-run PATH | --from-study FILE) [--top 3 | --designs ID ...] [--as-ideas] --by NAME`
+
+Brings designs in from an earlier run, or from a study file (this loop's `study.json`, or one from CAMEO; a
+path or a link). A design that fits this project is trained here and built on. One from another project
+is kept as an idea and shown to the writers. [Start from earlier designs](warm-start.md).
+| --designs C12 ...] --by NAME`
 
 Brings designs from an earlier search in, to be trained here and built on.
 

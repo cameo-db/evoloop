@@ -178,3 +178,53 @@ def test_replies_are_streamed_and_long_enough_for_several_designs():
     assert form.DEFAULTS["agents"]["max_tokens"] == 64000
     source = open(os.path.join(os.path.dirname(form.__file__), "model", "anthropic_api.py")).read()
     assert "messages.stream(**kwargs)" in source and "get_final_message()" in source and ".create(" not in source
+
+
+def test_designs_from_a_study_file_are_fitted_here_or_kept_as_ideas(tmp_path, capsys):
+    import json
+    folder = search(tmp_path, budget__evaluations=7, evaluation__allowance=150, audit__reviews="none", strategist__mode="off")
+    first, _ = run(folder, name="one")
+    assert main(["study", folder, "--name", "one"]) == 0
+    mine = os.path.join(folder, "runs", "one", "study.json")
+    from evoloop import study
+    models = study.ranked(study.load(mine))
+    assert len(models) >= 2 and models[0]["score"] <= models[1]["score"]         # this example minimizes: best first
+    assert set(study.blocks_in([models[0]["code"], models[0]["script"]], first.designer.table)) == set(first.designer.table)
+    # A study of another project, on other data: its code has none of this project's blocks.
+    other = os.path.join(str(tmp_path), "other_study.json")
+    with open(other, "w", encoding="utf-8") as handle:
+        json.dump({"format_version": "0.4", "experiment": {"id": "atac-k562", "data": {"name": "K562 ATAC"},
+                                                            "evaluation": {"primary_metric": "pearson_r", "direction": "maximize"},
+                                                            "conclusions": {"findings": ["Dilated residual towers beat plain ones."]}},
+                   "models": [{"id": "M1", "name": "dilated tower", "family": "conv", "code": "class Net:\n    depth = 9\n"},
+                              {"id": "M2", "name": "plain tower", "family": "conv", "code": "class Net:\n    depth = 4\n"}],
+                   "training": {}, "runs": [{"id": "R1", "model": "M1", "performance": {"status": "done", "score": 0.71}},
+                                            {"id": "R2", "model": "M2", "performance": {"status": "done", "score": 0.64}}]}, handle)
+    second = Controller(folder, "t", poll=0.2)
+    second.begin()
+    capsys.readouterr()
+    assert main(["import", folder, "--name", "t", "--from-study", mine, "--top", "2", "--by", "Ada"]) == 0
+    assert main(["import", folder, "--name", "t", "--from-study", other, "--top", "1", "--by", "Ada"]) == 0
+    assert "data: K562 ATAC" in capsys.readouterr().out
+    with pytest.raises(SystemExit):
+        main(["import", folder, "--name", "t", "--from-study", os.path.join(folder, "brief.yaml"), "--by", "Ada"])   # not a study
+    with pytest.raises(SystemExit):
+        main(["import", folder, "--name", "t", "--by", "Ada"])                                                     # from nowhere
+    reason = second.run(max_seconds=240)
+    assert reason.startswith("the budget")
+    view = second.view()
+    imported = [r for r in view.runs.values() if r["purpose"] == "import"]
+    assert len(imported) == 2 and all(r["performance"]["status"] in SCORED for r in imported)       # same project: fitted here
+    assert {r["history"]["imported_from"]["model"] for r in imported} == {m["model"] for m in models[:2]}
+    ideas = second.store.read("ideas")
+    assert [i["model"] for i in ideas] == ["M1"] and ideas[0]["data_there"] == "K562 ATAC" and "depth = 9" in ideas[0]["code"]
+    entries = [e for e in second.store.merged_list("ledger") if e["kind"] == "import"]
+    assert [len(e["imported"]) for e in entries] == [2, 0] and entries[1]["ideas"] == ["M1 as I1"]
+    # A writer of a new design is shown the idea, with where it came from.
+    from evoloop import space
+    table = second.designer.table
+    ask = {"mode": "new", "parents": [], "source": space.full(table, {}), "allowed": {n: b["kind"] for n, b in table.items()},
+           "purpose": "search", "move": "new_approach"}
+    shown = second.designer.context(ask, view, second.settings, [])
+    assert shown["designs_from_other_studies"][0]["study"] == "atac-k562"
+    assert "designs_from_other_studies" not in second.designer.context(dict(ask, mode="local", move="settings_move", step="small"), view, second.settings, [])

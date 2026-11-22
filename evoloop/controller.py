@@ -25,6 +25,9 @@ from .store import ENDED, SCORED, Store, View, read_json, write_json
 STALL = 8   # designs refused in a row, with nothing running, before the run stops as stalled
 
 
+IDEA_CODE = 12000      # characters of an idea's code that are kept and shown
+
+
 class Controller:
     def __init__(self, folder: str, name: str, backend: Any = None, agent_backend: Any = None, poll: Optional[float] = None):
         self.folder = os.path.abspath(folder)
@@ -225,7 +228,7 @@ class Controller:
         elif kind == "force":
             self.order(request, who, why)
         elif kind == "import":
-            self.import_designs(request, who, why)
+            (self.import_study if request.get("study") else self.import_designs)(request, who, why)
         elif kind == "reference":
             row = {k: request.get(k) for k in ("label", "score", "valid", "test", "parameters", "note", "source")}
             if not row["label"] or not isinstance(row["score"], (int, float)):
@@ -563,6 +566,51 @@ class Controller:
             done.append("%s as %s" % (cand, run["candidate"]))
         self.ledger({"kind": "import", "source": source, "imported": done, "refused": refused, "by": who, "reason": why,
                      "status": "applied" if done else "refused", "why": None if done else "; ".join(refused) or "nothing to import"})
+
+    def import_study(self, request: Dict[str, Any], who: Any, why: Any) -> None:
+        """Designs from a study file (the CAMEO format this loop also writes). A design whose code carries this
+        project's marked blocks is fitted here, as a design of this run. Any other (another project, other data)
+        cannot be run here: it is kept as an idea, and writers of new designs are shown it to adapt."""
+        source = os.path.abspath(str(request.get("study")))
+        loaded = study.load(source)
+        origin, models = study.about(loaded), study.ranked(loaded)
+        if not models:
+            raise ValueError("%s holds no model with a finished run and its code" % source)
+        asked = request.get("candidates")
+        chosen = [m for m in models if m["model"] in asked] if asked else models[:int(request.get("top") or 3)]
+        done, ideas, refused = [], [], [("%s: not a model of that study" % c) for c in (asked or []) if c not in [m["model"] for m in models]]
+        label = origin["study"] or os.path.basename(source)
+        for model in chosen:
+            blocks = {} if request.get("as_ideas") else study.blocks_in([model["code"], model["script"]], self.designer.table)
+            where = {"study": label, "file": source, "model": model["model"], "score_there": model["score"],
+                     "metric_there": origin["metric"], "data_there": origin["data"]}
+            run, fault = None, None
+            if blocks:
+                ask = {"mode": "new", "move": "imported", "parents": [], "purpose": "import", "why": "imported: %s of %s" % (model["model"], label),
+                       "allowed": {n: b["kind"] for n, b in self.designer.table.items()},
+                       "source": space.full(self.designer.table, {}),
+                       "proposals": [{"name": "%s of %s" % (model["name"], label), "family": model["family"] or "imported",
+                                      "hypothesis": "It did well in the study %s." % label,
+                                      "change_summary": "imported from the study %s (its score there: %s)" % (label, model["score"]),
+                                      "blocks": space.full(self.designer.table, blocks)}]}
+                run, fault = self.designer.commit(ask, self.view(), self.settings)
+            if run is not None:
+                run["history"].update(mode=None, imported_from=where)
+                self.queue(run)
+                done.append("%s as %s" % (model["model"], run["candidate"]))
+                continue
+            held = self.store.read("ideas")
+            if any(i["study"] == label and i["model"] == model["model"] for i in held):
+                refused.append("%s: already held as an idea" % model["model"])
+                continue
+            idea = self.store.append("ideas", dict(where, id="I%d" % (len(held) + 1), name=model["name"], family=model["family"],
+                                                   parameters=model["parameters"], code=model["code"][:IDEA_CODE],
+                                                   findings=origin["findings"], by=who,
+                                                   why_not_fitted=fault or "its code does not carry this project's marked blocks"))
+            ideas.append("%s as %s" % (model["model"], idea["id"]))
+        self.ledger({"kind": "import", "source": source, "imported": done, "ideas": ideas, "refused": refused, "by": who,
+                     "reason": why, "status": "applied" if done or ideas else "refused",
+                     "why": None if done or ideas else "; ".join(refused) or "nothing to import"})
 
     def passed(self, view: View) -> bool:
         threshold = self.settings["objective"].get("success_threshold")

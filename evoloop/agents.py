@@ -49,6 +49,10 @@ You write designs. The request names the kind of slot:
 is missing, and aim there.
 - mode `novel`: a design unlike anything tried. You are shown `inspirations`: designs that were rarely built on. \
 Build from them or against them; do not return a variant of the leader.
+- in mode `new` or `novel` you may also be shown `designs_from_other_studies`: designs that did well in another \
+search, often on other data, with their code and their score there. Their code does not fit this project as it is. \
+Where one suits this problem, carry its idea over into the blocks you may change, and say in `change_summary` which \
+one you drew on. Their scores are not comparable with scores here.
 - mode `local`, move `edit`: ONE attributable change to the parent's structure, so that the result has one cause. \
 `step` says how large: `small` (a careful adjustment), `normal`, or `bold` (a larger single change).
 - mode `local`, move `settings`: change only values in the `params` blocks.

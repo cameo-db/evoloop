@@ -4,6 +4,9 @@ Every search ends with one JSON file, `study.json`, holding every model, trainin
 the format of [CAMEO](https://cameo-db.github.io), a public database of models, how they were trained,
 and how they performed, so a finished search can be deposited as one entry.
 
+The exchange goes both ways: a study file from CAMEO can seed a new search.
+[Start from earlier designs](warm-start.md).
+
 
 ## 1. Write the file
 

@@ -99,6 +99,17 @@ supply that guidance yourself in the task description.
 The library has thirteen. During setup you can read the one you chose, edit it, or merge several into
 one file. [Choose a skill](which-search.md) · [Edit, merge or write a skill](skills.md)
 
+## CAMEO: start from other searches, and add yours
+
+[CAMEO](https://cameo-db.github.io) is a public database of models, with their code, how they were trained
+and how they scored. evoloop reads and writes its format.
+
+- **In:** `evoloop import --from-study` takes designs from a CAMEO study file. Designs from the same project are
+  trained in your search. Designs from other data are shown to the agents as ideas to adapt.
+- **Out:** every search writes `study.json`, the whole search in one file in the CAMEO format, ready to deposit.
+
+[Start from earlier designs](warm-start.md) · [Save and deposit the study](study.md)
+
 ## Read next
 
 | To | Read |

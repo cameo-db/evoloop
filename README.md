@@ -212,6 +212,16 @@ change made during the search; a record of every agent call and what it cost; an
 whole search in one file in the format of [CAMEO](https://cameo-db.github.io), a public database of
 models and how they were trained. [Save and deposit the study](docs/study.md).
 
+## CAMEO: start from other searches, and add yours
+
+evoloop reads and writes the CAMEO format.
+
+- **In:** `evoloop import --from-study FILE` takes designs from a CAMEO study file. Designs from the same project
+  are trained in your search. Designs from other data are shown to the agents as ideas to adapt.
+- **Out:** every search writes `study.json`, ready to deposit in CAMEO.
+
+[Start from earlier designs](docs/warm-start.md)
+
 ## Status
 
 Version 0.2. It passes its tests on two built-in examples with scripted proposals standing in for a

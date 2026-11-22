@@ -7,9 +7,10 @@ settings and seed), so this is an export, not a translation. What the run does n
 stay in the ledger beside the file and are summarised under `experiment.search.method`."""
 from __future__ import annotations
 
+import json
 import os
 import time
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from . import space
 from .agents import spend
@@ -155,3 +156,68 @@ def write(controller: Any, view: View) -> str:
     path = os.path.join(controller.run_dir, "study.json")
     write_json(path, build(controller, view))
     return path
+
+
+# --- reading a study file: designs from another search, on this data or on other data -----------------------------
+
+def load(path: str) -> Dict[str, Any]:
+    """A study file (CAMEO format), from a path. Raises ValueError when it is not one."""
+    with open(path, "r", encoding="utf-8") as handle:
+        study = json.load(handle)
+    if not isinstance(study, dict) or not isinstance(study.get("models"), list) or not isinstance(study.get("runs"), list):
+        raise ValueError("%s is not a study file: it needs `models` and `runs`" % path)
+    return study
+
+
+def ranked(study: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """The models of a study that have a finished run, best first by the study's own metric and direction."""
+    experiment = study.get("experiment") or {}
+    evaluation = experiment.get("evaluation") or {}
+    lower = str(evaluation.get("direction") or "maximize").startswith("min")
+    training = study.get("training") or {}
+    best: Dict[str, Dict[str, Any]] = {}
+    for run in study["runs"]:
+        perf = run.get("performance") or {}
+        score = perf.get("score")
+        if perf.get("status") != "done" or not isinstance(score, (int, float)):
+            continue
+        held = best.get(run.get("model"))
+        if held is None or (score < held["score"] if lower else score > held["score"]):
+            best[run.get("model")] = {"score": score, "run": run.get("id"), "training": run.get("training"),
+                                      "parameters": perf.get("parameters")}
+    out = []
+    for model in study["models"]:
+        if model.get("id") in best and isinstance(model.get("code"), str):
+            mine = best[model["id"]]
+            script = ((training.get(mine["training"]) or {}).get("code") or {}).get("script")
+            out.append({"model": model["id"], "name": model.get("name") or model["id"], "family": model.get("family"),
+                        "code": model["code"], "script": script if isinstance(script, str) else None,
+                        "score": mine["score"], "run": mine["run"], "parameters": mine["parameters"]})
+    return sorted(out, key=lambda m: m["score"], reverse=not lower)
+
+
+def about(study: Dict[str, Any]) -> Dict[str, Any]:
+    """Where a study's designs come from: its id, data, metric and what it concluded."""
+    experiment = study.get("experiment") or {}
+    evaluation = experiment.get("evaluation") or {}
+    data = experiment.get("data") or {}
+    return {"study": experiment.get("id"), "title": experiment.get("title"), "data": data.get("name"),
+            "metric": evaluation.get("primary_metric"), "direction": evaluation.get("direction"),
+            "findings": [f for f in ((experiment.get("conclusions") or {}).get("findings") or []) if isinstance(f, str)][:12]}
+
+
+def blocks_in(texts: List[Optional[str]], table: Dict[str, Dict[str, Any]]) -> Dict[str, str]:
+    """The marked blocks of this project found by name in a study's code. A study of the same project (the same
+    markers) yields them all; code from another project yields none."""
+    found: Dict[str, str] = {}
+    for text in texts:
+        if not text:
+            continue
+        try:
+            segments = space.parse(text)
+        except space.SpaceError:
+            continue
+        for seg in segments:
+            if "name" in seg and seg["name"] in table and seg["kind"] == table[seg["name"]]["kind"]:
+                found.setdefault(seg["name"], seg["content"])
+    return found

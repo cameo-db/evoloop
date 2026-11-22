@@ -235,6 +235,12 @@ class Designer:
                                        for c in request["inspirations"]]
         if request.get("thin_cells"):
             context["thin_cells"] = request["thin_cells"]
+        ideas = self.store.read("ideas") if request.get("mode") in ("new", "novel") and request.get("purpose") != "import" else []
+        if ideas:      # designs from other studies that cannot be run here as they are: for the writer to adapt
+            context["designs_from_other_studies"] = [
+                {k: i.get(k) for k in ("id", "study", "data_there", "metric_there", "score_there", "name", "family",
+                                       "parameters", "code", "findings")}
+                for i in self.rng.sample(ideas, min(2, len(ideas)))]
         if parents and settings["variation"].get("edit_format") == "diff":
             context["request"]["edit_format"] = "diff"
         if approaches.on(settings):
