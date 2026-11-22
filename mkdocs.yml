@@ -31,7 +31,7 @@ theme:
 extra_javascript:
   - assets/js/explore.js
 extra_css:
-  - evoloop.css
+  - evoloop-3.css
 exclude_docs: |
   generated/
 validation:
