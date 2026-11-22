@@ -181,3 +181,6 @@
 .md-footer__button svg { width: 0.95rem; height: 0.95rem; }
 .md-footer-meta { background-color: #17201f; }
 .md-typeset table:not([class]) code { word-break: normal; overflow-wrap: normal; }
+/* Keep the previous and next buttons under the text column, not under the side menus. */
+@media screen and (min-width: 60em) { .md-footer__inner { padding-left: 13.3rem; } }
+@media screen and (min-width: 76.25em) { .md-footer__inner { padding-right: 13.3rem; } }
