@@ -46,6 +46,11 @@ Agents write the changes. Code does everything that must be trusted: it picks wh
 that only the marked parts changed, runs the jobs, enforces the budget and your limits, and keeps the
 record.
 
+> **Recommended: run it through [Claude Code](https://claude.com/claude-code).** Open this repository in Claude Code and
+> say what you want to improve. It sets up the search with you by asking the questions one at a time, starts the run
+> when you confirm the plan, and watches it: it reports progress, reads the results with you, and turns your feedback
+> into changes to the running search.
+
 ## Three ways to run it
 
 | | What you do |

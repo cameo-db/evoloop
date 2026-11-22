@@ -9,6 +9,7 @@ theme:
   name: material
   features:
     - navigation.tabs
+    - navigation.tabs.sticky
     - navigation.sections
     - navigation.top
     - navigation.indexes
@@ -44,6 +45,23 @@ nav:
       - Write the evaluator: evaluator.md
       - Measure your noise: noise.md
       - Run on a cluster: servers.md
+  - How it works:
+      - Overview: how-it-works.md
+      - Search options on one page: options.md
+      - Schedule: schedule.md
+      - Parent selection: parents.md
+      - Moves: moves.md
+      - Early stopping: early-stopping.md
+      - Comparing scores: comparable.md
+      - Agents: agents.md
+      - Comparison with FunSearch and AlphaEvolve: compared.md
+  - Run:
+      - Monitor and steer a search: steering.md
+      - Budget and cost: cost.md
+      - Working with the strategist: strategist.md
+      - Audit the agents: auditing.md
+      - Start from earlier designs: warm-start.md
+      - Save and deposit the study: study.md
   - Skills:
       - Choose a skill and a run type: which-search.md
       - Models:
@@ -64,23 +82,6 @@ nav:
           - Interpretable or biophysical models: guides/model-mechanistic.md
           - Bayesian tuning without agents: guides/settings-tuning-bayesian.md
       - Edit, merge or write a skill: skills.md
-  - How it works:
-      - Overview: how-it-works.md
-      - Search options on one page: options.md
-      - Schedule: schedule.md
-      - Parent selection: parents.md
-      - Moves: moves.md
-      - Early stopping: early-stopping.md
-      - Comparing scores: comparable.md
-      - Agents: agents.md
-      - Comparison with FunSearch and AlphaEvolve: compared.md
-  - Run:
-      - Monitor and steer a search: steering.md
-      - Budget and cost: cost.md
-      - Working with the strategist: strategist.md
-      - Audit the agents: auditing.md
-      - Start from earlier designs: warm-start.md
-      - Save and deposit the study: study.md
   - Reference:
       - reference.md
       - Commands: commands.md
@@ -91,6 +92,7 @@ nav:
       - Files of a run: records.md
       - Skill library: skill-library.md
       - Models and prices: models.md
+      - Code map: code.md
       - Glossary: glossary.md
       - Status and limits: status.md
 markdown_extensions:

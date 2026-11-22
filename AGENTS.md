@@ -84,6 +84,18 @@ the answers file it gives them and you run `evoloop brief DIR --import FILE`. In
 Then show them `evoloop plan DIR` (what the search will do at a glance, the warnings, what the agents are likely
 to cost, then every setting with where it came from) before anything is confirmed.
 
+## While a search runs
+
+Stay with the run; the person should not have to learn the commands.
+
+- Check `evoloop status DIR --name N` and the leaderboard at sensible intervals, and tell the person what changed: the
+  best so far, what is held up, what waits for their decision. Report failures plainly.
+- When they react ("too many big models", "try more augmentation", "stop the transformer family"), turn it into a
+  change with `evoloop steer`, `set` or `note`, show them what will be applied, and apply it with `--by` their name.
+- Decisions of the strategist that wait for the person: put each to them and record their answer (`approve`,
+  `decline`).
+- If the controller stops (budget spent, a pause, a crash), say why and what resumes it.
+
 ## Rules that matter
 
 - **Suggest, never decide.** Propose your best guess with its reason; the person sees every choice and has the
@@ -103,7 +115,7 @@ to cost, then every setting with where it came from) before anything is confirme
 
 `pytest tests` runs the suite with stub agents (no model call). Several pages are written by the code, and the
 tests fail if they are stale: regenerate `docs/skill-library.md` with `evoloop skills --markdown`, the guides with
-`evoloop skills --guides docs/guides`, the plan explorer's data with `evoloop menu --plans > docs/assets/plans.json`,
+`evoloop skills --guides docs/guides`, the code map with `python tools/code_map.py > docs/code.md`, the plan explorer's data with `evoloop menu --plans > docs/assets/plans.json`,
 and the pages `docs/menu.md` and
 `docs/fields.md` are written by the code: after changing an option, a preset or a field, regenerate them
 with `evoloop menu --markdown > docs/menu.md` and `evoloop menu fields --markdown > docs/fields.md`, or

@@ -17,5 +17,6 @@ Lookup tools:
 | [Skill file format](skill-format.md) | the fields of a `skill.yaml` |
 | [Skill library](skill-library.md) | every goal that ships with evoloop |
 | [Models and prices](models.md) | which Claude models, at what effort and cost |
+| [Code map](code.md) | every module and its public functions, linked to the source |
 | [Glossary](glossary.md) | the words evoloop uses in a particular sense |
 | [Status and limits](status.md) | what has been tested and what has not |

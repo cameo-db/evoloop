@@ -117,3 +117,34 @@
 @media screen and (max-width: 30em) { .md-header__button.md-logo img { height: 1.35rem; } }
 .md-typeset .evo-loop-skillline { font-size: 0.78rem; margin: 0 0 0.9rem; }
 .md-typeset .evo-loop-skill { font-family: var(--md-code-font-family); font-size: 0.74rem; }
+
+/* The home page map: what goes in, the loop with the choice at each step, what comes out. */
+.evo-map { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 4.4fr) minmax(0, 1fr); gap: 0.9rem; margin: 1.6rem 0 0.6rem; align-items: stretch; }
+.evo-map-side { border: 1px solid var(--evo-line); border-radius: 14px; padding: 1rem; background: var(--evo-surface); }
+.evo-map-side h4, .evo-map-loop h4 { margin: 0 0 0.7rem; font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--evo-teal); }
+.evo-map-side ul { list-style: none; margin: 0; padding: 0; }
+.evo-map-side li { margin: 0 0 0.7rem; padding: 0; font-size: 0.82rem; line-height: 1.35; }
+.evo-map-side li b { display: block; font-size: 0.9rem; }
+.evo-map-loop { border: 2px solid var(--evo-teal); border-radius: 16px; padding: 1rem 1rem 0.8rem; }
+.evo-map-steps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.7rem; }
+.evo-step { border: 1px solid var(--evo-line); border-radius: 12px; background: var(--evo-surface); display: flex; flex-direction: column; overflow: hidden; }
+.evo-step-top { padding: 0.85rem 0.9rem 0.7rem; flex: 1; }
+.evo-step-n { display: inline-flex; width: 1.7rem; height: 1.7rem; border-radius: 50%; background: var(--evo-teal); color: #fff; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; margin-right: 0.45rem; }
+.evo-step-name { font-size: 1.15rem; font-weight: 700; vertical-align: middle; }
+.evo-step-what { font-size: 0.84rem; line-height: 1.4; margin: 0.55rem 0 0.5rem; }
+.evo-who { display: inline-block; font-size: 0.7rem; font-weight: 600; padding: 0.12rem 0.55rem; border-radius: 999px; border: 1px solid var(--evo-line); }
+.evo-who.agent { background: var(--evo-teal); color: #fff; border-color: var(--evo-teal); }
+.evo-step-choice { border-top: 1px dashed var(--evo-line); padding: 0.7rem 0.9rem 0.85rem; font-size: 0.8rem; line-height: 1.4; }
+.evo-step-choice span { display: block; font-size: 0.66rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--evo-teal); font-weight: 700; margin-bottom: 0.25rem; }
+.evo-step-choice b { display: block; font-size: 0.88rem; margin-bottom: 0.3rem; }
+.evo-map-back { text-align: center; font-size: 0.8rem; margin-top: 0.75rem; color: var(--evo-teal); font-weight: 600; }
+.evo-map-across { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.7rem; }
+.evo-across { border: 1px dashed var(--evo-teal); border-radius: 12px; padding: 0.7rem 0.9rem; font-size: 0.8rem; line-height: 1.4; }
+.evo-across b { display: block; font-size: 0.88rem; margin-bottom: 0.2rem; }
+.evo-map a { font-weight: 600; }
+@media screen and (max-width: 76em) { .evo-map { grid-template-columns: minmax(0, 1fr); } .evo-map-side ul { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.7rem; } }
+@media screen and (max-width: 60em) { .evo-map-steps, .evo-map-across { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media screen and (max-width: 36em) { .evo-map-steps, .evo-map-across, .evo-map-side ul { grid-template-columns: minmax(0, 1fr); } }
+.evo-map { --evo-line: var(--md-default-fg-color--lighter); --evo-surface: var(--md-default-bg-color); }
+[data-md-color-scheme="slate"] .evo-map .evo-who.agent, [data-md-color-scheme="slate"] .evo-map .evo-step-n { color: #fff; }
+[data-md-color-scheme="slate"] .evo-map h4, [data-md-color-scheme="slate"] .evo-step-choice span, [data-md-color-scheme="slate"] .evo-map-back { color: #5fd0c1; }

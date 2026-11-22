@@ -16,35 +16,70 @@ hyperparameters, or make an algorithm or pipeline faster while its output stays 
 [Explore the search options](options.md){ .md-button }
 [Source on GitHub](https://github.com/cameo-db/evoloop){ .md-button }
 
-```mermaid
-flowchart LR
-    subgraph you ["You provide"]
-        direction TB
-        A["Code, with the parts<br>that may change marked"]
-        B["A script that scores<br>one version"]
-        C["A budget"]
-    end
-    subgraph loop ["evoloop repeats, many versions at once"]
-        direction LR
-        P["<b>1. Choose</b><br>which earlier version<br>to build on<br><i>evoloop's code</i>"]
-        W["<b>2. Propose</b><br>a change to it<br><i>an LLM agent</i>"]
-        S["<b>3. Score</b><br>the new version<br><i>your script, as a job</i>"]
-        R["<b>4. Record</b><br>the result and compare<br><i>evoloop's code</i>"]
-        P --> W --> S --> R
-        R -- "next version" --> P
-    end
-    subgraph get ["You get"]
-        direction TB
-        L["A leaderboard"]
-        D["Every version tried, with<br>its code, parent and score"]
-        J["The whole search<br>in one file"]
-    end
-    you --> loop --> get
-```
+<div class="evo-map" markdown="0">
+  <div class="evo-map-side">
+    <h4>You provide</h4>
+    <ul>
+      <li><b>Your code</b>with the parts that may change marked</li>
+      <li><b>A scoring script</b>that measures one version</li>
+      <li><b>A budget</b>evaluations, and dollars for the agents</li>
+    </ul>
+  </div>
+  <div class="evo-map-loop">
+    <h4>The loop, repeated until the budget is spent</h4>
+    <div class="evo-map-steps">
+      <div class="evo-step">
+        <div class="evo-step-top"><span class="evo-step-n">1</span><span class="evo-step-name">Choose</span>
+          <p class="evo-step-what">Pick which earlier versions to build on, and what kind of change to try.</p>
+          <span class="evo-who">evoloop's code</span></div>
+        <div class="evo-step-choice"><span>Your choice</span><b>Search strategy</b>Keep several families alive, keep the best of each size, or follow the single best. <a href="parents/">Five strategies</a></div>
+      </div>
+      <div class="evo-step">
+        <div class="evo-step-top"><span class="evo-step-n">2</span><span class="evo-step-name">Propose</span>
+          <p class="evo-step-what">Write the new version: new contents for the marked parts.</p>
+          <span class="evo-who agent">an LLM agent</span></div>
+        <div class="evo-step-choice"><span>Your choice</span><b>What may change</b>Hyperparameters only, the training recipe, or the whole architecture. <a href="moves/">Moves</a></div>
+      </div>
+      <div class="evo-step">
+        <div class="evo-step-top"><span class="evo-step-n">3</span><span class="evo-step-name">Score</span>
+          <p class="evo-step-what">Run your script on the new version, as its own job.</p>
+          <span class="evo-who">your script</span></div>
+        <div class="evo-step-choice"><span>Your choice</span><b>What is measured</b>Your metric, on your data. Weak versions can be stopped part way. <a href="evaluator/">Evaluator</a></div>
+      </div>
+      <div class="evo-step">
+        <div class="evo-step-top"><span class="evo-step-n">4</span><span class="evo-step-name">Record</span>
+          <p class="evo-step-what">Keep the version, its parent and its score. Compare it with the rest.</p>
+          <span class="evo-who">evoloop's code</span></div>
+        <div class="evo-step-choice"><span>Your choice</span><b>Limits</b>Hard bounds, such as a largest model size, that no version may break. <a href="cost/">Budget and limits</a></div>
+      </div>
+    </div>
+    <div class="evo-map-back">&#8634; each result changes what is chosen next</div>
+  </div>
+  <div class="evo-map-side">
+    <h4>You get</h4>
+    <ul>
+      <li><b>A leaderboard</b>the best versions, beside your baseline</li>
+      <li><b>Every version tried</b>with its code, parent and score</li>
+      <li><b>One JSON file</b>the whole search, ready for CAMEO</li>
+    </ul>
+  </div>
+  <div class="evo-map-across">
+    <div class="evo-across"><b>How much the agents decide</b>From code planning every move to agents choosing the moves and adjusting the schedule. <a href="agents/">Agents</a></div>
+    <div class="evo-across"><b>A skill, if you want one</b>Settings and agent guidance for one goal, such as distillation. Editable. <a href="which-search/">Skills</a></div>
+    <div class="evo-across"><b>Where to start from</b>Your baseline, an earlier search, or designs from CAMEO. <a href="warm-start/">Start from earlier designs</a></div>
+    <div class="evo-across"><b>Steering while it runs</b>Change settings, send the agents a note, or stop. <a href="steering/">Monitor and steer</a></div>
+  </div>
+</div>
 
 Agents write the changes. Code does everything that must be trusted: it picks what to build on, checks
 that only the marked parts changed, runs the jobs, enforces the budget and your limits, and keeps the
 record. The search runs on a laptop or on a Slurm cluster.
+
+!!! tip "Recommended: run it through Claude Code"
+    Open the evoloop repository in [Claude Code](https://claude.com/claude-code) and say what you want to improve.
+    It sets up the search with you by asking the questions one at a time, starts the run when you confirm the
+    plan, and watches it: it reports progress, reads the results with you, and turns your feedback into changes
+    to the running search. You do not need to learn the commands first.
 
 ## Three ways to run it
 
@@ -60,20 +95,6 @@ Every search starts the same way, whichever you choose: a short list of question
 what will run and what it is likely to cost, and your confirmation. Nothing is spent before you confirm.
 While it runs you can change settings, send the agents a note, or stop it.
 [Monitor and steer a search](steering.md).
-
-## What you decide
-
-Each step of the loop has one choice that matters. Everything else has a default.
-
-| Step | The choice | Your options |
-|---|---|---|
-| 1. Choose | Which earlier versions get another try? | Five search strategies, below. [Parent selection](parents.md) |
-| 2. Propose | How much do the agents decide? | From `harnessed` (code plans every move, the agent only writes it) to `agentic` (agents also choose the moves and adjust the schedule). A search over hyperparameters alone can use a built-in Bayesian optimizer with no agent. [Agents](agents.md) |
-| 3. Score | What does your script measure, and does every version run to the end? | Your own metric. Optionally stop weak versions part way. [Write the evaluator](evaluator.md) · [Early stopping](early-stopping.md) |
-| 4. Record | How much may be spent, and what is out of bounds? | A number of evaluations, a dollar cap for the agents, and limits such as a largest model size. [Budget and cost](cost.md) |
-
-A **run type** sets these choices together for a way of spending the budget, such as exploring first and
-refining later. [Choose a skill and a run type](which-search.md).
 
 ## Search strategies
 

@@ -25,7 +25,7 @@ class TransientError(ModelError):
 
 
 class BudgetExceeded(ModelError):
-    """`budget.max_model_calls` has been reached."""
+    """`budget.model_calls` has been reached."""
 
 
 class QuotaExhausted(ModelError):
@@ -137,7 +137,7 @@ class ModelClient:
             self.pause_reason = str(exc)
         if first:
             log.warning("agent calls paused until %s: the account's limit refused a call (%s). Jobs already "
-                        "queued go on; a refused call is not charged to budget.max_model_calls",
+                        "queued go on; a refused call is not charged to budget.model_calls",
                         time.strftime("%Y-%m-%d %H:%M", time.localtime(self.paused_until)), str(exc)[:200])
 
     def complete(self, role: str, system: str, user: str, schema: Dict[str, Any],
@@ -154,7 +154,7 @@ class ModelClient:
                     time.strftime("%Y-%m-%d %H:%M", time.localtime(self.paused_until)), self.pause_reason[:200]),
                     self.paused_until)
             if self.exhausted():
-                raise BudgetExceeded("budget.max_model_calls (%s) reached" % self.max_calls)
+                raise BudgetExceeded("budget.model_calls (%s) reached" % self.max_calls)
             self.calls_used += 1
         attempt = 0
         with self._slots:
