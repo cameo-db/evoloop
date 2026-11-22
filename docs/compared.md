@@ -95,9 +95,9 @@ scorecard says whether each role earns its cost. [Audit the agents](auditing.md)
 - Throughput. There is no tier of cheap stand-in evaluations (a smaller dataset or model) with
   promotion to the real task. The ladder stops weak designs early within the real task, which
   stretches a budget a few-fold, not a thousandfold.
-- Evidence. The systems above have published results. evoloop has passed its tests on built-in
-  examples with scripted stand-ins for the LLM. It has not yet been run with an LLM on a real training
-  task. [Status and limits](status.md)
+- Evidence. The systems above have published results and comparisons with other methods. evoloop
+  0.1.0 has seven searches on record in CAMEO, with no published comparison against another search
+  method. Version 0.2 has not yet finished a search with a real LLM. [Status and limits](status.md)
 - Novelty before training. How different a proposal is from what has been tried is measured on its
   code. What a model does is known only after it is trained.
 - Prompt evolution. Only one line of the writer's instructions varies.

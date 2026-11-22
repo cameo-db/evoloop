@@ -1,10 +1,34 @@
 # Status and limits
 
-Version 0.2. This page says what has been run and what has not, so that nobody takes a feature for
-more than it is.
+evoloop is at version 0.2. This page says what has been run and what has not, so that nobody takes a
+feature for more than it is.
+
+## Version 0.1.0
+
+The previous version, 0.1.0, ran seven searches with `claude-opus-5-5` on real training tasks in
+regulatory genomics. All seven are in [CAMEO](https://cameo-db.github.io/#/database) with every model,
+training recipe and run: 1,450 training runs of 1,227 models, across six benchmarks.
+
+| Study | Benchmark | Runs | Models |
+|---|---|---|---|
+| [Gosai MPRA architecture search](https://cameo-db.github.io/#/s/study-search-opus2) | Gosai MPRA activity | 303 | 227 |
+| [K562 PRO-cap architecture search](https://cameo-db.github.io/#/s/study-procap_k562-run2) | K562 PRO-cap profiles | 253 | 200 |
+| [PARM K562 promoter MPRA architecture search](https://cameo-db.github.io/#/s/study-parm_k562-run2) | PARM promoter MPRA, K562 | 242 | 207 |
+| [K562 ATAC-seq Y-net architecture search](https://cameo-db.github.io/#/s/study-capy_search-run3) | K562 ATAC-seq profiles | 215 | 229 |
+| [DeepSTARR architecture search](https://cameo-db.github.io/#/s/study-deepstarr_search-opus) | DeepSTARR enhancer activity | 201 | 147 |
+| [Bolero cell-state conditioning search](https://cameo-db.github.io/#/s/study-bolero-conditioning-round1) | HumanBrainDev cell-state accessibility | 186 | 170 |
+| [K562 ATAC-seq open architecture search](https://cameo-db.github.io/#/s/study-capy_open-open1) | K562 ATAC-seq profiles | 50 | 47 |
+
+These show the approach running end to end with a real LLM at the scale of hundreds of training runs.
+They are not a test of the code in this repository. Version 0.2 is a rewrite, and the rest of this page
+is about version 0.2.
 
 ## Tested
 
+- A search with a real LLM on a real GPU training task, in progress as of 2026-11-22. `claude-opus-5-5`,
+  through the Claude Code backend, writes the designs and the lessons, and each design trains as its own
+  GPU job on Slurm. 14 designs have been trained and scored so far. The search has not finished, so it
+  says nothing yet about how well version 0.2 searches.
 - Over 200 tests on the two built-in examples with stub agents (no model call, no GPU). They cover the brief,
   every strategy, islands, the crossover kinds, steering during a run, changing the strategy, harness
   and search space midway, changing the run length, stopping and continuing, the study file, and one
@@ -15,24 +39,23 @@ more than it is.
 
 ## Not tested
 
+- A finished search with a real LLM. One is in progress.
 - The strategist with a real agent. Its bounds, its record and the commands to approve or decline are
   tested with a stub that follows a fixed rule. Whether a real model decides well is not known.
+- The `anthropic_api` backend. The search in progress uses `claude_code`.
 - The spend governor against real prices. It is tested with a backend that charges a fixed sum per call.
 - The cost estimate against a real bill. It counts calls from the settings and sizes them from the code; it
   has not been compared with what a real run cost.
-- A real agent. The prompts have not been read by a model, and the `anthropic_api` and
-  `claude_code` backends have not been called from this version.
-- A real training task. Nothing has been trained on a GPU through this version.
 - Whether any strategy searches better than another. The strategies are known to work as code.
 - The skills. Thirteen templates load, merge and reach the agents; whether their guidance makes a real
   model search better is not known. The settings estimator beats random draws on a made-up function; it has
   not tuned a real model.
 - Several models writing, find-and-replace edits, approaches and weight inheritance with a real agent or a
-  real evaluator. The stub returns whole-block edits and one fixed approach; the example adapter ignores the
+  real evaluator. The stub returns whole-block edits and one fixed approach; the example evaluator ignores the
   parent's checkpoint. Whether a real model writes edits that apply, or approaches worth keeping, is not known.
 - The ladder, the trade-off front, behaviour groups and island resets on a real task. They are tested on
   the example and on made-up results; whether early progress predicts the final score on your task is not known.
-- On Slurm: GPU jobs, a preempted job being requeued, the QoS list, a time limit being hit.
+- On Slurm: a preempted job being requeued, the QoS list, a time limit being hit.
 - Continuing a run from a checkpoint after the run length is raised.
 - Importing a study file downloaded from CAMEO. The import is tested on study files evoloop wrote and on a
   hand-made file from another project.

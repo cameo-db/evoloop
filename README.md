@@ -139,9 +139,13 @@ saved as `study.json` in CAMEO's format so that it can be deposited there.
 
 ## Status
 
-evoloop is at version 0.2. Its test suite runs complete searches with scripted stand-ins for the LLM,
-and one of them has run on a Slurm cluster. It has not yet been validated with an LLM on a real training
-task. [Status and limits](https://evoloop.readthedocs.io/en/latest/status/)
+The previous version, 0.1.0, ran seven searches with `claude-opus-5-5` on real training tasks in
+regulatory genomics. All seven are in [CAMEO](https://cameo-db.github.io/#/database): 1,450 training
+runs of 1,227 models.
+
+Version 0.2, in this repository, is a rewrite. Its test suite runs complete searches with scripted
+stand-ins for the LLM, and its first search with a real LLM is in progress.
+[Status and limits](https://evoloop.readthedocs.io/en/latest/status/)
 
 ## Development
 
