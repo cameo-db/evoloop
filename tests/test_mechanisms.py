@@ -181,7 +181,7 @@ def test_a_search_with_island_resets_runs_to_its_end(tmp_path):
     runs = controller.view().runs.values()
     assert len(scored(controller.view())) >= 10
     assert any("was reset" in str(r["history"].get("why_this_slot")) for r in runs)
-    assert all(r.get("designed") for r in runs)
+    assert all(r.get("designed") for r in runs if r.get("candidate"))      # a refused proposal has no design to stamp
 
 
 def test_an_island_is_founded_once_after_a_reset():

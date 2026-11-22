@@ -1,4 +1,4 @@
-# Watch and steer a run
+# Monitor and steer a search
 
 A search does not need a restart to change. Every command below leaves a request in the run's folder;
 the search reads it within a few seconds, checks it, and records it as applied or refused, with your

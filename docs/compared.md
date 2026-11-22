@@ -1,4 +1,4 @@
-# Compared with FunSearch and AlphaEvolve
+# Comparison with FunSearch and AlphaEvolve
 
 evoloop is put together from mechanisms that others introduced and tested. This page says which, how
 each appears here, and where evoloop differs or falls short. Every mechanism below is an option; the
@@ -104,7 +104,7 @@ scorecard says whether each role earns its cost ([Audit the agents](auditing.md)
 | FunSearch | `strategy.mechanism: archive`, `strategy.descriptors: [behaviour]`, `strategy.islands: 4`, `strategy.reset_every: 40`, `harness.level: minimal` |
 | AlphaEvolve | `strategy.mechanism: archive` on `strategy.islands: 3`, `agents.writer_mix`, `variation.edit_format: diff`, `variation.approaches: evolve`, `evaluation.ladder` |
 | Regularized evolution | `strategy.mechanism: tournament`, a schedule of local moves only |
-| Hyperband with a Bayesian sampler (BOHB) | `run.skill: settings-tuning` with `evaluation.ladder` |
+| Hyperband with a Bayesian sampler (BOHB) | `run.skill: settings-tuning-bayesian` with `evaluation.ladder` |
 | A hill climb | `strategy.mechanism: greedy` |
 
 These resemble the methods; they are not reimplementations of them, and they need budgets in the

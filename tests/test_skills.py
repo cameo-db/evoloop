@@ -30,7 +30,8 @@ def resolved(folder=None, **answers):
 def test_every_built_in_skill_can_be_used_and_says_what_it_is_for():
     assert skill.names() == ["model-performance", "model-distillation", "model-efficiency", "model-ensemble-members",
                              "model-finetuning", "model-mechanistic", "model-size-frontier", "model-training-recipe",
-                             "algorithm-runtime", "bioinformatics-algorithm", "data-pipeline", "settings-tuning"]
+                             "algorithm-runtime", "bioinformatics-algorithm", "data-pipeline", "settings-tuning",
+                             "settings-tuning-bayesian"]
     for name in skill.names():
         found, fault = skill.load(name)
         assert fault is None and found["name"] == name and len(found["summary"]) > 40
@@ -50,11 +51,13 @@ def test_a_skill_is_laid_over_the_run_type_and_under_what_the_person_set():
     settings, sources = resolved(run__skill="efficiency")
     assert settings["strategy"]["mechanism"] == "pareto" and sources["strategy.mechanism"] == "skill model-efficiency"
     assert settings["strategy"]["second_metric"] == "parameters" and settings["_skill"]["name"] == "model-efficiency"
-    assert settings["space"]["preset"] == "template" and sources["space.preset"] == "run type refine"   # the skill leaves it
+    assert settings["space"]["preset"] == "architecture_and_recipe" and sources["space.preset"] == "skill model-efficiency"
+    assert settings["population"]["lineages"] == 3 and sources["population.lineages"] == "run type refine"      # what the skill leaves alone
     mine, sources = resolved(run__skill="efficiency", strategy__mechanism="archive")
     assert mine["strategy"]["mechanism"] == "archive" and sources["strategy.mechanism"] == "brief"
     tuned, _ = resolved(run__skill="tuning")
-    assert tuned["space"]["preset"] == "settings_only" and tuned["variation"]["settings_by"] == "tpe"
+    assert tuned["space"]["preset"] == "settings_only" and tuned["variation"]["settings_by"] == "agent"     # an agent tunes
+    assert resolved(run__skill="settings-tuning-bayesian")[0]["variation"]["settings_by"] == "tpe"               # or none does
     assert tuned["strategist"]["mode"] == "off" and tuned["schedule"]["phases"][0]["local"] == 1.0
     assert any("the skill needs" in w for w in form.warnings(settings))       # what the adapter must do
     broken, _ = resolved(run__skill="nonesuch")
@@ -157,7 +160,9 @@ def test_the_report_says_what_the_skill_still_lacks():
     assert any("`parameters`" in line for line in skill.missing(wants, view, []))
     for run in view.runs.values():
         run["performance"]["parameters"] = 1000
-    assert skill.missing(wants, type(view)(view.runs, view.models, {}, "maximize", 0.01, 0), []) == []
+    measured = type(view)(view.runs, view.models, {}, "maximize", 0.01, 0)
+    assert len(skill.missing(wants, measured, [])) == 2                               # the teacher and from-scratch rows are still missing
+    assert skill.missing(wants, measured, [{"label": "teacher"}, {"label": "student from scratch"}]) == []
     taught, _ = skill.load("distillation")
     lacking = skill.missing(taught, view, [{"label": "Teacher ensemble (5 models)"}])
     assert len(lacking) == 1 and "from scratch" in lacking[0]
@@ -225,7 +230,7 @@ def test_the_estimator_copes_with_what_it_is_given():
 
 
 def test_the_tuning_skill_searches_settings_without_calling_an_agent(tmp_path):
-    folder = search(tmp_path, budget__evaluations=16, evaluation__allowance=150, run__skill="tuning", space__preset=None)
+    folder = search(tmp_path, budget__evaluations=16, evaluation__allowance=150, run__skill="settings-tuning-bayesian", space__preset=None)
     controller = Controller(folder, "t", poll=0.1)
     assert controller.settings["space"]["preset"] == "settings_only" and controller.settings["variation"]["settings_by"] == "tpe"
     assert controller.run(max_seconds=300)
@@ -282,7 +287,7 @@ def test_a_search_gets_its_own_copy_of_each_skill_and_reads_that(tmp_path, capsy
     with open(own, encoding="utf-8") as handle:
         text = handle.read()
     with open(own, "w", encoding="utf-8") as handle:
-        handle.write(text.replace("Take away before adding.", "Take away before adding. Never use attention."))
+        handle.write(text.replace("Design the student for efficiency;", "Never use attention. Design the student for efficiency;"))
     assert "Never use attention." in skill.load("model-efficiency", folder)[0]["guidance"]["writer"]
     assert "Never use attention." not in skill.load("model-efficiency")[0]["guidance"]["writer"]      # the library is untouched
 
@@ -330,7 +335,7 @@ def test_the_library_can_be_listed_searched_and_read_by_a_program(tmp_path, caps
     assert main(["skills", "--search", "student teacher"]) == 0 and "model-distillation" in capsys.readouterr().out
     assert main(["skills", "--json"]) == 0
     rows = json.loads(capsys.readouterr().out)
-    assert len(rows) == 12 and set(rows[0]) >= {"name", "title", "domain", "objective", "tags", "version", "sets", "needs", "digest"}
+    assert len(rows) == 13 and set(rows[0]) >= {"name", "title", "domain", "objective", "tags", "version", "sets", "needs", "digest"}
     page = skill.library_markdown()
     assert all("### %s" % name in page for name in skill.names()) and "The guide for this goal" in page
     with open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "docs", "skill-library.md"),
@@ -369,3 +374,24 @@ def test_the_decision_page_and_the_readme_list_the_whole_library_and_say_it_can_
     assert "Writing your own" in text and "Adding a skill to the library" in text and "Combining skills" in text
     with open(os.path.join(root, "README.md"), encoding="utf-8") as handle:
         assert "study.json" in handle.read()                                          # and how the result is kept
+
+
+def test_the_tuning_skill_has_an_agent_choose_each_trial(tmp_path):
+    folder = search(tmp_path, budget__evaluations=10, evaluation__allowance=150, run__skill="settings-tuning", space__preset=None)
+    controller = Controller(folder, "t", poll=0.1)
+    assert controller.settings["variation"]["settings_by"] == "agent" and controller.settings["strategist"]["mode"] == "off"
+    assert controller.run(max_seconds=300)
+    runs = [r for r in controller.view().runs.values() if r.get("purpose", "search") in ("search", "trial")]
+    writers = [c for c in controller.store.read("calls") if c["role"] == "writer"]
+    assert writers and all("skill" in c["shown"] for c in writers)                # every trial was chosen by an agent shown the skill
+    assert {r["history"]["move"] for r in runs if r["history"].get("move")} == {"settings_move"}
+    assert len({r["model"] for r in runs}) == 1                                   # the structure never changed
+    with open(os.path.join(folder, "runs", "t", "report.md"), encoding="utf-8") as handle:
+        assert "Skill: settings-tuning." in handle.read()
+
+
+def test_shrinking_a_model_is_set_up_as_distillation():
+    one = skill.load("model-efficiency")[0]
+    assert one["settings"]["space"]["preset"] == "architecture_and_recipe"       # the student and how it is trained are both searched
+    assert one["needs"]["references"] == ["teacher", "from scratch"]
+    assert "teacher" in one["guidance"]["all"] and "student" in one["guidance"]["writer"]

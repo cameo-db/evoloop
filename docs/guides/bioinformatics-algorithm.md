@@ -16,7 +16,7 @@ budget:
   evaluations: 100
 ```
 
-These lines go in `brief.yaml`. The budget, and any limits or ranges, are placeholders for your own. <a href="../../which-search/?goal=bioinformatics-algorithm&run=explore_then_exploit#preview-your-search">Preview this search</a> to see what it will do, or [set up this search](../setting-up.md) on your project. The goal is the skill `bioinformatics-algorithm`, shown in full in the [skill library](../skill-library.md#bioinformatics-algorithm).
+These lines go in `brief.yaml`. The budget, and any limits or ranges, are placeholders for your own. <a href="../../which-search/?goal=bioinformatics-algorithm&run=explore_then_exploit#preview-a-search">Preview this search</a> to see what it will do, or [set up this search](../setting-up.md) on your project. The goal is the skill `bioinformatics-algorithm`, shown in full in the [skill library](../skill-library.md#bioinformatics-algorithm).
 
 ## Why this set-up
 

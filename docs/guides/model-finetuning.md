@@ -16,7 +16,7 @@ budget:
   evaluations: 60
 ```
 
-These lines go in `brief.yaml`. The budget, and any limits or ranges, are placeholders for your own. <a href="../../which-search/?goal=model-finetuning&run=refine#preview-your-search">Preview this search</a> to see what it will do, or [set up this search](../setting-up.md) on your project. The goal is the skill `model-finetuning`, shown in full in the [skill library](../skill-library.md#model-finetuning).
+These lines go in `brief.yaml`. The budget, and any limits or ranges, are placeholders for your own. <a href="../../which-search/?goal=model-finetuning&run=refine#preview-a-search">Preview this search</a> to see what it will do, or [set up this search](../setting-up.md) on your project. The goal is the skill `model-finetuning`, shown in full in the [skill library](../skill-library.md#model-finetuning).
 
 ## Why this set-up
 

@@ -1,4 +1,4 @@
-# What gets tried next
+# Schedule
 
 Every evaluation is one of three kinds of move. The schedule decides how many of each.
 
@@ -18,7 +18,7 @@ With 100 evaluations and the default plan, the first 60 are shared 65% new, 10% 
 The last 40 are shared 15% new, 25% crossover, 60% local. So about 45 designs start new families and
 about 39 refine existing ones.
 
-The [run type](which-search.md#how-to-spend-the-budget-the-run-type) sets these shares, and you can set them
+The [run type](which-search.md#run-types) sets these shares, and you can set them
 yourself:
 
 ```yaml

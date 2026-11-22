@@ -48,8 +48,8 @@ and a strong one for some is `agents.writer_mix` ([Models and prices](models.md)
 **How many designs.** A promotion ladder makes the same training budget cover more designs, and each
 design is written by an agent, so the agent cost rises with it.
 
-**Whether agents are needed at all.** A search over settings alone can use the built-in estimator and
-make no agent call ([`settings-tuning`](guides/settings-tuning.md)).
+**Whether agents are needed at all.** Hyperparameter tuning can use the built-in Bayesian optimizer and
+make no agent call ([`settings-tuning-bayesian`](guides/settings-tuning-bayesian.md)).
 
 **The size of your blocks.** Returning local moves as edits (`variation.edit_format: diff`) cuts the
 output of those calls on large blocks.

@@ -75,8 +75,10 @@ def test_the_plan_explorer_shows_what_the_code_would_do():
     assert data["run_types"] == list(form.RUN_TYPES) and len(data["plans"]) == len(data["run_types"]) * len(data["skills"]) * 4 * 3
     plain = data["plans"]["explore_then_exploit|||100"]
     assert plain["strategy"] == "lineage" and plain["phases"][0][:2] == [0.6, 0.65] and plain["calls"]["writer"] > 50
-    tuned = data["plans"]["settings_only|settings-tuning|agentic|100"]
+    tuned = data["plans"]["settings_only|settings-tuning-bayesian|agentic|100"]
     assert tuned["calls"] == {} and tuned["settings_by"] == "tpe" and tuned["space"] == "settings_only"   # agent-free at every level
+    led = data["plans"]["settings_only|settings-tuning||100"]
+    assert led["settings_by"] == "agent" and led["calls"]["writer"] > 50 and "strategist" not in led["calls"]
     small = data["plans"]["explore_then_exploit|model-efficiency||100"]
     assert small["strategy"] == "pareto" and small["second"] == "parameters" and any("skill needs" in data["warnings"][i] for i in small["warn"])
     with open(os.path.join(ROOT, "docs", "assets", "plans.json"), encoding="utf-8") as handle:

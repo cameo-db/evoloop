@@ -405,7 +405,7 @@ def guide_markdown(name: str) -> str:
     for key, value in (start.get("brief") or {}).items():
         brief.setdefault(key, {}).update(value) if isinstance(value, dict) else brief.__setitem__(key, value)
     run_type = brief["run"]["type"]
-    preview = '<a href="../../which-search/?goal=%s&run=%s#preview-your-search">Preview this search</a>' % (one["name"], run_type)
+    preview = '<a href="../../which-search/?goal=%s&run=%s#preview-a-search">Preview this search</a>' % (one["name"], run_type)
     out = ["# %s" % one["goal"], "",
            one["summary"], "",
            "## What a good result looks like", "", one["reading"], "",

@@ -83,7 +83,7 @@ Set with `run.skill`.
 |---|---|
 | `model-performance` | Raise the validation score by whatever the open blocks allow. Size and speed are not weighed unless you set limits. |
 | `model-distillation` | Train a smaller or faster student to match a teacher. The student's architecture and its training recipe (loss, optimizer, learning rate, regularization, augmentation) are both open. |
-| `model-efficiency` | Make the model smaller or faster while holding its score. Designs are selected on the trade-off between the score and size (or speed), and removal is the commonest move. |
+| `model-efficiency` | Design a smaller or faster student and train it to match the model you already have. The original model is the teacher. The student's architecture and its training against the teacher are both searched. |
 | `model-ensemble-members` | Find models that are each good and that make different errors from one another, so that averaging them gains more than averaging copies of the best one. |
 | `model-finetuning` | Start from a pretrained model and search over how to adapt it (what to freeze, what to add, the learning rates by layer, how long to train). |
 | `model-mechanistic` | Improve a model that is interpretable by design, where the parameters stand for something (motifs in filters, a graph of interactions, rates and affinities in a biophysical model). The structure that carries the meaning is kept. |
@@ -92,7 +92,8 @@ Set with `run.skill`.
 | `algorithm-runtime` | Speed up a piece of code (or cut its memory) while its output stays correct. The score is a measured time; a design whose output is wrong is rejected, not scored. |
 | `bioinformatics-algorithm` | Improve a method that analyses biological data (an aligner, a caller, a peak finder, a quantifier, a scoring function) against a truth set, without breaking the conventions of the formats and coordinates it works in. |
 | `data-pipeline` | Speed up a multi-step data pipeline (reading, transforming, joining, writing) or cut its memory and cost, with its output unchanged. |
-| `settings-tuning` | Tune the settings of fixed code (a model's learning rate, regularization, widths, schedule; or the parameters of any algorithm) with a Bayesian estimator in code. No structure changes and no agent calls. |
+| `settings-tuning` | An agent tunes the hyperparameters of a fixed model, the architecture's (depth, widths, kernel sizes) and the training's (learning rate, weight decay, schedule), reading the results of earlier trials before choosing the next. |
+| `settings-tuning-bayesian` | A built-in Bayesian optimizer (TPE) draws each set of hyperparameters from the results of earlier trials. No agent is called, so the search costs compute only. |
 
 A skill says what kind of problem the search is; the run type says how to search. Skills can be combined (`run.skill: [a, b]`), and a search gets its own editable copy of each in its `skills/` folder. `evoloop skills NAME` shows a skill in full, and `evoloop skills NAME --copy DIR` writes it out as a folder to edit and use as your own (`run.skill: DIR`).
 
@@ -117,7 +118,8 @@ variation.approaches = "fixed"
 
 ```
 report.columns = ["speed"]
-schedule.local_mix = {"edit": 0.35, "settings": 0.15, "ablation": 0.5}
+schedule.local_mix = {"edit": 0.5, "settings": 0.3, "ablation": 0.2}
+space.preset = "architecture_and_recipe"
 strategy.mechanism = "pareto"
 strategy.second_direction = "minimize"
 strategy.second_metric = "parameters"
@@ -191,6 +193,24 @@ schedule.novelty = 0.3
 ```
 
 **`settings-tuning`**
+
+```
+audit.reviews = "end"
+harness.conductor = "code"
+harness.coordinator = "code"
+harness.level = "standard"
+schedule.local_mix = {"edit": 0.0, "settings": 1.0, "ablation": 0.0}
+schedule.novel_share = 0.0
+schedule.phases = [{"until": 1.0, "new": 0.0, "cross": 0.0, "local": 1.0}]
+space.preset = "settings_only"
+strategist.mode = "off"
+strategy.mechanism = "greedy"
+variation.proposals_per_slot = 1
+variation.settings_by = "agent"
+variation.step_adaptation = false
+```
+
+**`settings-tuning-bayesian`**
 
 ```
 audit.reviews = "none"

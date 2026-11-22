@@ -1,19 +1,19 @@
 name: settings-tuning
-title: Tune settings with a Bayesian estimator
-summary: Tune the settings of fixed code (a model's learning rate, regularization, widths, schedule; or the parameters of any algorithm) with a Bayesian estimator in code. No structure changes and no agent calls.
+title: Tune a model's hyperparameters
+summary: An agent tunes the hyperparameters of a fixed model, the architecture's (depth, widths, kernel sizes) and the training's (learning rate, weight decay, schedule), reading the results of earlier trials before choosing the next.
 domain: settings
-objective: the best values for the settings of fixed code
-tags: [hyperparameters, tuning, bayesian, tpe, learning rate, no agents]
-version: 2
+objective: the best hyperparameters for a fixed model
+tags: [hyperparameters, tuning, architecture, learning rate, agent, bayesian, tpe]
+version: 3
 authors: [evoloop]
 when: >
-  The code is right and only its numbers are in question. It costs no model credits. Not for a search that
-  should change structure; use it after such a search, on the winner.
+  The code is right and its numbers are in question. Use it on its own, or after an architecture search, on the
+  winner. To tune without any agent calls, use settings-tuning-bayesian (a built-in Bayesian optimizer).
 settings:
   space:
     preset: settings_only
   variation:
-    settings_by: tpe
+    settings_by: agent
     proposals_per_slot: 1
     step_adaptation: false
   strategy:
@@ -23,59 +23,69 @@ settings:
     local_mix: {edit: 0.0, settings: 1.0, ablation: 0.0}
     novel_share: 0.0
   harness:
-    level: minimal
+    level: standard
     coordinator: code
     conductor: code
   strategist:
     mode: "off"
   audit:
-    reviews: none
+    reviews: end
 guidance:
   all: |
-    This is a search over settings alone. The structure of the code does not change.
+    This search changes hyperparameters only. The code of the model and the training loop stays as it is.
   writer: |
-    You are only called if the person has switched settings moves to an agent. Change settings together when they
-    interact (learning rate with batch size, with warm-up, with weight decay), and move a setting by a factor, not
-    by a small step, until the results bracket the best value.
+    You are tuning hyperparameters. Read `recent` and the leaderboard as a table of trials before proposing.
+    - Hyperparameters interact. Learning rate moves with batch size, warm-up and weight decay; width moves with
+      depth and dropout. Change the ones that interact together and say which you treated as a group.
+    - Move by factors until the best value is bracketed: 3x or 10x on a learning rate, 2x on a width. Small steps
+      come after you have a trial on each side of the best.
+    - Architecture hyperparameters (depth, widths, kernel sizes, number of heads) change capacity and cost. A
+      larger model that scores the same has not improved anything; say what the change does to the parameter count.
+    - If the best trial sits at the edge of the values tried so far, go further in that direction next.
+    - Do not repeat a setting within the noise floor of one already tried.
+    State in `hypothesis` which hyperparameter you think limits the model now, and why the results say so.
   analyst: |
-    Say which settings the score is sensitive to and which it is not, and whether the best values sit at the edge
-    of the range tried. A best value at an edge means the range is wrong.
+    Say which hyperparameters the score is sensitive to and which it is not, with the trials that show it. Flag a
+    best value at the edge of the range tried, and pairs of hyperparameters that seem to interact.
 diagnose:
-  - see: "the best designs have a setting at the edge of its range"
-    do: "widen that range in space.ranges; the optimum is probably outside it"
-  - see: "the score barely changes across a setting's whole range"
-    do: "the setting does not matter here: fix it and spend the budget on the others"
+  - see: "the best trials have a hyperparameter at the edge of the values tried"
+    do: "go further in that direction; the optimum is probably outside what has been tried"
+  - see: "the score barely changes across a hyperparameter's whole range"
+    do: "it does not matter here: fix it and spend the trials on the others"
   - see: "scores differ as much between repeats as between settings"
-    do: "the noise floor is too high to tune on: lengthen the run or average seeds before continuing"
-  - see: "good values of one setting depend on another"
-    do: "the estimator models each setting alone: tune the pair in a second, narrower search around the best design"
+    do: "the noise floor is too high to tune on: train longer or average seeds before continuing"
+  - see: "the best learning rate changes when the batch size or the width changes"
+    do: "tune them together: scale the learning rate with the batch size, and re-tune it after a change of width"
+  - see: "training loss is still falling at the end of the best trials"
+    do: "the training length limits the result, not the hyperparameters: lengthen it before tuning further"
 stages:
-  early: "The first designs cover the ranges evenly; nothing is concluded from them one by one."
-  late: "The draws concentrate near the best settings; narrow the ranges if the best values are well inside them."
+  early: "Bracket each hyperparameter with large moves, one group of interacting ones at a time."
+  late: "Refine around the best trial with small moves, and re-check the leader on a new seed."
 needs:
   adapter:
-    - "every setting to tune must sit in a marked params block (one dict of numbers, true/false or text)"
-    - "give bounds for settings that must stay in a range with `space.ranges`, e.g. {\"fit.lr\": [0.00001, 0.1]}; without one a setting may move a hundredfold either way"
-    - "to stop poor settings early, report progress and set `evaluation.ladder`"
+    - "every hyperparameter to tune must sit in a marked params block (one dict of numbers, true/false or text)"
+    - "report the parameter count, so that a change of width or depth shows its cost"
+    - "for tuning with no agent calls, use the settings-tuning-bayesian skill"
   figures: []
   references: []
 combines: []
-conflicts: [model-performance, model-distillation, model-efficiency, model-size-frontier, model-mechanistic, model-training-recipe, model-ensemble-members, model-finetuning, algorithm-runtime, bioinformatics-algorithm, data-pipeline]
+conflicts: [settings-tuning-bayesian, model-performance, model-distillation, model-efficiency, model-size-frontier, model-mechanistic, model-training-recipe, model-ensemble-members, model-finetuning, algorithm-runtime, bioinformatics-algorithm, data-pipeline]
 goal: Tune hyperparameters
 start:
   run_type: settings_only
   evaluations: 60
-  brief:
-    space: {ranges: {"fit.lr": [0.00001, 0.1]}}
 why: >
-  When only numbers change, no judgement is needed to propose the next candidate: an estimator that models which
-  values scored well is cheaper and more systematic than an agent. This search makes no model call, so it costs
-  compute only.
+  Tuning is a sequence of trials where each should be chosen from the ones before. An agent that reads the
+  trials can move interacting hyperparameters together and can tell a hyperparameter that does not matter from
+  one that has not been pushed far enough. The search changes numbers only, always builds on the best trial, and
+  keeps an analyst to summarise what the trials show.
 reading: >
-  The best row of the leaderboard holds the settings to use. Before trusting them, look at where they sit: a
-  best value at the edge of its range means the range was wrong, and a score that barely moves across a setting
-  means that setting does not matter. Re-fit the winner on new seeds.
+  The top row of the leaderboard holds the hyperparameters to use. Check where they sit before trusting them: a
+  best value at the edge of what was tried means the search stopped too early in that direction, and a score that
+  barely moves across a hyperparameter means it does not matter. Train the winner again on new seeds.
 instead:
+  - if: you want no agent calls at all
+    use: settings-tuning-bayesian
   - if: the loss, optimizer or augmentation code should change, not only their numbers
     use: model-training-recipe
   - if: the model's structure may change

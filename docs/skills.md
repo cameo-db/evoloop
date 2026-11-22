@@ -1,4 +1,4 @@
-# Edit or write a skill
+# Write or edit a skill
 
 A skill is what evoloop knows about one kind of optimization goal: the settings that suit it, advice
 for the agents, and what your evaluator has to report. Each [goal guide](which-search.md) is a skill.

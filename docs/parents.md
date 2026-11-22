@@ -1,4 +1,4 @@
-# Who becomes a parent
+# Parent selection
 
 A local move needs one parent and a crossover needs two. Which designs are chosen is the search's
 *strategy*, or parent rule: it chooses which earlier designs get another chance. Under greedy selection one

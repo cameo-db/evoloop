@@ -1,62 +1,36 @@
-# Run the CPU demo
+# Worked example
 
-The package carries a toy model search: find a small network that separates two interleaved spirals.
-Every model is really trained (in NumPy, in a fraction of a second) and scored by its validation
-accuracy. The proposals are scripted, so it needs no API key and no GPU, costs nothing, and finishes in
-about half a minute. It exercises every part of the loop.
+A complete search you can run in half a minute on a laptop. It looks for a small neural network that
+separates two interleaved spirals. Each design is trained for real, in NumPy. The proposals come from a
+script, not an LLM, so it costs nothing and needs no API key.
 
-## Install and run
+## Run it
 
-In a fresh Python environment (3.9 or later), with Git available:
+Python 3.9 or later, with Git:
 
 ```
 git clone https://github.com/cameo-db/evoloop.git
 cd evoloop
 python -m pip install -e . numpy
 
-evoloop example demo                        # copies the example to ./demo
-evoloop plan demo                           # what the search will do, the warnings, every setting
-evoloop brief demo --confirm "Your Name"    # your agreement to the plan
+evoloop example demo
+evoloop plan demo
+evoloop brief demo --confirm "Your Name"
 evoloop run demo --name first
-evoloop report demo --name first
+evoloop leaderboard demo --name first
 ```
 
-!!! warning "Install from the repository, not from PyPI"
-    The package named `evoloop` on PyPI is a different project. Install from this repository, as above.
-    NumPy is needed by the example's own training code; evoloop itself needs only PyYAML.
+Install from the repository. The `evoloop` package on PyPI is an unrelated project.
 
-## What the commands did
+| Command | What it does |
+|---|---|
+| `example` | copies the example into `./demo`: the code to optimize, a scoring script, and a brief |
+| `plan` | prints what the search will do |
+| `brief --confirm` | records that you agree to the plan; nothing runs without it |
+| `run` | runs the search until 40 evaluations are spent |
+| `leaderboard` | lists the designs, best first |
 
-`evoloop plan demo` printed what the search was about to do. It begins:
-
-```
-At a glance
-  Optimizing:      explore_then_exploit, no skill
-  Designs:         written by an agent; settings moves by an agent
-  Agents:          the stub backend (scripted, no cost); roles: writer (about 44 calls), analyst (about 5 calls), ...
-  Selection:       lineage
-  Runs on:         this machine, 3 at once
-  Early stopping:  none
-  Budget:          40 evaluations of 300 steps; agents capped at $0
-```
-
-`evoloop brief demo --confirm "Your Name"` recorded that you agreed to that plan. A search will not start
-without it, and the name goes into the search's records. With real agents this is the step where you
-agree to the spend.
-
-`evoloop run demo --name first` ran the search and gave it the name `first`.
-
-## What you should see
-
-`evoloop run` returns when the budget of 40 evaluations is spent:
-
-```
-run first: the budget of 40 evaluations is spent
-report: demo/runs/first/report.md
-```
-
-`evoloop leaderboard demo --name first` then lists the designs, best first. This is one run; in yours
-the top rows may be tied in a different order.
+## Result
 
 ```
 | kind     | model | lineage | family            | score   | state | length | fits | parameters |
@@ -67,14 +41,9 @@ the top rows may be tied in a different order.
 | baseline | C1    | L1      | baseline          | 0.5     | full  | 300    | 1    | 3          |
 ```
 
-`model` is the design's id. `lineage` is its line of descent: `L9` is the ninth family the search
-started. `family` is the label the design's writer gave that kind of design. `state` says whether it
-trained to the end, `length` is the training length (here in steps), and `fits` is how many times it
-was trained. The table also has a `minutes` column, left out here.
-
-### The search, evaluation by evaluation
-
-40 training runs across 39 designs. One design, C17, was trained twice.
+Validation accuracy went from 0.50 for the baseline, a linear classifier, to 0.97. The held-out test
+accuracy of the selected design is 0.96. Four labels in a hundred are wrong on purpose, so 0.96 is about
+the ceiling. Your run may order tied designs differently.
 
 <div class="evo-chart">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 330" role="img" aria-label="The validation accuracy of each model in the built-in example, and the best so far, over 40 models">
@@ -195,26 +164,31 @@ was trained. The table also has a `minutes` column, left out here.
 </svg>
 </div>
 
-The baseline is a linear classifier, which cannot separate two spirals, so it scores 0.50. The best
-score then rises in steps: a hidden layer at evaluation 4, the distance from the centre as an extra
-input at evaluation 5, more layers at 8 and 11, and inputs that vary along the radius at 14. Most
-evaluations after that do not beat the best, which is what a search usually looks like.
+40 training runs, 39 designs. Hover over a point to see the design and the move that produced it.
 
-The selected design scores 0.97 on validation data and 0.96 on the held-out test set, which the search
-never sees. About four labels in a hundred are wrong on purpose, so little can score higher.
+## How it got there
 
-Evaluation 23 is a re-check. C17 had reached 0.970; trained again on a new seed it scored 0.967. A
-design trained more than once is ranked by the mean of its scores, so C17 sits second, behind C32. A
-score from a single training run is only as reliable as your noise: see
-[When two scores can be compared](comparable.md).
+These are the evaluations that raised the best score.
 
-The proposals in this demo are scripted. They are real edits (wider, deeper, other inputs, another
-learning rate) and real training runs, but they come from a fixed list. The demo shows how a search
-proceeds and what it records. It does not show what a language model would find.
+| Evaluation | Move | Change | Validation accuracy |
+|---|---|---|---|
+| 1 | baseline | linear classifier on the raw coordinates | 0.500 |
+| 2 | new design | squares and products of the coordinates as inputs | 0.540 |
+| 4 | edit | a hidden layer | 0.633 |
+| 5 | new design | distance from the centre as an input, with a hidden layer | 0.917 |
+| 8 | edit | a second, narrower layer | 0.957 |
+| 11 | new design | two wider hidden layers | 0.960 |
+| 14 | new design | sine and cosine of the radius as inputs | 0.967 |
+| 17 | edit of 14 | a second layer | 0.970 |
 
-### What changed in the code
+The other 32 evaluations did not improve on the best at the time. That ratio is normal.
 
-The search may only change the marked blocks. This is the model block it started from:
+Evaluation 23 retrained design C17 on a new seed and got 0.967. A design with two runs is ranked by
+their mean, which is why C17 is second on the leaderboard and C32, a later variant, is first.
+
+## The code that changed
+
+The search can only change code between the markers. The model block at the start:
 
 ```python
 # EVOLVE-BLOCK-START name=model kind=structure role=network
@@ -226,7 +200,7 @@ def features(x):
 # EVOLVE-BLOCK-END
 ```
 
-and this is the same block in the selected design:
+The same block in the selected design:
 
 ```python
 HIDDEN = [12, 8]
@@ -237,14 +211,46 @@ def features(x):
     return np.stack([x[:, 0], x[:, 1], np.sin(6.0 * r), np.cos(6.0 * r)], axis=1)
 ```
 
-To see any design with its code, its parent, what its writer predicted and how it ended:
+`evoloop show demo C32 --name first` prints a design's code, its parent, and how it scored.
+
+## Where the skill came in
+
+The example's brief names a skill:
+
+```yaml
+run:
+  type: explore_then_exploit
+  skill: model-performance
+```
+
+When you confirmed the brief, evoloop copied that skill to `demo/skills/model-performance/skill.yaml`.
+Each time a design was written, the writer was sent the skill's instructions along with the parent's
+code and the results so far. In this example the writer is a script and ignores them. With an LLM
+backend the same file is what tells the agent how to approach the task, and you can edit it.
+
+## Change the search while it runs
 
 ```
-evoloop show demo C32 --name first
+evoloop brief demo --answer budget.evaluations=120 --confirm "Your Name"
+evoloop run demo --name second &
+evoloop set demo --name second schedule.novelty=0.8 --by "Your Name"
+evoloop set demo --name second evaluation.allowance=200 --by "Your Name"
+evoloop status demo --name second
 ```
 
-Use the id at the top of your own leaderboard. The figure is drawn from the run's files by
-`python tools/demo_figure.py demo/runs/first docs/assets`.
+The first `set` takes effect from the next design. The second shortens training, which changes what a
+score means, so evoloop starts a new comparison period: it retrains the leading designs at the new
+length and stops ranking new scores against old ones. Both changes are listed in the report under
+"Steering ledger".
+
+Designs here train in a fraction of a second, so the search may finish before a command arrives. If so,
+run `evoloop run demo --name second` again and the change is applied then.
+
+## What this example does not show
+
+The proposals are scripted: a fixed list of new designs and simple edits. The example shows the
+mechanics (the loop, the records, steering) on real training runs. It says nothing about what an LLM
+would propose or how good the result would be on a real task.
 
 ??? note "The numbers behind the figure"
     | Model | Design | Made by | Validation accuracy |
@@ -290,46 +296,8 @@ Use the id at the top of your own leaderboard. The figure is drawn from the run'
     | 39 | C39 | an edit | 0.9667 |
     | 40 | C40 | a settings move | 0.96 |
 
-There is a second example, a search for a formula that fits a dataset, where the score is an error and
-lower is better: `evoloop example demo2 --kind formula`.
 
-## What the run leaves behind
+A second example searches for a formula that fits a dataset, where a lower score is better:
+`evoloop example demo2 --kind formula`.
 
-The run's folder is `demo/runs/first/`.
-
-| File | Holds |
-|---|---|
-| `report.md` | the leaderboard, the population, what each mode and move returned, the ledger, the agents' spend |
-| `status.json` | the same in brief, rewritten every turn while the run goes |
-| `runs.jsonl`, `models.jsonl`, `recipes.jsonl` | every training run, architecture and recipe |
-| `ledger.jsonl` | every change to the run and every note, with who made it |
-| `calls.jsonl`, `replies/` | every agent call: what it was shown, what it answered, what it cost |
-| `study.json` | the run as one JSON file in the CAMEO entry format ([saving and depositing it](study.md)) |
-
-## Try steering it
-
-Start a second, longer run and change it while it goes:
-
-```
-evoloop brief demo --answer budget.evaluations=120 --confirm "Your Name"
-evoloop run demo --name second &
-evoloop set demo --name second schedule.novelty=0.8 --by "Your Name" --reason "try wider"
-evoloop set demo --name second evaluation.allowance=200 --by "Your Name" --reason "shorter fits"
-evoloop note demo --name second "Prefer small networks." --roles writer --by "Your Name"
-evoloop status demo --name second
-```
-
-The report's *Steering ledger* section shows each entry with the number of evaluations at which it was
-applied. Shortening the fits changes what a score means, so the second change starts a new comparison
-period: the leaders are trained again at the new length, and earlier scores stop deciding selection.
-
-Each design here trains in a fraction of a second, so the search may finish before your command arrives. If it
-does, the request waits: run `evoloop run demo --name second` again and it is applied then. A
-request made to a run that has ended waits, and is applied when the run is continued with the same
-`evoloop run` command.
-
-## Next
-
-- [Use your own project](setting-up.md): mark the code, write the evaluator, answer the questions.
-- [What do you want to optimize?](which-search.md): a starting configuration for each goal.
-- Before spending on real agents, dry-run your project with `agents.backend: stub`.
+Next: [Set up a project](setting-up.md).

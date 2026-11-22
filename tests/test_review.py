@@ -53,16 +53,16 @@ def plan(**answers):
 
 def test_a_skill_that_searches_without_agents_stays_without_agents_under_any_autonomy():
     for level in (None, "harnessed", "guided", "agentic"):
-        settings, lines = plan(run__type="settings_only", run__skill="settings-tuning", harness__autonomy=level)
+        settings, lines = plan(run__type="settings_only", run__skill="settings-tuning-bayesian", harness__autonomy=level)
         assert settings["variation"]["settings_by"] == "tpe", level
         text = "\n".join(lines)
         assert "every move is made by a Bayesian estimator in code (tpe; no agent call)" in text, level
         assert "none: this search calls no agent" in text, level
-    _, lines = plan(run__type="settings_only", run__skill="settings-tuning", harness__autonomy="guided")
+    _, lines = plan(run__type="settings_only", run__skill="settings-tuning-bayesian", harness__autonomy="guided")
     assert any(line.startswith("  Kept:") and "variation.settings_by stays 'tpe'" in line and "autonomy guided asks for 'agent'" in line
                for line in lines)
     # Setting it yourself still wins, and the plan says that the skill's own choice was changed.
-    settings, lines = plan(run__type="settings_only", run__skill="settings-tuning", variation__settings_by="agent")
+    settings, lines = plan(run__type="settings_only", run__skill="settings-tuning-bayesian", variation__settings_by="agent")
     assert settings["variation"]["settings_by"] == "agent"
     assert any(line.startswith("  Changed:") and "variation.settings_by is 'agent' (you set it)" in line for line in lines)
     assert any("every move is made by an agent" in line for line in lines)
@@ -87,7 +87,7 @@ def test_the_plan_leads_with_what_the_search_will_do_then_warnings_then_cost_the
 
 def test_six_evaluations_of_tuning_under_guided_autonomy_call_no_agent(tmp_path):
     folder = search(tmp_path, budget__evaluations=6, evaluation__allowance=150, run__type="settings_only",
-                    run__skill="settings-tuning", harness__autonomy="guided", space__preset=None)
+                    run__skill="settings-tuning-bayesian", harness__autonomy="guided", space__preset=None)
     controller = Controller(folder, "t", poll=0.1)
     assert controller.run(max_seconds=200)
     assert controller.store.read("calls") == [] and len(scored(controller.view())) >= 5

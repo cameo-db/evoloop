@@ -1,4 +1,4 @@
-# Cheaper evaluations
+# Early stopping
 
 Most designs a search tries are not improvements. Stopping the weak ones early leaves more of the
 budget for the rest. Both methods here need your evaluator to report progress as it trains

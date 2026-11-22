@@ -114,6 +114,8 @@ def lines(controller: Any, view: View, reason: Optional[str] = None) -> List[str
     settings, store = controller.settings, controller.store
     snap = snapshot(controller, view, reason)
     out = ["# Run %s" % controller.name, "", "Goal: %s" % settings["objective"]["goal"], ""]
+    if settings.get("_skill"):       # the skill whose settings and advice this search runs with
+        out += ["Skill: %s." % settings["_skill"]["name"], ""]
     out.append("State: %s. Evaluations spent: %s of %s. Agent spend: $%.2f over %d calls." % (
         reason or "running", snap["budget"]["spent"], snap["budget"]["evaluations"], controller.agents.dollars,
         controller.agents.count))

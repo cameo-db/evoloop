@@ -16,7 +16,7 @@ budget:
   evaluations: 150
 ```
 
-These lines go in `brief.yaml`. The budget, and any limits or ranges, are placeholders for your own. <a href="../../which-search/?goal=model-ensemble-members&run=survey#preview-your-search">Preview this search</a> to see what it will do, or [set up this search](../setting-up.md) on your project. The goal is the skill `model-ensemble-members`, shown in full in the [skill library](../skill-library.md#model-ensemble-members).
+These lines go in `brief.yaml`. The budget, and any limits or ranges, are placeholders for your own. <a href="../../which-search/?goal=model-ensemble-members&run=survey#preview-a-search">Preview this search</a> to see what it will do, or [set up this search](../setting-up.md) on your project. The goal is the skill `model-ensemble-members`, shown in full in the [skill library](../skill-library.md#model-ensemble-members).
 
 ## Why this set-up
 

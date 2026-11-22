@@ -1,4 +1,4 @@
-# The agents, and how much they decide
+# Agents
 
 A search uses language-model agents in several roles. Each role is a separate call with its own
 instructions, and no role talks to another: each is shown what it needs from the run's files.
@@ -15,7 +15,7 @@ instructions, and no role talks to another: each is shown what it needs from the
 | **translator** | turns your own words into setting changes, for `evoloop steer` | when you use it |
 
 Only the writer is needed. A search can run with writers alone, and the
-[`settings-tuning` skill](guides/settings-tuning.md) runs with no agent at all.
+[`settings-tuning-bayesian` skill](guides/settings-tuning-bayesian.md) runs with no agent at all.
 
 Two things that sound like roles are not agents. The *controller* is the Python process that runs the
 search. The *conductor* is the strategist when you have chosen to talk to it with `evoloop chat`.
@@ -39,7 +39,7 @@ checks on every design and a minimum share of new designs. More autonomy widens 
 It does not remove those.
 
 Left unset, the run type decides: most run types behave like `guided`. A [skill](skills.md) can
-override the level where it knows better, which is how `settings-tuning` stays agent-free under any of
+override the level where it knows better, which is how `settings-tuning-bayesian` stays agent-free under any of
 them. Anything you set yourself wins over all of these.
 
 ## Why have a strategist

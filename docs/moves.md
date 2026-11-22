@@ -1,4 +1,4 @@
-# Edits, crossover and settings moves
+# Moves
 
 Once a slot has a kind of move and its parents, something has to write the design. This page lists
 every move, who makes it, and what it costs.
@@ -38,8 +38,8 @@ The **sampler** (`sampler`) nudges one or two values up or down by a random fact
 The **estimator** (`tpe`) is Bayesian optimization, the method Optuna uses by default. It splits the
 settings tried so far into the best quarter and the rest, works out which values are typical of the
 good ones and untypical of the others, and draws the next settings from there. The first eight designs
-are spread over the range. No call, so a search that only tunes numbers costs no agent dollars; this is
-what the [`settings-tuning` skill](guides/settings-tuning.md) uses.
+are spread over the range. It makes no agent call. The
+[`settings-tuning-bayesian` skill](guides/settings-tuning-bayesian.md) uses it; [`settings-tuning`](guides/settings-tuning.md) has an agent choose each trial instead.
 
 For the estimator, give ranges where a value must stay within bounds:
 

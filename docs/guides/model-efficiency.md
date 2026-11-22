@@ -1,16 +1,16 @@
-# Find a smaller or faster model
+# Shrink a model
 
-Make the model smaller or faster while holding its score. Designs are selected on the trade-off between the score and size (or speed), and removal is the commonest move.
+Design a smaller or faster student and train it to match the model you already have. The original model is the teacher. The student's architecture and its training against the teacher are both searched.
 
 ## What a good result looks like
 
-Read the population table: it lists the designs on the trade-off front with their score and size. Pick the smallest whose score is within your tolerance of the reference row. A design is only an improvement if its loss in score is below the noise floor or acceptable to you.
+Read the students on the trade-off front against two reference rows: the teacher, and the best student trained from scratch without the teacher. Pick the smallest student whose score is within your tolerance of the teacher. A student that only matches its from-scratch twin gained nothing from distillation, and the recipe needs work before the architecture does.
 
 ## Start here
 
 ```yaml
 run:
-  type: refine
+  type: explore_then_exploit
   skill: model-efficiency
 budget:
   evaluations: 100
@@ -19,28 +19,31 @@ limits:
     max: 5000000
 ```
 
-These lines go in `brief.yaml`. The budget, and any limits or ranges, are placeholders for your own. <a href="../../which-search/?goal=model-efficiency&run=refine#preview-your-search">Preview this search</a> to see what it will do, or [set up this search](../setting-up.md) on your project. The goal is the skill `model-efficiency`, shown in full in the [skill library](../skill-library.md#model-efficiency).
+These lines go in `brief.yaml`. The budget, and any limits or ranges, are placeholders for your own. <a href="../../which-search/?goal=model-efficiency&run=explore_then_exploit#preview-a-search">Preview this search</a> to see what it will do, or [set up this search](../setting-up.md) on your project. The goal is the skill `model-efficiency`, shown in full in the [skill library](../skill-library.md#model-efficiency).
 
 ## Why this set-up
 
-The aim is one cheaper model at about the same score, so designs are selected on the trade-off between score and size instead of on score alone, and half the local moves remove something. Starting from a model you know is good, a refining search keeps close to it.
+A small model trained on the original targets is usually worse than the same small model trained to imitate a large one. So shrinking is set up as distillation: the model you have is the teacher, and the search looks for the student architecture and the training recipe that keep the most of it. Students are selected on the trade-off between score and size, which keeps cheaper students alive even when a larger one scores higher.
 
 The skill sets these for you (anything you set in the brief wins):
 
 | Setting | Value |
 |---|---|
 | [`report.columns`](../fields.md#report-columns) | `[speed]` |
-| [`schedule.local_mix`](../fields.md#schedule-local_mix) | `{ablation: 0.5, edit: 0.35, settings: 0.15}` |
+| [`schedule.local_mix`](../fields.md#schedule-local_mix) | `{ablation: 0.2, edit: 0.5, settings: 0.3}` |
+| [`space.preset`](../fields.md#space-preset) | `architecture_and_recipe` |
 | [`strategy.mechanism`](../fields.md#strategy-mechanism) | `pareto` |
 | [`strategy.second_direction`](../fields.md#strategy-second_direction) | `minimize` |
 | [`strategy.second_metric`](../fields.md#strategy-second_metric) | `parameters` |
 
 ## What your evaluator must report
 
-- report `parameters` in result.json (and `inference_speed.examples_per_s` to rank on speed: then set strategy.second_metric to examples_per_s and strategy.second_direction to maximize)
+- produce the teacher's outputs (run the original model, or read stored predictions) and train each student against them; mark the student's architecture and the distillation loss as open blocks
+- report `parameters` in result.json, and `inference_speed.examples_per_s` to rank on speed (then set strategy.second_metric to examples_per_s and strategy.second_direction to maximize)
 - set `limits` for the largest size or lowest speed you accept, and put those figures in the first progress line so that a design outside them costs seconds
-- add a reference row for the model you are trying to shrink
 - Every result must report `parameters`. If none does, the report says so.
+- Add a row to the leaderboard for teacher, to compare against (`evoloop reference`).
+- Add a row to the leaderboard for from scratch, to compare against (`evoloop reference`).
 
 [Write the evaluator](../evaluator.md) shows how to report these; [Evaluator interface](../project-contract.md) is the reference.
 
@@ -49,7 +52,7 @@ The skill sets these for you (anything you set in the brief wins):
 | If | Use |
 |---|---|
 | you want the best model at each of several sizes | [`model-size-frontier`](model-size-frontier.md) |
-| a larger model or ensemble is available to learn from | [`model-distillation`](model-distillation.md) |
+| the teacher is an ensemble or a model of a different kind | [`model-distillation`](model-distillation.md) |
 
 It combines well with [`model-distillation`](model-distillation.md) (`run.skill: [model-efficiency, ...]`).
 
@@ -60,41 +63,43 @@ It combines well with [`model-distillation`](model-distillation.md) (`run.skill:
 ## What the agents are told
 
 ??? note "Every role"
-    The aim is the best trade-off between the score and the model's cost (its parameter count, or its speed if the
-    person has set that as the second figure). A design that loses less than the noise floor and is clearly
-    smaller or faster is a gain. `limits_enforced_by_code` gives the hard bounds; a design outside them is
-    rejected unrun or stopped early.
+    The model being shrunk is the teacher. Every design in this search is a student: a cheaper architecture trained
+    to reproduce the teacher's outputs. A student is judged on the trade-off between its score and its cost
+    (parameter count, or measured speed if that is the second metric). Deleting parts of the original and
+    retraining from scratch is the weakest version of this and rarely the best.
 
 ??? note "The writer"
-    Take away before adding. In rough order of what is usually cheapest to remove:
-    - layers or blocks whose removal earlier ablations showed costs nothing;
-    - width, where the layer is far from the output or follows a wider one;
-    - dense layers and large heads, which often hold most of the parameters;
-    - full convolutions, replaced by separable, grouped or bottlenecked ones; attention replaced by something local
-      where the range it covers is short;
-    - resolution early (stride or pooling sooner), which cuts the cost of everything after it.
-    Then spend a little of what was saved where it pays most. State in `predicted_effect` both what you expect for
-    the score and for the size or speed, since both are measured.
-    When the parent sits at the small end of the front, try to recover score at the same size; at the accurate end,
-    try to cut size at the same score. Do not propose a design larger than the largest on the leaderboard.
+    Design the student for efficiency; do not start from the teacher with pieces removed.
+    - Pick operators that are cheap for the hardware: depthwise-separable or grouped convolutions, bottlenecks,
+      early downsampling, shared weights, local attention in place of global where the context is short.
+    - Size the student to the target. Decide the parameter or latency budget first, then spend it where the
+      teacher's own ablations or the results say it matters.
+    - Train against the teacher. Use the teacher's outputs as targets, alone or mixed with the measured ones, and
+      let the teacher label augmented or synthetic inputs: a small student needs more data than the measured set
+      holds, and the teacher supplies it.
+    - Give the student time. Students usually need a longer schedule and less regularization than the teacher had.
+    State in `predicted_effect` the expected score and the expected size or speed. Do not propose a student
+    larger than the teacher.
 
 ??? note "The analyst"
-    For each change say what it did to the score and to the size or speed. A lesson of the form "removing X costs
-    nothing" is the most useful kind here; cite the runs.
+    For each change say what it did to the score and to the size or speed, and whether the gain came from the
+    architecture or from how the student was trained. Report the gap to the teacher and to the same student
+    trained without the teacher.
 
 ??? note "The strategist"
-    If the front has stopped moving at the small end, order ablations on its smallest designs. If it has stopped
-    at the accurate end, order crossovers between the two ends.
+    If students of the current shape have stopped closing the gap to the teacher, order new architectures. If the
+    gap is closing, keep the share of recipe changes up.
 
 | If the results show | Then |
 |---|---|
-| an ablation costs less than the noise floor | the component is dead weight: keep it out, and try removing its neighbours |
-| parameter count fell but speed did not | the time is not where the parameters are: cut resolution, sequence length or depth instead of width |
-| every reduction costs score, however small | the model is already tight: change the kind of layer (separable, bottleneck, shared weights) instead of shrinking the same ones |
-| a much smaller design scores the same as the reference | the reference was over-sized for the data: keep going down until the score moves |
+| the student cannot fit the teacher's outputs even on training inputs | it is too small or trained too briefly: lengthen training first, then add capacity where it is cheapest |
+| the student fits the teacher on training inputs and not on held-out ones | add teacher-labelled augmented or synthetic inputs; do not enlarge the student |
+| the student scores the same with and without the teacher | the distillation is not doing anything: check the teacher's outputs are used, and raise their weight |
+| parameter count fell but measured speed did not | the time is not where the parameters are: reduce resolution, sequence length or depth, and measure speed directly |
+| a much smaller student matches the teacher | the teacher was over-sized for the data: keep going down until the score moves |
 
-Early in the budget: Find what can be removed for nothing, with ablations across the whole model.
+Early in the budget: Try several efficient architectures at the target size, each trained against the teacher with one simple recipe.
 
-Late in the budget: Work at the two ends of the front, and cross designs from the ends.
+Late in the budget: Take the two or three best students and work on how they are trained: targets, augmentation, schedule.
 
 You can change any of this: the search gets its own copy of the skill in `skills/model-efficiency/skill.yaml` ([Skills](../skills.md)).

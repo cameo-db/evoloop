@@ -10,8 +10,7 @@
 **An optimization loop for models, algorithms, and data pipelines.**
 
 Give evoloop working code and a way to score it. You choose which parts may change. AI agents propose
-changes, evoloop evaluates each version, and the results guide what it tries next. For numerical
-settings, a built-in optimizer can propose the changes with no agent at all.
+changes, evoloop evaluates each version, and the results guide what it tries next.
 
 Use it to improve a model's accuracy, find a smaller model at a similar score, tune a training recipe,
 or make a pipeline faster while checking that its outputs stay correct.
@@ -33,7 +32,7 @@ score and decision as it goes.
 
 | Stage | What happens | Who does it |
 |---|---|---|
-| Propose a change | a new design, an edit to an earlier one, a combination of two, or new values for the settings | an agent; or, for settings, a built-in Bayesian optimizer or sampler |
+| Propose a change | a new design, an edit to an earlier one, a combination of two, or new hyperparameters | an LLM agent, following the skill you chose |
 | Evaluate it | the design is checked, then run as its own job; your script writes its score | your code, on your machine or one Slurm job per design |
 | Choose what to try next | which earlier designs get built on, and how much of the budget goes to new ideas | evoloop's code, from the scores |
 
@@ -55,9 +54,10 @@ agents, all in a file you can edit.
 |---|---|
 | [`model-performance`](https://evoloop.readthedocs.io/en/latest/guides/model-performance/) | the best score, with the architecture open |
 | [`model-training-recipe`](https://evoloop.readthedocs.io/en/latest/guides/model-training-recipe/) | a better score from the same architecture: the loss, optimizer, schedule, augmentation |
-| [`settings-tuning`](https://evoloop.readthedocs.io/en/latest/guides/settings-tuning/) | hyperparameters only, by a Bayesian optimizer, with no agent calls |
+| [`settings-tuning`](https://evoloop.readthedocs.io/en/latest/guides/settings-tuning/) | hyperparameters of a fixed model, chosen trial by trial by an agent |
+| [`settings-tuning-bayesian`](https://evoloop.readthedocs.io/en/latest/guides/settings-tuning-bayesian/) | the same with a built-in Bayesian optimizer and no agent calls |
 | [`model-finetuning`](https://evoloop.readthedocs.io/en/latest/guides/model-finetuning/) | adapting a pretrained model |
-| [`model-efficiency`](https://evoloop.readthedocs.io/en/latest/guides/model-efficiency/) | one smaller or faster model at about the same score |
+| [`model-efficiency`](https://evoloop.readthedocs.io/en/latest/guides/model-efficiency/) | shrinking the model you have, by distilling it into a cheaper student |
 | [`model-size-frontier`](https://evoloop.readthedocs.io/en/latest/guides/model-size-frontier/) | the best model at each of several sizes |
 | [`model-distillation`](https://evoloop.readthedocs.io/en/latest/guides/model-distillation/) | a small student that matches a large teacher |
 | [`model-ensemble-members`](https://evoloop.readthedocs.io/en/latest/guides/model-ensemble-members/) | several good models that fail differently |

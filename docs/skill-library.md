@@ -6,7 +6,7 @@ Every skill that comes with evoloop. This page is written from the skill files t
 |---|---|---|
 | [`model-performance`](#model-performance) | model | the best score, nothing else weighed |
 | [`model-distillation`](#model-distillation) | model | a smaller or faster model that matches a larger model or an ensemble |
-| [`model-efficiency`](#model-efficiency) | model | the same score at a lower cost in parameters or time |
+| [`model-efficiency`](#model-efficiency) | model | a smaller or faster model that keeps the original's score |
 | [`model-ensemble-members`](#model-ensemble-members) | model | a set of strong models whose errors do not coincide |
 | [`model-finetuning`](#model-finetuning) | model | the best score on a task starting from a pretrained model |
 | [`model-mechanistic`](#model-mechanistic) | model | a better fit without losing what the parameters mean |
@@ -15,7 +15,8 @@ Every skill that comes with evoloop. This page is written from the skill files t
 | [`algorithm-runtime`](#algorithm-runtime) | algorithm | the same results in less time or memory |
 | [`bioinformatics-algorithm`](#bioinformatics-algorithm) | bioinformatics | better accuracy against a truth set, at an acceptable run time |
 | [`data-pipeline`](#data-pipeline) | pipeline | the same output from a pipeline in less time, memory or cost |
-| [`settings-tuning`](#settings-tuning) | settings | the best values for the settings of fixed code |
+| [`settings-tuning`](#settings-tuning) | settings | the best hyperparameters for a fixed model |
+| [`settings-tuning-bayesian`](#settings-tuning-bayesian) | settings | the best hyperparameters for a fixed model, at no agent cost |
 
 ## Model
 
@@ -57,17 +58,17 @@ Every skill that comes with evoloop. This page is written from the skill files t
 
 ### model-efficiency
 
-**Make one model smaller or faster.** Make the model smaller or faster while holding its score. Designs are selected on the trade-off between the score and size (or speed), and removal is the commonest move.
+**Shrink a model by distilling it into an efficient student.** Design a smaller or faster student and train it to match the model you already have. The original model is the teacher. The student's architecture and its training against the teacher are both searched.
 
-*When to choose it.* You have a model that scores well enough and costs too much. The aim is one cheaper model at about the same score. For a whole family across sizes use model-size-frontier; with a teacher available, model-distillation.
+*When to choose it.* You have a model that scores well enough and costs too much to run. The aim is one cheaper model at about the same score. For a family across sizes use model-size-frontier; when the teacher is an ensemble or a different model, use model-distillation.
 
 | | |
 |---|---|
-| Tags | efficiency, compression, pruning, size, speed, pareto, ablation |
-| Sets | `report.columns`, `schedule.local_mix`, `strategy.mechanism`, `strategy.second_direction`, `strategy.second_metric` |
+| Tags | efficiency, distillation, compression, student, teacher, size, speed, pareto |
+| Sets | `report.columns`, `schedule.local_mix`, `space.preset`, `strategy.mechanism`, `strategy.second_direction`, `strategy.second_metric` |
 | Guidance for | all, analyst, strategist, writer |
-| Diagnoses | 4, in the guide |
-| Needs from the evaluator | report `parameters` in result.json (and `inference_speed.examples_per_s` to rank on speed: then set strategy.second_metric to examples_per_s and strategy.second_direction to maximize); set `limits` for the largest size or lowest speed you accept, and put those figures in the first progress line so that a design outside them costs seconds; add a reference row for the model you are trying to shrink |
+| Diagnoses | 5, in the guide |
+| Needs from the evaluator | produce the teacher's outputs (run the original model, or read stored predictions) and train each student against them; mark the student's architecture and the distillation loss as open blocks; report `parameters` in result.json, and `inference_speed.examples_per_s` to rank on speed (then set strategy.second_metric to examples_per_s and strategy.second_direction to maximize); set `limits` for the largest size or lowest speed you accept, and put those figures in the first progress line so that a design outside them costs seconds |
 | Goes well with | `model-distillation` |
 | Not with | `settings-tuning`, `model-size-frontier` |
 
@@ -227,9 +228,27 @@ Every skill that comes with evoloop. This page is written from the skill files t
 
 ### settings-tuning
 
-**Tune settings with a Bayesian estimator.** Tune the settings of fixed code (a model's learning rate, regularization, widths, schedule; or the parameters of any algorithm) with a Bayesian estimator in code. No structure changes and no agent calls.
+**Tune a model's hyperparameters.** An agent tunes the hyperparameters of a fixed model, the architecture's (depth, widths, kernel sizes) and the training's (learning rate, weight decay, schedule), reading the results of earlier trials before choosing the next.
 
-*When to choose it.* The code is right and only its numbers are in question. It costs no model credits. Not for a search that should change structure; use it after such a search, on the winner.
+*When to choose it.* The code is right and its numbers are in question. Use it on its own, or after an architecture search, on the winner. To tune without any agent calls, use settings-tuning-bayesian (a built-in Bayesian optimizer).
+
+| | |
+|---|---|
+| Tags | hyperparameters, tuning, architecture, learning rate, agent, bayesian, tpe |
+| Sets | `audit.reviews`, `harness.conductor`, `harness.coordinator`, `harness.level`, `schedule.local_mix`, `schedule.novel_share`, `schedule.phases`, `space.preset`, `strategist.mode`, `strategy.mechanism`, `variation.proposals_per_slot`, `variation.settings_by`, `variation.step_adaptation` |
+| Guidance for | all, analyst, writer |
+| Diagnoses | 5, in the guide |
+| Needs from the evaluator | every hyperparameter to tune must sit in a marked params block (one dict of numbers, true/false or text); report the parameter count, so that a change of width or depth shows its cost; for tuning with no agent calls, use the settings-tuning-bayesian skill |
+| Goes well with | any |
+| Not with | `settings-tuning-bayesian`, `model-performance`, `model-distillation`, `model-efficiency`, `model-size-frontier`, `model-mechanistic`, `model-training-recipe`, `model-ensemble-members`, `model-finetuning`, `algorithm-runtime`, `bioinformatics-algorithm`, `data-pipeline` |
+
+[The guide for this goal](guides/settings-tuning.md) has the starting brief, the advice the agents are given and the diagnoses in full.
+
+### settings-tuning-bayesian
+
+**Tune hyperparameters with a Bayesian optimizer, no agents.** A built-in Bayesian optimizer (TPE) draws each set of hyperparameters from the results of earlier trials. No agent is called, so the search costs compute only.
+
+*When to choose it.* You want hyperparameter tuning at no agent cost, or a baseline to compare an agent against. For tuning led by an agent that reads the trials, use settings-tuning.
 
 | | |
 |---|---|
@@ -239,6 +258,6 @@ Every skill that comes with evoloop. This page is written from the skill files t
 | Diagnoses | 4, in the guide |
 | Needs from the evaluator | every setting to tune must sit in a marked params block (one dict of numbers, true/false or text); give bounds for settings that must stay in a range with `space.ranges`, e.g. {"fit.lr": [0.00001, 0.1]}; without one a setting may move a hundredfold either way; to stop poor settings early, report progress and set `evaluation.ladder` |
 | Goes well with | any |
-| Not with | `model-performance`, `model-distillation`, `model-efficiency`, `model-size-frontier`, `model-mechanistic`, `model-training-recipe`, `model-ensemble-members`, `model-finetuning`, `algorithm-runtime`, `bioinformatics-algorithm`, `data-pipeline` |
+| Not with | `settings-tuning`, `model-performance`, `model-distillation`, `model-efficiency`, `model-size-frontier`, `model-mechanistic`, `model-training-recipe`, `model-ensemble-members`, `model-finetuning`, `algorithm-runtime`, `bioinformatics-algorithm`, `data-pipeline` |
 
-[The guide for this goal](guides/settings-tuning.md) has the starting brief, the advice the agents are given and the diagnoses in full.
+[The guide for this goal](guides/settings-tuning-bayesian.md) has the starting brief, the advice the agents are given and the diagnoses in full.

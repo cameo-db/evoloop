@@ -16,7 +16,7 @@ budget:
   evaluations: 80
 ```
 
-These lines go in `brief.yaml`. The budget, and any limits or ranges, are placeholders for your own. <a href="../../which-search/?goal=model-training-recipe&run=explore_then_exploit#preview-your-search">Preview this search</a> to see what it will do, or [set up this search](../setting-up.md) on your project. The goal is the skill `model-training-recipe`, shown in full in the [skill library](../skill-library.md#model-training-recipe).
+These lines go in `brief.yaml`. The budget, and any limits or ranges, are placeholders for your own. <a href="../../which-search/?goal=model-training-recipe&run=explore_then_exploit#preview-a-search">Preview this search</a> to see what it will do, or [set up this search](../setting-up.md) on your project. The goal is the skill `model-training-recipe`, shown in full in the [skill library](../skill-library.md#model-training-recipe).
 
 ## Why this set-up
 

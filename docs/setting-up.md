@@ -1,4 +1,4 @@
-# Set up your search
+# Set up a project
 
 Five steps take a project to a running search. A coding agent can do most of them with you; the steps
 are the same either way, and this page is also how to check what an agent did.

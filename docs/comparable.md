@@ -1,4 +1,4 @@
-# When two scores can be compared
+# Comparing scores
 
 Train the same model twice with different seeds and the scores differ. A search that ignores this
 spends its budget chasing luck. Three mechanisms deal with it.

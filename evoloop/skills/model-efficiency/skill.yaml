@@ -1,84 +1,92 @@
 name: model-efficiency
-title: Make one model smaller or faster
-summary: Make the model smaller or faster while holding its score. Designs are selected on the trade-off between the score and size (or speed), and removal is the commonest move.
+title: Shrink a model by distilling it into an efficient student
+summary: Design a smaller or faster student and train it to match the model you already have. The original model is the teacher. The student's architecture and its training against the teacher are both searched.
 domain: model
-objective: the same score at a lower cost in parameters or time
-tags: [efficiency, compression, pruning, size, speed, pareto, ablation]
-version: 2
+objective: a smaller or faster model that keeps the original's score
+tags: [efficiency, distillation, compression, student, teacher, size, speed, pareto]
+version: 3
 authors: [evoloop]
 when: >
-  You have a model that scores well enough and costs too much. The aim is one cheaper model at about the same
-  score. For a whole family across sizes use model-size-frontier; with a teacher available, model-distillation.
+  You have a model that scores well enough and costs too much to run. The aim is one cheaper model at about the
+  same score. For a family across sizes use model-size-frontier; when the teacher is an ensemble or a different
+  model, use model-distillation.
 settings:
+  space:
+    preset: architecture_and_recipe
   strategy:
     mechanism: pareto
     second_metric: parameters
     second_direction: minimize
   schedule:
-    local_mix: {edit: 0.35, settings: 0.15, ablation: 0.5}
+    local_mix: {edit: 0.5, settings: 0.3, ablation: 0.2}
   report:
     columns: [speed]
 guidance:
   all: |
-    The aim is the best trade-off between the score and the model's cost (its parameter count, or its speed if the
-    person has set that as the second figure). A design that loses less than the noise floor and is clearly
-    smaller or faster is a gain. `limits_enforced_by_code` gives the hard bounds; a design outside them is
-    rejected unrun or stopped early.
+    The model being shrunk is the teacher. Every design in this search is a student: a cheaper architecture trained
+    to reproduce the teacher's outputs. A student is judged on the trade-off between its score and its cost
+    (parameter count, or measured speed if that is the second metric). Deleting parts of the original and
+    retraining from scratch is the weakest version of this and rarely the best.
   writer: |
-    Take away before adding. In rough order of what is usually cheapest to remove:
-    - layers or blocks whose removal earlier ablations showed costs nothing;
-    - width, where the layer is far from the output or follows a wider one;
-    - dense layers and large heads, which often hold most of the parameters;
-    - full convolutions, replaced by separable, grouped or bottlenecked ones; attention replaced by something local
-      where the range it covers is short;
-    - resolution early (stride or pooling sooner), which cuts the cost of everything after it.
-    Then spend a little of what was saved where it pays most. State in `predicted_effect` both what you expect for
-    the score and for the size or speed, since both are measured.
-    When the parent sits at the small end of the front, try to recover score at the same size; at the accurate end,
-    try to cut size at the same score. Do not propose a design larger than the largest on the leaderboard.
+    Design the student for efficiency; do not start from the teacher with pieces removed.
+    - Pick operators that are cheap for the hardware: depthwise-separable or grouped convolutions, bottlenecks,
+      early downsampling, shared weights, local attention in place of global where the context is short.
+    - Size the student to the target. Decide the parameter or latency budget first, then spend it where the
+      teacher's own ablations or the results say it matters.
+    - Train against the teacher. Use the teacher's outputs as targets, alone or mixed with the measured ones, and
+      let the teacher label augmented or synthetic inputs: a small student needs more data than the measured set
+      holds, and the teacher supplies it.
+    - Give the student time. Students usually need a longer schedule and less regularization than the teacher had.
+    State in `predicted_effect` the expected score and the expected size or speed. Do not propose a student
+    larger than the teacher.
   analyst: |
-    For each change say what it did to the score and to the size or speed. A lesson of the form "removing X costs
-    nothing" is the most useful kind here; cite the runs.
+    For each change say what it did to the score and to the size or speed, and whether the gain came from the
+    architecture or from how the student was trained. Report the gap to the teacher and to the same student
+    trained without the teacher.
   strategist: |
-    If the front has stopped moving at the small end, order ablations on its smallest designs. If it has stopped
-    at the accurate end, order crossovers between the two ends.
+    If students of the current shape have stopped closing the gap to the teacher, order new architectures. If the
+    gap is closing, keep the share of recipe changes up.
 diagnose:
-  - see: "an ablation costs less than the noise floor"
-    do: "the component is dead weight: keep it out, and try removing its neighbours"
-  - see: "parameter count fell but speed did not"
-    do: "the time is not where the parameters are: cut resolution, sequence length or depth instead of width"
-  - see: "every reduction costs score, however small"
-    do: "the model is already tight: change the kind of layer (separable, bottleneck, shared weights) instead of shrinking the same ones"
-  - see: "a much smaller design scores the same as the reference"
-    do: "the reference was over-sized for the data: keep going down until the score moves"
+  - see: "the student cannot fit the teacher's outputs even on training inputs"
+    do: "it is too small or trained too briefly: lengthen training first, then add capacity where it is cheapest"
+  - see: "the student fits the teacher on training inputs and not on held-out ones"
+    do: "add teacher-labelled augmented or synthetic inputs; do not enlarge the student"
+  - see: "the student scores the same with and without the teacher"
+    do: "the distillation is not doing anything: check the teacher's outputs are used, and raise their weight"
+  - see: "parameter count fell but measured speed did not"
+    do: "the time is not where the parameters are: reduce resolution, sequence length or depth, and measure speed directly"
+  - see: "a much smaller student matches the teacher"
+    do: "the teacher was over-sized for the data: keep going down until the score moves"
 stages:
-  early: "Find what can be removed for nothing, with ablations across the whole model."
-  late: "Work at the two ends of the front, and cross designs from the ends."
+  early: "Try several efficient architectures at the target size, each trained against the teacher with one simple recipe."
+  late: "Take the two or three best students and work on how they are trained: targets, augmentation, schedule."
 needs:
   adapter:
-    - "report `parameters` in result.json (and `inference_speed.examples_per_s` to rank on speed: then set strategy.second_metric to examples_per_s and strategy.second_direction to maximize)"
+    - "produce the teacher's outputs (run the original model, or read stored predictions) and train each student against them; mark the student's architecture and the distillation loss as open blocks"
+    - "report `parameters` in result.json, and `inference_speed.examples_per_s` to rank on speed (then set strategy.second_metric to examples_per_s and strategy.second_direction to maximize)"
     - "set `limits` for the largest size or lowest speed you accept, and put those figures in the first progress line so that a design outside them costs seconds"
-    - "add a reference row for the model you are trying to shrink"
   figures: [parameters]
-  references: []
+  references: ["teacher", "from scratch"]
 combines: [model-distillation]
 conflicts: [settings-tuning, model-size-frontier]
-goal: Find a smaller or faster model
+goal: Shrink a model
 start:
-  run_type: refine
+  run_type: explore_then_exploit
   evaluations: 100
   brief:
     limits: {parameters: {max: 5000000}}
 why: >
-  The aim is one cheaper model at about the same score, so designs are selected on the trade-off between score
-  and size instead of on score alone, and half the local moves remove something. Starting from a model you know
-  is good, a refining search keeps close to it.
+  A small model trained on the original targets is usually worse than the same small model trained to imitate a
+  large one. So shrinking is set up as distillation: the model you have is the teacher, and the search looks for
+  the student architecture and the training recipe that keep the most of it. Students are selected on the
+  trade-off between score and size, which keeps cheaper students alive even when a larger one scores higher.
 reading: >
-  Read the population table: it lists the designs on the trade-off front with their score and size. Pick the
-  smallest whose score is within your tolerance of the reference row. A design is only an improvement if its
-  loss in score is below the noise floor or acceptable to you.
+  Read the students on the trade-off front against two reference rows: the teacher, and the best student trained
+  from scratch without the teacher. Pick the smallest student whose score is within your tolerance of the
+  teacher. A student that only matches its from-scratch twin gained nothing from distillation, and the recipe
+  needs work before the architecture does.
 instead:
   - if: you want the best model at each of several sizes
     use: model-size-frontier
-  - if: a larger model or ensemble is available to learn from
+  - if: the teacher is an ensemble or a model of a different kind
     use: model-distillation

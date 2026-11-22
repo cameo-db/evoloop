@@ -73,9 +73,10 @@
 [data-md-color-scheme="slate"] {
   --md-hue: 172; --md-primary-fg-color: #0f3f39; --md-primary-fg-color--light: #1f5a52; --md-primary-fg-color--dark: #0a2e2a;
   --md-accent-fg-color: #3dbfab; --md-typeset-a-color: #55c9b6; }
-.md-typeset .md-button--primary { background-color: var(--evo-teal); border-color: var(--evo-teal); color: #fff; }
 .md-typeset .md-button { border-color: var(--evo-teal); color: var(--md-typeset-a-color); }
-.md-typeset .md-button:hover, .md-typeset .md-button:focus { background-color: var(--evo-deep); border-color: var(--evo-deep); color: #fff; }
+.md-typeset .md-button.md-button--primary { background-color: var(--evo-teal); border-color: var(--evo-teal); color: #fff; }
+.md-typeset .md-button:hover, .md-typeset .md-button:focus,
+.md-typeset .md-button.md-button--primary:hover, .md-typeset .md-button.md-button--primary:focus { background-color: var(--evo-deep); border-color: var(--evo-deep); color: #fff; }
 
 /* The home page: a definition, then the loop. */
 .evo-lead h1 { font-size: 2.3rem; line-height: 1.14; font-weight: 700; letter-spacing: -0.02em; margin: 0.4rem 0 1rem; max-width: 22em; }
@@ -105,10 +106,14 @@
 .evo-run.ghost { stroke-dasharray: 2 4; opacity: 0.35; stroke-width: 1.2; }
 .evo-run.ghost.best { stroke-width: 2.2; opacity: 0.6; }
 
-/* The wordmark stands in the header in place of the site's name in text. */
-.md-header__button.md-logo { padding: 0.2rem 0.4rem; }
-.md-header__button.md-logo img { height: 1.7rem; width: auto; }
-@media screen and (min-width: 76.25em) { .md-header__title .md-header__topic:first-child .md-ellipsis { visibility: hidden; } .md-header__title { margin-left: 0; } }
+/* The wordmark stands in the header on every page and at every width, in place of the site's name in text. */
+.md-header__button.md-logo { display: inline-block !important; padding: 0.2rem 0.4rem; margin: 0.2rem 0.2rem 0.2rem 0.4rem; }
+.md-header__button.md-logo img, .md-header__button.md-logo svg { height: 1.7rem; width: auto; }
+.md-header__title .md-header__topic:first-child .md-ellipsis { display: none; }
+.md-header__title { margin-left: 0.2rem; }
 .md-nav__title .md-nav__button.md-logo img { height: 2rem; width: auto; }
-.md-typeset .evo-wordmark { margin: 0.2rem 0 0.6rem; }
-.md-typeset .evo-wordmark img { width: min(22rem, 80%); height: auto; }
+.md-nav--primary .md-nav__title[for="__drawer"] { font-size: 0; }      /* the drawer shows the wordmark, not the name again */
+.md-nav--primary .md-nav__title[for="__drawer"] .md-nav__button { font-size: 1rem; }
+@media screen and (max-width: 30em) { .md-header__button.md-logo img { height: 1.35rem; } }
+.md-typeset .evo-loop-skillline { font-size: 0.78rem; margin: 0 0 0.9rem; }
+.md-typeset .evo-loop-skill { font-family: var(--md-code-font-family); font-size: 0.74rem; }

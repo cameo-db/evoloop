@@ -38,33 +38,34 @@
   /* ---------------------------------------------------------------- the loop on the home page */
   var LOOP = {
     "model-performance": {name: "Improve a model",
-      propose: "An agent writes a new architecture, edits one part of an earlier design, or combines two designs.",
-      evaluate: "Your script trains the model and reports its validation score.",
-      choose: "Several families of designs are kept going. The strongest get more edits, and new families keep being tried."},
-    "settings-tuning": {name: "Tune settings",
-      propose: "A built-in Bayesian optimizer draws the next learning rate, weight decay and layer widths. No agent is called.",
-      evaluate: "Your script trains the same model with those values and reports its score.",
-      choose: "Values that scored well make nearby values more likely on the next draw."},
+      propose: "The agent is told to work out what limits the current best model (capacity, optimization or generalization) and to make one change that addresses it.",
+      evaluate: "Your script trains the design and reports its validation score.",
+      choose: "Several families of designs are kept. The best ones get more edits, and new families keep being started."},
+    "settings-tuning": {name: "Tune hyperparameters",
+      propose: "The agent reads the earlier trials and picks the next hyperparameters, changing the ones that interact (learning rate with batch size, width with depth) together.",
+      evaluate: "Your script trains the same model with those values and reports the score and the parameter count.",
+      choose: "Each trial starts from the best one so far."},
     "model-efficiency": {name: "Shrink a model",
-      propose: "An agent removes a layer, narrows one, or swaps in a cheaper kind, one change at a time.",
-      evaluate: "Your script reports the score and the parameter count, or the measured speed.",
-      choose: "Designs on the trade-off between score and size are kept, and the next edit starts from one of them."},
+      propose: "The agent designs a cheaper student network and the way to train it against your current model, which acts as the teacher.",
+      evaluate: "Your script trains the student on the teacher's outputs and reports its score with its parameter count or speed.",
+      choose: "Students on the trade-off between score and size are kept, so a small student survives even when a larger one scores higher."},
     "algorithm-runtime": {name: "Speed up an algorithm",
-      propose: "An agent rewrites the marked function: a better algorithm, less repeated work, a tighter inner loop.",
-      evaluate: "Your benchmark times it and compares its output with a reference. A wrong answer is rejected.",
-      choose: "The fastest correct version so far is built on, while different approaches keep being tried."}
+      propose: "The agent rewrites the marked function. It is told to look for a better algorithm first and to remove repeated work second.",
+      evaluate: "Your benchmark times the code and compares its output with a reference. A version with a wrong output is rejected.",
+      choose: "The fastest correct version is built on, and different approaches keep being tried."}
   };
   function loop(root) {
-    var holder = root.querySelector(".evo-loop-goals"), link = root.querySelector(".evo-loop-link");
+    var holder = root.querySelector(".evo-loop-goals"), link = root.querySelector(".evo-loop-link"), label = root.querySelector(".evo-loop-skill");
     function show(goal) {
       ["propose", "evaluate", "choose"].forEach(function (stage) {
         var node = root.querySelector('[data-stage="' + stage + '"]');
         if (node) { node.textContent = LOOP[goal][stage]; }
       });
-      if (link) { link.setAttribute("href", link.getAttribute("data-base") + "?goal=" + goal + "#preview-your-search"); }
+      if (label) { label.textContent = goal; label.setAttribute("href", label.getAttribute("data-base") + goal + "/"); }
+      if (link) { link.setAttribute("href", link.getAttribute("data-base") + "?goal=" + goal + "#preview-a-search"); }
     }
     if (holder) {
-      holder.appendChild(chipRow("Show the loop for", Object.keys(LOOP).map(function (g) { return [g, LOOP[g].name]; }), "model-performance", show));
+      holder.appendChild(chipRow("Skill", Object.keys(LOOP).map(function (g) { return [g, LOOP[g].name]; }), "model-performance", show));
     }
     show("model-performance");
   }
@@ -77,12 +78,12 @@
                tournament: "The best of a few recent designs", pareto: "Designs on the trade-off between two metrics", greedy: "Always the current best design"},
     space: {settings_only: "Numbers only", module: "One part of the model", template: "The model, keeping its overall shape",
             open_architecture: "The whole model", architecture_and_recipe: "The model and how it is trained", custom: "The parts the goal names"},
-    settings_by: {agent: "an agent", sampler: "a random sampler in code", tpe: "a Bayesian optimizer in code"},
+    settings_by: {agent: "an agent", sampler: "a random sampler in code", tpe: "a built-in Bayesian optimizer"},
     level: {minimal: "writers", standard: "writers and an analyst", full: "writers and an analyst, with re-checks of the leader"}
   };
   function source(text) {
     if (!text || text === "default") { return "default"; }
-    if (text.indexOf("skill") === 0) { return "from the goal"; }
+    if (text.indexOf("skill") === 0) { return "from the skill"; }
     if (text.indexOf("run type") === 0) { return "from the run type"; }
     if (text.indexOf("guidance") === 0) { return "from the budget size"; }
     if (text.indexOf("autonomy") === 0) { return "from the autonomy level"; }
@@ -139,15 +140,15 @@
     var out = el("div", {"class": "evo-out"});
     var goalPick = el("select", {"class": "evo-select", "aria-label": "Goal"});
     data.skills.forEach(function (name) {
-      var o = el("option", {value: name, text: name ? data.about.goals[name] + "  (" + name + ")" : "No particular goal: the plain search"});
+      var o = el("option", {value: name, text: name ? data.about.goals[name] + "  (" + name + ")" : "No skill"});
       if (name === state.skill) { o.selected = true; }
       goalPick.appendChild(o);
     });
     goalPick.addEventListener("change", function () { state.skill = goalPick.value; render(); });
     clear(root);
     root.appendChild(el("div", {"class": "evo-controls"}, [
-      el("div", {"class": "evo-row"}, [el("span", {"class": "evo-label", text: "What you want"}), goalPick]),
-      chipRow("How to spend the budget", data.run_types.map(function (r) { return [r, RUN_LABEL[r] || r, data.about.run_types[r], r]; }), state.run, function (v) { state.run = v; render(); }),
+      el("div", {"class": "evo-row"}, [el("span", {"class": "evo-label", text: "Skill"}), goalPick]),
+      chipRow("Run type", data.run_types.map(function (r) { return [r, RUN_LABEL[r] || r, data.about.run_types[r], r]; }), state.run, function (v) { state.run = v; render(); }),
       chipRow("Budget", data.budgets.map(function (b) { return [b, b + " evaluations"]; }), state.budget, function (v) { state.budget = v; render(); }),
       chipRow("How much the agents decide", data.levels.map(function (l) { return [l, l || "not set", data.about.levels[l]]; }), state.level, function (v) { state.level = v; render(); })
     ]));

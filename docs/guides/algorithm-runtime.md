@@ -18,7 +18,7 @@ objective:
   direction: minimize
 ```
 
-These lines go in `brief.yaml`. The budget, and any limits or ranges, are placeholders for your own. <a href="../../which-search/?goal=algorithm-runtime&run=explore_then_exploit#preview-your-search">Preview this search</a> to see what it will do, or [set up this search](../setting-up.md) on your project. The goal is the skill `algorithm-runtime`, shown in full in the [skill library](../skill-library.md#algorithm-runtime).
+These lines go in `brief.yaml`. The budget, and any limits or ranges, are placeholders for your own. <a href="../../which-search/?goal=algorithm-runtime&run=explore_then_exploit#preview-a-search">Preview this search</a> to see what it will do, or [set up this search](../setting-up.md) on your project. The goal is the skill `algorithm-runtime`, shown in full in the [skill library](../skill-library.md#algorithm-runtime).
 
 ## Why this set-up
 

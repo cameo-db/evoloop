@@ -1,100 +1,107 @@
-# Which search should I run?
+# Choose a skill and a run type
 
-Pick what you want and how to spend the budget. The panel shows the search evoloop would run.
+A search is defined by two settings in the brief. `run.skill` says what you are optimizing.
+`run.type` says how the evaluations are spent.
 
-## Preview your search
+```yaml
+run:
+  skill: model-performance
+  type: explore_then_exploit
+budget:
+  evaluations: 100
+```
+
+If you are unsure, start with those three lines.
+
+## Skills
+
+A skill is a file with instructions for the agents, settings suited to the task, and the list of things
+your scoring script must report. Open a skill's page for a brief to copy and for how to read its
+results.
+
+=== "Models"
+
+    | Skill | Use it to | The agent works on |
+    |---|---|---|
+    | [`model-performance`](guides/model-performance.md) | get the best score | the architecture |
+    | [`model-training-recipe`](guides/model-training-recipe.md) | train a fixed architecture better | loss, optimizer, schedule, augmentation |
+    | [`settings-tuning`](guides/settings-tuning.md) | tune hyperparameters | architecture and training hyperparameters, trial by trial |
+    | [`model-finetuning`](guides/model-finetuning.md) | adapt a pretrained model | what to freeze, the head, learning rates by layer |
+
+=== "Smaller and faster"
+
+    | Skill | Use it to | The agent works on |
+    |---|---|---|
+    | [`model-efficiency`](guides/model-efficiency.md) | shrink the model you have | a cheaper student, distilled from your model |
+    | [`model-distillation`](guides/model-distillation.md) | distil an ensemble or a larger model | the student and its training against the teacher |
+    | [`model-size-frontier`](guides/model-size-frontier.md) | get the best model at several sizes | one design per size band |
+
+=== "Algorithms and pipelines"
+
+    | Skill | Use it to | The agent works on |
+    |---|---|---|
+    | [`algorithm-runtime`](guides/algorithm-runtime.md) | make code faster with the same output | the algorithm, then repeated work, then inner loops |
+    | [`data-pipeline`](guides/data-pipeline.md) | make a pipeline faster or cheaper | what is read, how often data moves, step order |
+    | [`bioinformatics-algorithm`](guides/bioinformatics-algorithm.md) | improve accuracy against a truth set | the model of the data and the hard cases |
+
+=== "Other"
+
+    | Skill | Use it to | The agent works on |
+    |---|---|---|
+    | [`model-ensemble-members`](guides/model-ensemble-members.md) | find models that fail differently | designs with different inductive biases |
+    | [`model-mechanistic`](guides/model-mechanistic.md) | improve an interpretable or biophysical model | the form of each term, with every parameter keeping its meaning |
+    | [`settings-tuning-bayesian`](guides/settings-tuning-bayesian.md) | tune hyperparameters with no agent calls | nothing: a built-in Bayesian optimizer (TPE) picks the values |
+
+Skills are plain files. When you confirm a brief, the skills it names are copied to `mysearch/skills/`
+and the search reads those copies, so you can edit them. Two skills can be combined
+(`skill: [model-distillation, model-size-frontier]`). [Write or edit a skill](skills.md).
+
+### What a skill changes in the loop
+
+| Stage | What the skill supplies |
+|---|---|
+| Propose a change | instructions shown to the agent on every call: what to try first, what to avoid, what a given result means |
+| Evaluate it | the measurements your script must report (score, and for some skills size, speed or an error profile) |
+| Choose what to try next | the parent rule and the mix of moves, for example a score-versus-size front for `model-efficiency` |
+
+## Run types
+
+| `run.type` | Evaluations go to | Use when |
+|---|---|---|
+| `explore_then_exploit` | new designs for the first 60%, then mostly edits of the best | default |
+| `refine` | edits of existing designs (70%) | you already have a good model |
+| `survey` | new designs (75%) | the problem is new to you |
+| `discovery` | new and unusual designs, with writers only | evaluations are cheap |
+| `settings_only` | hyperparameter changes only | nothing structural should change |
+
+Where a skill and a run type set the same thing, the skill's value is used.
+
+## Budget
+
+`budget.evaluations` counts full training runs. Some defaults scale with it.
+
+| Evaluations | Families of designs kept | Proposals per slot |
+|---|---|---|
+| about 30 | 3 | 4 |
+| about 100 | 6 | 3 |
+| about 300 | 10 | 2 |
+
+Below about 40 evaluations a population does not have time to form. Set `strategy.mechanism: greedy`
+so that every edit builds on the current best. The run types do not do this for you, and `evoloop plan`
+warns when it applies.
+
+`budget.model_dollars` caps what the agents may cost. `evoloop plan` prints an estimate before you
+confirm. [Budget and cost](cost.md).
+
+## Preview a search
 
 <div class="evo-widget" id="evo-plan-explorer" data-src="../assets/plans.json">Loading the preview…</div>
 
-The panel is worked out by the same code that reads a real brief, and `evoloop plan` prints the same
-for yours. The small label beside a value says where it came from: the goal, the run type, the size of
-the budget, or the default.
+The preview is generated by the code that reads a real brief. The label next to a value says which
+setting it came from. `evoloop plan` prints the same for your project.
 
-## What you want: the goal
+## How much the agents decide
 
-Each goal is a different search with its own guide. The guide gives a brief to start from, says what
-your scoring script has to report, and explains how to read the result.
-
-You have a model and a task:
-
-| You want | Guide |
-|---|---|
-| the best score you can get, with the architecture open | [`model-performance`](guides/model-performance.md) |
-| a better score from the same architecture, by changing the loss, optimizer or augmentation | [`model-training-recipe`](guides/model-training-recipe.md) |
-| the learning rate, weight decay or widths set better, with nothing else changed | [`settings-tuning`](guides/settings-tuning.md) |
-| to adapt a pretrained model | [`model-finetuning`](guides/model-finetuning.md) |
-
-You have a model that works and costs too much:
-
-| You want | Guide |
-|---|---|
-| one smaller or faster replacement at about the same score | [`model-efficiency`](guides/model-efficiency.md) |
-| the best model at each of several sizes | [`model-size-frontier`](guides/model-size-frontier.md) |
-| a small model that keeps the accuracy of a large one or an ensemble | [`model-distillation`](guides/model-distillation.md) |
-
-Something more particular:
-
-| You want | Guide |
-|---|---|
-| several good models that fail differently, to average | [`model-ensemble-members`](guides/model-ensemble-members.md) |
-| to improve a model that is interpretable by design, or a biophysical one | [`model-mechanistic`](guides/model-mechanistic.md) |
-| the same output from an algorithm, sooner | [`algorithm-runtime`](guides/algorithm-runtime.md) |
-| a bioinformatics method that is more accurate against a truth set | [`bioinformatics-algorithm`](guides/bioinformatics-algorithm.md) |
-| a data pipeline that is faster or cheaper | [`data-pipeline`](guides/data-pipeline.md) |
-
-Behind each goal is a *skill*: a file of settings and advice for the agents that you can edit. Goals
-can be combined (a family of distilled students is `model-distillation` with `model-size-frontier`),
-and you can write your own. [Edit or write a skill](skills.md).
-
-## How to spend the budget: the run type
-
-| Run type | In the brief | Choose it when | New / crossover / local |
-|---|---|---|---|
-| Explore, then refine | `explore_then_exploit` | you have no reason to choose another | 65 / 10 / 25 for the first 60% of the budget, then 15 / 25 / 60 |
-| Refine what works | `refine` | you have a good model and want it better | 10 / 20 / 70 throughout |
-| Explore broadly | `survey` | the problem is new and you want to see what works | 75 / 10 / 15 throughout |
-| Look for something unusual | `discovery` | evaluations are cheap | novelty turned up, writers only |
-| Settings only | `settings_only` | only numbers should change | every move is a settings move |
-| Your own | `custom` | you want to describe the search yourself | the defaults, plus what you write |
-
-Each guide suggests a run type for its goal. Where a goal and a run type set the same thing, the goal's
-value is used.
-
-## How much: the budget
-
-The budget is a number of evaluations, where one evaluation is one full training run. evoloop adjusts
-some defaults to its size:
-
-| About | Families kept | Proposals per slot | Reviews of the agents |
-|---|---|---|---|
-| 30 | 3 | 4 | once, at the end |
-| 100 | 6 | 3 | half way |
-| 300 | 10 | 2 | every quarter |
-
-At about 30 evaluations there is little room to keep several families going. The budget guidance
-suggests building on the current best design (`strategy.mechanism: greedy`), but a run type sets the
-parent rule too, and the run type wins. So with the default run type the preview above still shows
-several families at 30, and `evoloop plan` warns about it. To follow the guidance, set
-`strategy.mechanism: greedy` yourself.
-
-Islands, an archive and a promotion ladder start to pay from about 300 evaluations.
-
-You also set a cap on what the agents may cost, in dollars. `evoloop plan` estimates the cost before you
-confirm ([Budget and cost](cost.md)).
-
-## Who controls the search?
-
-By default code runs the search and agents only write designs and lessons. You can hand more over.
-A level of autonomy (`harnessed`, `guided`, `agentic`) decides how much the agents choose, and each
-step up adds agent calls: change it in the preview and watch the call count under "Agent calls by
-role". [The agents, and how much they decide](agents.md).
-
-You can also have an agent run the search and talk to it (`harness.conductor: agent`).
-[Working with the strategist](strategist.md).
-
-## What can change later
-
-The budget, the parent rule, the split between new designs and local moves, the goal and the limits can
-all be changed while a search runs. The objective, the direction of the score, the agent backend and
-the scheduler are fixed when it starts. [Brief fields](fields.md) marks each setting, and
-[Watch and steer a run](steering.md) has the commands.
+By default evoloop's code runs the search and agents write designs and summaries of the results.
+`harness.autonomy` changes that: `harnessed` gives agents the least to decide, `agentic` the most, and
+each step up costs more agent calls. [Agents](agents.md).

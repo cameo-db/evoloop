@@ -89,7 +89,8 @@ def test_limits_are_enforced_and_a_rejected_design_is_not_a_failure(tmp_path):
     assert len(rejected) >= 2 and all(r["performance"]["status"] == "invalid" for r in rejected)
     assert all("n_constants is" in r["performance"]["reason"] and "above the limit of 4" in r["performance"]["reason"] for r in rejected)
     assert all(r["performance"]["valid"]["n_constants"] <= 4 for r in view.runs.values() if r["performance"].get("status") in SCORED)
-    assert controller.spent(view) == len([r for r in view.runs.values() if r["performance"].get("status") in SCORED])   # uncounted
+    # Rejected designs are not charged: the spend is what the scored runs cost (a run stopped at the screen costs half).
+    assert controller.spent(view) == sum(float(r.get("charge", 1.0)) for r in view.runs.values() if r["performance"].get("status") in SCORED)
     stopped_early = [r for r in rejected if r.get("rejecting")]
     assert stopped_early                                                               # seen on a progress line, not trained to the end
     assert any('"limits_enforced_by_code"' in user and '"max": 4' in user for role, user in recorder.seen if role == "writer")
