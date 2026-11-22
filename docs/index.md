@@ -5,21 +5,31 @@ hide:
 
 # evoloop
 
-**AI agents that run your model search for you, while you stay in charge.**
+## Summary
 
-Improving a model is a loop. You have an idea, change the code, train it, look at the result, and
-decide what to try next. evoloop runs that loop on its own, hundreds of times. An AI agent writes each
-new idea as code. Your own training script tests it. Ideas that score well are developed further, and
-ideas that do not are dropped.
+**evoloop is an open-source tool for LLM-driven evolutionary search over machine-learning code:
+architectures, training recipes and hyperparameters.**
 
-You set it up once: which part of your code may change, how a result is scored, and how much you are
-willing to spend. You approve the plan before anything runs. While the search is running you can
-watch it, redirect it, or stop it.
+You give it a codebase with the editable regions marked and a script that trains and scores one
+candidate. It then runs a population-based search. LLM agents write every candidate, as a mutation of
+an earlier one, a crossover of two, or a new design. Deterministic code does the rest: it selects the
+parents, validates each candidate, schedules the training jobs, and enforces the budget.
 
-When it finishes you have a leaderboard of every model it tried, each with its code and its score.
+It belongs to the same family as FunSearch and AlphaEvolve. It differs in what it is built for: ML
+research on a lab's own GPUs, where one evaluation is a full training run and a researcher wants to
+watch and redirect the search.
 
-It also works for code that is not a model. If a script can score it, evoloop can search over it: an
-algorithm you want faster, a data pipeline you want cheaper.
+| | |
+|---|---|
+| **Searches over** | Model architecture, training recipe, hyperparameters, or all three. Distillation of a teacher into smaller students. Any other code a script can score, such as an algorithm or a data pipeline. |
+| **Search method** | Evolutionary. By default the population is a set of lineages with an explore-then-exploit schedule. MAP-Elites archive, tournament, Pareto and greedy selection are alternatives. |
+| **Agents** | A writer proposes candidates. An analyst distils results into lessons for the writer. A strategist reallocates the search. How much the agents decide is configurable. |
+| **Enforced by code** | Only the marked regions can change. The budget and any hard limits (model size, speed) hold. The test set is never shown to an agent. Every candidate, score and decision is logged. |
+| **Researcher control** | You approve a plan with a cost estimate before anything is spent. During the run you can change settings, send the agents notes, or stop. Runs from Claude Code or the command line. |
+| **Skills** | Thirteen editable presets, one per goal: raising a score, distillation, an accuracy-size frontier, fine-tuning, and others. Each sets the search and briefs the agents. Optional. |
+| **CAMEO** | Reads and writes [CAMEO](https://cameo-db.github.io) study files. A search can start from designs in the database, and its full record can be deposited there. |
+| **Runs on** | A workstation or a Slurm cluster. One GPU job per candidate, many in parallel. |
+| **Status** | Version 0.2. The test suite passes with scripted agents. It has not yet been validated with an LLM on a real training task. |
 
 [Set up a search](setting-up.md){ .md-button .md-button--primary }
 [Source on GitHub](https://github.com/cameo-db/evoloop){ .md-button }
@@ -30,77 +40,95 @@ algorithm you want faster, a data pipeline you want cheaper.
 .evo-loop-list { display: none; }
 @media screen and (max-width: 620px) { .evo-loop-svg { display: none !important; } .evo-loop-list { display: block; } }
 </style>
-<svg class="evo-loop-svg" viewBox="0 0 1200 670" role="img" aria-label="The evoloop loop. Propose: an AI agent writes a new version. Train: your script trains it. Score: it is ranked against all the others. Analyze: AI agents study what worked. The best versions become the next parents, and the loop repeats." style="width:100%;max-width:900px;height:auto;display:block;margin:28px auto 12px;font-family:inherit">
+<svg class="evo-loop-svg" viewBox="0 0 1200 724" role="img" aria-label="The evoloop loop. The writer agent proposes candidate code by mutation, crossover or a new design. Your script trains candidates as parallel jobs, with weak runs stopped early. Code scores each on the validation metric, with the test set held out. The analyst agent turns scores into lessons for the writer, and the strategist agent adjusts the schedule. In the centre, code keeps the lineages: it selects the parents and retires stalled lineages. Inputs are a brief and a baseline, optionally a skill and designs from CAMEO. Outputs are a leaderboard and study.json." style="width:100%;max-width:940px;height:auto;display:block;margin:28px auto 12px;font-family:inherit">
   <defs>
     <marker id="evo-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#7d8790"/></marker>
+    <marker id="evo-k" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker>
   </defs>
-  <g fill="none" stroke="#7d8790" stroke-width="4">
-    <path d="M777 95 Q1005 100 1012 228" marker-end="url(#evo-a)"/>
-    <path d="M1005 399 Q1000 545 779 545" marker-end="url(#evo-a)"/>
-    <path d="M423 545 Q200 545 195 399" marker-end="url(#evo-a)"/>
-    <path d="M195 243 Q200 100 421 95" marker-end="url(#evo-a)"/>
+  <g fill="none" stroke="#7d8790" stroke-width="3.5">
+    <path d="M760 100 Q990 104 1022 258" marker-end="url(#evo-a)"/>
+    <path d="M1010 420 Q985 595 762 606" marker-end="url(#evo-a)"/>
+    <path d="M440 606 Q215 595 190 422" marker-end="url(#evo-a)"/>
+    <path d="M190 276 Q215 108 438 104" marker-end="url(#evo-a)"/>
+  </g>
+  <g fill="none" stroke="currentColor" stroke-width="3.5">
+    <path d="M258 68 H438" marker-end="url(#evo-k)"/>
+    <path d="M760 644 H940" marker-end="url(#evo-k)"/>
   </g>
   <g stroke-width="3">
-    <rect x="435" y="30" width="330" height="130" rx="18" fill="#01796e" stroke="#01796e"/>
-    <rect x="30" y="255" width="330" height="130" rx="18" fill="#01796e" stroke="#01796e"/>
-    <rect x="856" y="239" width="330" height="130" rx="18" fill="#f1f3f4" stroke="#aab2b8"/>
-    <rect x="848" y="247" width="330" height="130" rx="18" fill="#f1f3f4" stroke="#8a949b"/>
-    <rect x="840" y="255" width="330" height="130" rx="18" fill="#f1f3f4" stroke="#5f6b73"/>
-    <rect x="435" y="480" width="330" height="130" rx="18" fill="#f1f3f4" stroke="#5f6b73"/>
+    <rect x="40" y="24" width="210" height="104" rx="16" fill="#f1f3f4" stroke="#9aa3ad"/>
+    <rect x="950" y="578" width="210" height="104" rx="16" fill="#f1f3f4" stroke="#9aa3ad"/>
+    <rect x="450" y="36" width="300" height="124" rx="16" fill="#01796e" stroke="#01796e"/>
+    <rect x="40" y="286" width="300" height="124" rx="16" fill="#01796e" stroke="#01796e"/>
+    <rect x="876" y="270" width="300" height="124" rx="16" fill="#e9eef0" stroke="#aab2b8"/>
+    <rect x="868" y="278" width="300" height="124" rx="16" fill="#e9eef0" stroke="#8a949b"/>
+    <rect x="860" y="286" width="300" height="124" rx="16" fill="#e9eef0" stroke="#5f6b73"/>
+    <rect x="450" y="546" width="300" height="124" rx="16" fill="#e9eef0" stroke="#5f6b73"/>
   </g>
-  <g text-anchor="middle" font-weight="700" font-size="31">
-    <text x="600" y="88" fill="#ffffff">Propose</text>
-    <text x="1005" y="313" fill="#1c2326">Train</text>
-    <text x="600" y="538" fill="#1c2326">Score</text>
-    <text x="195" y="313" fill="#ffffff">Analyze</text>
+  <g text-anchor="middle" font-weight="700" font-size="26">
+    <text x="600" y="78" fill="#ffffff">Propose</text>
+    <text x="1010" y="328" fill="#1c2326">Train</text>
+    <text x="600" y="588" fill="#1c2326">Score</text>
+    <text x="190" y="328" fill="#ffffff">Analyze</text>
+    <text x="600" y="326" fill="currentColor" font-size="23">Lineages</text>
+    <text x="145" y="60" fill="#1c2326" font-size="19">Brief + baseline</text>
+    <text x="1055" y="614" fill="#1c2326" font-size="19">Leaderboard</text>
   </g>
-  <g text-anchor="middle" font-size="19">
-    <text x="600" y="128" fill="#ffffff">An AI agent writes a new version</text>
-    <text x="1005" y="353" fill="#1c2326">Your script trains it</text>
-    <text x="600" y="578" fill="#1c2326">It is ranked against the others</text>
-    <text x="195" y="353" fill="#ffffff">AI agents study what worked</text>
+  <g text-anchor="middle" font-size="17">
+    <text x="600" y="110" fill="#ffffff">writer agent</text>
+    <text x="600" y="136" fill="#ffffff">mutation · crossover · new design</text>
+    <text x="1010" y="360" fill="#1c2326">your script, parallel jobs</text>
+    <text x="1010" y="386" fill="#1c2326">weak runs stopped early</text>
+    <text x="600" y="620" fill="#1c2326">validation metric</text>
+    <text x="600" y="646" fill="#1c2326">test set held out</text>
+    <text x="190" y="360" fill="#ffffff">analyst: lessons</text>
+    <text x="190" y="386" fill="#ffffff">strategist: schedule</text>
+    <text x="600" y="356" fill="currentColor">code selects the parents,</text>
+    <text x="600" y="380" fill="currentColor">retires stalled lineages</text>
+    <text x="145" y="88" fill="#1c2326" font-size="16">optional: a skill,</text>
+    <text x="145" y="110" fill="#1c2326" font-size="16">CAMEO designs</text>
+    <text x="1055" y="642" fill="#1c2326" font-size="16">+ study.json</text>
+    <text x="1055" y="664" fill="#1c2326" font-size="16">for CAMEO</text>
   </g>
-  <g text-anchor="middle" fill="currentColor" font-size="22" font-weight="700">
-    <text x="600" y="310">The best versions</text>
-    <text x="600" y="340">become the next parents</text>
+  <g font-size="16.5" font-style="italic" fill="currentColor" opacity="0.8" text-anchor="middle">
+    <text x="868" y="206">candidate code</text>
+    <text x="872" y="500">trained models</text>
+    <text x="328" y="500">scores</text>
+    <text x="336" y="206">lessons</text>
   </g>
-  <g font-size="17" fill="currentColor">
-    <rect x="440" y="640" width="30" height="20" rx="5" fill="#01796e"/>
-    <text x="480" y="656">AI agent</text>
-    <rect x="610" y="640" width="30" height="20" rx="5" fill="#f1f3f4" stroke="#5f6b73" stroke-width="2.5"/>
-    <text x="650" y="656">ordinary code</text>
+  <g font-size="16" fill="currentColor">
+    <rect x="40" y="694" width="30" height="20" rx="5" fill="#01796e"/>
+    <text x="80" y="710">LLM agents</text>
+    <rect x="200" y="694" width="30" height="20" rx="5" fill="#e9eef0" stroke="#5f6b73" stroke-width="2.5"/>
+    <text x="240" y="710">deterministic code</text>
   </g>
 </svg>
 
 <p class="evo-loop-list"><b>Propose</b> &rarr; <b>Train</b> &rarr; <b>Score</b> &rarr; <b>Analyze</b> &rarr; back to Propose.</p>
 
-Four steps repeat until the budget is spent.
+The loop runs until the evaluation budget is spent, with as many candidates in training as you have
+GPUs.
 
-1. **Propose.** An AI agent, the *writer*, takes a version that has done well and changes it. Sometimes
-   it combines two good versions into one.
-2. **Train.** Your script trains the new version. Many versions train at the same time.
-3. **Score.** The new version gets its score and is ranked against all the others.
-4. **Analyze.** Two more agents read the results. The *analyst* writes down what has worked and what
-   has not, and the writer reads those notes before its next proposal. The *strategist* decides where
-   the search should put its effort next.
+| Step | Done by | Detail |
+|---|---|---|
+| **Propose** | writer agent | Code selects one or two parents and the kind of move. The writer returns new code for the marked regions, with a hypothesis and a predicted effect. Code rejects a candidate that edits anything else, fails to parse, or duplicates an earlier one. |
+| **Train** | your script | Each candidate trains as its own job. By default a new design in the bottom half of its peers at 50% of the run is stopped there. |
+| **Score** | code | Reads the validation metric your script reports. Candidates outside a hard limit are rejected. Test-set metrics are recorded but withheld from every agent. |
+| **Analyze** | analyst and strategist agents | Every 8 candidates the analyst writes lessons, which the writer sees on its next call. Every 15, or on a plateau, the strategist may shift the schedule or retire a lineage, within bounds you set. Both are optional. |
+| **Lineages** | code | The population. Code selects parents from it and retires lineages that stop improving. |
 
-The agents supply the ideas. Everything that has to be dependable is ordinary code, with no AI
-involved: choosing which versions to build on, checking that a new version changed only what you
-allowed, and stopping when the budget runs out.
-
-[How it works, in detail](how-it-works.md) · [The agents](agents.md)
+[How it works, in detail](how-it-works.md) · [Agents](agents.md)
 
 ## Lineages
 
-A search that only ever improves its current best model gets stuck on the first decent idea. evoloop
-avoids this by keeping several *lineages* alive at once. A lineage is one design idea together with
-every version that grew out of it.
+Greedy search, which always edits the current best, converges on the first workable design. evoloop's
+default keeps several lineages in play. A lineage is one founding design and its descendants.
 
 <svg class="evo-loop-svg" viewBox="0 0 1200 500" role="img" aria-label="An illustration of lineages in one search, as validation score against evaluations spent. The baseline CNN stops improving and is retired. A dilated CNN climbs steadily. A transformer starts below the others, is protected for its first two runs, and then climbs. A crossover of the dilated CNN and the transformer founds a new lineage that ends as the best version." style="width:100%;max-width:940px;height:auto;display:block;margin:24px auto 8px;font-family:inherit">
   <rect x="80" y="64" width="620" height="356" fill="#01796e" opacity="0.06"/>
   <path d="M700 64 V420" stroke="#7d8790" stroke-width="2" stroke-dasharray="5 6"/>
   <path d="M80 64 V420 H1120" stroke="#7d8790" stroke-width="2" fill="none"/>
-  <g font-size="18" font-weight="700" fill="currentColor"><text x="92" y="48">First, explore: start many designs</text><text x="712" y="48">Then, exploit: improve the best</text></g>
+  <g font-size="18" font-weight="700" fill="currentColor"><text x="92" y="48">Explore: mostly new designs</text><text x="712" y="48">Exploit: local moves and crossover</text></g>
   <g font-size="15" fill="currentColor" opacity="0.8" text-anchor="end"><text x="70" y="425">0.60</text><text x="70" y="255">0.70</text><text x="70" y="85">0.80</text></g>
   <path d="M100 386 L150 369 L210 360 L280 352 L350 352 L420 352 L480 352" stroke="#9aa3ab" stroke-width="3.5" fill="none" stroke-linejoin="round"/>
   <circle cx="100" cy="386" r="7" fill="#ffffff" stroke="#9aa3ab" stroke-width="3"/>
@@ -143,73 +171,58 @@ every version that grew out of it.
   <circle cx="1060" cy="100" r="15" fill="none" stroke="#01796e" stroke-width="3"/>
   <g font-size="16" fill="currentColor">
     <text x="200" y="384" font-weight="700">Baseline CNN</text>
-    <text x="200" y="406">dropped after 6 tries with no gain</text>
+    <text x="200" y="406">retired: 6 moves without a gain</text>
     <text x="1024" y="184" font-weight="700">Dilated CNN</text>
     <text x="778" y="236" font-weight="700" fill="#01796e">crossover</text>
     <text x="866" y="263" font-weight="700">Transformer</text>
-    <text x="866" y="285">slow start, given 2 protected runs</text>
+    <text x="866" y="285">first 2 runs protected</text>
     <text x="714" y="88" font-weight="700">Dilated CNN &#215; Transformer</text>
-    <text x="714" y="110">a crossover of the two. It wins.</text>
+    <text x="714" y="110">hybrid lineage, founded by crossover</text>
   </g>
   <g font-size="15.5" fill="currentColor" opacity="0.85">
-    <text x="80" y="448">training runs &#8594;</text>
-    <text x="1120" y="448" text-anchor="end">each dot is one trained version</text>
-    <text x="80" y="476">An illustration, not real results. Hollow dots are protected runs.</text>
-    <text transform="translate(24 300) rotate(-90)">score</text>
+    <text x="80" y="448">evaluations &#8594;</text>
+    <text x="1120" y="448" text-anchor="end">one marker = one trained candidate</text>
+    <text x="80" y="476">Schematic, not data. Hollow markers: protected trial runs.</text>
+    <text transform="translate(24 300) rotate(-90)">validation score</text>
   </g>
 </svg>
 
-Reading the picture from left to right:
+| Rule | Default | In the figure |
+|---|---|---|
+| **Founding** | A new design, or a crossover, starts a lineage. | Dilated CNN, Transformer, and the hybrid. |
+| **Protected trial** | A lineage's first 2 runs are not compared with other lineages. | The Transformer starts lowest and survives to be tuned. |
+| **Retirement** | 6 local moves in a row without a gain above the noise floor. | The baseline CNN. |
+| **Crossover** | The writer combines parents from two lineages. A retired lineage can still be a parent. | Dilated CNN × Transformer, which ends as the best. |
+| **Population** | Up to 8 active lineages. None takes more than 40% of the local moves. | |
+| **Schedule** | First 60% of the budget: 65% new designs. After: 60% local moves, 25% crossover. | The shaded and unshaded halves. |
 
-- **A new idea starts a lineage.** The search begins with the baseline CNN, then tries a dilated CNN,
-  then a transformer.
-- **A new lineage gets a fair chance.** The transformer's first score is the worst on the board. Its
-  first two runs are protected, so it is not thrown out before it has been tuned.
-- **A lineage that stops improving is dropped.** After six tries with no gain, the baseline CNN gets no
-  more training runs. They go to the others.
-- **Crossover combines two lineages.** The agent merges the dilated CNN with the transformer. The result
-  starts a new lineage, and here it wins.
-
-Early on, most training runs go to new ideas. Later, most go to improving the best lineages and
-crossing them. You choose where that switch happens.
-
-This is evolutionary search. The versions are a population, the agent's edits are the mutations, and
-the score decides what survives. [Parent selection](parents.md) covers the other strategies evoloop
-offers and how they relate to FunSearch, AlphaEvolve and MAP-Elites.
+Every number is a setting. [Parent selection](parents.md) covers the other four strategies.
+[Comparison with FunSearch and AlphaEvolve](compared.md)
 
 ## Getting started
 
-!!! tip "The easy way: Claude Code"
-    Open the evoloop repository in [Claude Code](https://claude.com/claude-code) and tell it what you want to improve.
-    It asks you a short list of questions, one at a time, and sets everything up. It starts the search
-    once you approve the plan, keeps an eye on it, and changes course when you tell it what you think of
-    the results.
+!!! tip "Recommended: run it from Claude Code"
+    Open the evoloop repository in [Claude Code](https://claude.com/claude-code) and say what you want to optimize.
+    It marks the code with you, writes the scoring adapter, asks the setup questions one at a time, and
+    shows you the plan. After you approve, it launches the search, monitors it, and applies your feedback
+    as steering.
 
-Prefer to do it yourself? `evoloop setup` asks the same questions in a terminal, and every setting is
-a plain text file you can edit. [Set up a search](setting-up.md)
+The same steps by hand: [Set up a search](setting-up.md). Each run needs:
 
-What you need:
+1. **Editable regions**, marked in your code with a pair of comment lines.
+2. **An adapter**: a script that trains one candidate and writes its validation score.
+3. **A brief**: the objective, the budget, and the search settings. `evoloop setup` asks for them.
+   A [skill](which-search.md) fills in most of them for a given goal.
 
-- **Your code**, with the part that may change marked.
-- **A script that scores one version.** For a model, that is your training script.
-- **A budget**: how many versions to try, and a spending cap for the agents.
+To start from existing designs, import them from an earlier run or a CAMEO study:
+[Start from earlier designs](warm-start.md). To deposit your results: [Save and deposit the study](study.md).
 
-Two things are optional and save time:
+## Documentation
 
-- **A skill.** A skill is a ready-made set of settings and advice for one kind of goal, such as
-  distilling a large model into a small one. There are thirteen, and you can edit them.
-  [Skills](which-search.md)
-- **A head start from CAMEO.** [CAMEO](https://cameo-db.github.io) is a public database of models and
-  how they scored. You can start your search from designs that worked for someone else. When your search
-  ends, evoloop saves it in the same format, so you can add yours.
-  [Start from earlier designs](warm-start.md) · [Save and deposit the study](study.md)
-
-## More
-
-- [Every search option on one page](options.md)
-- [A toy search you can run in half a minute](quickstart.md)
-- [Run on a cluster](servers.md)
-- [Reference](reference.md)
-
-evoloop is at version 0.2. Its tests pass with a script standing in for the AI agent. It has not yet
-been run with a real agent on a real training task. [Status and limits](status.md)
+| | |
+|---|---|
+| **Get started** | [Set up a search](setting-up.md) · [Write the evaluator](evaluator.md) · [Run on a cluster](servers.md) · [Worked example](quickstart.md) |
+| **How it works** | [Overview](how-it-works.md) · [Schedule](schedule.md) · [Parent selection](parents.md) · [Moves](moves.md) · [Early stopping](early-stopping.md) · [Agents](agents.md) |
+| **Run** | [Monitor and steer](steering.md) · [Budget and cost](cost.md) · [Start from earlier designs](warm-start.md) · [Deposit the study](study.md) |
+| **Skills** | [Choose a skill](which-search.md) · [Edit, merge or write a skill](skills.md) |
+| **Reference** | [Commands](commands.md) · [Brief fields](fields.md) · [All options](options.md) · [Code map](code.md) · [Status and limits](status.md) |
