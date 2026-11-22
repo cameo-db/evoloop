@@ -65,20 +65,20 @@ nav:
       - Save and deposit the study: study.md
   - Skills:
       - Choose a skill and a run type: which-search.md
-      - Models:
+      - Model skills:
           - Improve a model's score: guides/model-performance.md
           - Train a fixed architecture better: guides/model-training-recipe.md
           - Tune hyperparameters: guides/settings-tuning.md
           - Adapt a pretrained model: guides/model-finetuning.md
-      - Smaller and faster:
+      - Efficiency skills:
           - Shrink a model: guides/model-efficiency.md
           - Distil a student from a teacher: guides/model-distillation.md
           - Best model at several sizes: guides/model-size-frontier.md
-      - Algorithms and pipelines:
+      - Algorithm skills:
           - Make an algorithm faster: guides/algorithm-runtime.md
           - Make a data pipeline faster or cheaper: guides/data-pipeline.md
           - Improve a bioinformatics method: guides/bioinformatics-algorithm.md
-      - Other:
+      - Other skills:
           - Ensemble members: guides/model-ensemble-members.md
           - Interpretable or biophysical models: guides/model-mechanistic.md
           - Bayesian tuning without agents: guides/settings-tuning-bayesian.md

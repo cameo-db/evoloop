@@ -24,7 +24,7 @@ A skill is a file with instructions for the agents, settings suited to the task,
 your scoring script must report. Each skill's page shows what it sets, the exact text it sends to the agents,
 and the file itself, with a link to it in the repository.
 
-=== "Models"
+=== "Model skills"
 
     | Skill | Use it to | The agent works on |
     |---|---|---|
@@ -33,7 +33,7 @@ and the file itself, with a link to it in the repository.
     | [`settings-tuning`](guides/settings-tuning.md) | tune hyperparameters | architecture and training hyperparameters, trial by trial |
     | [`model-finetuning`](guides/model-finetuning.md) | adapt a pretrained model | what to freeze, the head, learning rates by layer |
 
-=== "Smaller and faster"
+=== "Efficiency skills"
 
     | Skill | Use it to | The agent works on |
     |---|---|---|
@@ -41,7 +41,7 @@ and the file itself, with a link to it in the repository.
     | [`model-distillation`](guides/model-distillation.md) | distil an ensemble or a larger model | the student and its training against the teacher |
     | [`model-size-frontier`](guides/model-size-frontier.md) | get the best model at several sizes | one design per size band |
 
-=== "Algorithms and pipelines"
+=== "Algorithm skills"
 
     | Skill | Use it to | The agent works on |
     |---|---|---|
@@ -49,7 +49,7 @@ and the file itself, with a link to it in the repository.
     | [`data-pipeline`](guides/data-pipeline.md) | make a pipeline faster or cheaper | what is read, how often data moves, step order |
     | [`bioinformatics-algorithm`](guides/bioinformatics-algorithm.md) | improve accuracy against a truth set | the model of the data and the hard cases |
 
-=== "Other"
+=== "Other skills"
 
     | Skill | Use it to | The agent works on |
     |---|---|---|
