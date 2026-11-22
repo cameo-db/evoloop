@@ -75,24 +75,18 @@ watch and redirect the search.
     <text x="1055" y="614" fill="#1c2326" font-size="19">Leaderboard</text>
   </g>
   <g text-anchor="middle" font-size="17">
-    <text x="600" y="110" fill="#ffffff">writer agent</text>
-    <text x="600" y="136" fill="#ffffff">mutation · crossover · new design</text>
-    <text x="1010" y="360" fill="#1c2326">your script, parallel jobs</text>
-    <text x="1010" y="386" fill="#1c2326">weak runs stopped early</text>
-    <text x="600" y="620" fill="#1c2326">validation metric</text>
-    <text x="600" y="646" fill="#1c2326">test set held out</text>
-    <text x="190" y="360" fill="#ffffff">analyst: lessons</text>
-    <text x="190" y="386" fill="#ffffff">strategist: schedule</text>
-    <text x="600" y="356" fill="currentColor">code selects the parents,</text>
-    <text x="600" y="380" fill="currentColor">retires stalled lineages</text>
-    <text x="145" y="88" fill="#1c2326" font-size="16">optional: a skill,</text>
-    <text x="145" y="110" fill="#1c2326" font-size="16">CAMEO designs</text>
-    <text x="1055" y="642" fill="#1c2326" font-size="16">+ study.json</text>
-    <text x="1055" y="664" fill="#1c2326" font-size="16">for CAMEO</text>
+    <text x="600" y="118" fill="#ffffff">writer agent</text>
+    <text x="600" y="136" fill="#ffffff"></text>
+    <text x="1010" y="368" fill="#1c2326">parallel jobs</text>
+    <text x="600" y="628" fill="#1c2326">validation</text>
+    <text x="190" y="368" fill="#ffffff">analyst · strategist</text>
+    <text x="600" y="358" fill="currentColor">selection, by code</text>
+    <text x="145" y="96" fill="#1c2326" font-size="16">skill · CAMEO</text>
+    <text x="1055" y="646" fill="#1c2326" font-size="16">study.json</text>
   </g>
   <g font-size="16.5" font-style="italic" fill="currentColor" opacity="0.8" text-anchor="middle">
-    <text x="868" y="206">candidate code</text>
-    <text x="872" y="500">trained models</text>
+    <text x="868" y="206">code</text>
+    <text x="872" y="500">models</text>
     <text x="328" y="500">scores</text>
     <text x="336" y="206">lessons</text>
   </g>
@@ -128,7 +122,7 @@ default keeps several lineages in play. A lineage is one founding design and its
   <rect x="80" y="64" width="620" height="356" fill="#01796e" opacity="0.06"/>
   <path d="M700 64 V420" stroke="#7d8790" stroke-width="2" stroke-dasharray="5 6"/>
   <path d="M80 64 V420 H1120" stroke="#7d8790" stroke-width="2" fill="none"/>
-  <g font-size="18" font-weight="700" fill="currentColor"><text x="92" y="48">Explore: mostly new designs</text><text x="712" y="48">Exploit: local moves and crossover</text></g>
+  <g font-size="18" font-weight="700" fill="currentColor"><text x="92" y="48">Explore</text><text x="712" y="48">Exploit</text></g>
   <g font-size="15" fill="currentColor" opacity="0.8" text-anchor="end"><text x="70" y="425">0.60</text><text x="70" y="255">0.70</text><text x="70" y="85">0.80</text></g>
   <path d="M100 386 L150 369 L210 360 L280 352 L350 352 L420 352 L480 352" stroke="#9aa3ab" stroke-width="3.5" fill="none" stroke-linejoin="round"/>
   <circle cx="100" cy="386" r="7" fill="#ffffff" stroke="#9aa3ab" stroke-width="3"/>
@@ -171,30 +165,24 @@ default keeps several lineages in play. A lineage is one founding design and its
   <circle cx="1060" cy="100" r="15" fill="none" stroke="#01796e" stroke-width="3"/>
   <g font-size="16" fill="currentColor">
     <text x="200" y="384" font-weight="700">Baseline CNN</text>
-    <text x="200" y="406">retired: 6 moves without a gain</text>
     <text x="1024" y="184" font-weight="700">Dilated CNN</text>
-    <text x="778" y="236" font-weight="700" fill="#01796e">crossover</text>
     <text x="866" y="263" font-weight="700">Transformer</text>
-    <text x="866" y="285">first 2 runs protected</text>
     <text x="714" y="88" font-weight="700">Dilated CNN &#215; Transformer</text>
-    <text x="714" y="110">hybrid lineage, founded by crossover</text>
   </g>
   <g font-size="15.5" fill="currentColor" opacity="0.85">
     <text x="80" y="448">evaluations &#8594;</text>
-    <text x="1120" y="448" text-anchor="end">one marker = one trained candidate</text>
-    <text x="80" y="476">Schematic, not data. Hollow markers: protected trial runs.</text>
+    <g text-anchor="start"><circle cx="560" cy="443" r="6" fill="#ffffff" stroke="#5f6b73" stroke-width="2.5"/><text x="574" y="448">protected</text><path d="M676 437 l12 12 m-12 0 l12 -12" stroke="#9aa3ab" stroke-width="3" fill="none"/><text x="698" y="448">retired</text><path d="M780 443 h34" stroke="#01796e" stroke-width="3" stroke-dasharray="6 5"/><text x="824" y="448">crossover</text><text x="940" y="448">(schematic)</text></g>
     <text transform="translate(24 300) rotate(-90)">validation score</text>
   </g>
 </svg>
 
-| Rule | Default | In the figure |
-|---|---|---|
-| **Founding** | A new design, or a crossover, starts a lineage. | Dilated CNN, Transformer, and the hybrid. |
-| **Protected trial** | A lineage's first 2 runs are not compared with other lineages. | The Transformer starts lowest and survives to be tuned. |
-| **Retirement** | 6 local moves in a row without a gain above the noise floor. | The baseline CNN. |
-| **Crossover** | The writer combines parents from two lineages. A retired lineage can still be a parent. | Dilated CNN × Transformer, which ends as the best. |
-| **Population** | Up to 8 active lineages. None takes more than 40% of the local moves. | |
-| **Schedule** | First 60% of the budget: 65% new designs. After: 60% local moves, 25% crossover. | The shaded and unshaded halves. |
+| Rule | Default |
+|---|---|
+| Founding | a new design or a crossover starts a lineage |
+| Protected trial | first 2 runs |
+| Retirement | 6 local moves without a gain above the noise floor |
+| Population | 8 active lineages; at most 40% of local moves to any one |
+| Schedule | first 60% of budget: 65% new designs; then 60% local moves, 25% crossover |
 
 Every number is a setting. [Parent selection](parents.md) covers the other four strategies.
 [Comparison with FunSearch and AlphaEvolve](compared.md)
