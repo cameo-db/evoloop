@@ -6,11 +6,29 @@ scheduler, its queues, its GPUs, how an environment is activated, and what is no
 cluster differs in these, even two that both run Slurm. `evoloop plan` combines the two and shows what
 will run and where.
 
+## Setup by an agent
+
+An agent can work out a machine for you. Open the repository in Claude Code on the cluster and ask it
+to set evoloop up there. It runs `evoloop site --detect`, which only queries the scheduler and submits
+nothing, reads the draft with you, and asks for the three things the machine cannot report: the
+account to charge, how your environment is activated, and which queues to avoid. It then writes the
+site file and proves it with a dry run. From then on the site's rules are printed in every plan, where
+you and the agent both see them.
+
+Slurm and local processes are built in. On a machine with another scheduler (PBS, LSF, Grid Engine,
+Kubernetes, a cloud batch service), ask the agent to add it. A scheduler is one class in
+[`evoloop/jobs.py`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py) with four methods:
+`submit` a job, report its `state`, `cancel` it, and `shutdown`, plus a line to register its name. The
+Slurm class beside it is the model. Until that is written, evoloop can run designs as local processes inside one allocation you
+hold (`compute.scheduler: local`).
+
+The rest of this page is what the agent writes, in case you want to read or change it yourself.
+
 ## The site file
 
 ```
-evoloop site --detect                                          # prints a draft from what this machine reports
-evoloop site --detect --write ~/.config/evoloop/site.yaml      # or writes it
+evoloop site --detect                  # print a draft
+evoloop site --detect --write ~/.config/evoloop/site.yaml
 ```
 
 Detection only asks questions (`sinfo`, `sacctmgr`, `scontrol`, `nvidia-smi`); nothing is submitted. It
@@ -42,7 +60,7 @@ forbid:                        # refused by code, whoever asks
 | Part | What it does |
 |---|---|
 | `compute` | defaults for the [compute settings](fields.md) of every search on this machine. A brief that sets one itself still wins |
-| `rules` | text. Printed at the top of every plan, so that you and an agent helping you both see them |
+| `rules` | text, for you and the agent to follow. Printed at the top of every plan. Not enforced by code |
 | `forbid` | QoS and partition names that are never used. A brief that asks for one does not start, and a change during a run that asks for one is refused and recorded |
 
 Where it is looked for, in order:
@@ -70,21 +88,3 @@ our-cluster)") and lists the site's rules.
 | login-node rules | run the controller itself as a job: `evoloop controller` writes the script, and it requeues itself at its time limit |
 | preemption | each design is its own job, submitted with `--requeue`; a preempted job keeps its id and resumes from its checkpoint |
 
-## With an agent
-
-An agent helping you can do this for you: ask it to run `evoloop site --detect`, read the draft with
-you, and ask you only for what the machine cannot report (the account, the environment, the queues to
-avoid). Once the file exists, the agent sees the site's rules in every plan.
-
-## Not supported
-
-- Schedulers other than Slurm. PBS, LSF and Grid Engine are not built in. `evoloop site --detect`
-  says so when it finds `qsub` or `bsub`. Adding one means writing a backend with three operations
-  (submit a job, ask its state, cancel it) beside the Slurm one in `evoloop/jobs.py`. On such a machine
-  today, evoloop can still run designs as local processes inside one allocation you hold
-  (`compute.scheduler: local`).
-- Cloud and container platforms (Kubernetes, batch services): not built in, for the same reason.
-- Detection is a draft. It reads what the scheduler reports, and cannot know your account, your
-  environment or which queues to avoid. Expect to correct it.
-- Rules are text. Only `forbid` is enforced by code; a rule such as "scratch goes under /scratch"
-  is for you and the agent to follow.

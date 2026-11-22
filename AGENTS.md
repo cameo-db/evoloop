@@ -25,6 +25,10 @@ Your part before the questions:
   with the person, and ask only for what the machine cannot report: the account to charge, how their environment
   is activated, and which queues must not be used. Save it as `~/.config/evoloop/site.yaml`. Its `rules` are
   printed in every plan: follow them (for instance, no compute on a login node).
+  If the machine has a scheduler other than Slurm, say so and offer two routes: run designs as local processes
+  inside an allocation the person holds (`compute.scheduler: local`), or add the scheduler as a class in
+  `evoloop/jobs.py` with `submit`, `state`, `cancel` and `shutdown`, modelled on the Slurm class, registered in
+  `jobs.make` and in the choices for `compute.scheduler` in `evoloop/form.py`. Prove either with a dry run.
 - **The code.** `evoloop init DIR --source PROJECT` copies the project. Mark the blocks in `DIR/base/` with
   `# EVOLVE-BLOCK-START name=... kind=structure|params role=...` and `# EVOLVE-BLOCK-END`, write `DIR/task.md`
   (what the agents are told) and `DIR/adapter/run.py` (runs one design, writes `result.json`): see
