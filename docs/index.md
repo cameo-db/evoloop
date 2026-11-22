@@ -147,16 +147,15 @@ once.
   <circle cx="860" cy="182" r="7" fill="#5f6b73"/>
   <circle cx="940" cy="179" r="7" fill="#5f6b73"/>
   <circle cx="1010" cy="179" r="7" fill="#5f6b73"/>
-  <path d="M360 411 L420 386 L500 318 L580 259 L660 216 L740 199 L810 194 L880 193" stroke="#5f6b73" stroke-width="3.5" fill="none" stroke-linejoin="round"/>
-  <circle cx="360" cy="411" r="7" fill="#ffffff" stroke="#5f6b73" stroke-width="3"/>
-  <circle cx="420" cy="386" r="7" fill="#ffffff" stroke="#5f6b73" stroke-width="3"/>
-  <circle cx="500" cy="318" r="7" fill="#5f6b73"/>
-  <circle cx="580" cy="259" r="7" fill="#5f6b73"/>
-  <circle cx="660" cy="216" r="7" fill="#5f6b73"/>
-  <circle cx="740" cy="199" r="7" fill="#5f6b73"/>
-  <circle cx="810" cy="194" r="7" fill="#5f6b73"/>
-  <circle cx="880" cy="193" r="7" fill="#5f6b73"/>
-  <path d="M720 191 Q750 188 770 176 M660 216 Q730 205 768 178" stroke="#01796e" stroke-width="3" fill="none" stroke-dasharray="6 5"/>
+  <path d="M440 411 L500 386 L570 335 L640 301 L710 276 L780 262 L850 257" stroke="#5f6b73" stroke-width="3.5" fill="none" stroke-linejoin="round"/>
+  <circle cx="440" cy="411" r="7" fill="#ffffff" stroke="#5f6b73" stroke-width="3"/>
+  <circle cx="500" cy="386" r="7" fill="#ffffff" stroke="#5f6b73" stroke-width="3"/>
+  <circle cx="570" cy="335" r="7" fill="#5f6b73"/>
+  <circle cx="640" cy="301" r="7" fill="#5f6b73"/>
+  <circle cx="710" cy="276" r="7" fill="#5f6b73"/>
+  <circle cx="780" cy="262" r="7" fill="#5f6b73"/>
+  <circle cx="850" cy="257" r="7" fill="#5f6b73"/>
+  <path d="M720 191 Q750 188 770 176 M710 276 Q760 250 768 180" stroke="#01796e" stroke-width="3" fill="none" stroke-dasharray="6 5"/>
   <path d="M770 174 L820 157 L880 140 L940 123 L1000 111 L1060 100" stroke="#01796e" stroke-width="3.5" fill="none" stroke-linejoin="round"/>
   <circle cx="770" cy="174" r="7" fill="#ffffff" stroke="#01796e" stroke-width="3"/>
   <circle cx="820" cy="157" r="7" fill="#ffffff" stroke="#01796e" stroke-width="3"/>
@@ -166,11 +165,11 @@ once.
   <circle cx="1060" cy="100" r="7" fill="#01796e"/>
   <circle cx="1060" cy="100" r="15" fill="none" stroke="#01796e" stroke-width="3"/>
   <g font-size="16" fill="currentColor">
-    <text x="540" y="334" font-weight="700">Baseline CNN</text>
-    <text x="540" y="356">retired: 6 tries, no gain</text>
+    <text x="200" y="384" font-weight="700">Baseline CNN</text>
+    <text x="200" y="406">retired: 6 tries, no gain</text>
     <text x="1024" y="184" font-weight="700">Dilated CNN</text>
-    <text x="474" y="392" font-weight="700">Transformer</text>
-    <text x="474" y="413">slow start, protected for 2 runs</text>
+    <text x="866" y="263" font-weight="700">Transformer</text>
+    <text x="866" y="285">slow start, protected for 2 runs</text>
     <text x="714" y="88" font-weight="700">Dilated CNN &#215; Transformer</text>
     <text x="714" y="110">a cross of the two, ends up best</text>
   </g>
