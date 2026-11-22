@@ -8,16 +8,16 @@ hide:
 
 # evoloop
 
-<p class="evo-tagline">An AutoResearch loop for machine learning, driven by AI agents.</p>
+<p class="evo-tagline">An open-source, general-purpose AutoResearch loop, driven by AI agents.</p>
 
-evoloop automates the cycle a researcher runs by hand: propose a change to a model, train it, look at
-the score, and decide what to try next. AI agents do the proposing and the analysis. Your own training
-code does the evaluation. The loop runs for hundreds of experiments and keeps a record of every one.
+evoloop is an open-source, general-purpose AutoResearch loop. You give it code and a way to score that
+code. AI agents propose changes, every change is evaluated automatically, and the results decide what
+is tried next. A search runs for hundreds of experiments and keeps a record of every one. It is MIT
+licensed, and the source is on [GitHub](https://github.com/cameo-db/evoloop).
 
-It is useful when you have a model and a score, and improving the model means trying many variations.
-That covers searching for a better architecture, tuning a training recipe, distilling a large model
-into smaller ones, and mapping the trade-off between accuracy and size. It also works on other code
-that a script can score, such as an algorithm or a data pipeline.
+It was built for machine-learning research, where it searches for better architectures, tunes training
+recipes, distils large models into smaller ones, and maps the trade-off between accuracy and size. The
+same loop works on any code that a script can score, such as an algorithm or a data pipeline.
 
 You stay in charge of a search. You decide what may change and how much may be spent, you approve the
 plan before anything runs, and you can redirect the search while it is running.
@@ -28,9 +28,10 @@ plan before anything runs, and you can redirect the search while it is running.
 
 ## How it works
 
-You mark the parts of your code that may change, such as an architecture, a loss or a training recipe,
-and provide an *evaluator*: a script that trains one model and reports its validation score. evoloop
-then runs an evolutionary search over those parts.
+You mark the parts of your code that may change and provide an *evaluator*: a script that runs one
+version of the code and reports its score. For a model, the marked parts might be the architecture, the
+loss or the training recipe, and the evaluator trains the model and reports its validation score.
+evoloop then runs an evolutionary search over the marked parts.
 
 <figure class="evo-figure">
 <svg class="evo-fig" viewBox="0 0 1000 600" role="img" aria-label="Overview of evoloop. The researcher supplies a brief and baseline code. The writer agent proposes new code. Your training script trains each proposal as a parallel job. The validation metric scores it. The analyst and strategist agents analyze the results and return lessons to the writer. In the centre are the lineages, from which code chooses the parents. Skills and CAMEO are optional inputs. The outputs are a leaderboard and a study file for CAMEO. The researcher can steer during the run.">
