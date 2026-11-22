@@ -54,5 +54,3 @@ receives the parent's checkpoint folder as `EVO_PARENT_CHECKPOINT_DIR`.
   trained ahead of the schedule's own.
 - A study's code is used as it is written in the file. Read what you import, as you would any code you
   did not write.
-- Reading a study file has been tested on files evoloop wrote and on a hand-made file from another
-  project. It has not been tested on files downloaded from the CAMEO site.

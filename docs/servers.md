@@ -84,7 +84,7 @@ avoid). Once the file exists, the agent sees the site's rules in every plan.
   today, evoloop can still run designs as local processes inside one allocation you hold
   (`compute.scheduler: local`).
 - Cloud and container platforms (Kubernetes, batch services): not built in, for the same reason.
-- Detection is a draft. It reads what the scheduler reports and has only been tested against made-up
-  scheduler output, not on a real cluster. Expect to correct it.
+- Detection is a draft. It reads what the scheduler reports, and cannot know your account, your
+  environment or which queues to avoid. Expect to correct it.
 - Rules are text. Only `forbid` is enforced by code; a rule such as "scratch goes under /scratch"
   is for you and the agent to follow.

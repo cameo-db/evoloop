@@ -95,7 +95,7 @@ nav:
       - Models and prices: models.md
       - Code map: code.md
       - Glossary: glossary.md
-      - Status and limits: status.md
+      - Limitations: limitations.md
 markdown_extensions:
   - tables
   - admonition

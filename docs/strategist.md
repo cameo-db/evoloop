@@ -127,7 +127,7 @@ how much the best score actually rose, and the report sets the two side by side.
 
 That shows what followed a decision. It cannot show what the decision caused, because there is no copy
 of the search without it. To find out whether the strategist earns its cost, run the same budget with
-`strategist.mode: off` and compare. That comparison has not been made yet.
+`strategist.mode: off` and compare.
 
 ## Settings
 

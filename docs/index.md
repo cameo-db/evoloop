@@ -221,20 +221,19 @@ key or a Claude Code login.
 ## CAMEO
 
 [CAMEO](https://cameo-db.github.io) is a public database of trained models with their code and
-scores. A search can start from designs in CAMEO, and every search is saved in CAMEO's format so that
-it can be deposited there.
+scores, and it already holds searches run with evoloop. A search can start from designs in CAMEO, and
+every search is saved in CAMEO's format so that it can be deposited there.
 
 [Start from earlier designs →](warm-start.md) · [Save and deposit the study →](study.md)
 
-## Status
+## Disclaimer
 
-The previous version, 0.1.0, ran seven searches with `claude-opus-5-5` on real training tasks in
-regulatory genomics. All seven are in [CAMEO](https://cameo-db.github.io/#/database): 1,450 training
-runs of 1,227 models.
+Every AutoResearch method is a search, and how a search is run changes what it finds. No strategy,
+preset or custom configuration is guaranteed to find the best design. evoloop is infrastructure for
+running different kinds of search and recording what each one did. The agents add variability of
+their own: an LLM does not return the same proposal twice, so two runs of the same search can end in
+different places. Treat the result of a search as a candidate, and check it on held-out data.
 
-Version 0.2, documented here, is a rewrite. Its test suite runs complete searches with scripted
-stand-ins for the LLM, and its first search with a real LLM is in progress.
-
-[Status and limits →](status.md)
+[Limitations →](limitations.md)
 
 </div>

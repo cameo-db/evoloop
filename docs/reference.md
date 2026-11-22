@@ -19,4 +19,4 @@ Lookup tools:
 | [Models and prices](models.md) | which Claude models, at what effort and cost |
 | [Code map](code.md) | every module and its public functions, linked to the source |
 | [Glossary](glossary.md) | the words evoloop uses in a particular sense |
-| [Status and limits](status.md) | what has been tested and what has not |
+| [Limitations](limitations.md) | the disclaimer, and the limits of the method |

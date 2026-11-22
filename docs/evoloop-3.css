@@ -169,15 +169,15 @@
 .md-content__inner > p, .md-content__inner > ul, .md-content__inner > ol, .md-content__inner > dl, .md-content__inner > blockquote { max-width: 38rem; }
 .md-typeset img[src$="loop.svg"], .md-typeset img[src$="lineages.svg"] { display: block; max-width: min(100%, 44rem); margin: 1.4rem 0; border-radius: 10px; }
 
-/* Previous and next page: drawn as part of the page, where the reading ends, not inside the dark footer. */
+/* Previous and next page: two small dark-green buttons where the reading ends. */
 .md-footer { background-color: var(--md-default-bg-color); color: var(--md-default-fg-color); }
-.md-footer__inner { border-top: 1px solid var(--md-default-fg-color--lightest); padding: 0.8rem 0.6rem 2.6rem; gap: 0.8rem; }
-.md-footer__link { border: 1px solid var(--md-default-fg-color--lighter); border-radius: 10px; margin: 0; padding: 0.5rem 0.4rem; opacity: 1; flex: 1 1 0; max-width: 24rem; }
+.md-footer__inner { border-top: 1px solid var(--md-default-fg-color--lightest); padding: 0.7rem 0.6rem 2.6rem; overflow: visible; }
+.md-footer__link { background-color: var(--evo-deep); border-radius: 8px; margin: 0; padding: 0.1rem 0.3rem; opacity: 1; flex: 0 1 auto; width: auto; max-width: 45%; align-items: center; }
 .md-footer__link--next { margin-left: auto; }
-.md-footer__link:hover, .md-footer__link:focus { border-color: var(--evo-teal); opacity: 1; }
-.md-footer__direction { opacity: 0.7; }
-.md-footer__title { font-weight: 600; color: var(--evo-teal); }
-[data-md-color-scheme="slate"] .md-footer__title { color: #5fd0c1; }
-.md-footer__button { color: var(--evo-teal); }
+.md-footer__link:hover, .md-footer__link:focus { background-color: var(--evo-teal); opacity: 1; }
+.md-footer__title { font-size: 0.7rem; font-weight: 600; color: #eaf6f3; line-height: 1.25; margin: 0; padding: 0.3rem 0.5rem; max-width: none; flex-grow: 0; }
+.md-footer__direction { position: static; display: block; font-size: 0.56rem; font-weight: 400; color: #b5d6cf; opacity: 1; margin: 0 0 0.05rem; padding: 0; }
+.md-footer__button { color: #eaf6f3; margin: 0; padding: 0.2rem; }
+.md-footer__button svg { width: 0.95rem; height: 0.95rem; }
 .md-footer-meta { background-color: #17201f; }
 .md-typeset table:not([class]) code { word-break: normal; overflow-wrap: normal; }

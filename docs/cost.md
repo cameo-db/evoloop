@@ -35,7 +35,7 @@ cost several times this.
 
 Treat the estimate as right to within about a factor of two. The number of calls follows from the
 settings and is fairly sure. The size of a call is a guess: models differ in how much they write, and
-the tokens they spend reasoning are not counted. It has not yet been checked against a real bill.
+the tokens they spend reasoning are not counted.
 
 ## Cost factors
 

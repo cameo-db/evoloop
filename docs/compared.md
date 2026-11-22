@@ -76,28 +76,24 @@ Every mechanism below is an option in evoloop. [Options and presets](menu.md) li
 
 Four things are not in the methods above.
 
-A search can be changed while it runs. Most settings change without a restart, each change is recorded
-with who made it, and because a strategy keeps no state, even the strategy can change.
-[Monitor and steer a search](steering.md)
-
-Scores are compared only when they mean the same thing. You state how noisy your score is, and a
-difference below that counts as none. Lengthening training starts a new comparison period, so old and
-new scores are never ranked together. [Comparing scores](comparable.md)
-
-The goal of a search is set apart from how to search. A skill carries the settings and the guidance
-for one kind of goal, and can be edited. [Choose a skill and a run type](which-search.md)
-
-The agents are audited. Every call is recorded with what the agent forecast and what happened, and a
-scorecard says whether each role earns its cost. [Audit the agents](auditing.md)
+- A search can be changed while it runs. Most settings change without a restart, each change is
+  recorded with who made it, and because a strategy keeps no state, even the strategy can change.
+  [Monitor and steer a search](steering.md)
+- Scores are compared only when they mean the same thing. You state how noisy your score is, and a
+  difference below that counts as none. Lengthening training starts a new comparison period, so old
+  and new scores are never ranked together. [Comparing scores](comparable.md)
+- The goal of a search is set apart from how to search. A skill carries the settings and the guidance
+  for one kind of goal, and can be edited. [Choose a skill and a run type](which-search.md)
+- The agents are audited. Every call is recorded with what the agent forecast and what happened, and
+  a scorecard says whether each role earns its cost. [Audit the agents](auditing.md)
 
 ## Limitations
 
 - Throughput. There is no tier of cheap stand-in evaluations (a smaller dataset or model) with
   promotion to the real task. The ladder stops weak designs early within the real task, which
   stretches a budget a few-fold, not a thousandfold.
-- Evidence. The systems above have published results and comparisons with other methods. evoloop
-  0.1.0 has seven searches on record in CAMEO, with no published comparison against another search
-  method. Version 0.2 has not yet finished a search with a real LLM. [Status and limits](status.md)
+- No guarantee. Like every method on this page, evoloop is a search, and how a search is run changes
+  what it finds. [Limitations](limitations.md)
 - Novelty before training. How different a proposal is from what has been tried is measured on its
   code. What a model does is known only after it is trained.
 - Prompt evolution. Only one line of the writer's instructions varies.

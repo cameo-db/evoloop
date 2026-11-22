@@ -134,6 +134,3 @@ With `agents.fallbacks: default`, on the models where the API offers it, a reque
 is answered by another model in the same call instead of being lost; the reply says which model
 answered, and the call is priced at that model's rates. `agents.fallbacks: off` switches it off. This
 applies to `anthropic_api` only.
-
-Neither backend has been called from this version against the real service; see
-[Status and limits](status.md).
