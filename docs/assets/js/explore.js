@@ -200,7 +200,12 @@
     function best(list) { return list.reduce(function (a, b) { return b.score > a.score ? b : a; }); }
     function landscape(seed) {
       var r = rng(seed * 101 + 3);
-      var peaks = [[0.22 + 0.04 * (r() - 0.5), 0.55, 0.11], [0.52 + 0.06 * (r() - 0.5), 0.72, 0.05], [0.80 + 0.08 * (r() - 0.5), 1.0, 0.03]];
+      // The baseline's own hill is always low and near the left. The other hills differ from one landscape to the
+      // next in number, place, height and width, and so does which of them is the highest.
+      var peaks = [[0.14 + 0.10 * r(), 0.42 + 0.16 * r(), 0.07 + 0.05 * r()]];
+      var slots = r() < 0.5 ? [[0.40, 0.58], [0.70, 0.93]] : [[0.36, 0.48], [0.56, 0.70], [0.80, 0.95]];
+      var top = Math.floor(r() * slots.length);
+      slots.forEach(function (s, i) { peaks.push([s[0] + (s[1] - s[0]) * r(), i === top ? 1.0 : 0.60 + 0.26 * r(), i === top ? 0.02 + 0.015 * r() : 0.04 + 0.03 * r()]); });
       return function (x) { return peaks.reduce(function (m, p) { return Math.max(m, p[1] * Math.exp(-Math.pow((x - p[0]) / p[2], 2) / 2)); }, 0.05); };
     }
     function add(x, mode, parents, lineage) {

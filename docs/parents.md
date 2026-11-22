@@ -13,9 +13,11 @@ them, and so decides which earlier designs get built on.
 
 ## Interactive comparison
 
-Change the parent rule or move a slider and the search below reruns. The figure is a toy. Every possible design is laid out on a line, with similar designs close together,
-and a curve gives the true quality of each. The baseline starts on the lowest of three peaks. The
-search cannot see the curve. It can only try a design and get a noisy score.
+Change the parent rule or move a slider and the search below reruns. The figure is a toy. Every
+possible design is laid out on a line, with similar designs close together, and a curve gives the true
+quality of each. The baseline starts on a low hill, and the highest hill is narrow and somewhere else.
+"Another landscape" draws a different set of hills. The search cannot see the curve. It can only try a
+design and get a noisy score.
 
 <div class="evo-widget" id="evo-playground">The playground needs JavaScript.</div>
 
@@ -28,8 +30,10 @@ and a crossover lands between two parents.
   peak gets climbed once it is found.
 - Turn the noise up and greedy starts chasing lucky scores.
 
-A real design space is not a line and a real evaluation takes hours, so the toy says nothing about
-which strategy is best for your problem. It shows what each one does with a fixed budget.
+The outcome depends on the landscape. On some, greedy ends highest, because a new design happened to
+land near the top. A real design space is not a line and a real evaluation takes hours, so the toy
+says nothing about which strategy is best for your problem. It shows what each one does with a fixed
+budget.
 
 ## Lineage
 
