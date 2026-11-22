@@ -37,7 +37,7 @@ evoloop takes the mechanisms of the program-search systems and weights them for 
 With a few hundred evaluations, what matters most is which design is tried next, that a noisy score is
 not mistaken for a gain, and that the researcher can change course when the results call for it.
 
-## Mechanisms and their sources
+## Borrowed mechanisms
 
 Every mechanism below is an option in evoloop. [Options and presets](menu.md) lists the settings.
 
@@ -60,7 +60,7 @@ Every mechanism below is an option in evoloop. [Options and presets](menu.md) li
 | Several objectives | `strategy.mechanism: pareto` | two metrics, not many |
 | Instructions that evolve | `variation.approaches` | one line per slot varies, with a record of what it led to |
 
-### From evolutionary computation and hyperparameter optimization
+### From other methods
 
 | Method | Mechanism | In evoloop | How it differs here |
 |---|---|---|---|
@@ -72,7 +72,7 @@ Every mechanism below is an option in evoloop. [Options and presets](menu.md) li
 | TPE ([Bergstra et al., 2011](#ref-tpe)) | Bayesian choice of hyperparameters | `variation.settings_by: tpe` | a small implementation; each setting modelled alone |
 | Network morphism and weight sharing | a child starts from its parent's weights | `evaluation.inherit_weights` | the evaluator decides what to load |
 
-## What evoloop adds
+## Additions
 
 Four things are not in the methods above.
 
@@ -103,7 +103,7 @@ scorecard says whether each role earns its cost. [Audit the agents](auditing.md)
 - Prompt evolution. Only one line of the writer's instructions varies.
 - Scope of an edit. A writer changes marked blocks. It cannot restructure the frozen code around them.
 
-## Settings that approximate each method
+## Approximating other methods
 
 | To search like | Set |
 |---|---|

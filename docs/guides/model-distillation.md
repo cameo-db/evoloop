@@ -4,13 +4,13 @@ Skill `model-distillation`. Train a smaller or faster student to match a teacher
 
 File: [`evoloop/skills/model-distillation/skill.yaml`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skills/model-distillation/skill.yaml) ([raw](https://raw.githubusercontent.com/cameo-db/evoloop/main/evoloop/skills/model-distillation/skill.yaml)). A search copies this file to `mysearch/skills/model-distillation/skill.yaml` when you choose the skill, and reads that copy. [Edit it during setup](../skills.md).
 
-## When to use it
+## When to use
 
 You have a strong model or ensemble that is too large or slow to use, and want a student that keeps its accuracy. If the teacher is simply the model you want to shrink, and one cheaper model is the aim, use model-efficiency: it treats that model as the teacher. If no trained model's outputs are available, there is nothing to distil: use model-performance with limits on size.
 
-## Use it
+## Usage
 
-[Use this skill in setup](../setting-up.md#3-answer-the-questions) · [Combine it with another skill](../skills.md#combining-skills) · <a href="../../which-search/?goal=model-distillation&run=explore_then_exploit#preview-a-search">Preview the resulting search</a>
+[Use this skill in setup](../setting-up.md#3-answer-the-setup-questions) · [Combine it with another skill](../skills.md#combining-skills) · <a href="../../which-search/?goal=model-distillation&run=explore_then_exploit#preview-a-search">Preview the resulting search</a>
 
 In setup, name it at the skill question. Or put these lines in `brief.yaml`; the budget and any limits or ranges are placeholders.
 
@@ -22,7 +22,7 @@ budget:
   evaluations: 100
 ```
 
-## What it sets
+## Settings
 
 A skill's settings override the run type's and the autonomy level's. Settings in your brief override the skill's.
 
@@ -33,7 +33,7 @@ A skill's settings override the run type's and the autonomy level's. Settings in
 | [`variation.approach_seeds`](../fields.md#variation-approach_seeds) | 1. Change how the student is trained before changing the student: the loss against the teacher, the weight between teacher and measured targets, the augmentations the teacher labels.<br>2. Give the student inputs the measured data does not contain (perturbed, shuffled, synthetic) and let the teacher label them.<br>3. Match the student's capacity to the gap: if it underfits the teacher, widen or deepen; if it matches the teacher on training inputs and not on held-out ones, regularize or add teacher-labelled data.<br>4. Train longer at a lower learning rate before concluding a student is too small. |
 | [`variation.approaches`](../fields.md#variation-approaches) | `fixed` |
 
-## What it tells the agents
+## Agent guidance
 
 This text is added to every call to the role named. It is taken from the skill's file.
 
@@ -83,7 +83,7 @@ The writer and the analyst are also given these rules:
 
 And the writer is told, in the first half of the budget: "Find a recipe that works on one or two student shapes before varying the shape." In the second half: "Keep the recipe, and vary the student's size and shape around the best one to find the smallest that holds the score."
 
-## What your evaluator must report
+## Evaluator requirements
 
 - the training script must produce the teacher's outputs (or read stored ones) and train the student against them; the loss and augmentation blocks should be marked as open recipe blocks
 - to rank on speed or size, report `parameters` and `inference_speed.examples_per_s` in result.json; then `strategy.mechanism: pareto` or `limits` can use them
@@ -97,7 +97,7 @@ And the writer is told, in the first half of the budget: "Find a recipe that wor
 
 Compare the best student with two reference rows: the teacher (how much was lost) and the student trained from scratch (how much the teacher added). A student that only matches its from-scratch twin has not been distilled. Check the size or speed column against what you needed.
 
-## Why these settings
+## Rationale
 
 A student's result depends as much on how it is trained against the teacher as on its shape, so both the architecture and the recipe are open, and the writers are told to work on the recipe first. The leaderboard is only meaningful beside the teacher and the same student trained without it.
 
@@ -111,7 +111,7 @@ A student's result depends as much on how it is trained against the teacher as o
 
 Can be combined with [`model-size-frontier`](model-size-frontier.md), [`model-efficiency`](model-efficiency.md): `run.skill: [model-distillation, model-size-frontier]`.
 
-## The file
+## Skill file
 
 [`evoloop/skills/model-distillation/skill.yaml`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skills/model-distillation/skill.yaml) ([raw](https://raw.githubusercontent.com/cameo-db/evoloop/main/evoloop/skills/model-distillation/skill.yaml))
 

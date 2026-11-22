@@ -75,7 +75,7 @@ It only ever makes the search cheaper. If you raise the cap and want proposals b
 The last 15% of the cap is kept for writing designs (`budget.reserve_share`). When it is reached, the
 analyst, the strategist, scheduled reviews and the coordinator stop, so that what is left buys designs.
 
-## Limits of the cap
+## Cap limitations
 
 The cap counts dollars, so it needs prices. With the Anthropic API, give `agents.prices` for any model not on
 the built-in list. The plan warns when one is missing, and a capped search pauses after three calls with

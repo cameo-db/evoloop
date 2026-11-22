@@ -4,13 +4,13 @@ Skill `model-efficiency`. Design a smaller or faster student and train it to mat
 
 File: [`evoloop/skills/model-efficiency/skill.yaml`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skills/model-efficiency/skill.yaml) ([raw](https://raw.githubusercontent.com/cameo-db/evoloop/main/evoloop/skills/model-efficiency/skill.yaml)). A search copies this file to `mysearch/skills/model-efficiency/skill.yaml` when you choose the skill, and reads that copy. [Edit it during setup](../skills.md).
 
-## When to use it
+## When to use
 
 You have a model that scores well enough and costs too much to run. The aim is one cheaper model at about the same score. For a family across sizes use model-size-frontier; when the teacher is an ensemble or a different model, use model-distillation.
 
-## Use it
+## Usage
 
-[Use this skill in setup](../setting-up.md#3-answer-the-questions) · [Combine it with another skill](../skills.md#combining-skills) · <a href="../../which-search/?goal=model-efficiency&run=explore_then_exploit#preview-a-search">Preview the resulting search</a>
+[Use this skill in setup](../setting-up.md#3-answer-the-setup-questions) · [Combine it with another skill](../skills.md#combining-skills) · <a href="../../which-search/?goal=model-efficiency&run=explore_then_exploit#preview-a-search">Preview the resulting search</a>
 
 In setup, name it at the skill question. Or put these lines in `brief.yaml`; the budget and any limits or ranges are placeholders.
 
@@ -25,7 +25,7 @@ limits:
     max: 5000000
 ```
 
-## What it sets
+## Settings
 
 A skill's settings override the run type's and the autonomy level's. Settings in your brief override the skill's.
 
@@ -38,7 +38,7 @@ A skill's settings override the run type's and the autonomy level's. Settings in
 | [`strategy.second_direction`](../fields.md#strategy-second_direction) | `minimize` |
 | [`strategy.second_metric`](../fields.md#strategy-second_metric) | `parameters` |
 
-## What it tells the agents
+## Agent guidance
 
 This text is added to every call to the role named. It is taken from the skill's file.
 
@@ -88,7 +88,7 @@ The writer and the analyst are also given these rules:
 
 And the writer is told, in the first half of the budget: "Try several efficient architectures at the target size, each trained against the teacher with one simple recipe." In the second half: "Take the two or three best students and work on how they are trained: targets, augmentation, schedule."
 
-## What your evaluator must report
+## Evaluator requirements
 
 - produce the teacher's outputs (run the original model, or read stored predictions) and train each student against them; mark the student's architecture and the distillation loss as open blocks
 - report `parameters` in result.json, and `inference_speed.examples_per_s` to rank on speed (then set strategy.second_metric to examples_per_s and strategy.second_direction to maximize)
@@ -103,7 +103,7 @@ And the writer is told, in the first half of the budget: "Try several efficient 
 
 Read the students on the trade-off front against two reference rows: the teacher, and the best student trained from scratch without the teacher. Pick the smallest student whose score is within your tolerance of the teacher. A student that only matches its from-scratch twin gained nothing from distillation, and the recipe needs work before the architecture does.
 
-## Why these settings
+## Rationale
 
 A small model trained on the original targets is usually worse than the same small model trained to imitate a large one. So shrinking is set up as distillation: the model you have is the teacher, and the search looks for the student architecture and the training recipe that keep the most of it. Students are selected on the trade-off between score and size, which keeps cheaper students alive even when a larger one scores higher.
 
@@ -116,7 +116,7 @@ A small model trained on the original targets is usually worse than the same sma
 
 Can be combined with [`model-distillation`](model-distillation.md): `run.skill: [model-efficiency, model-distillation]`.
 
-## The file
+## Skill file
 
 [`evoloop/skills/model-efficiency/skill.yaml`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skills/model-efficiency/skill.yaml) ([raw](https://raw.githubusercontent.com/cameo-db/evoloop/main/evoloop/skills/model-efficiency/skill.yaml))
 

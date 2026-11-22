@@ -4,13 +4,13 @@ Skill `data-pipeline`. Speed up a multi-step data pipeline (reading, transformin
 
 File: [`evoloop/skills/data-pipeline/skill.yaml`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skills/data-pipeline/skill.yaml) ([raw](https://raw.githubusercontent.com/cameo-db/evoloop/main/evoloop/skills/data-pipeline/skill.yaml)). A search copies this file to `mysearch/skills/data-pipeline/skill.yaml` when you choose the skill, and reads that copy. [Edit it during setup](../skills.md).
 
-## When to use it
+## When to use
 
 A pipeline of several steps produces the right output too slowly or at too high a cost. For a single hot function use algorithm-runtime.
 
-## Use it
+## Usage
 
-[Use this skill in setup](../setting-up.md#3-answer-the-questions) · [Combine it with another skill](../skills.md#combining-skills) · <a href="../../which-search/?goal=data-pipeline&run=explore_then_exploit#preview-a-search">Preview the resulting search</a>
+[Use this skill in setup](../setting-up.md#3-answer-the-setup-questions) · [Combine it with another skill](../skills.md#combining-skills) · <a href="../../which-search/?goal=data-pipeline&run=explore_then_exploit#preview-a-search">Preview the resulting search</a>
 
 In setup, name it at the skill question. Or put these lines in `brief.yaml`; the budget and any limits or ranges are placeholders.
 
@@ -24,7 +24,7 @@ objective:
   direction: minimize
 ```
 
-## What it sets
+## Settings
 
 A skill's settings override the run type's and the autonomy level's. Settings in your brief override the skill's.
 
@@ -34,7 +34,7 @@ A skill's settings override the run type's and the autonomy level's. Settings in
 | [`schedule.local_mix`](../fields.md#schedule-local_mix) | `{ablation: 0.1, edit: 0.7, settings: 0.2}` |
 | [`schedule.novelty`](../fields.md#schedule-novelty) | `0.3` |
 
-## What it tells the agents
+## Agent guidance
 
 This text is added to every call to the role named. It is taken from the skill's file.
 
@@ -84,7 +84,7 @@ The writer and the analyst are also given these rules:
 
 And the writer is told, in the first half of the budget: "Find which steps hold the cost, and try restructuring: fewer passes, earlier filters, another format." In the second half: "Tighten the remaining hot steps, then parallelise what is independent."
 
-## What your evaluator must report
+## Evaluator requirements
 
 - run the pipeline on fixed sample data and compare its output with a stored reference (a checksum of sorted records, or row counts with value checks); write `valid: false` with the reason when it differs
 - report the cost as the score with objective.direction minimize: wall time as a median of repeats, or a figure that combines time and memory if both matter
@@ -98,7 +98,7 @@ And the writer is told, in the first half of the budget: "Find which steps hold 
 
 Read the best design's cost against the reference row, and the time per step it reports: that shows where the cost went. Check how the gain grows with input size before relying on it at full scale.
 
-## Why these settings
+## Rationale
 
 In a pipeline the cost is usually in moving data, so the writers are told to do less and move data fewer times before optimizing computation. The output is compared with a reference, and a design whose output differs is rejected.
 
@@ -110,7 +110,7 @@ In a pipeline the cost is usually in moving data, so the writers are told to do 
 
 Can be combined with [`algorithm-runtime`](algorithm-runtime.md): `run.skill: [data-pipeline, algorithm-runtime]`.
 
-## The file
+## Skill file
 
 [`evoloop/skills/data-pipeline/skill.yaml`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skills/data-pipeline/skill.yaml) ([raw](https://raw.githubusercontent.com/cameo-db/evoloop/main/evoloop/skills/data-pipeline/skill.yaml))
 

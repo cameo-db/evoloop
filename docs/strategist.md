@@ -1,4 +1,4 @@
-# Working with the strategist
+# The strategist
 
 The strategist is an agent that looks at a search as a whole and can change how the remaining budget is
 spent. It either advises you or acts on its own, and either way it works from a fixed list of actions
@@ -111,7 +111,7 @@ Each message costs one agent call. Turning this on switches the strategist to `a
 
 With `harness.conductor: code`, the default, no agent runs the search and there is nothing to talk to.
 
-## Retiring a lineage yourself
+## Retiring a lineage
 
 ```
 evoloop lineage mysearch --name r1 --retire L4 --by "Your Name"

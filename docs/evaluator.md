@@ -141,7 +141,7 @@ The score is the test score. The search optimizes whatever is in `score`, and ag
 Report validation there and put held-out results under `diagnostics.hidden`.
 
 The seed does nothing. If two runs with different `EVO_SEED` give identical scores, your training code
-is ignoring it. [Measure your noise](noise.md) shows how to check.
+is ignoring it. [Measure the noise floor](noise.md) shows how to check.
 
 Designs crash with shape errors. Agents write designs that do not fit, and that is expected. Add a quick
 check (`evaluation.quick_check: python adapter/check.py`) that builds the model and passes one batch

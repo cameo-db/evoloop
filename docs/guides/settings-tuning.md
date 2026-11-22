@@ -4,13 +4,13 @@ Skill `settings-tuning`. An agent tunes the hyperparameters of a fixed model, th
 
 File: [`evoloop/skills/settings-tuning/skill.yaml`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skills/settings-tuning/skill.yaml) ([raw](https://raw.githubusercontent.com/cameo-db/evoloop/main/evoloop/skills/settings-tuning/skill.yaml)). A search copies this file to `mysearch/skills/settings-tuning/skill.yaml` when you choose the skill, and reads that copy. [Edit it during setup](../skills.md).
 
-## When to use it
+## When to use
 
 The code is right and its numbers are in question. Use it on its own, or after an architecture search, on the winner. To tune without any agent calls, use settings-tuning-bayesian (a built-in Bayesian optimizer).
 
-## Use it
+## Usage
 
-[Use this skill in setup](../setting-up.md#3-answer-the-questions) · [Combine it with another skill](../skills.md#combining-skills) · <a href="../../which-search/?goal=settings-tuning&run=settings_only#preview-a-search">Preview the resulting search</a>
+[Use this skill in setup](../setting-up.md#3-answer-the-setup-questions) · [Combine it with another skill](../skills.md#combining-skills) · <a href="../../which-search/?goal=settings-tuning&run=settings_only#preview-a-search">Preview the resulting search</a>
 
 In setup, name it at the skill question. Or put these lines in `brief.yaml`; the budget and any limits or ranges are placeholders.
 
@@ -22,7 +22,7 @@ budget:
   evaluations: 60
 ```
 
-## What it sets
+## Settings
 
 A skill's settings override the run type's and the autonomy level's. Settings in your brief override the skill's.
 
@@ -42,7 +42,7 @@ A skill's settings override the run type's and the autonomy level's. Settings in
 | [`variation.settings_by`](../fields.md#variation-settings_by) | `agent` |
 | [`variation.step_adaptation`](../fields.md#variation-step_adaptation) | `false` |
 
-## What it tells the agents
+## Agent guidance
 
 This text is added to every call to the role named. It is taken from the skill's file.
 
@@ -82,7 +82,7 @@ The writer and the analyst are also given these rules:
 
 And the writer is told, in the first half of the budget: "Bracket each hyperparameter with large moves, one group of interacting ones at a time." In the second half: "Refine around the best trial with small moves, and re-check the leader on a new seed."
 
-## What your evaluator must report
+## Evaluator requirements
 
 - every hyperparameter to tune must sit in a marked params block (one dict of numbers, true/false or text)
 - report the parameter count, so that a change of width or depth shows its cost
@@ -94,7 +94,7 @@ And the writer is told, in the first half of the budget: "Bracket each hyperpara
 
 The top row of the leaderboard holds the hyperparameters to use. Check where they sit before trusting them: a best value at the edge of what was tried means the search stopped too early in that direction, and a score that barely moves across a hyperparameter means it does not matter. Train the winner again on new seeds.
 
-## Why these settings
+## Rationale
 
 Tuning is a sequence of trials where each should be chosen from the ones before. An agent that reads the trials can move interacting hyperparameters together and can tell a hyperparameter that does not matter from one that has not been pushed far enough. The search changes numbers only, always builds on the best trial, and keeps an analyst to summarise what the trials show.
 
@@ -106,7 +106,7 @@ Tuning is a sequence of trials where each should be chosen from the ones before.
 | the loss, optimizer or augmentation code should change, not only their numbers | [`model-training-recipe`](model-training-recipe.md) |
 | the model's structure may change | [`model-performance`](model-performance.md) |
 
-## The file
+## Skill file
 
 [`evoloop/skills/settings-tuning/skill.yaml`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skills/settings-tuning/skill.yaml) ([raw](https://raw.githubusercontent.com/cameo-db/evoloop/main/evoloop/skills/settings-tuning/skill.yaml))
 

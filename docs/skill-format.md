@@ -3,7 +3,7 @@
 A skill is a folder holding one file, `skill.yaml`. This page is the reference for that file.
 [Edit, merge or write a skill](skills.md) explains how skills are used.
 
-## An annotated example
+## Annotated example
 
 ```yaml
 name: model-efficiency            # specific: <what>-<goal>

@@ -30,7 +30,7 @@ Explained in [which search](which-search.md).
 
 ## space
 
-Explained in [setting up](setting-up.md#1-mark-what-may-change).
+Explained in [setting up](setting-up.md#1-mark-the-editable-code).
 
 | Field | Default | Changes in a search | What it is |
 |---|---|---|---|

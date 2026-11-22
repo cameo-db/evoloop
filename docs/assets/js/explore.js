@@ -233,7 +233,7 @@
       for (var j = 0; j < pool.length; j++) { t -= weights[j]; if (t <= 0) { return pool[j].elite; } }
       return pool[0].elite;
     }
-    function step() {
+    function step(quiet) {
       if (sim.designs.length > BUDGET) { stop(); return; }
       var done = sim.designs.length - 1, cross = state.fresh < 0.9 && sim.lineages >= 2 ? 0.1 : 0;
       var shares = {new: state.fresh, cross: cross, local: Math.max(0, 1 - state.fresh - cross)};
@@ -245,27 +245,29 @@
         var b = best(others), mix = 0.3 + 0.4 * sim.r();
         add(a.x * mix + b.x * (1 - mix), "cross", [a, b]);
       } else { var p = pickParent(); add(p.x + 0.035 * sim.r.normal(), "local", [p], p.lineage); }
-      draw();
+      if (quiet !== true) { draw(); }
     }
-    function stop() { if (state.timer) { clearInterval(state.timer); state.timer = null; } runButton.textContent = "Run"; }
+    function stop() { if (state.timer) { clearInterval(state.timer); state.timer = null; } runButton.textContent = "Replay step by step"; }
     function reset() {
       stop();
       sim = {f: landscape(state.seed), r: rng(state.seed * 7919 + 11), designs: [], counts: {new: 0, cross: 0, local: 0}, lineages: 0, last: null};
       add(0.2, "new", null);        // the baseline: on the nearest, lowest hill
       draw();
     }
-    function play() { if (sim.designs.length > BUDGET) { reset(); } stop(); state.timer = setInterval(step, 140); runButton.textContent = "Running…"; }
+    // A change of setting reruns the whole search at once, so its effect shows without pressing anything.
+    function finish() { reset(); while (sim.designs.length <= BUDGET) { step(true); } draw(); }
+    function play() { reset(); state.timer = setInterval(function () { step(); }, 120); runButton.textContent = "Replaying…"; }
 
     // The controls are built once and stay in place, so a slider keeps the keyboard focus while the plot changes.
     var freshLabel = el("span", {"class": "evo-label"}), noiseLabel = el("span", {"class": "evo-label"});
     var fresh = el("input", {type: "range", min: 0, max: 80, step: 5, value: Math.round(state.fresh * 100), "aria-label": "Share of new designs"});
-    fresh.addEventListener("input", function () { state.fresh = fresh.value / 100; labels(); reset(); });
+    fresh.addEventListener("input", function () { state.fresh = fresh.value / 100; labels(); finish(); });
     var noise = el("input", {type: "range", min: 0, max: 15, step: 1, value: Math.round(state.noise * 100), "aria-label": "Noise in the score"});
-    noise.addEventListener("input", function () { state.noise = noise.value / 100; labels(); reset(); });
+    noise.addEventListener("input", function () { state.noise = noise.value / 100; labels(); finish(); });
     function labels() { freshLabel.textContent = "New designs: " + pct(state.fresh) + " of the budget"; noiseLabel.textContent = "Noise in a score: ±" + state.noise.toFixed(2); }
-    var runButton = el("button", {type: "button", "class": "evo-chip go", text: "Run"});
+    var runButton = el("button", {type: "button", "class": "evo-chip go", text: "Replay step by step"});
     runButton.addEventListener("click", play);
-    var buttons = el("div", {"class": "evo-chips"}, [runButton].concat([["Step", function () { stop(); step(); }], ["Start over", reset], ["Another landscape", function () { state.seed += 1; reset(); }]].map(function (b) {
+    var buttons = el("div", {"class": "evo-chips"}, [runButton].concat([["Another landscape", function () { state.seed += 1; finish(); }]].map(function (b) {
       var node = el("button", {type: "button", "class": "evo-chip", text: b[0]});
       node.addEventListener("click", b[1]);
       return node;
@@ -274,11 +276,11 @@
     clear(root);
     root.appendChild(el("div", {"class": "evo-controls"}, [
       chipRow("Parent rule", [["greedy", "greedy", "always the current best"], ["tournament", "tournament", "the best of three recent designs"],
-                              ["lineage", "lineage", "the best of the leading families, the less used favoured"], ["archive", "archive", "the best of each region, the less used favoured"]],
-              state.strategy, function (v) { state.strategy = v; reset(); }),
+                              ["lineage", "lineage", "the best of the leading lineages, the less used favoured"], ["archive", "archive", "the best of each region, the less used favoured"]],
+              state.strategy, function (v) { state.strategy = v; finish(); }),
       el("div", {"class": "evo-row"}, [freshLabel, fresh]),
       el("div", {"class": "evo-row"}, [noiseLabel, noise]),
-      el("div", {"class": "evo-row"}, [el("span", {"class": "evo-label", text: "Changing a setting starts the search again."}), buttons])
+      el("div", {"class": "evo-row"}, [el("span", {"class": "evo-label", text: "Each change reruns the whole search."}), buttons])
     ]));
     root.appendChild(el("div", {"class": "evo-legend"}, [["base", "the baseline"]].concat(MODES).map(function (m) {
       return el("span", {}, [el("i", {"class": "evo-swatch evo-bg-" + m[0]}), document.createTextNode(m[1])]);
@@ -321,7 +323,7 @@
         (Math.abs(lead.score - lead.truth) > 0.08 ? " Its score, " + lead.score.toFixed(2) + ", flatters it: that is noise." : "") +
         " " + pool.length + (pool.length === 1 ? " design" : " designs") + " could be a parent next.";
     }
-    reset();
+    finish();
   }
 
   /* ---------------------------------------------------------------- the early-stopping figure */

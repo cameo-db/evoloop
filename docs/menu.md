@@ -15,7 +15,7 @@ Set with `run.type`.
 | `settings_only` | A hyperparameter search. No structure changes; every slot is a settings move. |
 | `custom` | Your own choices. Describe the search in `run.description`; where you set nothing, the guidance for the size of the budget and then the defaults apply. |
 
-### What each run type sets
+### Settings of each run type
 
 It is a bundle of settings. Anything you set yourself in the brief wins over it.
 
@@ -97,7 +97,7 @@ Set with `run.skill`.
 
 A skill says what kind of problem the search is; the run type says how to search. Skills can be combined (`run.skill: [a, b]`), and a search gets its own editable copy of each in its `skills/` folder. `evoloop skills NAME` shows a skill in full, and `evoloop skills NAME --copy DIR` writes it out as a folder to edit and use as your own (`run.skill: DIR`).
 
-### What each skill sets
+### Settings of each skill
 
 It is a bundle of settings. Anything you set yourself in the brief wins over it.
 
@@ -240,7 +240,7 @@ Set with `harness.autonomy`.
 
 Left empty, the run type decides. What you set yourself in the brief is kept at every level. `evoloop plan` and `evoloop estimate` show what the agents are likely to cost at each of the three.
 
-### What each level of autonomy sets
+### Settings of each level of autonomy
 
 It is a bundle of settings. Anything you set yourself in the brief wins over it.
 

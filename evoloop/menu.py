@@ -384,7 +384,7 @@ def menu_markdown() -> str:
         if note:
             out += [note, ""]
         if key in PRESETS:
-            out += ["### What each %s sets" % {"run-types": "run type", "autonomy": "level of autonomy", "skills": "skill"}[key], "",
+            out += ["### Settings of each %s" % {"run-types": "run type", "autonomy": "level of autonomy", "skills": "skill"}[key], "",
                     "It is a bundle of settings. Anything you set yourself in the brief wins over it.", ""]
             for name in entries:
                 lines = preset_lines(PRESETS[key][name], "")
@@ -401,7 +401,7 @@ def menu_markdown() -> str:
 # Where each group of fields is explained.
 CONCEPT = {"schedule": "schedule.md", "strategy": "parents.md", "population": "parents.md#lineage", "crossover": "moves.md#crossover",
            "variation": "moves.md", "harness": "agents.md", "strategist": "strategist.md", "evaluation": "comparable.md",
-           "budget": "cost.md", "compute": "servers.md", "agents": "models.md", "space": "setting-up.md#1-mark-what-may-change",
+           "budget": "cost.md", "compute": "servers.md", "agents": "models.md", "space": "setting-up.md#1-mark-the-editable-code",
            "limits": "early-stopping.md#limits", "run": "which-search.md",
            "data": "study.md", "depositor": "study.md", "audit": "auditing.md", "report": "steering.md#monitoring"}
 

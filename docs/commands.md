@@ -6,16 +6,16 @@ running or finished search take `--name`, the name you gave it. Commands that ch
 
 | To | Commands |
 |---|---|
-| [set up](#setting-up) | `init` · `example` · `setup` · `form` · `brief` · `plan` · `estimate` |
-| [look things up](#looking-things-up) | `skills` · `menu` · `guide` · `site` |
-| [run, or resume](#running) | `run` · `controller` |
-| [watch](#watching) | `status` · `leaderboard` · `show` · `report` |
-| [steer](#steering) | `set` · `note` · `withdraw` · `steer` · `chat` · `force` · `stop` |
-| [answer the strategist](#the-strategist-and-the-agents) | `approve` · `decline` · `lineage` · `review` |
-| [bring things in](#designs-and-models-from-elsewhere) | `import` · `reference` · `rehash` |
-| [finish](#finishing) | `study` |
+| [set up](#setup) | `init` · `example` · `setup` · `form` · `brief` · `plan` · `estimate` |
+| [look things up](#lookup) | `skills` · `menu` · `guide` · `site` |
+| [run, or resume](#run) | `run` · `controller` |
+| [watch](#monitor) | `status` · `leaderboard` · `show` · `report` |
+| [steer](#steer) | `set` · `note` · `withdraw` · `steer` · `chat` · `force` · `stop` |
+| [answer the strategist](#strategist-and-agents) | `approve` · `decline` · `lineage` · `review` |
+| [bring things in](#imports-and-references) | `import` · `reference` · `rehash` |
+| [finish](#export) | `study` |
 
-## Setting up
+## Setup
 
 ### init
 
@@ -87,7 +87,7 @@ where its value came from. Read it before confirming.
 What the agents are likely to cost, at each level of autonomy. With `--name`, projected from a running
 search's own calls.
 
-## Looking things up
+## Lookup
 
 ### skills
 
@@ -141,7 +141,7 @@ the scheduler reports; nothing is submitted.
 evoloop site --detect --write ~/.config/evoloop/site.yaml
 ```
 
-## Running
+## Run
 
 ### run
 
@@ -167,7 +167,7 @@ evoloop controller mysearch --name r1 --partition cpu --time 1-00:00:00
 sbatch mysearch/run_controller_r1.sbatch
 ```
 
-## Watching
+## Monitor
 
 ### status
 
@@ -198,7 +198,7 @@ is a design (`C12`) or one of its evaluations (`R37`).
 
 Rewrites and prints the report from the search's files as they are now.
 
-## Steering
+## Steer
 
 All of these take effect within seconds on a running search, and are recorded with your name.
 [Monitor and steer a search](steering.md) explains each.
@@ -258,7 +258,7 @@ evoloop force mysearch --name r1 --mode cross --kind hybrid --count 2 --by "Your
 
 Starts nothing more; the search ends when its jobs do. With `--run`, stops one evaluation.
 
-## The strategist and the agents
+## Strategist and agents
 
 ### approve, decline
 
@@ -278,7 +278,7 @@ Retires a lineage, or brings one back. Lineage strategy only.
 
 Has the assessor review the agents now.
 
-## Designs and models from elsewhere
+## Imports and references
 
 ### import
 
@@ -309,7 +309,7 @@ evoloop reference mysearch --name r1 --label "teacher ensemble" --score 0.912 --
 Records that a change you made to the frozen code or the evaluator during a search is intended. With
 `--moves-scores`, a new comparison period begins.
 
-## Finishing
+## Export
 
 ### study
 

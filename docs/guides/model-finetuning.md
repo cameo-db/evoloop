@@ -4,13 +4,13 @@ Skill `model-finetuning`. Start from a pretrained model and search over how to a
 
 File: [`evoloop/skills/model-finetuning/skill.yaml`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skills/model-finetuning/skill.yaml) ([raw](https://raw.githubusercontent.com/cameo-db/evoloop/main/evoloop/skills/model-finetuning/skill.yaml)). A search copies this file to `mysearch/skills/model-finetuning/skill.yaml` when you choose the skill, and reads that copy. [Edit it during setup](../skills.md).
 
-## When to use it
+## When to use
 
 A pretrained model exists and the task has far less data than the model was trained on. Not for training from scratch.
 
-## Use it
+## Usage
 
-[Use this skill in setup](../setting-up.md#3-answer-the-questions) · [Combine it with another skill](../skills.md#combining-skills) · <a href="../../which-search/?goal=model-finetuning&run=refine#preview-a-search">Preview the resulting search</a>
+[Use this skill in setup](../setting-up.md#3-answer-the-setup-questions) · [Combine it with another skill](../skills.md#combining-skills) · <a href="../../which-search/?goal=model-finetuning&run=refine#preview-a-search">Preview the resulting search</a>
 
 In setup, name it at the skill question. Or put these lines in `brief.yaml`; the budget and any limits or ranges are placeholders.
 
@@ -22,7 +22,7 @@ budget:
   evaluations: 60
 ```
 
-## What it sets
+## Settings
 
 A skill's settings override the run type's and the autonomy level's. Settings in your brief override the skill's.
 
@@ -31,7 +31,7 @@ A skill's settings override the run type's and the autonomy level's. Settings in
 | [`schedule.local_mix`](../fields.md#schedule-local_mix) | `{ablation: 0.15, edit: 0.4, settings: 0.45}` |
 | [`schedule.novelty`](../fields.md#schedule-novelty) | `0.25` |
 
-## What it tells the agents
+## Agent guidance
 
 This text is added to every call to the role named. It is taken from the skill's file.
 
@@ -75,7 +75,7 @@ The writer and the analyst are also given these rules:
 
 And the writer is told, in the first half of the budget: "Establish the frozen-backbone baseline, then compare the broad options (head only, adapters, partial and full unfreezing)." In the second half: "Tune the learning rates and the schedule of the best option, and refine the head."
 
-## What your evaluator must report
+## Evaluator requirements
 
 - load the pretrained weights from a fixed path outside base/ (weights are not copied per design)
 - mark as open the head, the choice of what is frozen, and the optimizer settings; leave the backbone's definition closed
@@ -88,7 +88,7 @@ And the writer is told, in the first half of the budget: "Establish the frozen-b
 
 Compare every design with the reference row for the frozen backbone with a linear head: that is the cheapest baseline, and the gain over it is what adapting was worth. Watch the best epoch; fine-tuning that peaks in the first epochs is overfitting.
 
-## Why these settings
+## Rationale
 
 Most of what the model knows is in its pretrained weights, so the search stays close to a working set-up and spends more of its moves on settings (which layers train, at what rate) than a search from scratch would.
 
@@ -100,7 +100,7 @@ Most of what the model knows is in its pretrained weights, so the search stays c
 
 Can be combined with [`model-training-recipe`](model-training-recipe.md): `run.skill: [model-finetuning, model-training-recipe]`.
 
-## The file
+## Skill file
 
 [`evoloop/skills/model-finetuning/skill.yaml`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skills/model-finetuning/skill.yaml) ([raw](https://raw.githubusercontent.com/cameo-db/evoloop/main/evoloop/skills/model-finetuning/skill.yaml))
 

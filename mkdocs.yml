@@ -44,7 +44,7 @@ nav:
       - Worked example: quickstart.md
       - Set up a search: setting-up.md
       - Write the evaluator: evaluator.md
-      - Measure your noise: noise.md
+      - Measure the noise floor: noise.md
       - Run on a cluster: servers.md
   - How it works:
       - Overview: how-it-works.md
@@ -55,10 +55,10 @@ nav:
       - Early stopping: early-stopping.md
       - Comparing scores: comparable.md
       - Comparison with other AutoResearch methods: compared.md
-      - Search options on one page: options.md
+      - All search options: options.md
   - Run:
       - Monitor and steer a search: steering.md
-      - Working with the strategist: strategist.md
+      - The strategist: strategist.md
       - Audit the agents: auditing.md
       - Budget and cost: cost.md
       - Start from earlier designs: warm-start.md

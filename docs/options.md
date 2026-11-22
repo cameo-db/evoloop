@@ -1,9 +1,9 @@
-# Search options on one page
+# All search options
 
 Every choice that shapes a search, with the setting that makes it and the file that implements it.
 [Choose a skill and a run type](which-search.md) helps you pick; this page is the full list.
 
-## One iteration
+## Loop steps
 
 Each time a job slot is free, evoloop does this. The last column is the file that implements the step.
 
@@ -11,7 +11,7 @@ Each time a job slot is free, evoloop does this. The last column is the file tha
 |---|---|---|---|---|
 | 1 | Pick the kind of move: a new design, a crossover of two designs, or a local move on one (an edit, a hyperparameter change, an ablation) | the schedule, in code. Optionally a coordinator agent picks among the options code prepares | `schedule.phases`, `harness.coordinator` | [schedule.py](https://github.com/cameo-db/evoloop/blob/main/evoloop/schedule.py) |
 | 2 | Pick the parent design or designs | the search strategy, in code | `strategy.mechanism` | [strategies/](https://github.com/cameo-db/evoloop/blob/main/evoloop/strategies) |
-| 3 | Write the candidate: new contents for the marked blocks | a writer agent (LLM). Code alone for a block swap or sampled hyperparameters | `agents.default_model`, `variation.settings_by` | [design.py](https://github.com/cameo-db/evoloop/blob/main/evoloop/design.py), prompts in [agents.py](https://github.com/cameo-db/evoloop/blob/main/evoloop/agents.py) |
+| 3 | Write the design: new contents for the marked blocks | a writer agent (LLM). Code alone for a block swap or sampled hyperparameters | `agents.default_model`, `variation.settings_by` | [design.py](https://github.com/cameo-db/evoloop/blob/main/evoloop/design.py), prompts in [agents.py](https://github.com/cameo-db/evoloop/blob/main/evoloop/agents.py) |
 | 4 | Check it: only marked blocks changed, it parses, it is not a copy of an earlier design | code | `space.preset`, `space.forbidden_terms` | [space.py](https://github.com/cameo-db/evoloop/blob/main/evoloop/space.py) |
 | 5 | Run your evaluator on it as its own job, locally or on Slurm. Optionally stop it early if it is behind | your script; early stopping by code | `evaluation.allowance`, `evaluation.ladder` | [jobs.py](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py), [controller.py](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py) |
 | 6 | Record the design, its parent, its score and the agent's forecast | code | | [store.py](https://github.com/cameo-db/evoloop/blob/main/evoloop/store.py) |

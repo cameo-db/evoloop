@@ -93,7 +93,7 @@ warns.
 - Change skill: `evoloop set mysearch --name r1 run.skill=model-efficiency --by "Your Name"`. The new
   skill is copied in, and the ledger lists every setting that moved with it.
 
-## Writing your own
+## Writing a skill
 
 Start from the nearest one:
 

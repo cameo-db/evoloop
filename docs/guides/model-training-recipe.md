@@ -4,13 +4,13 @@ Skill `model-training-recipe`. The architecture is fixed; the training recipe is
 
 File: [`evoloop/skills/model-training-recipe/skill.yaml`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skills/model-training-recipe/skill.yaml) ([raw](https://raw.githubusercontent.com/cameo-db/evoloop/main/evoloop/skills/model-training-recipe/skill.yaml)). A search copies this file to `mysearch/skills/model-training-recipe/skill.yaml` when you choose the skill, and reads that copy. [Edit it during setup](../skills.md).
 
-## When to use it
+## When to use
 
 The architecture is settled (it is published, deployed, or the point of comparison) and the question is how well it can be trained. If only numbers change, settings-tuning is cheaper; if the model may change too, use model-performance with the recipe opened.
 
-## Use it
+## Usage
 
-[Use this skill in setup](../setting-up.md#3-answer-the-questions) · [Combine it with another skill](../skills.md#combining-skills) · <a href="../../which-search/?goal=model-training-recipe&run=explore_then_exploit#preview-a-search">Preview the resulting search</a>
+[Use this skill in setup](../setting-up.md#3-answer-the-setup-questions) · [Combine it with another skill](../skills.md#combining-skills) · <a href="../../which-search/?goal=model-training-recipe&run=explore_then_exploit#preview-a-search">Preview the resulting search</a>
 
 In setup, name it at the skill question. Or put these lines in `brief.yaml`; the budget and any limits or ranges are placeholders.
 
@@ -22,7 +22,7 @@ budget:
   evaluations: 80
 ```
 
-## What it sets
+## Settings
 
 A skill's settings override the run type's and the autonomy level's. Settings in your brief override the skill's.
 
@@ -32,7 +32,7 @@ A skill's settings override the run type's and the autonomy level's. Settings in
 | [`space.preset`](../fields.md#space-preset) | `custom` |
 | [`space.roles`](../fields.md#space-roles) | `{augmentation: open, loss: open, optimizer: open, recipe: open, schedule: open, training: open}` |
 
-## What it tells the agents
+## Agent guidance
 
 This text is added to every call to the role named. It is taken from the skill's file.
 
@@ -77,7 +77,7 @@ The writer and the analyst are also given these rules:
 
 And the writer is told, in the first half of the budget: "Try one substantial change in each part of the recipe, to find which part has room." In the second half: "Work on the parts that paid, and re-tune the settings they interact with."
 
-## What your evaluator must report
+## Evaluator requirements
 
 - mark the loss, optimizer, schedule and augmentation as blocks with those roles; the model blocks stay closed
 - report the training score beside the validation score under diagnostics, so that fitting and generalising can be told apart
@@ -89,7 +89,7 @@ And the writer is told, in the first half of the budget: "Try one substantial ch
 
 Compare the best recipe with the baseline row: the difference is what training alone was worth. Look at whether the training score or the gap to validation moved, and at the best epoch: a best epoch at the end of the run means the comparison favoured fast recipes and a longer run is needed.
 
-## Why these settings
+## Rationale
 
 The model is settled and the question is how well it can be trained, so only the blocks that define the loss, the optimizer, the schedule and the augmentation are open. Unlike tuning, the code of those blocks can change, not only their numbers.
 
@@ -102,7 +102,7 @@ The model is settled and the question is how well it can be trained, so only the
 
 Can be combined with [`model-performance`](model-performance.md), [`model-finetuning`](model-finetuning.md): `run.skill: [model-training-recipe, model-performance]`.
 
-## The file
+## Skill file
 
 [`evoloop/skills/model-training-recipe/skill.yaml`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skills/model-training-recipe/skill.yaml) ([raw](https://raw.githubusercontent.com/cameo-db/evoloop/main/evoloop/skills/model-training-recipe/skill.yaml))
 

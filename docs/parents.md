@@ -13,7 +13,7 @@ them, and so decides which earlier designs get built on.
 
 ## Interactive comparison
 
-The figure is a toy. Every possible design is laid out on a line, with similar designs close together,
+Change the parent rule or move a slider and the search below reruns. The figure is a toy. Every possible design is laid out on a line, with similar designs close together,
 and a curve gives the true quality of each. The baseline starts on the lowest of three peaks. The
 search cannot see the curve. It can only try a design and get a noisy score.
 

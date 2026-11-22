@@ -1,10 +1,10 @@
-# Measure your noise
+# Measure the noise floor
 
 evoloop needs one number from you that it cannot work out itself: how much your score varies between two runs of
 the same design. It treats any difference smaller than that as no difference, so the number decides
 what counts as progress.
 
-## Estimate score variation across seeds
+## Estimating the noise
 
 Train your baseline five times with different seeds, at the training length you plan to use, and look
 at the spread.

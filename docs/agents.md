@@ -50,7 +50,7 @@ a few dozen results, and tends to settle on what already works.
 A strategist can read why something is failing, which a count cannot. It is bounded because an agent
 given a free hand over a search tends to do badly: code works out the facts, the agent chooses from a
 fixed list of actions, and code checks each choice before applying it.
-[Working with the strategist](strategist.md) has the list, the bounds, and how to approve or decline
+[The strategist](strategist.md) has the list, the bounds, and how to approve or decline
 what it proposes.
 
 ## Models

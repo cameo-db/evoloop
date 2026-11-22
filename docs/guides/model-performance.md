@@ -4,13 +4,13 @@ Skill `model-performance`. Raise the validation score by whatever the open block
 
 File: [`evoloop/skills/model-performance/skill.yaml`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skills/model-performance/skill.yaml) ([raw](https://raw.githubusercontent.com/cameo-db/evoloop/main/evoloop/skills/model-performance/skill.yaml)). A search copies this file to `mysearch/skills/model-performance/skill.yaml` when you choose the skill, and reads that copy. [Edit it during setup](../skills.md).
 
-## When to use it
+## When to use
 
 The default for model development. Choose something more specific when the goal is a smaller model (model-efficiency), a family across sizes (model-size-frontier), a student of a teacher (model-distillation), or when only the training recipe or the settings may change.
 
-## Use it
+## Usage
 
-[Use this skill in setup](../setting-up.md#3-answer-the-questions) · [Combine it with another skill](../skills.md#combining-skills) · <a href="../../which-search/?goal=model-performance&run=explore_then_exploit#preview-a-search">Preview the resulting search</a>
+[Use this skill in setup](../setting-up.md#3-answer-the-setup-questions) · [Combine it with another skill](../skills.md#combining-skills) · <a href="../../which-search/?goal=model-performance&run=explore_then_exploit#preview-a-search">Preview the resulting search</a>
 
 In setup, name it at the skill question. Or put these lines in `brief.yaml`; the budget and any limits or ranges are placeholders.
 
@@ -22,11 +22,11 @@ budget:
   evaluations: 100
 ```
 
-## What it sets
+## Settings
 
 Nothing. This skill only supplies instructions; the run type and the defaults set the search.
 
-## What it tells the agents
+## Agent guidance
 
 This text is added to every call to the role named. It is taken from the skill's file.
 
@@ -74,7 +74,7 @@ The writer and the analyst are also given these rules:
 
 And the writer is told, in the first half of the budget: "Cover different families of design; a rough version of each idea is enough to learn whether it has promise." In the second half: "Work on the two or three best families. Combine what each does well, and remove what ablations show is dead weight."
 
-## What your evaluator must report
+## Evaluator requirements
 
 The score only.
 
@@ -84,7 +84,7 @@ The score only.
 
 Read the leaderboard for the best design and its family, then "What each mode returned" to see whether new designs or local work produced the gains. A leader with a single fit is a candidate, not a result: fit it again on new seeds, and on the held-out set, before reporting it.
 
-## Why these settings
+## Rationale
 
 With the architecture open and one number to raise, the search should spend its first evaluations finding out which kinds of design work, then concentrate on the best. That is the explore-then-exploit schedule, with families of designs kept alive side by side so that an early leader does not crowd out a slower starter.
 
@@ -98,7 +98,7 @@ With the architecture open and one number to raise, the search should spend its 
 
 Can be combined with [`model-training-recipe`](model-training-recipe.md): `run.skill: [model-performance, model-training-recipe]`.
 
-## The file
+## Skill file
 
 [`evoloop/skills/model-performance/skill.yaml`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skills/model-performance/skill.yaml) ([raw](https://raw.githubusercontent.com/cameo-db/evoloop/main/evoloop/skills/model-performance/skill.yaml))
 

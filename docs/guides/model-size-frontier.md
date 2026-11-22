@@ -4,13 +4,13 @@ Skill `model-size-frontier`. Find the best model at each size (or speed), from v
 
 File: [`evoloop/skills/model-size-frontier/skill.yaml`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skills/model-size-frontier/skill.yaml) ([raw](https://raw.githubusercontent.com/cameo-db/evoloop/main/evoloop/skills/model-size-frontier/skill.yaml)). A search copies this file to `mysearch/skills/model-size-frontier/skill.yaml` when you choose the skill, and reads that copy. [Edit it during setup](../skills.md).
 
-## When to use it
+## When to use
 
 You need models for several budgets (a phone, a server, a screen of millions of inputs), or want to know what accuracy each size buys before choosing. For one cheaper model at a fixed score use model-efficiency.
 
-## Use it
+## Usage
 
-[Use this skill in setup](../setting-up.md#3-answer-the-questions) · [Combine it with another skill](../skills.md#combining-skills) · <a href="../../which-search/?goal=model-size-frontier&run=survey#preview-a-search">Preview the resulting search</a>
+[Use this skill in setup](../setting-up.md#3-answer-the-setup-questions) · [Combine it with another skill](../skills.md#combining-skills) · <a href="../../which-search/?goal=model-size-frontier&run=survey#preview-a-search">Preview the resulting search</a>
 
 In setup, name it at the skill question. Or put these lines in `brief.yaml`; the budget and any limits or ranges are placeholders.
 
@@ -26,7 +26,7 @@ limits:
     max: 50000000
 ```
 
-## What it sets
+## Settings
 
 A skill's settings override the run type's and the autonomy level's. Settings in your brief override the skill's.
 
@@ -38,7 +38,7 @@ A skill's settings override the run type's and the autonomy level's. Settings in
 | [`strategy.descriptors`](../fields.md#strategy-descriptors) | `[size]` |
 | [`strategy.mechanism`](../fields.md#strategy-mechanism) | `archive` |
 
-## What it tells the agents
+## Agent guidance
 
 This text is added to every call to the role named. It is taken from the skill's file.
 
@@ -84,7 +84,7 @@ The writer and the analyst are also given these rules:
 
 And the writer is told, in the first half of the budget: "Put at least two designs in every band, by scaling a few good shapes up and down." In the second half: "Improve the best design in each band with local moves, and cross neighbours."
 
-## What your evaluator must report
+## Evaluator requirements
 
 - report `parameters` in result.json for every design; the bands are made from it
 - to band by speed instead, report `inference_speed.examples_per_s` and set strategy.descriptors to the name of that metric under diagnostics
@@ -97,7 +97,7 @@ And the writer is told, in the first half of the budget: "Put at least two desig
 
 Read the population table band by band: each row is the best design of one size band. Plot score against size to see where a fourfold increase stops paying. Bands with one or two designs are not yet explored; treat their best as provisional.
 
-## Why these settings
+## Rationale
 
 The deliverable is a curve, not a point: the best design in each band of size. An archive keeps the best of each band, new designs are aimed at bands that are empty, and a design is a success when it leads its band even if a larger one scores higher. This needs more evaluations than a search for one model.
 
@@ -110,7 +110,7 @@ The deliverable is a curve, not a point: the best design in each band of size. A
 
 Can be combined with [`model-distillation`](model-distillation.md): `run.skill: [model-size-frontier, model-distillation]`.
 
-## The file
+## Skill file
 
 [`evoloop/skills/model-size-frontier/skill.yaml`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skills/model-size-frontier/skill.yaml) ([raw](https://raw.githubusercontent.com/cameo-db/evoloop/main/evoloop/skills/model-size-frontier/skill.yaml))
 

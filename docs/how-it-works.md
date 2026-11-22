@@ -63,7 +63,7 @@ In the demo the writer is a script. With an LLM, the exchange in step 3 looks li
                     "blocks": {"model": "HIDDEN = [12, 8]\nACTIVATION = \"tanh\"\n\ndef features(x): ..."}}]}
     ```
 
-## The controller
+## Controller
 
 `evoloop run` starts the controller. Every few seconds it takes a turn:
 
@@ -78,7 +78,7 @@ In the demo the writer is a script. With an LLM, the exchange in step 3 looks li
 The controller keeps no state that is not on disk. If it stops, `evoloop run` with the same name
 continues from the files, and picks up jobs that were still running.
 
-## The agents
+## Agents
 
 Each role is a separate LLM call with its own instructions. Roles never call each other. The
 controller sends each one what it needs from the run folder.
@@ -107,7 +107,7 @@ during the run, your brief, the skill, the autonomy level, the run type, the def
 size, the site file for your machine, the built-in default. `evoloop plan` prints the source of every
 value.
 
-## What code enforces
+## Guarantees
 
 These hold under every setting, because they are checks in code and not instructions to an agent.
 

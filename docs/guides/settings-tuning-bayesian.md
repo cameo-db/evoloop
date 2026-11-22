@@ -4,13 +4,13 @@ Skill `settings-tuning-bayesian`. A built-in Bayesian optimizer (TPE) draws each
 
 File: [`evoloop/skills/settings-tuning-bayesian/skill.yaml`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skills/settings-tuning-bayesian/skill.yaml) ([raw](https://raw.githubusercontent.com/cameo-db/evoloop/main/evoloop/skills/settings-tuning-bayesian/skill.yaml)). A search copies this file to `mysearch/skills/settings-tuning-bayesian/skill.yaml` when you choose the skill, and reads that copy. [Edit it during setup](../skills.md).
 
-## When to use it
+## When to use
 
 You want hyperparameter tuning at no agent cost, or a baseline to compare an agent against. For tuning led by an agent that reads the trials, use settings-tuning.
 
-## Use it
+## Usage
 
-[Use this skill in setup](../setting-up.md#3-answer-the-questions) · [Combine it with another skill](../skills.md#combining-skills) · <a href="../../which-search/?goal=settings-tuning-bayesian&run=settings_only#preview-a-search">Preview the resulting search</a>
+[Use this skill in setup](../setting-up.md#3-answer-the-setup-questions) · [Combine it with another skill](../skills.md#combining-skills) · <a href="../../which-search/?goal=settings-tuning-bayesian&run=settings_only#preview-a-search">Preview the resulting search</a>
 
 In setup, name it at the skill question. Or put these lines in `brief.yaml`; the budget and any limits or ranges are placeholders.
 
@@ -25,7 +25,7 @@ space:
     "fit.lr": [1e-05, 0.1]
 ```
 
-## What it sets
+## Settings
 
 A skill's settings override the run type's and the autonomy level's. Settings in your brief override the skill's.
 
@@ -45,7 +45,7 @@ A skill's settings override the run type's and the autonomy level's. Settings in
 | [`variation.settings_by`](../fields.md#variation-settings_by) | `tpe` |
 | [`variation.step_adaptation`](../fields.md#variation-step_adaptation) | `false` |
 
-## What it tells the agents
+## Agent guidance
 
 This text is added to every call to the role named. It is taken from the skill's file.
 
@@ -75,7 +75,7 @@ The writer and the analyst are also given these rules:
 
 And the writer is told, in the first half of the budget: "The first designs cover the ranges evenly; nothing is concluded from them one by one." In the second half: "The draws concentrate near the best settings; narrow the ranges if the best values are well inside them."
 
-## What your evaluator must report
+## Evaluator requirements
 
 - every setting to tune must sit in a marked params block (one dict of numbers, true/false or text)
 - give bounds for settings that must stay in a range with `space.ranges`, e.g. {"fit.lr": [0.00001, 0.1]}; without one a setting may move a hundredfold either way
@@ -87,7 +87,7 @@ And the writer is told, in the first half of the budget: "The first designs cove
 
 The best row of the leaderboard holds the settings to use. Before trusting them, look at where they sit: a best value at the edge of its range means the range was wrong, and a score that barely moves across a setting means that setting does not matter. Re-fit the winner on new seeds.
 
-## Why these settings
+## Rationale
 
 When only numbers change, no judgement is needed to propose the next candidate: an estimator that models which values scored well is cheaper and more systematic than an agent. This search makes no model call, so it costs compute only.
 
@@ -99,7 +99,7 @@ When only numbers change, no judgement is needed to propose the next candidate: 
 | the loss, optimizer or augmentation code should change, not only their numbers | [`model-training-recipe`](model-training-recipe.md) |
 | the model's structure may change | [`model-performance`](model-performance.md) |
 
-## The file
+## Skill file
 
 [`evoloop/skills/settings-tuning-bayesian/skill.yaml`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skills/settings-tuning-bayesian/skill.yaml) ([raw](https://raw.githubusercontent.com/cameo-db/evoloop/main/evoloop/skills/settings-tuning-bayesian/skill.yaml))
 

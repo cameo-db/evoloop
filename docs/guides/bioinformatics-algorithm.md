@@ -4,13 +4,13 @@ Skill `bioinformatics-algorithm`. Improve a method that analyses biological data
 
 File: [`evoloop/skills/bioinformatics-algorithm/skill.yaml`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skills/bioinformatics-algorithm/skill.yaml) ([raw](https://raw.githubusercontent.com/cameo-db/evoloop/main/evoloop/skills/bioinformatics-algorithm/skill.yaml)). A search copies this file to `mysearch/skills/bioinformatics-algorithm/skill.yaml` when you choose the skill, and reads that copy. [Edit it during setup](../skills.md).
 
-## When to use it
+## When to use
 
 The method has a measurable right answer on some data (simulated, curated, or orthogonally validated) and the aim is to do better on it. If the method is right and only slow, use algorithm-runtime.
 
-## Use it
+## Usage
 
-[Use this skill in setup](../setting-up.md#3-answer-the-questions) · [Combine it with another skill](../skills.md#combining-skills) · <a href="../../which-search/?goal=bioinformatics-algorithm&run=explore_then_exploit#preview-a-search">Preview the resulting search</a>
+[Use this skill in setup](../setting-up.md#3-answer-the-setup-questions) · [Combine it with another skill](../skills.md#combining-skills) · <a href="../../which-search/?goal=bioinformatics-algorithm&run=explore_then_exploit#preview-a-search">Preview the resulting search</a>
 
 In setup, name it at the skill question. Or put these lines in `brief.yaml`; the budget and any limits or ranges are placeholders.
 
@@ -22,7 +22,7 @@ budget:
   evaluations: 100
 ```
 
-## What it sets
+## Settings
 
 A skill's settings override the run type's and the autonomy level's. Settings in your brief override the skill's.
 
@@ -31,7 +31,7 @@ A skill's settings override the run type's and the autonomy level's. Settings in
 | [`schedule.local_mix`](../fields.md#schedule-local_mix) | `{ablation: 0.15, edit: 0.6, settings: 0.25}` |
 | [`schedule.novelty`](../fields.md#schedule-novelty) | `0.3` |
 
-## What it tells the agents
+## Agent guidance
 
 This text is added to every call to the role named. It is taken from the skill's file.
 
@@ -81,7 +81,7 @@ The writer and the analyst are also given these rules:
 
 And the writer is told, in the first half of the budget: "Find which kind of case holds most of the error, and try different ways of modelling it." In the second half: "Refine the best method on the hard cases, and confirm each gain on every dataset."
 
-## What your evaluator must report
+## Evaluator requirements
 
 - score against a truth set with a standard comparison for the task, and report precision, recall and their combination under diagnostics; the score should be one number that does not reward trading one for the other at a single threshold
 - use more than one dataset (another sample, depth or organism), and keep one the search never sees under diagnostics.hidden
@@ -95,7 +95,7 @@ And the writer is told, in the first half of the budget: "Find which kind of cas
 
 Read precision and recall separately, and by dataset. A gain made by trading one for the other is a moved threshold, not a better method. Confirm the winner on the dataset the search never saw.
 
-## Why these settings
+## Rationale
 
 The method is scored against a truth set, and the writers are told what makes this kind of code different: coordinate, strand and format conventions that must not change, and gains that must hold across datasets and not on one.
 
@@ -107,7 +107,7 @@ The method is scored against a truth set, and the writers are told what makes th
 
 Can be combined with [`algorithm-runtime`](algorithm-runtime.md): `run.skill: [bioinformatics-algorithm, algorithm-runtime]`.
 
-## The file
+## Skill file
 
 [`evoloop/skills/bioinformatics-algorithm/skill.yaml`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skills/bioinformatics-algorithm/skill.yaml) ([raw](https://raw.githubusercontent.com/cameo-db/evoloop/main/evoloop/skills/bioinformatics-algorithm/skill.yaml))
 

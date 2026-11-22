@@ -3,7 +3,7 @@
 Train the same model twice with different seeds and the scores differ. A search that ignores this
 spends its budget chasing luck. Three mechanisms deal with it.
 
-## The noise floor
+## Noise floor
 
 When you set up a search you say how much the score varies between two runs of the same design
 (`evaluation.noise`; [how to measure it](noise.md)). Suppose it is 0.005.
@@ -15,7 +15,7 @@ counts as supported only if the same change gained in two different lineages.
 
 Set it too low and the search treats noise as progress. Set it too high and real gains are ignored.
 
-## Re-checks of the leader
+## Leader re-checks
 
 The best of many single runs is partly the luckiest. So at intervals the leader is trained again on a
 new seed, and its score becomes the mean of its runs. In the built-in demo, a design reached 0.970, was
@@ -47,7 +47,7 @@ and 20 more epochs at that rate teach little.
 A design stopped part way has a score for the part it ran. It is shown as provisional and is not ranked
 against full-length runs ([Early stopping](early-stopping.md#stopped-designs)).
 
-## The test set
+## Test set
 
 Your evaluator can report held-out results under `diagnostics.hidden`. They are stored and written to
 the study file, and never shown to an agent or used for selection. The search optimizes the validation

@@ -355,8 +355,8 @@ def test_every_goal_has_a_guide_that_matches_its_skill(tmp_path):
         assert one["goal"] and one["why"] and one["reading"] and one["start"].get("run_type") in form.RUN_TYPES, name
         assert all(n in skill.names() for row in one["instead"] for n in skill.wanted(row["use"])), name
         page = skill.guide_markdown(name)
-        for part in ("## Use it", "skill: %s" % name, "## What it sets", "## What it tells the agents", "## What your evaluator must report",
-                     "## Reading the results", "## The file", "github.com/cameo-db/evoloop/blob/main/evoloop/skills/%s/skill.yaml" % name, "name: %s" % name):
+        for part in ("## Usage", "skill: %s" % name, "## Settings", "## Agent guidance", "## Evaluator requirements",
+                     "## Reading the results", "## Skill file", "github.com/cameo-db/evoloop/blob/main/evoloop/skills/%s/skill.yaml" % name, "name: %s" % name):
             assert part in page, (name, part)
     with open(os.path.join(os.path.dirname(root), "..", "mkdocs.yml"), encoding="utf-8") as handle:
         nav = handle.read()
@@ -371,7 +371,7 @@ def test_the_decision_page_and_the_readme_list_the_whole_library_and_say_it_can_
         assert all("`%s`" % name in text for name in skill.names()), page            # every goal can be found
     with open(os.path.join(root, "docs", "skills.md"), encoding="utf-8") as handle:
         text = handle.read()
-    assert "Writing your own" in text and "Adding a skill to the library" in text and "Combining skills" in text
+    assert "Writing a skill" in text and "Adding a skill to the library" in text and "Combining skills" in text
     with open(os.path.join(root, "README.md"), encoding="utf-8") as handle:
         assert "study.json" in handle.read()                                          # and how the result is kept
 

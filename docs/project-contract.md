@@ -99,7 +99,7 @@ trains from where its parent stopped.
 - A new design, and the first parent's missing folder, get no variable: the evaluator must handle its
   absence.
 
-## The quick check
+## Quick check
 
 `evaluation.quick_check` is a command that tests a design in seconds, for instance building the model
 and passing one batch through it. It runs first in the job; a design that fails it is not trained and
@@ -121,7 +121,7 @@ its job id.
 
 The controller itself is light and can run as a small CPU job.
 
-### The controller as a job
+### Controller as a job
 
 ```
 evoloop controller mysearch --name r1 --partition cpu --time 1-00:00:00 --setup "source ~/envs/x/bin/activate"

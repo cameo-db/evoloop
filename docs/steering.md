@@ -14,17 +14,17 @@ name. The same commands work on a search that has stopped.
 | read everything | `evoloop report mysearch --name r1` |
 | give it more budget | `evoloop set mysearch --name r1 budget.evaluations=300 --by "Me"` |
 | explore more, or less | `evoloop set mysearch --name r1 schedule.novelty=0.6 --by "Me"` |
-| train longer | `evoloop set mysearch --name r1 evaluation.allowance=50 --by "Me"` ([starts a new period](#changing-the-length-of-a-run)) |
+| train longer | `evoloop set mysearch --name r1 evaluation.allowance=50 --by "Me"` ([starts a new period](#changing-the-run-length)) |
 | tell the agents something | `evoloop note mysearch --name r1 "No attention layers." --by "Me"` |
 | say it in my own words | `evoloop steer mysearch --name r1 "more novelty, keep models small" --by "Me"` |
 | order the next few moves | `evoloop force mysearch --name r1 --mode cross --count 3 --by "Me"` |
 | cap model size | `evoloop set mysearch --name r1 'limits={"parameters": {"max": 20000000}}' --by "Me"` |
 | bring in designs from an earlier search | `evoloop import mysearch --name r2 --from-run mysearch/runs/r1 --top 5 --by "Me"` |
 | add a published model to the leaderboard | `evoloop reference mysearch --name r1 --label "paper" --score 0.49 --by "Me"` |
-| answer something the strategist proposed | `evoloop approve mysearch --name r1 --id S14 --by "Me"` ([Working with the strategist](strategist.md)) |
+| answer something the strategist proposed | `evoloop approve mysearch --name r1 --id S14 --by "Me"` ([The strategist](strategist.md)) |
 | talk to the agent running it | `evoloop chat mysearch --name r1 --by "Me"` |
 | stop one design | `evoloop stop mysearch --name r1 --run R12 --by "Me"` |
-| stop the search | `evoloop stop mysearch --name r1 --by "Me"` ([stop and resume](#stop-and-resume-a-search)) |
+| stop the search | `evoloop stop mysearch --name r1 --by "Me"` ([stop and resume](#stopping-and-resuming)) |
 | resume a stopped search | `evoloop run mysearch --name r1` |
 
 The sections below explain each.
@@ -77,7 +77,7 @@ Some changes move other settings with them. Changing `budget.evaluations` across
 guidance, or changing `run.type`, moves the settings that follow from it. The ledger entry lists every
 setting that moved with it.
 
-## Changing the length of a run
+## Changing the run length
 
 `evaluation.allowance` (and `evaluation.seed`, `data.fraction`) change what a score means: a model
 trained for 50 epochs is not comparable with one trained for 30. So a new *period* begins:
@@ -125,7 +125,7 @@ An agent turns your words into setting changes and notes, and the command prints
 with the sentence of yours it came from, and anything it could not express under "not covered".
 Nothing is changed. Running the same command again with `--yes` applies exactly what was printed.
 
-## Stop and resume a search
+## Stopping and resuming
 
 ```
 evoloop stop mysearch --name r1 --by "Your Name"            # start nothing more; end when the jobs do
@@ -219,7 +219,7 @@ evoloop reference mysearch --name r2 --from-run mysearch/runs/r1 --top 3 --by "Y
 
 Reference rows are shown and marked as such; they take no part in selection.
 
-## Record of steering
+## Steering record
 
 A run that was steered is not a clean test of one fixed strategy. The report lists every entry of the
 ledger with the number of evaluations at which it took effect, and the study file says how many

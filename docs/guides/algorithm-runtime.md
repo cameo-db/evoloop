@@ -4,13 +4,13 @@ Skill `algorithm-runtime`. Speed up a piece of code (or cut its memory) while it
 
 File: [`evoloop/skills/algorithm-runtime/skill.yaml`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skills/algorithm-runtime/skill.yaml) ([raw](https://raw.githubusercontent.com/cameo-db/evoloop/main/evoloop/skills/algorithm-runtime/skill.yaml)). A search copies this file to `mysearch/skills/algorithm-runtime/skill.yaml` when you choose the skill, and reads that copy. [Edit it during setup](../skills.md).
 
-## When to use it
+## When to use
 
 The code is correct and too slow or too hungry. The search needs a benchmark that checks the output and times the run. Not for improving what the algorithm computes (see bioinformatics-algorithm for accuracy against a truth set).
 
-## Use it
+## Usage
 
-[Use this skill in setup](../setting-up.md#3-answer-the-questions) · [Combine it with another skill](../skills.md#combining-skills) · <a href="../../which-search/?goal=algorithm-runtime&run=explore_then_exploit#preview-a-search">Preview the resulting search</a>
+[Use this skill in setup](../setting-up.md#3-answer-the-setup-questions) · [Combine it with another skill](../skills.md#combining-skills) · <a href="../../which-search/?goal=algorithm-runtime&run=explore_then_exploit#preview-a-search">Preview the resulting search</a>
 
 In setup, name it at the skill question. Or put these lines in `brief.yaml`; the budget and any limits or ranges are placeholders.
 
@@ -24,7 +24,7 @@ objective:
   direction: minimize
 ```
 
-## What it sets
+## Settings
 
 A skill's settings override the run type's and the autonomy level's. Settings in your brief override the skill's.
 
@@ -34,7 +34,7 @@ A skill's settings override the run type's and the autonomy level's. Settings in
 | [`schedule.local_mix`](../fields.md#schedule-local_mix) | `{ablation: 0.15, edit: 0.75, settings: 0.1}` |
 | [`schedule.novelty`](../fields.md#schedule-novelty) | `0.3` |
 
-## What it tells the agents
+## Agent guidance
 
 This text is added to every call to the role named. It is taken from the skill's file.
 
@@ -82,7 +82,7 @@ The writer and the analyst are also given these rules:
 
 And the writer is told, in the first half of the budget: "Try different algorithms and data structures; a rough version shows whether the idea is in a better class." In the second half: "Tighten the best design: remove repeated work, then improve its layout and inner loops."
 
-## What your evaluator must report
+## Evaluator requirements
 
 - compare every design's output with a stored reference output and write `valid: false` with `rejected: "output differs"` when it does not match (exactly, or within a stated tolerance)
 - time the run several times on a quiet machine with a fixed number of threads, and report the median as the score with objective.direction minimize; set evaluation.noise from the spread of repeats
@@ -96,7 +96,7 @@ And the writer is told, in the first half of the budget: "Try different algorith
 
 Read the best design's time against the reference row for the original code, and count the designs rejected for a wrong output. Then run the winner on the inputs the search never saw: a gain that does not hold there was fitted to the benchmark.
 
-## Why these settings
+## Rationale
 
 The score is a measured time and the output must not change, so the benchmark rejects any design whose output differs. Early stopping is off, because a timing is not a curve. The largest gains come from a different algorithm, so the first half of the budget explores.
 
@@ -109,7 +109,7 @@ The score is a measured time and the output must not change, so the benchmark re
 
 Can be combined with [`data-pipeline`](data-pipeline.md), [`bioinformatics-algorithm`](bioinformatics-algorithm.md): `run.skill: [algorithm-runtime, data-pipeline]`.
 
-## The file
+## Skill file
 
 [`evoloop/skills/algorithm-runtime/skill.yaml`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skills/algorithm-runtime/skill.yaml) ([raw](https://raw.githubusercontent.com/cameo-db/evoloop/main/evoloop/skills/algorithm-runtime/skill.yaml))
 

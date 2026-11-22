@@ -4,13 +4,13 @@ Skill `model-ensemble-members`. Find models that are each good and that make dif
 
 File: [`evoloop/skills/model-ensemble-members/skill.yaml`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skills/model-ensemble-members/skill.yaml) ([raw](https://raw.githubusercontent.com/cameo-db/evoloop/main/evoloop/skills/model-ensemble-members/skill.yaml)). A search copies this file to `mysearch/skills/model-ensemble-members/skill.yaml` when you choose the skill, and reads that copy. [Edit it during setup](../skills.md).
 
-## When to use it
+## When to use
 
 You will average several models (as a final predictor, or as the teacher for model-distillation) and want members that add to each other. Not for a single best model.
 
-## Use it
+## Usage
 
-[Use this skill in setup](../setting-up.md#3-answer-the-questions) · [Combine it with another skill](../skills.md#combining-skills) · <a href="../../which-search/?goal=model-ensemble-members&run=survey#preview-a-search">Preview the resulting search</a>
+[Use this skill in setup](../setting-up.md#3-answer-the-setup-questions) · [Combine it with another skill](../skills.md#combining-skills) · <a href="../../which-search/?goal=model-ensemble-members&run=survey#preview-a-search">Preview the resulting search</a>
 
 In setup, name it at the skill question. Or put these lines in `brief.yaml`; the budget and any limits or ranges are placeholders.
 
@@ -22,7 +22,7 @@ budget:
   evaluations: 150
 ```
 
-## What it sets
+## Settings
 
 A skill's settings override the run type's and the autonomy level's. Settings in your brief override the skill's.
 
@@ -34,7 +34,7 @@ A skill's settings override the run type's and the autonomy level's. Settings in
 | [`strategy.descriptors`](../fields.md#strategy-descriptors) | `[behaviour]` |
 | [`strategy.mechanism`](../fields.md#strategy-mechanism) | `archive` |
 
-## What it tells the agents
+## Agent guidance
 
 This text is added to every call to the role named. It is taken from the skill's file.
 
@@ -80,7 +80,7 @@ The writer and the analyst are also given these rules:
 
 And the writer is told, in the first half of the budget: "Found as many different families as possible, each trained well enough to judge." In the second half: "Raise the score of the best design in each group without making it behave like the others."
 
-## What your evaluator must report
+## Evaluator requirements
 
 - report `signature` in result.json: a list of numbers saying where the model's errors fall (per class, per range of the target, or per held-out example); the groups are made from it
 - after the search, score the average of the best design of each group yourself; evoloop does not train or score ensembles
@@ -91,7 +91,7 @@ And the writer is told, in the first half of the budget: "Found as many differen
 
 Read the population table: each row is the best design of one behaviour group. Those are the candidate members. evoloop does not score the ensemble itself: average the best of each group yourself and check the average against the best single model.
 
-## Why these settings
+## Rationale
 
 An ensemble gains only as far as its members are wrong in different places. So designs are grouped by where their errors fall and the best of each group is kept, which keeps a design that is slightly worse but different in play.
 
@@ -103,7 +103,7 @@ An ensemble gains only as far as its members are wrong in different places. So d
 
 Can be combined with [`model-distillation`](model-distillation.md): `run.skill: [model-ensemble-members, model-distillation]`.
 
-## The file
+## Skill file
 
 [`evoloop/skills/model-ensemble-members/skill.yaml`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skills/model-ensemble-members/skill.yaml) ([raw](https://raw.githubusercontent.com/cameo-db/evoloop/main/evoloop/skills/model-ensemble-members/skill.yaml))
 

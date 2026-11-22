@@ -435,14 +435,14 @@ def guide_markdown(name: str) -> str:
            "Skill `%s`. %s" % (one["name"], one["summary"]), "",
            "File: %s. A search copies this file to `mysearch/skills/%s/skill.yaml` when you choose the skill, and "
            "reads that copy. [Edit it during setup](../skills.md)." % (file_links(one["name"]), one["name"]), "",
-           "## When to use it", "", one["when"] or one["summary"], ""]
-    out += ["## Use it", "",
-            "[Use this skill in setup](../setting-up.md#3-answer-the-questions) · "
+           "## When to use", "", one["when"] or one["summary"], ""]
+    out += ["## Usage", "",
+            "[Use this skill in setup](../setting-up.md#3-answer-the-setup-questions) · "
             "[Combine it with another skill](../skills.md#combining-skills) · %s" % preview, "",
             "In setup, name it at the skill question. Or put these lines in `brief.yaml`; the budget and any limits or "
             "ranges are placeholders.", "", "```yaml", _brief(brief).rstrip(), "```", ""]
     sets = form.flatten(one["settings"])
-    out += ["## What it sets", ""]
+    out += ["## Settings", ""]
     if sets:
         out += ["A skill's settings override the run type's and the autonomy level's. Settings in your brief override "
                 "the skill's.", "", "| Setting | Value |", "|---|---|"]
@@ -450,7 +450,7 @@ def guide_markdown(name: str) -> str:
         out.append("")
     else:
         out += ["Nothing. This skill only supplies instructions; the run type and the defaults set the search.", ""]
-    out += ["## What it tells the agents", "",
+    out += ["## Agent guidance", "",
             "This text is added to every call to the role named. It is taken from the skill's file.", ""]
     labels = {"all": "Every role", "writer": "Writer", "analyst": "Analyst", "strategist": "Strategist",
               "coordinator": "Coordinator", "conductor": "Conductor"}
@@ -465,7 +465,7 @@ def guide_markdown(name: str) -> str:
     if one["stages"]:
         out += ["And the writer is told, in the first half of the budget: \"%s\" In the second half: \"%s\"" % (
             one["stages"].get("early", ""), one["stages"].get("late", "")), ""]
-    out += ["## What your evaluator must report", ""]
+    out += ["## Evaluator requirements", ""]
     needs = one["needs"]
     if needs["adapter"] or needs["figures"] or needs["references"]:
         out += ["- %s" % n for n in needs["adapter"]]
@@ -477,7 +477,7 @@ def guide_markdown(name: str) -> str:
     out += ["", "[Write the evaluator](../evaluator.md) · [Evaluator interface](../project-contract.md)", ""]
     out += ["## Reading the results", "", one["reading"], ""]
     if one["why"]:
-        out += ["## Why these settings", "", one["why"], ""]
+        out += ["## Rationale", "", one["why"], ""]
     if one["instead"] or one["combines"]:
         out += ["## Related skills", ""]
         if one["instead"]:
@@ -493,7 +493,7 @@ def guide_markdown(name: str) -> str:
                 ", ".join("[`%s`](%s.md)" % (n, n) for n in one["combines"]), one["name"], one["combines"][0]), ""]
     with open(os.path.join(one["path"], "skill.yaml"), "r", encoding="utf-8") as handle:
         text = handle.read().rstrip()
-    out += ["## The file", "", "%s" % file_links(one["name"]), "", "```yaml", text, "```", ""]
+    out += ["## Skill file", "", "%s" % file_links(one["name"]), "", "```yaml", text, "```", ""]
     return "\n".join(out).rstrip() + "\n"
 
 

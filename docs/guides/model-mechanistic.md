@@ -4,13 +4,13 @@ Skill `model-mechanistic`. Improve a model that is interpretable by design, wher
 
 File: [`evoloop/skills/model-mechanistic/skill.yaml`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skills/model-mechanistic/skill.yaml) ([raw](https://raw.githubusercontent.com/cameo-db/evoloop/main/evoloop/skills/model-mechanistic/skill.yaml)). A search copies this file to `mysearch/skills/model-mechanistic/skill.yaml` when you choose the skill, and reads that copy. [Edit it during setup](../skills.md).
 
-## When to use it
+## When to use
 
 The model is meant to be read, not only to predict: its parts stand for things. Not for making a black-box model explainable after the fact.
 
-## Use it
+## Usage
 
-[Use this skill in setup](../setting-up.md#3-answer-the-questions) · [Combine it with another skill](../skills.md#combining-skills) · <a href="../../which-search/?goal=model-mechanistic&run=refine#preview-a-search">Preview the resulting search</a>
+[Use this skill in setup](../setting-up.md#3-answer-the-setup-questions) · [Combine it with another skill](../skills.md#combining-skills) · <a href="../../which-search/?goal=model-mechanistic&run=refine#preview-a-search">Preview the resulting search</a>
 
 In setup, name it at the skill question. Or put these lines in `brief.yaml`; the budget and any limits or ranges are placeholders.
 
@@ -22,7 +22,7 @@ budget:
   evaluations: 80
 ```
 
-## What it sets
+## Settings
 
 A skill's settings override the run type's and the autonomy level's. Settings in your brief override the skill's.
 
@@ -33,7 +33,7 @@ A skill's settings override the run type's and the autonomy level's. Settings in
 | [`space.must_keep`](../fields.md#space-must_keep) | 1. Every learned parameter keeps a stated meaning (a motif, an interaction, a rate, an affinity, a concentration). Do not add a component whose parameters cannot be read this way, such as a dense network between the interpretable parts and the output.<br>2. Keep the constraints that make the parts readable: signs, non-negativity, normalisation, saturation, conservation, units. |
 | [`space.preset`](../fields.md#space-preset) | `template` |
 
-## What it tells the agents
+## Agent guidance
 
 This text is added to every call to the role named. It is taken from the skill's file.
 
@@ -84,7 +84,7 @@ The writer and the analyst are also given these rules:
 
 And the writer is told, in the first half of the budget: "Find out which parts are doing work, with ablations, and get the optimization reliable across seeds." In the second half: "Change the form of the terms that matter, one at a time, and prefer the simpler design at equal score."
 
-## What your evaluator must report
+## Evaluator requirements
 
 - optional, and worth doing: report a figure of how well the parts match what is known (the share of filters matching known motifs, recovered interactions, parameters within physical ranges) under diagnostics; it can then be a leaderboard column, a speciality metric, or the second figure of the pareto strategy
 - report `signature` (where the errors fall) so that designs with the same failure are told apart from ones that fail differently
@@ -96,7 +96,7 @@ And the writer is told, in the first half of the budget: "Find out which parts a
 
 A higher score is only half the result. For the best designs, read `evoloop show` to see what changed and what the writer said it stands for, and check the fitted parameters yourself. The rule that parameters keep a meaning is an instruction to the writers, not a check in code.
 
-## Why these settings
+## Rationale
 
 The model is meant to be read, so the search keeps its overall shape, tells the writers that every parameter must keep a stated meaning, and uses more ablations than usual to find parts that do no work. Novelty is turned down: a different kind of model is not the goal.
 
@@ -106,7 +106,7 @@ The model is meant to be read, so the search keeps its overall shape, tells the 
 |---|---|
 | only the score matters | [`model-performance`](model-performance.md) |
 
-## The file
+## Skill file
 
 [`evoloop/skills/model-mechanistic/skill.yaml`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skills/model-mechanistic/skill.yaml) ([raw](https://raw.githubusercontent.com/cameo-db/evoloop/main/evoloop/skills/model-mechanistic/skill.yaml))
 

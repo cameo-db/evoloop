@@ -250,7 +250,7 @@ length and stops ranking new scores against old ones. Both changes are listed in
 Designs here train in a fraction of a second, so the search may finish before a command arrives. If so,
 run `evoloop run demo --name second` again and the change is applied then.
 
-## Limits of the example
+## Limitations
 
 The proposals are scripted: a fixed list of new designs and simple edits. The example shows the
 mechanics (the loop, the records, steering) on real training runs. It says nothing about what an LLM

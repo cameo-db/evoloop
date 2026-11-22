@@ -15,7 +15,7 @@ cannot work out.
 Five decisions are yours either way: what to optimize, what may change, how a design is
 scored and how noisy that score is, how much to spend, and any hard limits. The rest have defaults.
 
-## Before you start
+## Search folder
 
 ```
 evoloop init mysearch --source path/to/project
@@ -30,7 +30,7 @@ copies your project into a search folder. Your original is never touched.
 | `task.md` | what the agents are told about the problem |
 | `brief.yaml` | the answers that set up the search |
 
-## 1. Mark what may change
+## 1. Mark the editable code
 
 In `base/`, put a pair of comment lines around each part that may change:
 
@@ -71,7 +71,7 @@ Then write `task.md`: a page telling the agents what the problem is, what the da
 score means, and anything you already know works or does not. They read it on every call and see
 nothing else of your project except the marked blocks.
 
-## 3. Answer the questions
+## 3. Answer the setup questions
 
 ```
 evoloop setup mysearch
@@ -88,7 +88,7 @@ default and must be answered:
 | How should the search spend its evaluations? | the run type: [Choose a skill and a run type](which-search.md) |
 | How many designs may be trained in all? | the budget, in evaluations |
 | How long is one training run? | in your evaluator's own unit: epochs, steps |
-| How much does the score vary between two runs of the same design? | The spread between seeds. If you do not know it, train your baseline twice and take the difference. [Measure your noise](noise.md) |
+| How much does the score vary between two runs of the same design? | The spread between seeds. If you do not know it, train your baseline twice and take the difference. [Measure the noise floor](noise.md) |
 | Train the baseline, import its score, or skip it? | training it inside the search is the usual choice |
 | How many designs may train at once? | |
 | Which agent backend? | the Anthropic API, Claude Code, or scripted proposals for a dry run |
@@ -106,7 +106,7 @@ skills, to merge them into one file (`m`). The form shows each chosen skill as a
 Change the settings or the text the agents are given, then read the plan: it shows the effect.
 [Edit, merge or write a skill](skills.md).
 
-## 4. Read the plan, then confirm
+## 4. Review and confirm the plan
 
 ```
 evoloop plan mysearch
@@ -139,7 +139,7 @@ evoloop brief mysearch --confirm "Your Name"
 Nothing runs before this. Your name and a digest of what you agreed to are recorded, and a brief that
 is edited afterwards has to be confirmed again.
 
-## 5. Dry-run, then run
+## 5. Dry run and launch
 
 First prove the plumbing with scripted proposals and a tiny budget, which costs nothing:
 
@@ -171,6 +171,6 @@ You answer a few questions and evoloop fills in the rest, from the first of thes
 
 `evoloop plan` shows which of these each value came from.
 
-## Next
+## Next steps
 
 [Monitor and steer a search](steering.md) once it is going.

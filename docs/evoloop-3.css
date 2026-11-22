@@ -2,7 +2,7 @@
 .md-grid { max-width: 1400px; }
 .md-typeset table:not([class]) { font-size: 0.72rem; }
 .md-typeset table:not([class]) th { white-space: nowrap; }
-.md-typeset table:not([class]) td:first-child { white-space: nowrap; }
+.md-typeset table:not([class]) td:first-child code { white-space: nowrap; }
 .md-typeset .mermaid { text-align: center; }
 
 /* The front page: what it is and what to do first, beside one real result. */
@@ -168,3 +168,16 @@
 /* Inner pages: prose at a readable width. Tables, code and figures may use the full column. */
 .md-content__inner > p, .md-content__inner > ul, .md-content__inner > ol, .md-content__inner > dl, .md-content__inner > blockquote { max-width: 38rem; }
 .md-typeset img[src$="loop.svg"], .md-typeset img[src$="lineages.svg"] { display: block; max-width: min(100%, 44rem); margin: 1.4rem 0; border-radius: 10px; }
+
+/* Previous and next page: drawn as part of the page, where the reading ends, not inside the dark footer. */
+.md-footer { background-color: var(--md-default-bg-color); color: var(--md-default-fg-color); }
+.md-footer__inner { border-top: 1px solid var(--md-default-fg-color--lightest); padding: 0.8rem 0.6rem 1rem; gap: 0.8rem; }
+.md-footer__link { border: 1px solid var(--md-default-fg-color--lighter); border-radius: 10px; margin: 0; padding: 0.5rem 0.4rem; opacity: 1; flex: 1 1 0; max-width: 24rem; }
+.md-footer__link--next { margin-left: auto; }
+.md-footer__link:hover, .md-footer__link:focus { border-color: var(--evo-teal); opacity: 1; }
+.md-footer__direction { opacity: 0.7; }
+.md-footer__title { font-weight: 600; color: var(--evo-teal); }
+[data-md-color-scheme="slate"] .md-footer__title { color: #5fd0c1; }
+.md-footer__button { color: var(--evo-teal); }
+.md-footer-meta { background-color: #17201f; }
+.md-typeset table:not([class]) code { word-break: normal; overflow-wrap: normal; }
