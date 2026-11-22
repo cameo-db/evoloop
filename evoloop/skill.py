@@ -704,3 +704,58 @@ def told(skill: Optional[Dict[str, Any]]) -> List[str]:
         if skill.get("stages", {}).get(stage):
             out += ["", "  Writer, in the %s:" % label] + ["    " + line for line in skill["stages"][stage].split("\n")]
     return out
+
+
+# --- a skill of the person's own, from an empty template -----------------------------------------------------------
+
+TEMPLATE = """# {name}: a skill of your own. It does not have to resemble a library skill.
+# A skill does two things: its settings are applied to the search, and its guidance is added to the agent
+# calls. Every entry is optional. Delete what you do not need.
+name: {name}
+title: One line saying what this skill is for
+summary: One or two sentences, shown in listings and in the plan.
+
+# Search settings this skill applies. Any setting that can change during a run may go here; the run type
+# decides the rest. For example:
+#   settings:
+#     strategy: {{mechanism: pareto, second_metric: parameters, second_direction: minimize}}
+settings: {{}}
+
+# Text added to the agent calls. `all` goes to every role, the others to one role.
+guidance:
+  all: |
+    Say what this search is for and what counts as success.
+  writer: |
+    Say what to try first, what to avoid, and what must not change.
+
+# Rules for the writer and the analyst: what a result means, and what to do about it. For example:
+#   diagnose:
+#     - see: "training loss falls and validation loss does not"
+#       do: "regularize before adding capacity"
+diagnose: []
+
+# Advice to the writer in the first and the second half of the budget. For example:
+#   stages: {{early: "Try several kinds of design.", late: "Refine the two best."}}
+stages: {{}}
+
+# What the evaluator must report for this skill to work. For example:
+#   needs: {{figures: [parameters], references: ["teacher"]}}
+needs: {{}}
+"""
+
+
+def new(name: str, folder: str) -> Tuple[Optional[str], Optional[str]]:
+    """Write an empty skill of the person's own, `skills/NAME/skill.yaml` in the search folder: (the file, None) or
+    (None, why not). Nothing that is there already is written over."""
+    if not OWN_NAME.fullmatch(name or ""):
+        return None, "give the skill a name in lower case, with digits, hyphens or underscores (for instance my-skill)"
+    if name in names() or name in ALIASES:
+        return None, "%s is a skill of the library; give yours a name of its own, or copy that one with --copy" % name
+    target = os.path.join(folder, "skills", name)
+    if os.path.exists(target):
+        return None, "%s exists already" % target
+    os.makedirs(target)
+    file = os.path.join(target, "skill.yaml")
+    with open(file, "w", encoding="utf-8") as handle:
+        handle.write(TEMPLATE.format(name=name))
+    return file, None

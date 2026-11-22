@@ -1,7 +1,7 @@
 # Skill file format
 
 A skill is a folder holding one file, `skill.yaml`. This page is the reference for that file.
-[Edit, merge or write a skill](skills.md) explains how skills are used.
+[Edit or merge a skill](skills.md) · [Write a skill](custom-skills.md) explains how skills are used.
 
 ## Annotated example
 

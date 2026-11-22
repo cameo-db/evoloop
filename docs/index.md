@@ -201,9 +201,10 @@ code can change.
 A skill is a file of search settings and agent guidance for one goal: raising a score, distilling a
 teacher into a student, mapping an accuracy-size frontier, fine-tuning, speeding up an algorithm.
 evoloop runs without one. With one, you supply less yourself. The library has thirteen, and the one you
-choose is copied into your search folder, where you can edit it.
+choose is copied into your search folder, where you can edit it. You can also write your own, for any
+goal, without following the library.
 
-[Choose a skill →](which-search.md) · [Edit, merge or write a skill →](skills.md)
+[Choose a skill →](which-search.md) · [Edit or merge a skill →](skills.md) · [Write a skill →](custom-skills.md)
 
 ## Running a search
 
@@ -225,6 +226,14 @@ scores, and it already holds searches run with evoloop. A search can start from 
 every search is saved in CAMEO's format so that it can be deposited there.
 
 [Start from earlier designs →](warm-start.md) · [Save and deposit the study →](study.md)
+
+## Extending
+
+The library skills, run types and strategies are starting points. Without touching the code you can
+write your own skill, schedule, metrics and limits, and replace the LLM with a proposer of your own. A
+new strategy, scheduler or LLM backend is a short module.
+
+[Extending evoloop →](extending.md)
 
 ## Disclaimer
 

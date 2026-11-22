@@ -108,5 +108,5 @@ several into one file. This table is generated from the files.
 --8<-- "generated/skills-table.md"
 
 Each skill's page shows its settings, the exact text it sends to each agent, and the file.
-[Edit, merge or write a skill](skills.md) · [Skill file format](skill-format.md)
+[Edit or merge a skill](skills.md) · [Write a skill](custom-skills.md) · [Skill file format](skill-format.md)
 

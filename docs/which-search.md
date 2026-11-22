@@ -60,7 +60,7 @@ and the file itself, with a link to it in the repository.
 Skills are plain files. When you choose one during setup, it is copied to `mysearch/skills/`, and the
 search reads that copy. You can edit it before you confirm, and at any time after. Two skills can be
 combined (`skill: [model-distillation, model-size-frontier]`) or merged into one file.
-[Edit, merge or write a skill](skills.md).
+[Edit or merge a skill](skills.md) · [Write a skill](custom-skills.md).
 
 ### Effect on the loop
 

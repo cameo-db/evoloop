@@ -370,8 +370,10 @@ def test_the_decision_page_and_the_readme_list_the_whole_library_and_say_it_can_
             text = handle.read()
         assert all("`%s`" % name in text for name in skill.names()), page            # every goal can be found
     with open(os.path.join(root, "docs", "skills.md"), encoding="utf-8") as handle:
+        assert "Combining skills" in handle.read()
+    with open(os.path.join(root, "docs", "custom-skills.md"), encoding="utf-8") as handle:
         text = handle.read()
-    assert "Writing a skill" in text and "Adding a skill to the library" in text and "Combining skills" in text
+    assert "evoloop skills --new" in text and "Adding a skill to the library" in text
     with open(os.path.join(root, "README.md"), encoding="utf-8") as handle:
         assert "study.json" in handle.read()                                          # and how the result is kept
 
@@ -580,3 +582,29 @@ def test_your_own_choice_settles_a_disagreement_between_skills_and_the_plan_says
     notes = form.warnings(clash)
     assert any("strategy.mechanism is 'pareto' because you set it in the brief" in n for n in notes)
     assert not any("model-size-frontier stands" in n and "strategy.mechanism" in n for n in notes)
+
+
+def test_a_skill_of_your_own_starts_from_an_empty_template_and_is_not_bound_to_the_library(tmp_path, capsys):
+    folder = search(tmp_path)
+    assert main(["skills", "--new", "splice-sites", "--dir", folder]) == 0
+    said = capsys.readouterr().out
+    file = os.path.join(folder, "skills", "splice-sites", "skill.yaml")
+    assert os.path.isfile(file) and "run.skill=splice-sites" in said
+    one, fault = skill.load("splice-sites", folder)
+    assert fault is None and one["own"] and one["settings"] == {} and "what counts as success" in one["guidance"]["all"]
+    assert skill.state("splice-sites", folder)[0]["kind"] == "own"
+    with pytest.raises(SystemExit):
+        main(["skills", "--new", "splice-sites", "--dir", folder])                 # never written over
+    with pytest.raises(SystemExit):
+        main(["skills", "--new", "model-efficiency", "--dir", folder])             # a library name is refused
+    # A skill can be a few lines: no title, no settings, nothing of the library's shape.
+    small = os.path.join(folder, "skills", "tiny", "skill.yaml")
+    os.makedirs(os.path.dirname(small))
+    with open(small, "w", encoding="utf-8") as handle:
+        handle.write("guidance:\n  writer: |\n    Keep every model under two million parameters.\n")
+    assert main(["brief", folder, "--answer", "run.skill=tiny"]) == 0
+    assert main(["plan", folder]) == 0
+    plan = capsys.readouterr().out
+    assert "Skill: tiny" in plan and "Keep every model under two million parameters." in plan
+    both, fault = skill.combine("model-performance, tiny", folder)                # and it combines with a library skill
+    assert fault is None and "under two million parameters" in both["guidance"]["writer"]

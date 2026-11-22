@@ -91,7 +91,7 @@ search's own calls.
 
 ### skills
 
-`evoloop skills [NAME] [--dir DIR] [--search WORDS] [--edit] [--diff] [--merge A,B --name NEW] [--copy DIR] [--json]`
+`evoloop skills [NAME] [--dir DIR] [--search WORDS] [--new NAME] [--edit] [--diff] [--merge A,B --name NEW] [--copy DIR] [--json]`
 
 With nothing, lists the skill library by domain. With a name, prints that skill in full; with `--dir`,
 the search's own copy of it.
@@ -101,6 +101,7 @@ the search's own copy of it.
 | `--search WORDS` | finds skills by what they are for |
 | `--edit --dir DIR` | opens the search's copy in `$EDITOR`, then checks it can be used |
 | `--diff --dir DIR` | shows how the search's copy differs from the library's |
+| `--new NAME --dir DIR` | writes an empty skill of your own, `DIR/skills/NAME/skill.yaml` |
 | `--merge A,B --name NEW --dir DIR` | writes several skills as one file, `DIR/skills/NEW/skill.yaml` |
 | `--copy DIR` | writes one skill out as a folder, to start a skill of your own |
 
@@ -110,7 +111,7 @@ evoloop skills model-efficiency --edit --dir mysearch
 evoloop skills --merge model-distillation,model-size-frontier --name my-students --dir mysearch
 ```
 
-[Edit, merge or write a skill](skills.md).
+[Edit or merge a skill](skills.md) · [Write a skill](custom-skills.md).
 
 `--json` prints the library as records. `--markdown` and `--guides DIR` write the documentation's skill
 pages.

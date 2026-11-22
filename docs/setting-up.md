@@ -104,7 +104,7 @@ Choosing a skill copies its file to `mysearch/skills/NAME/skill.yaml`. That copy
 reads. `evoloop setup` shows what it sets and offers to open it in your editor (`e`) or, with several
 skills, to merge them into one file (`m`). The form shows each chosen skill as an editable text box.
 Change the settings or the text the agents are given, then read the plan: it shows the effect.
-[Edit, merge or write a skill](skills.md).
+[Edit or merge a skill](skills.md) · [Write a skill](custom-skills.md).
 
 ## 4. Review and confirm the plan
 

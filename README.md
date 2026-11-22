@@ -126,7 +126,7 @@ it, and several can be merged into one file.
 | [`data-pipeline`](evoloop/skills/data-pipeline/skill.yaml) | make a data pipeline faster or cheaper |
 
 [Choose a skill](https://evoloop.readthedocs.io/en/latest/which-search/) ·
-[Edit, merge or write a skill](https://evoloop.readthedocs.io/en/latest/skills/)
+[Edit or merge a skill](https://evoloop.readthedocs.io/en/latest/skills/) · [Write a skill](https://evoloop.readthedocs.io/en/latest/custom-skills/)
 
 ## CAMEO
 

@@ -380,6 +380,17 @@ def cmd_skills(args: Any) -> int:
     if args.markdown:
         sys.stdout.write(skills.library_markdown())
         return 0
+    if args.new:
+        if not args.dir:
+            raise SystemExit("give the search folder the skill is for: evoloop skills --new NAME --dir DIR")
+        file, fault = skills.new(args.new, os.path.abspath(args.dir))
+        if file is None:
+            raise SystemExit(fault)
+        out("written: %s" % file)
+        out("It is an empty skill of your own. Write its guidance and settings, then use it with:")
+        out("  evoloop brief %s --answer run.skill=%s" % (args.dir, args.new))
+        out("`evoloop plan %s` then shows what it sets and what it tells the agents." % args.dir)
+        return 0
     if args.merge:
         if not args.dir or not args.name:
             raise SystemExit("to merge skills into one file, give the search folder and a name for it: "
@@ -975,6 +986,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--table", action="store_true", help="the table of skills and what each sets, for the documentation")
     p.add_argument("--edit", action="store_true", help="open the search's copy of the skill in your editor (with --dir)")
     p.add_argument("--diff", action="store_true", help="how the search's copy differs from the library's (with --dir)")
+    p.add_argument("--new", metavar="NAME", help="write an empty skill of your own in the search folder (with --dir)")
     p.add_argument("--merge", metavar="A,B", help="write several skills as one skill file in the search folder (with --name and --dir)")
     p.add_argument("--name", default=None, help="the name of the merged skill")
     p.add_argument("--dir", default=None, help="the search folder: its own copies of skills are read first")

@@ -1,4 +1,4 @@
-# Edit, merge or write a skill
+# Edit or merge a skill
 
 A skill is one YAML file: settings for the search, text added to every agent call, and the measurements
 your evaluator must report. [The file format](skill-format.md) lists every entry. Skills are optional.
@@ -93,37 +93,7 @@ warns.
 - Change skill: `evoloop set mysearch --name r1 run.skill=model-efficiency --by "Your Name"`. The new
   skill is copied in, and the ledger lists every setting that moved with it.
 
-## Writing a skill
+## Writing your own
 
-Start from the nearest one:
-
-```
-evoloop skills model-efficiency --copy mysearch/skills/edge-device
-```
-
-Edit `mysearch/skills/edge-device/skill.yaml`, change its `name`, and set `run.skill: edge-device`. A
-skill is looked up by name in the search's `skills/` folder first, then as a path, then in the library.
-
-What to put in it, most useful first:
-
-1. Diagnoses of the form "if the results show X, do Y". Write down the mistakes you have watched a
-   search make.
-2. An order of attack: what to try first, and what is rarely worth an evaluation.
-3. What must not change: conventions and constraints.
-4. What to measure, under `needs`, so that a search missing a figure is told.
-5. Settings, only where the task calls for them.
-
-If you run without a skill and find yourself writing the same instructions into `task.md` and notes for
-each search, those instructions are the skill.
-
-## Adding a skill to the library
-
-Add its folder under `evoloop/skills/` in the repository and open a pull request. The tests check that
-every library skill loads and is complete. After adding one, regenerate the pages built from the
-library (`evoloop skills --markdown > docs/skill-library.md`, `evoloop skills --guides docs/guides`,
-`evoloop skills --table > docs/generated/skills-table.md`), add its guide to the navigation in
-`mkdocs.yml`, and add its name to the list in `tests/test_skills.py`.
-
-`evoloop skills --json` prints the library as a list of records (name, title, domain, objective, tags,
-version, authors, what it sets, what it needs, a digest). There is no online registry yet; the library
-is the folder in the repository.
+A skill does not have to come from the library. [Write a skill](custom-skills.md) starts one from an
+empty file.

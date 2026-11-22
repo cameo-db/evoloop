@@ -67,31 +67,31 @@ The commands.
 | [`menu_topics()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L354) |  |
 | [`cmd_menu(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L359) |  |
 | [`cmd_skills(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L371) | The skill library: the list, a search of it, one skill in full, or one written out as a folder to edit. |
-| [`cmd_site(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L456) | The site file: what is particular to this machine. |
-| [`cmd_run(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L490) |  |
-| [`offline(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L502) | A controller object for reading a run, with nothing started. |
-| [`cmd_status(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L509) |  |
-| [`cmd_show(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L546) | One run: where it came from, what its design changed against its parent, how it ended. |
-| [`cmd_report(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L585) |  |
-| [`cmd_study(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L596) |  |
-| [`cmd_set(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L608) |  |
-| [`cmd_note(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L624) |  |
-| [`cmd_withdraw(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L630) |  |
-| [`cmd_stop(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L636) |  |
-| [`cmd_chat(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L642) | Talk with the agent that runs the search. |
-| [`cmd_rehash(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L713) |  |
-| [`cmd_force(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L720) |  |
-| [`cmd_import(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L727) |  |
-| [`import_study(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L740) | Designs from a study file: a path, or a link to one (a study.json downloaded from CAMEO, or another search's). |
-| [`cmd_reference(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L768) | A row on the leaderboard for a model that is not part of the search: a published baseline, an earlier run's best. |
-| [`cmd_leaderboard(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L795) |  |
-| [`cmd_controller(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L834) | A Slurm job script that runs the search and requeues itself at its time limit. |
-| [`cmd_lineage(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L850) |  |
-| [`cmd_answer(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L858) |  |
-| [`cmd_review(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L864) |  |
-| [`cmd_steer(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L870) | The person's words, turned into ledger entries by the translator, shown back, applied only with --yes. |
-| [`build_parser()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L924) |  |
-| [`main(argv)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L1052) |  |
+| [`cmd_site(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L467) | The site file: what is particular to this machine. |
+| [`cmd_run(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L501) |  |
+| [`offline(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L513) | A controller object for reading a run, with nothing started. |
+| [`cmd_status(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L520) |  |
+| [`cmd_show(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L557) | One run: where it came from, what its design changed against its parent, how it ended. |
+| [`cmd_report(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L596) |  |
+| [`cmd_study(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L607) |  |
+| [`cmd_set(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L619) |  |
+| [`cmd_note(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L635) |  |
+| [`cmd_withdraw(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L641) |  |
+| [`cmd_stop(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L647) |  |
+| [`cmd_chat(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L653) | Talk with the agent that runs the search. |
+| [`cmd_rehash(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L724) |  |
+| [`cmd_force(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L731) |  |
+| [`cmd_import(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L738) |  |
+| [`import_study(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L751) | Designs from a study file: a path, or a link to one (a study.json downloaded from CAMEO, or another search's). |
+| [`cmd_reference(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L779) | A row on the leaderboard for a model that is not part of the search: a published baseline, an earlier run's best. |
+| [`cmd_leaderboard(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L806) |  |
+| [`cmd_controller(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L845) | A Slurm job script that runs the search and requeues itself at its time limit. |
+| [`cmd_lineage(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L861) |  |
+| [`cmd_answer(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L869) |  |
+| [`cmd_review(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L875) |  |
+| [`cmd_steer(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L881) | The person's words, turned into ledger entries by the translator, shown back, applied only with --yes. |
+| [`build_parser()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L935) |  |
+| [`main(argv)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L1064) |  |
 
 ## `controller.py` { #m-controller-py }
 
@@ -403,6 +403,7 @@ Skills: what kind of optimization a search is.
 | [`write_edited(name, text, folder)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skill.py#L661) | Save an edited skill file (from the set-up form) as the search's copy. |
 | [`texts(folder)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skill.py#L680) | The file of every skill a search in `folder` could name (its own copies first), for the set-up form. |
 | [`told(skill)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skill.py#L690) | What a skill adds to the agent calls, role by role, as lines of a plan. |
+| [`new(name, folder)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skill.py#L747) | Write an empty skill of the person's own, `skills/NAME/skill.yaml` in the search folder: (the file, None) or (None, why not). |
 
 ## `interview.py` { #m-interview-py }
 

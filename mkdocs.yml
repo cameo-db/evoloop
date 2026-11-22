@@ -56,6 +56,7 @@ nav:
       - Comparing scores: comparable.md
       - Comparison with other AutoResearch methods: compared.md
       - All search options: options.md
+      - Extending evoloop: extending.md
   - Run:
       - Monitor and steer a search: steering.md
       - The strategist: strategist.md
@@ -82,14 +83,16 @@ nav:
           - Ensemble members: guides/model-ensemble-members.md
           - Interpretable or biophysical models: guides/model-mechanistic.md
           - Bayesian tuning without agents: guides/settings-tuning-bayesian.md
-      - Edit, merge or write a skill: skills.md
+      - Custom skills:
+          - Write a skill: custom-skills.md
+          - Edit or merge a skill: skills.md
+          - Skill file format: skill-format.md
   - Reference:
       - reference.md
       - Commands: commands.md
       - Brief fields: fields.md
       - Options and presets: menu.md
       - Evaluator interface: project-contract.md
-      - Skill file format: skill-format.md
       - Files of a run: records.md
       - Skill library: skill-library.md
       - Models and prices: models.md
