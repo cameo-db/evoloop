@@ -8,20 +8,29 @@ hide:
 
 # evoloop
 
-<p class="evo-tagline">Evolutionary search over machine-learning code, with LLM agents writing the candidates.</p>
+<p class="evo-tagline">An AutoResearch loop for machine learning, driven by AI agents.</p>
 
-You mark the parts of your code that may change, such as an architecture, a loss or a training recipe,
-and provide a script that trains one model and reports its validation score. A writer agent proposes
-changes. Each proposal is trained as a job on your GPUs and scored, and the proposals that score best
-become the parents of the next ones.
+evoloop automates the cycle a researcher runs by hand: propose a change to a model, train it, look at
+the score, and decide what to try next. AI agents do the proposing and the analysis. Your own training
+code does the evaluation. The loop runs for hundreds of experiments and keeps a record of every one.
 
-The agents propose and advise. Everything else is deterministic code: choosing the parents, checking
-each edit, scheduling the jobs, enforcing the budget. The method follows [FunSearch and AlphaEvolve](compared.md),
-adapted to searches in which every evaluation is a full training run and the researcher wants to steer.
+It is useful when you have a model and a score, and improving the model means trying many variations.
+That covers searching for a better architecture, tuning a training recipe, distilling a large model
+into smaller ones, and mapping the trade-off between accuracy and size. It also works on other code
+that a script can score, such as an algorithm or a data pipeline.
+
+You stay in charge of a search. You decide what may change and how much may be spent, you approve the
+plan before anything runs, and you can redirect the search while it is running.
 
 [Get started](setting-up.md){ .md-button .md-button--primary }
 [How it works](how-it-works.md){ .md-button }
 [GitHub](https://github.com/cameo-db/evoloop){ .md-button }
+
+## How it works
+
+You mark the parts of your code that may change, such as an architecture, a loss or a training recipe,
+and provide an *evaluator*: a script that trains one model and reports its validation score. evoloop
+then runs an evolutionary search over those parts.
 
 <figure class="evo-figure">
 <svg class="evo-fig" viewBox="0 0 1000 600" role="img" aria-label="Overview of evoloop. The researcher supplies a brief and baseline code. The writer agent proposes new code. Your training script trains each proposal as a parallel job. The validation metric scores it. The analyst and strategist agents analyze the results and return lessons to the writer. In the centre are the lineages, from which code chooses the parents. Skills and CAMEO are optional inputs. The outputs are a leaderboard and a study file for CAMEO. The researcher can steer during the run.">
@@ -88,17 +97,18 @@ adapted to searches in which every evaluation is a full training run and the res
 </svg>
 </figure>
 
-## The loop
-
 A search repeats four steps until its budget of training runs is spent. The *writer* agent proposes a
-design: an edit to a parent, a crossover of two parents, or something new. Your training script, the
-*evaluator*, trains it as a job alongside others. The design is scored on your validation metric and
-ranked. Every few designs the *analyst* agent summarizes what has and has not worked, and the writer
-reads those lessons before its next proposal. A *strategist* agent can shift effort between new designs
-and refinement.
+design: an edit to a parent, a crossover of two parents, or something new. The evaluator trains it as
+a job on your GPUs, alongside others. The design is scored on your validation metric and ranked. Every
+few designs the *analyst* agent summarizes what has and has not worked, and the writer reads those
+lessons before its next proposal. A *strategist* agent can shift effort between new designs and
+refinement.
 
-Code decides which designs become parents. It also rejects any proposal that edits code you did not
-mark, stops weak training runs early, and keeps test-set results away from the agents.
+The agents propose and advise. Everything else is deterministic code: choosing which designs become
+parents, rejecting any proposal that edits code you did not mark, stopping weak training runs early,
+keeping test-set results away from the agents, and enforcing the budget. The method follows
+[FunSearch and AlphaEvolve](compared.md), adapted to searches in which every evaluation is a full
+training run and the researcher wants to steer.
 
 [How it works →](how-it-works.md)
 

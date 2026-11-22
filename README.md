@@ -7,37 +7,47 @@
 
 [![Documentation](https://readthedocs.org/projects/evoloop/badge/?version=latest)](https://evoloop.readthedocs.io/en/latest/)
 
-**Evolutionary search over machine-learning code, with LLM agents writing the candidates.**
+**An AutoResearch loop for machine learning, driven by AI agents.**
 
-You mark the parts of your code that may change, such as an architecture, a loss or a training recipe,
-and provide a script that trains one model and reports its validation score. A writer agent proposes
-changes. Each proposal is trained as a job on your GPUs and scored, and the proposals that score best
-become the parents of the next ones.
+evoloop automates the cycle a researcher runs by hand: propose a change to a model, train it, look at
+the score, and decide what to try next. AI agents do the proposing and the analysis. Your own training
+code does the evaluation. The loop runs for hundreds of experiments and keeps a record of every one.
 
-The agents propose and advise. Everything else is deterministic code: choosing the parents, checking
-each edit, scheduling the jobs, enforcing the budget. The method follows FunSearch and AlphaEvolve,
-adapted to searches in which every evaluation is a full training run and the researcher wants to steer.
+It is useful when you have a model and a score, and improving the model means trying many variations.
+That covers searching for a better architecture, tuning a training recipe, distilling a large model
+into smaller ones, and mapping the trade-off between accuracy and size. It also works on other code
+that a script can score, such as an algorithm or a data pipeline.
+
+You stay in charge of a search. You decide what may change and how much may be spent, you approve the
+plan before anything runs, and you can redirect the search while it is running.
 
 Documentation: <https://evoloop.readthedocs.io>
 
+## How it works
+
+You mark the parts of your code that may change, such as an architecture, a loss or a training recipe,
+and provide an *evaluator*: a script that trains one model and reports its validation score. evoloop
+then runs an evolutionary search over those parts.
+
 <p align="center"><img src="docs/assets/loop.svg" alt="The evoloop loop: the writer agent proposes new code, your training script trains it, the validation metric scores it, and the analyst and strategist agents return lessons to the writer. Code chooses the parents from the lineages." width="820"></p>
+
+A search repeats four steps until its budget of training runs is spent. The *writer* agent proposes a
+design: an edit to a parent, a crossover of two parents, or something new. The evaluator trains it as
+a job on your GPUs, alongside others. The design is scored on your validation metric and ranked. Every
+few designs the *analyst* agent summarizes what has and has not worked, and the writer reads those
+lessons before its next proposal. A *strategist* agent can shift effort between new designs and
+refinement.
+
+The agents propose and advise. Everything else is deterministic code: choosing which designs become
+parents, rejecting any proposal that edits code you did not mark, stopping weak training runs early,
+keeping test-set results away from the agents, and enforcing the budget. The method follows FunSearch
+and AlphaEvolve, adapted to searches in which every evaluation is a full training run and the
+researcher wants to steer.
 
 By default the search keeps several lineages, families of designs descended from one founding design,
 so that it does not converge on the first idea that works.
 
 <p align="center"><img src="docs/assets/lineages.svg" alt="Schematic of lineages in one search: three are founded while the search explores, the baseline is retired, and a crossover of two founds a hybrid that ends up best." width="820"></p>
-
-## How it works
-
-A search repeats four steps until its budget of training runs is spent. The *writer* agent proposes a
-design: an edit to a parent, a crossover of two parents, or something new. Your training script, the
-*evaluator*, trains it as a job alongside others. The design is scored on your validation metric and
-ranked. Every few designs the *analyst* agent summarizes what has and has not worked, and the writer
-reads those lessons before its next proposal. A *strategist* agent can shift effort between new designs
-and refinement.
-
-Code decides which designs become parents. It also rejects any proposal that edits code you did not
-mark, stops weak training runs early, and keeps test-set results away from the agents.
 
 Lineages are one of five selection strategies. The others are a MAP-Elites archive, tournament
 selection as in regularized evolution, a Pareto front over the score and a second measure such as model
