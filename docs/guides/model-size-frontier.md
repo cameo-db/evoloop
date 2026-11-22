@@ -4,7 +4,15 @@ Skill `model-size-frontier`. Find the best model at each size (or speed), from v
 
 File: [`evoloop/skills/model-size-frontier/skill.yaml`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skills/model-size-frontier/skill.yaml) ([raw](https://raw.githubusercontent.com/cameo-db/evoloop/main/evoloop/skills/model-size-frontier/skill.yaml)). A search copies this file to `mysearch/skills/model-size-frontier/skill.yaml` when you choose the skill, and reads that copy. [Edit it during setup](../skills.md).
 
+## When to use it
+
+You need models for several budgets (a phone, a server, a screen of millions of inputs), or want to know what accuracy each size buys before choosing. For one cheaper model at a fixed score use model-efficiency.
+
 ## Use it
+
+[Use this skill in setup](../setting-up.md#3-answer-the-questions) · [Combine it with another skill](../skills.md#combining-skills) · <a href="../../which-search/?goal=model-size-frontier&run=survey#preview-a-search">Preview the resulting search</a>
+
+In setup, name it at the skill question. Or put these lines in `brief.yaml`; the budget and any limits or ranges are placeholders.
 
 ```yaml
 run:
@@ -17,10 +25,6 @@ limits:
     min: 50000
     max: 50000000
 ```
-
-Put these lines in `brief.yaml`. The budget and any limits or ranges are placeholders. <a href="../../which-search/?goal=model-size-frontier&run=survey#preview-a-search">Preview the resulting search</a>.
-
-You need models for several budgets (a phone, a server, a screen of millions of inputs), or want to know what accuracy each size buys before choosing. For one cheaper model at a fixed score use model-efficiency.
 
 ## What it sets
 

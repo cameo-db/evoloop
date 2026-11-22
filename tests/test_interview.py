@@ -67,7 +67,7 @@ def test_the_terminal_walk_through(tmp_path):
     folder = blank(tmp_path)
     said = []
     replies = {"What is being improved": ["Find a better model."], "higher score better": ["1"], "may be trained in all": ["30"],
-               "What kind of search": [""], "What kind of optimisation": [""], "Which parts of the code": ["wrong", ""], "How much of the search": ["b", "3"],
+               "How should the search spend": [""], "Which parts of the code": ["wrong", ""], "How much of the search": ["b", "3"],
                "How long is one training run": ["25"], "differ between two fits": ["0.01"], "about the baseline": [""],
                "at the same time": ["4"], "Where do the training jobs run": [""], "How are the agents called": [""],
                "When should the agents be reviewed": ["q"]}

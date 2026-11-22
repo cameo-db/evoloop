@@ -4,7 +4,15 @@ Skill `model-distillation`. Train a smaller or faster student to match a teacher
 
 File: [`evoloop/skills/model-distillation/skill.yaml`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skills/model-distillation/skill.yaml) ([raw](https://raw.githubusercontent.com/cameo-db/evoloop/main/evoloop/skills/model-distillation/skill.yaml)). A search copies this file to `mysearch/skills/model-distillation/skill.yaml` when you choose the skill, and reads that copy. [Edit it during setup](../skills.md).
 
+## When to use it
+
+You have a strong model or ensemble that is too large or slow to use, and want a student that keeps its accuracy. If the teacher is simply the model you want to shrink, and one cheaper model is the aim, use model-efficiency: it treats that model as the teacher. If no trained model's outputs are available, there is nothing to distil: use model-performance with limits on size.
+
 ## Use it
+
+[Use this skill in setup](../setting-up.md#3-answer-the-questions) · [Combine it with another skill](../skills.md#combining-skills) · <a href="../../which-search/?goal=model-distillation&run=explore_then_exploit#preview-a-search">Preview the resulting search</a>
+
+In setup, name it at the skill question. Or put these lines in `brief.yaml`; the budget and any limits or ranges are placeholders.
 
 ```yaml
 run:
@@ -13,10 +21,6 @@ run:
 budget:
   evaluations: 100
 ```
-
-Put these lines in `brief.yaml`. The budget and any limits or ranges are placeholders. <a href="../../which-search/?goal=model-distillation&run=explore_then_exploit#preview-a-search">Preview the resulting search</a>.
-
-You have a strong model or ensemble that is too large or slow to use, and want a student that keeps its accuracy. Not for shrinking a model with no teacher (model-efficiency).
 
 ## What it sets
 
@@ -99,7 +103,8 @@ A student's result depends as much on how it is trained against the teacher as o
 
 | If | Use |
 |---|---|
-| there is no teacher, only a model to shrink | [`model-efficiency`](model-efficiency.md) |
+| the teacher is the model you want to shrink, and one cheaper model is the aim | [`model-efficiency`](model-efficiency.md) |
+| no trained model's outputs are available | [`model-performance`](model-performance.md) |
 | you want students at several sizes | add [`model-size-frontier`](model-size-frontier.md) to this one |
 
 Can be combined with [`model-size-frontier`](model-size-frontier.md), [`model-efficiency`](model-efficiency.md): `run.skill: [model-distillation, model-size-frontier]`.
@@ -115,11 +120,13 @@ summary: Train a smaller or faster student to match a teacher. The student's arc
 domain: model
 objective: a smaller or faster model that matches a larger model or an ensemble
 tags: [distillation, student, teacher, compression, ensemble, augmentation]
-version: 2
+version: 3
 authors: [evoloop]
 when: >
   You have a strong model or ensemble that is too large or slow to use, and want a student that keeps its
-  accuracy. Not for shrinking a model with no teacher (model-efficiency).
+  accuracy. If the teacher is simply the model you want to shrink, and one cheaper model is the aim, use
+  model-efficiency: it treats that model as the teacher. If no trained model's outputs are available, there is
+  nothing to distil: use model-performance with limits on size.
 settings:
   space:
     preset: architecture_and_recipe
@@ -193,8 +200,10 @@ reading: >
   scratch (how much the teacher added). A student that only matches its from-scratch twin has not been
   distilled. Check the size or speed column against what you needed.
 instead:
-  - if: there is no teacher, only a model to shrink
+  - if: the teacher is the model you want to shrink, and one cheaper model is the aim
     use: model-efficiency
+  - if: no trained model's outputs are available
+    use: model-performance
   - if: you want students at several sizes
     use: "model-distillation, model-size-frontier"
 ```

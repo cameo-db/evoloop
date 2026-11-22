@@ -5,128 +5,108 @@ hide:
 
 # evoloop
 
-evoloop runs an evolutionary search over parts of your code. You mark the blocks that may change and
-write a script that scores one version. An LLM agent writes each candidate. evoloop's own code decides
-which candidate to build on, runs your script on each one as a job, enforces the budget, and records
-everything.
+**evoloop improves code you can score.** You mark the parts of your code that may change and write a
+script that measures how good one version is. evoloop then runs an evolutionary search: LLM agents
+propose changes, your script scores each one, and the results decide what is tried next.
 
-It is a general search. Two things configure it: the **search strategy** and how much of the search
-**agents** decide. An optional **skill** sets those choices for a particular goal and tells the agents
-how to approach it.
+Use it to raise a model's validation score, train a smaller student from a teacher, tune
+hyperparameters, or make an algorithm or pipeline faster while its output stays the same.
 
-[Worked example](quickstart.md){ .md-button .md-button--primary }
-[Set up a project](setting-up.md){ .md-button }
+[Set up a search](setting-up.md){ .md-button .md-button--primary }
+[Explore the search options](options.md){ .md-button }
 [Source on GitHub](https://github.com/cameo-db/evoloop){ .md-button }
 
-## One iteration
+```mermaid
+flowchart LR
+    subgraph you ["You provide"]
+        direction TB
+        A["Code, with the parts<br>that may change marked"]
+        B["A script that scores<br>one version"]
+        C["A budget"]
+    end
+    subgraph loop ["evoloop repeats, many versions at once"]
+        direction LR
+        P["<b>1. Choose</b><br>which earlier version<br>to build on<br><i>evoloop's code</i>"]
+        W["<b>2. Propose</b><br>a change to it<br><i>an LLM agent</i>"]
+        S["<b>3. Score</b><br>the new version<br><i>your script, as a job</i>"]
+        R["<b>4. Record</b><br>the result and compare<br><i>evoloop's code</i>"]
+        P --> W --> S --> R
+        R -- "next version" --> P
+    end
+    subgraph get ["You get"]
+        direction TB
+        L["A leaderboard"]
+        D["Every version tried, with<br>its code, parent and score"]
+        J["The whole search<br>in one file"]
+    end
+    you --> loop --> get
+```
 
-Each time a job slot is free, evoloop does this. The last column is the file that implements the step.
+Agents write the changes. Code does everything that must be trusted: it picks what to build on, checks
+that only the marked parts changed, runs the jobs, enforces the budget and your limits, and keeps the
+record. The search runs on a laptop or on a Slurm cluster.
 
-| Step | What happens | Decided by | Setting | Code |
-|---|---|---|---|---|
-| 1 | Pick the kind of move: a new design, a crossover of two designs, or a local move on one (an edit, a hyperparameter change, an ablation) | the schedule, in code. Optionally a coordinator agent picks among the options code prepares | `schedule.phases`, `harness.coordinator` | [schedule.py](https://github.com/cameo-db/evoloop/blob/main/evoloop/schedule.py) |
-| 2 | Pick the parent design or designs | the search strategy, in code | `strategy.mechanism` | [strategies/](https://github.com/cameo-db/evoloop/blob/main/evoloop/strategies) |
-| 3 | Write the candidate: new contents for the marked blocks | a writer agent (LLM). Code alone for a block swap or sampled hyperparameters | `agents.default_model`, `variation.settings_by` | [design.py](https://github.com/cameo-db/evoloop/blob/main/evoloop/design.py), prompts in [agents.py](https://github.com/cameo-db/evoloop/blob/main/evoloop/agents.py) |
-| 4 | Check it: only marked blocks changed, it parses, it is not a copy of an earlier design | code | `space.preset`, `space.forbidden_terms` | [space.py](https://github.com/cameo-db/evoloop/blob/main/evoloop/space.py) |
-| 5 | Run your evaluator on it as its own job, locally or on Slurm. Optionally stop it early if it is behind | your script; early stopping by code | `evaluation.allowance`, `evaluation.ladder` | [jobs.py](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py), [controller.py](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py) |
-| 6 | Record the design, its parent, its score and the agent's forecast | code | | [store.py](https://github.com/cameo-db/evoloop/blob/main/evoloop/store.py) |
+## Three ways to run it
 
-Every 8 designs an analyst agent summarizes what the results show, and the writers are given that
-summary. [How it works](how-it-works.md) has the full loop.
+evoloop is a Python package with a command line. You can drive it at whichever level you like.
+
+| | What you do |
+|---|---|
+| **Let an agent run it** | Open the repository in Claude Code or another coding agent and say what you want to improve. The agent asks you the setup questions one at a time, marks the code and writes the scoring script with you, shows you the plan, and starts the search when you confirm. It follows [AGENTS.md](https://github.com/cameo-db/evoloop/blob/main/AGENTS.md). |
+| **Answer the questions yourself** | `evoloop setup` asks the same questions in the terminal. `evoloop form` gives them as a web page. [Set up a search](setting-up.md). |
+| **Edit the files** | Everything is a plain file you can open and change: the brief (`brief.yaml`), the task description the agents read, and the skill files. [Brief fields](fields.md) · [Commands](commands.md). |
+
+Every search starts the same way, whichever you choose: a short list of questions, a plan that states
+what will run and what it is likely to cost, and your confirmation. Nothing is spent before you confirm.
+While it runs you can change settings, send the agents a note, or stop it.
+[Monitor and steer a search](steering.md).
+
+## What you decide
+
+Each step of the loop has one choice that matters. Everything else has a default.
+
+| Step | The choice | Your options |
+|---|---|---|
+| 1. Choose | Which earlier versions get another try? | Five search strategies, below. [Parent selection](parents.md) |
+| 2. Propose | How much do the agents decide? | From `harnessed` (code plans every move, the agent only writes it) to `agentic` (agents also choose the moves and adjust the schedule). A search over hyperparameters alone can use a built-in Bayesian optimizer with no agent. [Agents](agents.md) |
+| 3. Score | What does your script measure, and does every version run to the end? | Your own metric. Optionally stop weak versions part way. [Write the evaluator](evaluator.md) · [Early stopping](early-stopping.md) |
+| 4. Record | How much may be spent, and what is out of bounds? | A number of evaluations, a dollar cap for the agents, and limits such as a largest model size. [Budget and cost](cost.md) |
+
+A **run type** sets these choices together for a way of spending the budget, such as exploring first and
+refining later. [Choose a skill and a run type](which-search.md).
 
 ## Search strategies
 
-The strategy is the rule for step 2: which earlier designs are built on. Set it with
-`strategy.mechanism`.
+The strategy decides which versions are built on. Each follows a known method.
 
-| Strategy | Parents are chosen from | Method it follows | Code |
-|---|---|---|---|
-| `lineage` (default) | the best design of each of several families. A new family gets protected evaluations before it competes, and no family gets more than 40% of the local moves | speciation with protected niches, as in NEAT | [strategies/lineage.py](https://github.com/cameo-db/evoloop/blob/main/evoloop/strategies/lineage.py) |
-| `archive` | the best design in each cell of a grid. A cell is a family and a size band, or a group of models whose errors fall alike | MAP-Elites. With islands, the program database of AlphaEvolve | [strategies/archive.py](https://github.com/cameo-db/evoloop/blob/main/evoloop/strategies/archive.py) |
-| `tournament` | the best of 3 drawn from the 24 most recent designs. Older designs drop out | regularized (aging) evolution, Real et al. 2019 | [strategies/tournament.py](https://github.com/cameo-db/evoloop/blob/main/evoloop/strategies/tournament.py) |
-| `pareto` | designs not beaten on both the score and a second metric such as parameter count | non-dominated sorting, as in NSGA-II | [strategies/pareto.py](https://github.com/cameo-db/evoloop/blob/main/evoloop/strategies/pareto.py) |
-| `greedy` | the single best design | hill climbing | [strategies/greedy.py](https://github.com/cameo-db/evoloop/blob/main/evoloop/strategies/greedy.py) |
-
-Any strategy can run as several separate populations (`strategy.islands`), and the weaker populations
-can be restarted from the best one (`strategy.reset_every`), as in FunSearch
-([strategies/islands.py](https://github.com/cameo-db/evoloop/blob/main/evoloop/strategies/islands.py)).
-
-Other mechanisms, each an option:
-
-| Mechanism | Setting | Method it follows |
+| Strategy | Builds on | Known as |
 |---|---|---|
-| Marked regions of a program evolved by an LLM | `EVOLVE-BLOCK` markers in your code | FunSearch, AlphaEvolve |
-| Explore first, then exploit: shares of new designs, crossover and local moves by phase of the budget | `schedule.phases` | |
-| Stop weak candidates part way through training | `evaluation.ladder` | successive halving, ASHA |
-| A cheap model for most candidates and a strong one for some | `agents.writer_mix` | AlphaEvolve |
-| Candidates returned as diffs | `variation.edit_format: diff` | AlphaEvolve |
-| Hyperparameters drawn by a Bayesian optimizer, with no agent | `variation.settings_by: tpe` | TPE (Optuna, Hyperopt) |
-| Designs grouped by where their errors fall | `strategy.descriptors: [behaviour]` | FunSearch's signature clusters |
+| `lineage` (default) | the best version of each of several families, so a slow starter is not crowded out | speciation, as in NEAT |
+| `archive` | the best version in each cell of a grid, such as each size band | MAP-Elites; with islands, AlphaEvolve's program database |
+| `tournament` | the best of a few drawn from the most recent versions | regularized evolution |
+| `pareto` | versions not beaten on both the score and a second measure, such as size | non-dominated sorting, as in NSGA-II |
+| `greedy` | the single best version | hill climbing |
 
-To search in the manner of FunSearch: `archive` with `strategy.descriptors: [behaviour]`,
-`strategy.islands: 4`, `strategy.reset_every: 40`. In the manner of AlphaEvolve: `archive` on
-`strategy.islands: 3` with `agents.writer_mix`, `variation.edit_format: diff` and
-`evaluation.ladder`. These are approximations.
-[Comparison with FunSearch and AlphaEvolve](compared.md) lists the differences.
-
-## Harness and autonomy
-
-Two settings decide which agents run and how much they control.
-
-`harness.level` sets which agent roles run alongside the writer:
-
-| `harness.level` | Agents that run |
-|---|---|
-| `minimal` | writer |
-| `standard` | writer, and an analyst that summarizes results every 8 designs |
-| `full` (default) | writer and analyst, and the leading design is retrained on a new seed every 20 designs |
-
-`harness.autonomy` is a preset for how much the agents decide. More autonomy means more LLM calls.
-
-| | `harnessed` | `guided` | `agentic` |
-|---|---|---|---|
-| Kind of move for each slot | schedule (code) | schedule (code) | a coordinator agent, from options code prepares |
-| Parents | strategy (code) | strategy (code) | strategy (code) |
-| Strategist agent that can shift the schedule | off | on, within limits | on, more often, wider limits |
-| Hyperparameter moves | random sampler (code) | writer agent | writer agent |
-| Proposals written per slot | 1 | set by budget size | 3 |
-| LLM calls for 100 designs, estimated | about 110 | about 140 | about 270 |
-
-With any of these, code enforces the budget, the limits, the checks in step 4 and a minimum share of new
-designs. `harness.conductor: agent` additionally lets you talk to the strategist with `evoloop chat`.
-[Agents](agents.md) has the detail.
-
-## Run types
-
-A run type is a preset for the strategy, the harness and the schedule.
-
-| `run.type` | Strategy | Agents | New / crossover / local |
-|---|---|---|---|
-| `explore_then_exploit` (default) | `lineage` | full harness, strategist on | 65 / 10 / 25 for the first 60% of the budget, then 15 / 25 / 60 |
-| `refine` | `lineage`, 3 families | full harness, strategist on | 10 / 20 / 70 |
-| `survey` | `archive` | writer and analyst, strategist on | 75 / 10 / 15 |
-| `discovery` | `archive` | writer only | 60 / 15 / 25, novelty raised |
-| `settings_only` | `greedy` | writer only | hyperparameter moves only |
+Any strategy can run as separate populations that are restarted from the best one, as in FunSearch.
+[How evoloop compares with FunSearch and AlphaEvolve](compared.md).
 
 ## Skills
 
-Skills are optional. evoloop runs without one: the settings then come from the run type and the defaults,
-and the agents see only your `task.md` and any notes you send. A skill saves you supplying that guidance
-yourself. It adapts the general search to one goal, and is
-a YAML file with three parts: settings for the choices in the tables above, text that is added to
-every agent call, and the list of measurements your evaluator must report.
+A skill is optional. It is a file that adapts the general search to one goal, such as distillation or a
+faster algorithm: it sets the choices above and gives the agents guidance for that goal. Without one you
+supply that guidance yourself in the task description.
 
-You name a skill in the brief (`run.skill: model-efficiency`). evoloop copies its file into your search
-folder as soon as you choose it and reads that copy. You can [edit it during setup](skills.md), or merge
-several into one file. This table is generated from the files.
+The library has thirteen. During setup you can read the one you chose, edit it, or merge several into
+one file. [Choose a skill](which-search.md) · [Edit, merge or write a skill](skills.md)
 
---8<-- "generated/skills-table.md"
+## Read next
 
-Each skill's page shows its settings, the exact text it sends to each agent, and the file.
-[Edit, merge or write a skill](skills.md) · [Skill file format](skill-format.md)
+| To | Read |
+|---|---|
+| start on your own project | [Set up a search](setting-up.md) · [Write the evaluator](evaluator.md) · [Run on a cluster](servers.md) |
+| understand the loop | [How it works](how-it-works.md) · [Search options on one page](options.md) |
+| see it run on a toy problem | [Worked example](quickstart.md) |
+| look something up | [Reference](reference.md) |
 
-## Status
-
-Version 0.2. The tests run two built-in examples in which a script stands in for the LLM. evoloop has
-not been run with a real LLM on a real training task, and the strategies have not been compared with
-each other. [Status and limits](status.md).
+Version 0.2. evoloop passes its tests with a script standing in for the LLM. It has not yet been run
+with a real LLM on a real training task. [Status and limits](status.md).

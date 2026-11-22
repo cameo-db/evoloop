@@ -4,7 +4,15 @@ Skill `data-pipeline`. Speed up a multi-step data pipeline (reading, transformin
 
 File: [`evoloop/skills/data-pipeline/skill.yaml`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skills/data-pipeline/skill.yaml) ([raw](https://raw.githubusercontent.com/cameo-db/evoloop/main/evoloop/skills/data-pipeline/skill.yaml)). A search copies this file to `mysearch/skills/data-pipeline/skill.yaml` when you choose the skill, and reads that copy. [Edit it during setup](../skills.md).
 
+## When to use it
+
+A pipeline of several steps produces the right output too slowly or at too high a cost. For a single hot function use algorithm-runtime.
+
 ## Use it
+
+[Use this skill in setup](../setting-up.md#3-answer-the-questions) · [Combine it with another skill](../skills.md#combining-skills) · <a href="../../which-search/?goal=data-pipeline&run=explore_then_exploit#preview-a-search">Preview the resulting search</a>
+
+In setup, name it at the skill question. Or put these lines in `brief.yaml`; the budget and any limits or ranges are placeholders.
 
 ```yaml
 run:
@@ -15,10 +23,6 @@ budget:
 objective:
   direction: minimize
 ```
-
-Put these lines in `brief.yaml`. The budget and any limits or ranges are placeholders. <a href="../../which-search/?goal=data-pipeline&run=explore_then_exploit#preview-a-search">Preview the resulting search</a>.
-
-A pipeline of several steps produces the right output too slowly or at too high a cost. For a single hot function use algorithm-runtime.
 
 ## What it sets
 

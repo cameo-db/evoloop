@@ -40,7 +40,7 @@ nav:
   - Home: index.md
   - Get started:
       - Worked example: quickstart.md
-      - Set up a project: setting-up.md
+      - Set up a search: setting-up.md
       - Write the evaluator: evaluator.md
       - Measure your noise: noise.md
       - Run on a cluster: servers.md
@@ -66,6 +66,7 @@ nav:
       - Edit, merge or write a skill: skills.md
   - How it works:
       - Overview: how-it-works.md
+      - Search options on one page: options.md
       - Schedule: schedule.md
       - Parent selection: parents.md
       - Moves: moves.md

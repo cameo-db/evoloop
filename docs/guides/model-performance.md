@@ -4,7 +4,15 @@ Skill `model-performance`. Raise the validation score by whatever the open block
 
 File: [`evoloop/skills/model-performance/skill.yaml`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skills/model-performance/skill.yaml) ([raw](https://raw.githubusercontent.com/cameo-db/evoloop/main/evoloop/skills/model-performance/skill.yaml)). A search copies this file to `mysearch/skills/model-performance/skill.yaml` when you choose the skill, and reads that copy. [Edit it during setup](../skills.md).
 
+## When to use it
+
+The default for model development. Choose something more specific when the goal is a smaller model (model-efficiency), a family across sizes (model-size-frontier), a student of a teacher (model-distillation), or when only the training recipe or the settings may change.
+
 ## Use it
+
+[Use this skill in setup](../setting-up.md#3-answer-the-questions) · [Combine it with another skill](../skills.md#combining-skills) · <a href="../../which-search/?goal=model-performance&run=explore_then_exploit#preview-a-search">Preview the resulting search</a>
+
+In setup, name it at the skill question. Or put these lines in `brief.yaml`; the budget and any limits or ranges are placeholders.
 
 ```yaml
 run:
@@ -13,10 +21,6 @@ run:
 budget:
   evaluations: 100
 ```
-
-Put these lines in `brief.yaml`. The budget and any limits or ranges are placeholders. <a href="../../which-search/?goal=model-performance&run=explore_then_exploit#preview-a-search">Preview the resulting search</a>.
-
-The default for model development. Choose something more specific when the goal is a smaller model (model-efficiency), a family across sizes (model-size-frontier), a student of a teacher (model-distillation), or when only the training recipe or the settings may change.
 
 ## What it sets
 

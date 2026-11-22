@@ -1,4 +1,4 @@
-# Set up a project
+# Set up a search
 
 Five steps take a project to a running search. A coding agent can do most of them with you; the steps
 are the same either way, and this page is also how to check what an agent did.
@@ -87,7 +87,7 @@ default and must be answered:
 |---|---|
 | What is being improved, and why? | one or two sentences; every agent reads them |
 | Is a higher score better, or a lower one? | |
-| What kind of search? | [Which search should I run?](which-search.md) |
+| How should the search spend its evaluations? | the run type: [Choose a skill and a run type](which-search.md) |
 | How many designs may be trained in all? | the budget, in evaluations |
 | How long is one training run? | in your evaluator's own unit: epochs, steps |
 | How much does the score vary between two runs of the same design? | [Measure your noise](noise.md) |

@@ -230,7 +230,7 @@ def cmd_brief(args: Any) -> int:
         if not args.next:      # --next prints JSON only; the files are in it as skill_files
             out(line)
     if args.next:
-        now = interview.state(brief)
+        now = interview.state(brief, folder)
         q = now["next"]
         out(json.dumps({"done": now["done"], "total": now["total"], "sections": now["sections"],
                         "question": None if q is None else {k: q[k] for k in (

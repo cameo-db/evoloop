@@ -412,10 +412,12 @@ def guide_markdown(name: str) -> str:
            "Skill `%s`. %s" % (one["name"], one["summary"]), "",
            "File: %s. A search copies this file to `mysearch/skills/%s/skill.yaml` when you choose the skill, and "
            "reads that copy. [Edit it during setup](../skills.md)." % (file_links(one["name"]), one["name"]), "",
-           "## Use it", "", "```yaml", _brief(brief).rstrip(), "```", "",
-           "Put these lines in `brief.yaml`. The budget and any limits or ranges are placeholders. %s." % preview, ""]
-    if one["when"]:
-        out += [one["when"], ""]
+           "## When to use it", "", one["when"] or one["summary"], ""]
+    out += ["## Use it", "",
+            "[Use this skill in setup](../setting-up.md#3-answer-the-questions) · "
+            "[Combine it with another skill](../skills.md#combining-skills) · %s" % preview, "",
+            "In setup, name it at the skill question. Or put these lines in `brief.yaml`; the budget and any limits or "
+            "ranges are placeholders.", "", "```yaml", _brief(brief).rstrip(), "```", ""]
     sets = form.flatten(one["settings"])
     out += ["## What it sets", ""]
     if sets:
@@ -660,4 +662,23 @@ def texts(folder: Optional[str] = None) -> Dict[str, str]:
         text = _read(file_of(row["name"], folder))
         if text:
             out[row["name"]] = text
+    return out
+
+
+def told(skill: Optional[Dict[str, Any]]) -> List[str]:
+    """What a skill adds to the agent calls, role by role, as lines of a plan."""
+    if not skill:
+        return []
+    out: List[str] = []
+    labels = {"all": "Every role that is given the skill (writer, analyst, strategist, coordinator, conductor)"}
+    for role in ROLES:
+        text = skill["guidance"].get(role)
+        if text:
+            out += ["", "  %s:" % labels.get(role, "The %s, in addition" % role)] + ["    " + line for line in text.split("\n")]
+    if skill.get("diagnose"):
+        out += ["", "  Writer and analyst, if the results show:"]
+        out += ["    - %s -> %s" % (d["see"], d["do"]) for d in skill["diagnose"]]
+    for stage, label in (("early", "first half of the budget"), ("late", "second half of the budget")):
+        if skill.get("stages", {}).get(stage):
+            out += ["", "  Writer, in the %s:" % label] + ["    " + line for line in skill["stages"][stage].split("\n")]
     return out

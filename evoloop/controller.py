@@ -79,6 +79,10 @@ class Controller:
             raise form.BriefError(self.settings["_site_fault"])
         if self.settings.get("_skill_fault"):
             raise form.BriefError(self.settings["_skill_fault"])
+        moved = form.skills_changed(self.brief, self.folder)
+        if moved:      # what was confirmed is what runs: an edit made after confirming is read and confirmed first
+            raise form.BriefError("the skill file of %s changed after the brief was confirmed. Read `evoloop plan`, then "
+                                  "confirm again (`evoloop brief --confirm NAME`)" % ", ".join(moved))
         self.info = {"name": self.name, "started": time.strftime("%Y-%m-%d %H:%M"), "brief": self.brief,
                      "frozen": space.frozen_hash(os.path.join(self.folder, "base"), os.path.join(self.folder, "adapter")),
                      "status": "running"}

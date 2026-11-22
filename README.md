@@ -7,16 +7,55 @@
 
 [![Documentation](https://readthedocs.org/projects/evoloop/badge/?version=latest)](https://evoloop.readthedocs.io/en/latest/)
 
-**An optimization loop for models, algorithms, and data pipelines.**
+**evoloop improves code you can score.** You mark the parts of your code that may change and write a
+script that measures how good one version is. evoloop then runs an evolutionary search: LLM agents
+propose changes, your script scores each one, and the results decide what is tried next.
 
-evoloop runs an evolutionary search over parts of your code. You mark the blocks that may change and write a
-script that scores one version. An LLM agent writes each candidate. evoloop's code decides which candidate to
-build on, runs your script on each one as a job, enforces the budget, and records everything.
-
-Use it to improve a model's accuracy, find a smaller model at a similar score, tune a training recipe,
-or make a pipeline faster while checking that its outputs stay correct.
+Use it to raise a model's validation score, train a smaller student from a teacher, tune
+hyperparameters, or make an algorithm or pipeline faster while its output stays the same.
 
 Documentation: <https://evoloop.readthedocs.io>
+
+```mermaid
+flowchart LR
+    subgraph you ["You provide"]
+        direction TB
+        A["Code, with the parts<br>that may change marked"]
+        B["A script that scores<br>one version"]
+        C["A budget"]
+    end
+    subgraph loop ["evoloop repeats, many versions at once"]
+        direction LR
+        P["<b>1. Choose</b><br>which earlier version<br>to build on<br><i>evoloop's code</i>"]
+        W["<b>2. Propose</b><br>a change to it<br><i>an LLM agent</i>"]
+        S["<b>3. Score</b><br>the new version<br><i>your script, as a job</i>"]
+        R["<b>4. Record</b><br>the result and compare<br><i>evoloop's code</i>"]
+        P --> W --> S --> R
+        R -- "next version" --> P
+    end
+    subgraph get ["You get"]
+        direction TB
+        L["A leaderboard"]
+        D["Every version tried, with<br>its code, parent and score"]
+        J["The whole search<br>in one file"]
+    end
+    you --> loop --> get
+```
+
+Agents write the changes. Code does everything that must be trusted: it picks what to build on, checks
+that only the marked parts changed, runs the jobs, enforces the budget and your limits, and keeps the
+record.
+
+## Three ways to run it
+
+| | What you do |
+|---|---|
+| **Let an agent run it** | Open this repository in Claude Code or another coding agent and say what you want to improve. The agent asks you the setup questions one at a time, marks the code and writes the scoring script with you, shows you the plan, and starts the search when you confirm. It follows [AGENTS.md](AGENTS.md). |
+| **Answer the questions yourself** | `evoloop setup` asks the same questions in the terminal; `evoloop form` gives them as a web page. |
+| **Edit the files** | Everything is a plain file: the brief (`brief.yaml`), the task description the agents read, and the skill files. |
+
+Every search starts the same way: a short list of questions, a plan that states what will run and what
+it is likely to cost, and your confirmation. Nothing is spent before you confirm.
 
 It is a general search. Two things configure it: the search strategy and how much of the search agents
 decide. An optional skill sets those choices for a particular goal and tells the agents how to approach

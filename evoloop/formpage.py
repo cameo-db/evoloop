@@ -200,7 +200,7 @@ function question(q, n, of) {
       const mine = value !== null && value !== undefined && !known.includes(value);
       const input = el("input", {type: "radio", name: id(q.field), id: id(q.field) + "-other"});
       input.checked = mine;
-      const text = el("input", {type: "text", id: id(q.field) + "-other-text", placeholder: "another model id", "aria-label": "Another value"});
+      const text = el("input", {type: "text", id: id(q.field) + "-other-text", placeholder: q.field === "run.skill" ? "several skills, separated by commas, or the name of your own" : "another value", "aria-label": "Another value"});
       text.value = mine ? value : "";
       text.addEventListener("change", () => { if (text.value.trim()) setAnswer(q.field, text.value.trim()); });
       input.addEventListener("change", () => text.focus());

@@ -4,7 +4,15 @@ Skill `settings-tuning`. An agent tunes the hyperparameters of a fixed model, th
 
 File: [`evoloop/skills/settings-tuning/skill.yaml`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skills/settings-tuning/skill.yaml) ([raw](https://raw.githubusercontent.com/cameo-db/evoloop/main/evoloop/skills/settings-tuning/skill.yaml)). A search copies this file to `mysearch/skills/settings-tuning/skill.yaml` when you choose the skill, and reads that copy. [Edit it during setup](../skills.md).
 
+## When to use it
+
+The code is right and its numbers are in question. Use it on its own, or after an architecture search, on the winner. To tune without any agent calls, use settings-tuning-bayesian (a built-in Bayesian optimizer).
+
 ## Use it
+
+[Use this skill in setup](../setting-up.md#3-answer-the-questions) · [Combine it with another skill](../skills.md#combining-skills) · <a href="../../which-search/?goal=settings-tuning&run=settings_only#preview-a-search">Preview the resulting search</a>
+
+In setup, name it at the skill question. Or put these lines in `brief.yaml`; the budget and any limits or ranges are placeholders.
 
 ```yaml
 run:
@@ -13,10 +21,6 @@ run:
 budget:
   evaluations: 60
 ```
-
-Put these lines in `brief.yaml`. The budget and any limits or ranges are placeholders. <a href="../../which-search/?goal=settings-tuning&run=settings_only#preview-a-search">Preview the resulting search</a>.
-
-The code is right and its numbers are in question. Use it on its own, or after an architecture search, on the winner. To tune without any agent calls, use settings-tuning-bayesian (a built-in Bayesian optimizer).
 
 ## What it sets
 

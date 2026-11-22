@@ -4,7 +4,15 @@ Skill `algorithm-runtime`. Speed up a piece of code (or cut its memory) while it
 
 File: [`evoloop/skills/algorithm-runtime/skill.yaml`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skills/algorithm-runtime/skill.yaml) ([raw](https://raw.githubusercontent.com/cameo-db/evoloop/main/evoloop/skills/algorithm-runtime/skill.yaml)). A search copies this file to `mysearch/skills/algorithm-runtime/skill.yaml` when you choose the skill, and reads that copy. [Edit it during setup](../skills.md).
 
+## When to use it
+
+The code is correct and too slow or too hungry. The search needs a benchmark that checks the output and times the run. Not for improving what the algorithm computes (see bioinformatics-algorithm for accuracy against a truth set).
+
 ## Use it
+
+[Use this skill in setup](../setting-up.md#3-answer-the-questions) · [Combine it with another skill](../skills.md#combining-skills) · <a href="../../which-search/?goal=algorithm-runtime&run=explore_then_exploit#preview-a-search">Preview the resulting search</a>
+
+In setup, name it at the skill question. Or put these lines in `brief.yaml`; the budget and any limits or ranges are placeholders.
 
 ```yaml
 run:
@@ -15,10 +23,6 @@ budget:
 objective:
   direction: minimize
 ```
-
-Put these lines in `brief.yaml`. The budget and any limits or ranges are placeholders. <a href="../../which-search/?goal=algorithm-runtime&run=explore_then_exploit#preview-a-search">Preview the resulting search</a>.
-
-The code is correct and too slow or too hungry. The search needs a benchmark that checks the output and times the run. Not for improving what the algorithm computes (see bioinformatics-algorithm for accuracy against a truth set).
 
 ## What it sets
 

@@ -4,11 +4,13 @@ summary: Train a smaller or faster student to match a teacher. The student's arc
 domain: model
 objective: a smaller or faster model that matches a larger model or an ensemble
 tags: [distillation, student, teacher, compression, ensemble, augmentation]
-version: 2
+version: 3
 authors: [evoloop]
 when: >
   You have a strong model or ensemble that is too large or slow to use, and want a student that keeps its
-  accuracy. Not for shrinking a model with no teacher (model-efficiency).
+  accuracy. If the teacher is simply the model you want to shrink, and one cheaper model is the aim, use
+  model-efficiency: it treats that model as the teacher. If no trained model's outputs are available, there is
+  nothing to distil: use model-performance with limits on size.
 settings:
   space:
     preset: architecture_and_recipe
@@ -82,7 +84,9 @@ reading: >
   scratch (how much the teacher added). A student that only matches its from-scratch twin has not been
   distilled. Check the size or speed column against what you needed.
 instead:
-  - if: there is no teacher, only a model to shrink
+  - if: the teacher is the model you want to shrink, and one cheaper model is the aim
     use: model-efficiency
+  - if: no trained model's outputs are available
+    use: model-performance
   - if: you want students at several sizes
     use: "model-distillation, model-size-frontier"

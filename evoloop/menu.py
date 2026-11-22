@@ -471,7 +471,7 @@ def plans() -> Dict[str, Any]:
     so the page cannot say something the tool does not do."""
     from . import estimate
     run_types = list(form.RUN_TYPES)
-    names = [""] + skills.names()
+    names = [""] + skills.names() + list(PLAN_COMBOS)
     levels = [""] + list(form.CHOICES["harness.autonomy"])
     warnings: List[str] = []
     rows: Dict[str, Any] = {}
@@ -513,10 +513,17 @@ def plans() -> Dict[str, Any]:
                             ("strategist", "strategist.mode"), ("proposals", "variation.proposals_per_slot"))}}
     return {"run_types": run_types, "skills": names, "levels": levels, "budgets": list(PLAN_BUDGETS),
             "about": {"run_types": RUN_TYPES, "skills": dict({"": "No skill: the run type and the defaults decide."}, **{
-                n: (skills.load(n)[0] or {}).get("objective", "") for n in skills.names()}),
+                n: (skills.combine(n)[0] or {}).get("objective") or (skills.combine(n)[0] or {}).get("summary", "") for n in skills.names() + list(PLAN_COMBOS)}),
                 "levels": dict({"": "Left to the run type."}, **AUTONOMY), "strategies": STRATEGIES, "spaces": SPACES,
-                "goals": {n: (skills.load(n)[0] or {}).get("goal", n) for n in skills.names()}},
+                "goals": dict({n: (skills.load(n)[0] or {}).get("goal", n) for n in skills.names()}, **PLAN_COMBOS)},
             "warnings": warnings, "plans": rows}
+
+
+# Combinations of skills the library recommends, offered in the plan explorer beside the single skills.
+PLAN_COMBOS = {"model-distillation, model-size-frontier": "Distil students at several sizes",
+               "model-distillation, model-efficiency": "Distil the smallest student that holds the score",
+               "model-finetuning, model-training-recipe": "Fine-tune with the recipe open",
+               "bioinformatics-algorithm, algorithm-runtime": "A method that is more accurate and faster"}
 
 
 def plans_json() -> str:

@@ -4,7 +4,15 @@ Skill `model-efficiency`. Design a smaller or faster student and train it to mat
 
 File: [`evoloop/skills/model-efficiency/skill.yaml`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skills/model-efficiency/skill.yaml) ([raw](https://raw.githubusercontent.com/cameo-db/evoloop/main/evoloop/skills/model-efficiency/skill.yaml)). A search copies this file to `mysearch/skills/model-efficiency/skill.yaml` when you choose the skill, and reads that copy. [Edit it during setup](../skills.md).
 
+## When to use it
+
+You have a model that scores well enough and costs too much to run. The aim is one cheaper model at about the same score. For a family across sizes use model-size-frontier; when the teacher is an ensemble or a different model, use model-distillation.
+
 ## Use it
+
+[Use this skill in setup](../setting-up.md#3-answer-the-questions) · [Combine it with another skill](../skills.md#combining-skills) · <a href="../../which-search/?goal=model-efficiency&run=explore_then_exploit#preview-a-search">Preview the resulting search</a>
+
+In setup, name it at the skill question. Or put these lines in `brief.yaml`; the budget and any limits or ranges are placeholders.
 
 ```yaml
 run:
@@ -16,10 +24,6 @@ limits:
   parameters:
     max: 5000000
 ```
-
-Put these lines in `brief.yaml`. The budget and any limits or ranges are placeholders. <a href="../../which-search/?goal=model-efficiency&run=explore_then_exploit#preview-a-search">Preview the resulting search</a>.
-
-You have a model that scores well enough and costs too much to run. The aim is one cheaper model at about the same score. For a family across sizes use model-size-frontier; when the teacher is an ensemble or a different model, use model-distillation.
 
 ## What it sets
 

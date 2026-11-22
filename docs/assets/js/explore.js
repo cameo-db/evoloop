@@ -150,7 +150,7 @@
       el("div", {"class": "evo-row"}, [el("span", {"class": "evo-label", text: "Skill"}), goalPick]),
       chipRow("Run type", data.run_types.map(function (r) { return [r, RUN_LABEL[r] || r, data.about.run_types[r], r]; }), state.run, function (v) { state.run = v; render(); }),
       chipRow("Budget", data.budgets.map(function (b) { return [b, b + " evaluations"]; }), state.budget, function (v) { state.budget = v; render(); }),
-      chipRow("How much the agents decide", data.levels.map(function (l) { return [l, l || "not set", data.about.levels[l]]; }), state.level, function (v) { state.level = v; render(); })
+      chipRow("How much the agents decide", data.levels.map(function (l) { return [l, l || "run type default", data.about.levels[l]]; }), state.level, function (v) { state.level = v; render(); })
     ]));
     root.appendChild(out);
     function render() {

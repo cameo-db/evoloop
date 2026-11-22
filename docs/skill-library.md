@@ -43,7 +43,7 @@ Every skill that comes with evoloop. This page is written from the skill files t
 
 **Distil a student from a teacher.** Train a smaller or faster student to match a teacher. The student's architecture and its training recipe (loss, optimizer, learning rate, regularization, augmentation) are both open.
 
-*When to choose it.* You have a strong model or ensemble that is too large or slow to use, and want a student that keeps its accuracy. Not for shrinking a model with no teacher (model-efficiency).
+*When to choose it.* You have a strong model or ensemble that is too large or slow to use, and want a student that keeps its accuracy. If the teacher is simply the model you want to shrink, and one cheaper model is the aim, use model-efficiency: it treats that model as the teacher. If no trained model's outputs are available, there is nothing to distil: use model-performance with limits on size.
 
 | | |
 |---|---|

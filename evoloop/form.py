@@ -533,7 +533,18 @@ def warnings(settings: Dict[str, Any]) -> List[str]:
     """Combinations that work against each other. A warning never stops a run."""
     out = [settings["_skill_fault"]] if settings.get("_skill_fault") else []
     out += [settings["_site_fault"]] if settings.get("_site_fault") else []
-    out += (settings.get("_skill") or {}).get("warnings") or []
+    the_skill = settings.get("_skill") or {}
+    clashes = the_skill.get("clashes") or []
+    notes = the_skill.get("warnings") or []
+    out += notes[:len(notes) - len(clashes)]
+    mine = {o["setting"]: o for o in settings.get("_overrides") or [] if o["by"] == "brief"}
+    for clash, note in zip(clashes, notes[len(notes) - len(clashes):]):
+        if clash["setting"] in mine:      # the person's own choice settles it: say that, not which skill would have
+            out.append("%s is %r because you set it in the brief. The skills disagree about it (%s: %r, %s: %r), and "
+                       "neither value is used" % (clash["setting"], mine[clash["setting"]]["now"], clash["from"],
+                                                  clash["value"], clash["stands"], clash["to"]))
+        else:
+            out.append(note)
     for need in ((settings.get("_skill") or {}).get("needs") or {}).get("adapter") or []:
         out.append("the skill needs: %s" % need)
     n = settings["budget"]["evaluations"] or 0
@@ -607,10 +618,23 @@ def confirm(folder: str, name: str) -> Dict[str, Any]:
     faults = problems(brief)
     if faults:
         raise BriefError("; ".join(faults))
+    settings = resolve(brief, folder=folder)[0]
+    if settings.get("_skill_fault"):       # the files this search would read, checked now and not at the first run
+        raise BriefError("%s. Correct run.skill or the skill file, read `evoloop plan`, then confirm." % settings["_skill_fault"])
     brief.setdefault("status", {}).update(confirmed_by=name, confirmed_on=time.strftime("%Y-%m-%d %H:%M"),
-                                          confirmed_digest=digest(brief))
+                                          confirmed_digest=digest(brief),
+                                          confirmed_skills=dict((settings.get("_skill") or {}).get("digests") or {}))
     save_brief(folder, brief)
     return brief
+
+
+def skills_changed(brief: Dict[str, Any], folder: Optional[str] = None) -> List[str]:
+    """The skills whose files are not as they were when the brief was confirmed (edited, or no longer usable)."""
+    then = (brief.get("status") or {}).get("confirmed_skills")
+    if not isinstance(then, dict) or not (brief.get("status") or {}).get("confirmed_by"):
+        return []
+    now = (resolve(brief, folder=folder)[0].get("_skill") or {}).get("digests") or {}
+    return sorted(n for n in set(then) | set(now) if then.get(n) != now.get(n))
 
 
 def confirmed(brief: Dict[str, Any]) -> bool:
@@ -702,10 +726,20 @@ def plan_lines(brief: Dict[str, Any], star: Optional[str] = None, folder: Option
                 for row in skills.state(settings["run"].get("skill") or settings["_skill"].get("parts") or [], folder) if row["file"]]
         out.append("  Edit a file to change what the skill sets or tells the agents; this plan then shows the effect.")
     notes = warnings(settings)
+    moved = skills_changed(brief, folder)
+    if moved:
+        notes.insert(0, "the skill file of %s changed after this brief was confirmed by %s: read this plan and confirm "
+                        "again before the first run (`evoloop skills NAME --diff --dir DIR` shows edits against the library)"
+                     % (", ".join(moved), brief["status"]["confirmed_by"]))
     if notes:
         out += ["", "Warnings:"] + ["  - " + note for note in notes]
     if cost:
         out += [line for line in cost]
+    if settings.get("_skill"):
+        from . import skill as skills
+        said = skills.told(settings["_skill"])
+        if said:
+            out += ["", "What the skill adds to the agent calls (the text of the skill file; edit the file to change it)"] + said
     out += ["", "Every setting, by where its value came from"]
     if settings["_guidance"]:
         out.append("(budget guidance used: %s evaluations)" % settings["_guidance"])

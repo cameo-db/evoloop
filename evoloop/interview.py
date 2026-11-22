@@ -54,14 +54,15 @@ QUESTIONS: List[Dict[str, Any]] = [
      "question": "How many models may be trained in all?",
      "why": "The schedule and the guidance for a small or large search are worked out from it."},
     {"field": "run.type", "section": "Search", "title": "Kind of search", "kind": "choice",
-     "question": "What kind of search do you want?",
+     "question": "How should the search spend its evaluations?",
      "why": "It sets the strategy, the schedule, the harness and the search space unless you set them yourself.",
      "choices": _choices(menu.RUN_TYPES)},
     {"field": "run.skill", "section": "Search", "title": "Kind of optimization", "kind": "choice",
-     "question": "What kind of optimization is this? (To combine skills, give their names separated by commas.)",
-     "why": "It sets what suits the task (what is open, how designs are selected) and gives the agents guidance for it. "
-            "Independent of the kind of search.",
-     "choices": _choices(menu.SKILLS), "other": True},
+     "question": "Which goal should the agents be given guidance for? (Optional. To combine skills, give their names separated by commas.)",
+     "why": "A skill sets what suits one goal and adds guidance to the agent calls. The search runs without one. "
+            "You can read and edit the skill file before you confirm.",
+     "choices": [{"value": "none", "label": "none", "description": "No skill: the run type and the defaults decide, and the agents see only your task.md and notes."}]
+                + _choices(menu.SKILLS), "other": True},
     {"field": "run.description", "section": "Search", "title": "Your own description", "kind": "text",
      "question": "Describe the search you want, in your own words.",
      "why": "With the custom kind the agents read this as your first note.", "when": {"run.type": ["custom"]}},
@@ -129,9 +130,9 @@ def applies(question: Dict[str, Any], values: Dict[str, Any]) -> bool:
     return True
 
 
-def state(brief: Dict[str, Any]) -> Dict[str, Any]:
+def state(brief: Dict[str, Any], folder: Optional[str] = None) -> Dict[str, Any]:
     """Every question that applies now, with its answer or default, and where the person is in the list."""
-    settings, sources = form.resolve(brief)
+    settings, sources = form.resolve(brief, folder=folder)
     stated = form.given(brief)
     seen = set((brief.get("status") or {}).get("asked") or [])
     values = {field: form.get(settings, field) for field in FIELDS}
@@ -292,7 +293,7 @@ def run(folder: str, ask: Callable[[str], str], say: Callable[[str], None],
     position: Optional[str] = None
     while True:
         infer(folder, brief)      # best guesses from what is known so far
-        now = state(brief)
+        now = state(brief, folder)
         q = next((x for x in now["questions"] if x["field"] == position), None) if position else now["next"]
         if q is None:
             break
@@ -326,20 +327,20 @@ def run(folder: str, ask: Callable[[str], str], say: Callable[[str], None],
     form.save_brief(folder, brief)
     say("")
     say("All %d questions are done. Next: `evoloop plan %s`, then `evoloop brief %s --confirm \"Your Name\"`." % (
-        state(brief)["total"], folder, folder))
+        state(brief, folder)["total"], folder, folder))
     return True
 
 
 def payload(brief: Dict[str, Any], folder: Optional[str] = None) -> Dict[str, Any]:
     """What the HTML form needs: every question (the form itself decides which apply as answers change),
     the current answers, the defaults, and the schedule each kind of search runs."""
-    settings, sources = form.resolve(brief)
+    settings, sources = form.resolve(brief, folder=folder)
     stated = form.given(brief)
     shares = {}
     for name in form.RUN_TYPES:
         variant = copy.deepcopy(brief)
         form.put(variant, "run.type", name)
-        shares[name] = form.resolve(variant)[0]["schedule"]["phases"]
+        shares[name] = form.resolve(variant, folder=folder)[0]["schedule"]["phases"]
     questions = []
     for q in QUESTIONS:
         field = q["field"]
@@ -440,7 +441,7 @@ def infer(folder: str, brief: Dict[str, Any]) -> Dict[str, Any]:
         backend = stated.get("agents.backend")
         if backend in ("anthropic_api", "claude_code"):
             from . import estimate
-            est = estimate.estimate(form.resolve(brief)[0], folder)
+            est = estimate.estimate(form.resolve(brief, folder=folder)[0], folder)
             if est["dollars"]:
                 cap = max(1, int(est["dollars"][2] + 0.999))
                 found["budget.model_dollars"] = (cap, "the estimate for this search runs to about $%.2f at its upper end" % est["dollars"][2])

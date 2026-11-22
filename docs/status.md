@@ -24,7 +24,7 @@ more than it is.
   `claude_code` backends have not been called from this version.
 - A real training task. Nothing has been trained on a GPU through this version.
 - Whether any strategy searches better than another. The strategies are known to work as code.
-- The skills. Twelve templates load, merge and reach the agents; whether their guidance makes a real
+- The skills. Thirteen templates load, merge and reach the agents; whether their guidance makes a real
   model search better is not known. The settings estimator beats random draws on a made-up function; it has
   not tuned a real model.
 - **Several models writing, find-and-replace edits, approaches and weight inheritance with a real agent or a

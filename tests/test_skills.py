@@ -131,8 +131,8 @@ def test_the_agents_are_told_what_the_skill_asks_of_their_role(tmp_path):
 
 
 def test_a_run_will_not_start_on_a_skill_that_cannot_be_used(tmp_path):
-    folder = search(tmp_path, run__skill="nonesuch")
-    with pytest.raises(form.BriefError) as refused:
+    with pytest.raises(form.BriefError) as refused:      # refused when the brief is confirmed, before any run
+        folder = search(tmp_path, run__skill="nonesuch")
         Controller(folder, "t", poll=0.1).begin()
     assert "no skill named" in str(refused.value)
 
@@ -190,7 +190,7 @@ def test_setup_suggests_a_skill_from_the_words_of_the_goal(tmp_path):
         made = interview.infer(folder, brief)
         assert made.get("run.skill") == wanted, (goal, made.get("run.skill"))
     asked = [q for q in interview.QUESTIONS if q["field"] == "run.skill"][0]
-    assert [c["value"] for c in asked["choices"]] == skill.names()
+    assert [c["value"] for c in asked["choices"]] == ["none"] + skill.names()
 
 
 # --- the estimator --------------------------------------------------------------------------------
@@ -404,7 +404,7 @@ def test_the_front_page_table_of_skills_is_read_from_the_files():
     assert "| `pareto` | `architecture_and_recipe` |" in table and "skills/model-efficiency/skill.yaml" in table
     with open(os.path.join(root, "docs", "generated", "skills-table.md"), encoding="utf-8") as handle:
         assert handle.read() == table, "docs/generated/skills-table.md is stale: evoloop skills --table > docs/generated/skills-table.md"
-    with open(os.path.join(root, "docs", "index.md"), encoding="utf-8") as handle:
+    with open(os.path.join(root, "docs", "options.md"), encoding="utf-8") as handle:
         front = handle.read()
     assert 'generated/skills-table.md' in front
     for mechanism in form.MECHANISMS:                       # every search strategy is on the front page, linked to its code
@@ -513,3 +513,70 @@ def test_skills_edited_in_the_form_come_back_with_the_answers(tmp_path, capsys):
     assert skill.state("model-efficiency", folder)[0]["kind"] == "edited"
     assert form.resolve(form.load_brief(folder), [], folder)[0]["strategy"]["mechanism"] == "greedy"
     assert not os.path.exists(os.path.join(folder, "skills", "model-distillation"))
+
+
+def test_set_up_and_the_form_read_the_searchs_own_skill_files_as_the_plan_does(tmp_path):
+    folder = search(tmp_path)
+    brief = form.load_brief(folder)
+    brief["space"] = {k: v for k, v in (brief.get("space") or {}).items() if k != "preset"}
+    form.put(brief, "run.skill", "model-distillation")
+    form.save_brief(folder, brief)
+    skill.checkout("model-distillation", folder)
+    own = os.path.join(folder, "skills", "model-distillation", "skill.yaml")
+    with open(own, encoding="utf-8") as handle:
+        text = handle.read()
+    with open(own, "w", encoding="utf-8") as handle:
+        handle.write(text.replace("preset: architecture_and_recipe", "preset: settings_only"))
+    brief = form.load_brief(folder)
+    assert form.resolve(brief, [], folder)[0]["space"]["preset"] == "settings_only"
+    asked = {q["field"]: q for q in interview.state(brief, folder)["questions"]}
+    assert asked["space.preset"]["default"] == "settings_only"                  # the terminal questions
+    page = {q["field"]: q for q in interview.payload(brief, folder)["questions"]}
+    assert page["space.preset"]["default"] == "settings_only"                   # the form
+
+
+def test_a_skill_that_cannot_be_used_stops_the_confirmation_not_the_first_run(tmp_path, capsys):
+    folder = search(tmp_path)
+    assert main(["brief", folder, "--answer", "run.skill=model-distilation"]) == 0     # misspelled
+    with pytest.raises(SystemExit) as stop:
+        main(["brief", folder, "--confirm", "Ada"])
+    assert "no skill named 'model-distilation'" in str(stop.value) and "Correct run.skill" in str(stop.value)
+    assert main(["brief", folder, "--answer", "run.skill=model-distillation"]) == 0
+    own = os.path.join(folder, "skills", "model-distillation", "skill.yaml")
+    with open(own, encoding="utf-8") as handle:
+        text = handle.read()
+    with open(own, "w", encoding="utf-8") as handle:
+        handle.write(text.replace("settings:\n", "settings:\n  objective:\n    direction: minimize\n", 1))
+    with pytest.raises(SystemExit) as stop:
+        main(["brief", folder, "--confirm", "Ada"])
+    assert "objective.direction" in str(stop.value)
+    with open(own, "w", encoding="utf-8") as handle:
+        handle.write(text)
+    assert main(["brief", folder, "--confirm", "Ada"]) == 0
+    status = form.load_brief(folder)["status"]
+    assert status["confirmed_skills"] == {"model-distillation": skill.load("model-distillation", folder)[0]["digest"]}
+    capsys.readouterr()
+    # The plan shows the text the agents are given; an edit after confirming is said, and stops the first run.
+    assert main(["plan", folder]) == 0
+    plan = capsys.readouterr().out
+    assert "What the skill adds to the agent calls" in plan and "The recipe matters as much as the architecture here." in plan
+    assert "changed after this brief was confirmed" not in plan
+    with open(own, "w", encoding="utf-8") as handle:
+        handle.write(text.replace("The recipe matters as much", "Never use attention. The recipe matters as much"))
+    assert form.skills_changed(form.load_brief(folder), folder) == ["model-distillation"]
+    assert main(["plan", folder]) == 0
+    plan = capsys.readouterr().out
+    assert "model-distillation changed after this brief was confirmed by Ada" in plan and "Never use attention." in plan
+    with pytest.raises(form.BriefError) as stop:
+        Controller(folder, "late").begin()
+    assert "changed after the brief was confirmed" in str(stop.value)
+    assert main(["brief", folder, "--confirm", "Ada"]) == 0
+    assert form.skills_changed(form.load_brief(folder), folder) == []
+
+
+def test_your_own_choice_settles_a_disagreement_between_skills_and_the_plan_says_so():
+    clash, _ = resolved(run__skill="model-efficiency, model-size-frontier", strategy__mechanism="pareto")
+    assert clash["strategy"]["mechanism"] == "pareto"
+    notes = form.warnings(clash)
+    assert any("strategy.mechanism is 'pareto' because you set it in the brief" in n for n in notes)
+    assert not any("model-size-frontier stands" in n and "strategy.mechanism" in n for n in notes)
