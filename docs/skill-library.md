@@ -28,6 +28,7 @@ Every skill that comes with evoloop. This page is written from the skill files t
 
 | | |
 |---|---|
+| File | [`evoloop/skills/model-performance/skill.yaml`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skills/model-performance/skill.yaml) ([raw](https://raw.githubusercontent.com/cameo-db/evoloop/main/evoloop/skills/model-performance/skill.yaml)) |
 | Tags | accuracy, performance, architecture, general |
 | Sets | nothing: guidance only |
 | Guidance for | all, analyst, strategist, writer |
@@ -46,6 +47,7 @@ Every skill that comes with evoloop. This page is written from the skill files t
 
 | | |
 |---|---|
+| File | [`evoloop/skills/model-distillation/skill.yaml`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skills/model-distillation/skill.yaml) ([raw](https://raw.githubusercontent.com/cameo-db/evoloop/main/evoloop/skills/model-distillation/skill.yaml)) |
 | Tags | distillation, student, teacher, compression, ensemble, augmentation |
 | Sets | `report.columns`, `space.preset`, `variation.approach_seeds`, `variation.approaches` |
 | Guidance for | all, analyst, strategist, writer |
@@ -64,6 +66,7 @@ Every skill that comes with evoloop. This page is written from the skill files t
 
 | | |
 |---|---|
+| File | [`evoloop/skills/model-efficiency/skill.yaml`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skills/model-efficiency/skill.yaml) ([raw](https://raw.githubusercontent.com/cameo-db/evoloop/main/evoloop/skills/model-efficiency/skill.yaml)) |
 | Tags | efficiency, distillation, compression, student, teacher, size, speed, pareto |
 | Sets | `report.columns`, `schedule.local_mix`, `space.preset`, `strategy.mechanism`, `strategy.second_direction`, `strategy.second_metric` |
 | Guidance for | all, analyst, strategist, writer |
@@ -82,6 +85,7 @@ Every skill that comes with evoloop. This page is written from the skill files t
 
 | | |
 |---|---|
+| File | [`evoloop/skills/model-ensemble-members/skill.yaml`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skills/model-ensemble-members/skill.yaml) ([raw](https://raw.githubusercontent.com/cameo-db/evoloop/main/evoloop/skills/model-ensemble-members/skill.yaml)) |
 | Tags | ensemble, diversity, behaviour, errors, averaging, teacher |
 | Sets | `schedule.novelty`, `schedule.novelty_measure`, `schedule.phases`, `strategy.descriptors`, `strategy.mechanism` |
 | Guidance for | all, analyst, strategist, writer |
@@ -100,6 +104,7 @@ Every skill that comes with evoloop. This page is written from the skill files t
 
 | | |
 |---|---|
+| File | [`evoloop/skills/model-finetuning/skill.yaml`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skills/model-finetuning/skill.yaml) ([raw](https://raw.githubusercontent.com/cameo-db/evoloop/main/evoloop/skills/model-finetuning/skill.yaml)) |
 | Tags | finetuning, pretrained, transfer, adapters, foundation model, freezing |
 | Sets | `schedule.local_mix`, `schedule.novelty` |
 | Guidance for | all, analyst, strategist, writer |
@@ -118,6 +123,7 @@ Every skill that comes with evoloop. This page is written from the skill files t
 
 | | |
 |---|---|
+| File | [`evoloop/skills/model-mechanistic/skill.yaml`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skills/model-mechanistic/skill.yaml) ([raw](https://raw.githubusercontent.com/cameo-db/evoloop/main/evoloop/skills/model-mechanistic/skill.yaml)) |
 | Tags | interpretable, mechanistic, biophysical, motifs, interactions, constraints |
 | Sets | `schedule.local_mix`, `schedule.novelty`, `space.must_keep`, `space.preset` |
 | Guidance for | all, analyst, strategist, writer |
@@ -136,6 +142,7 @@ Every skill that comes with evoloop. This page is written from the skill files t
 
 | | |
 |---|---|
+| File | [`evoloop/skills/model-size-frontier/skill.yaml`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skills/model-size-frontier/skill.yaml) ([raw](https://raw.githubusercontent.com/cameo-db/evoloop/main/evoloop/skills/model-size-frontier/skill.yaml)) |
 | Tags | pareto, frontier, trade-off, size, speed, family, scaling, coverage |
 | Sets | `report.columns`, `schedule.novelty`, `schedule.phases`, `strategy.descriptors`, `strategy.mechanism` |
 | Guidance for | all, analyst, strategist, writer |
@@ -154,6 +161,7 @@ Every skill that comes with evoloop. This page is written from the skill files t
 
 | | |
 |---|---|
+| File | [`evoloop/skills/model-training-recipe/skill.yaml`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skills/model-training-recipe/skill.yaml) ([raw](https://raw.githubusercontent.com/cameo-db/evoloop/main/evoloop/skills/model-training-recipe/skill.yaml)) |
 | Tags | recipe, training, loss, optimizer, schedule, regularization, augmentation |
 | Sets | `schedule.local_mix`, `space.preset`, `space.roles` |
 | Guidance for | all, analyst, strategist, writer |
@@ -174,6 +182,7 @@ Every skill that comes with evoloop. This page is written from the skill files t
 
 | | |
 |---|---|
+| File | [`evoloop/skills/algorithm-runtime/skill.yaml`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skills/algorithm-runtime/skill.yaml) ([raw](https://raw.githubusercontent.com/cameo-db/evoloop/main/evoloop/skills/algorithm-runtime/skill.yaml)) |
 | Tags | speed, runtime, performance, optimization, complexity, memory, benchmark |
 | Sets | `evaluation.screen_keep`, `schedule.local_mix`, `schedule.novelty` |
 | Guidance for | all, analyst, strategist, writer |
@@ -194,6 +203,7 @@ Every skill that comes with evoloop. This page is written from the skill files t
 
 | | |
 |---|---|
+| File | [`evoloop/skills/bioinformatics-algorithm/skill.yaml`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skills/bioinformatics-algorithm/skill.yaml) ([raw](https://raw.githubusercontent.com/cameo-db/evoloop/main/evoloop/skills/bioinformatics-algorithm/skill.yaml)) |
 | Tags | bioinformatics, genomics, sequence, alignment, variant calling, peak calling, benchmark, truth set |
 | Sets | `schedule.local_mix`, `schedule.novelty` |
 | Guidance for | all, analyst, strategist, writer |
@@ -214,6 +224,7 @@ Every skill that comes with evoloop. This page is written from the skill files t
 
 | | |
 |---|---|
+| File | [`evoloop/skills/data-pipeline/skill.yaml`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skills/data-pipeline/skill.yaml) ([raw](https://raw.githubusercontent.com/cameo-db/evoloop/main/evoloop/skills/data-pipeline/skill.yaml)) |
 | Tags | pipeline, data processing, throughput, io, memory, etl, preprocessing, parallel |
 | Sets | `evaluation.screen_keep`, `schedule.local_mix`, `schedule.novelty` |
 | Guidance for | all, analyst, strategist, writer |
@@ -234,6 +245,7 @@ Every skill that comes with evoloop. This page is written from the skill files t
 
 | | |
 |---|---|
+| File | [`evoloop/skills/settings-tuning/skill.yaml`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skills/settings-tuning/skill.yaml) ([raw](https://raw.githubusercontent.com/cameo-db/evoloop/main/evoloop/skills/settings-tuning/skill.yaml)) |
 | Tags | hyperparameters, tuning, architecture, learning rate, agent, bayesian, tpe |
 | Sets | `audit.reviews`, `harness.conductor`, `harness.coordinator`, `harness.level`, `schedule.local_mix`, `schedule.novel_share`, `schedule.phases`, `space.preset`, `strategist.mode`, `strategy.mechanism`, `variation.proposals_per_slot`, `variation.settings_by`, `variation.step_adaptation` |
 | Guidance for | all, analyst, writer |
@@ -252,6 +264,7 @@ Every skill that comes with evoloop. This page is written from the skill files t
 
 | | |
 |---|---|
+| File | [`evoloop/skills/settings-tuning-bayesian/skill.yaml`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skills/settings-tuning-bayesian/skill.yaml) ([raw](https://raw.githubusercontent.com/cameo-db/evoloop/main/evoloop/skills/settings-tuning-bayesian/skill.yaml)) |
 | Tags | hyperparameters, tuning, bayesian, tpe, learning rate, no agents |
 | Sets | `audit.reviews`, `harness.conductor`, `harness.coordinator`, `harness.level`, `schedule.local_mix`, `schedule.novel_share`, `schedule.phases`, `space.preset`, `strategist.mode`, `strategy.mechanism`, `variation.proposals_per_slot`, `variation.settings_by`, `variation.step_adaptation` |
 | Guidance for | all, analyst, writer |

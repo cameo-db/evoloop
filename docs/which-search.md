@@ -1,6 +1,7 @@
 # Choose a skill and a run type
 
-A search is defined by two settings in the brief. `run.skill` says what you are optimizing.
+A search needs a run type. A skill is optional. `run.skill` says what you are optimizing, and brings settings and
+instructions for that goal so that you do not have to write them yourself.
 `run.type` says how the evaluations are spent.
 
 ```yaml
@@ -16,8 +17,8 @@ If you are unsure, start with those three lines.
 ## Skills
 
 A skill is a file with instructions for the agents, settings suited to the task, and the list of things
-your scoring script must report. Open a skill's page for a brief to copy and for how to read its
-results.
+your scoring script must report. Each skill's page shows what it sets, the exact text it sends to the agents,
+and the file itself, with a link to it in the repository.
 
 === "Models"
 

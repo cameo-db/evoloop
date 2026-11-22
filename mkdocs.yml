@@ -31,6 +31,8 @@ extra_javascript:
   - assets/js/explore.js
 extra_css:
   - evoloop.css
+exclude_docs: |
+  generated/
 validation:
   links:
     anchors: warn
@@ -94,6 +96,9 @@ markdown_extensions:
   - admonition
   - attr_list
   - md_in_html
+  - pymdownx.snippets:
+      base_path: docs
+      check_paths: true
   - pymdownx.details
   - pymdownx.tabbed:
       alternate_style: true

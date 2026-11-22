@@ -1,108 +1,102 @@
-# How a search works
+# How it works
 
-A search is a loop with three stages. An agent proposes a change to the marked code, your script
-scores it, and evoloop's code decides what to build on next. The skill you chose is read at each stage.
+evoloop is a controller process, a set of agent roles it calls, and a folder of files it writes. This
+page describes each, with the code that implements it.
 
-```mermaid
-flowchart LR
-    K["<b>Skill</b><br>instructions · settings · required measurements"]
-    P["<b>1. Propose</b><br>agent writes a design"] --> E["<b>2. Evaluate</b><br>your script scores it"]
-    E --> C["<b>3. Choose</b><br>code picks what to build on"]
-    C --> P
-    K -.-> P
-    K -.-> E
-    K -.-> C
-```
+## The controller
 
-Five settings account for most of what a search does. Each section gives the default, when to change
-it, and a link to the details.
+`evoloop run` starts one Python process, the controller
+([controller.py](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py)). It repeats the same turn every few seconds until the budget is
+spent:
 
-## 1. What kind of change is proposed
+| | In each turn the controller |
+|---|---|
+| 1 | reads any steering requests you sent (`evoloop set`, `note`, `stop`) and applies or refuses them |
+| 2 | checks the running jobs: collects results, stops a candidate that is behind at an early-stopping point or outside a limit |
+| 3 | records the candidates the agents have finished writing, after checking them |
+| 4 | calls the periodic agents if they are due (analyst, strategist, assessor), and retrains the leader on a new seed if due |
+| 5 | for each free job slot, while budget remains, starts a new candidate (below) |
+| 6 | writes `status.json` |
 
-Every evaluation is a new design, a crossover of two designs, or a local move on one design (an edit, a
-hyperparameter change, or an ablation). New designs explore and local moves exploit.
+The controller keeps no state that is not on disk. If it stops, `evoloop run` with the same name
+continues from the files, including jobs that were still running.
 
-The default spends 65% of the first 60% of the budget on new designs, then 60% of the rest on local
-moves. That suits a search that starts without a good model. If you already have one, use
-`run.type: refine`, which spends 70% on local moves from the start. If you do not yet know which kind of
-model works, use `survey`.
+## Starting one candidate
 
-[Schedule](schedule.md) · [Moves](moves.md)
+| Step | What happens | Code |
+|---|---|---|
+| Kind of move | `next_mode` returns `new`, `novel`, `cross` or `local`: whichever is furthest behind its share of the budget in `schedule.phases`. With `harness.coordinator: agent`, an agent picks among the possible kinds | [schedule.py](https://github.com/cameo-db/evoloop/blob/main/evoloop/schedule.py) |
+| Parents | the strategy's `choose` returns the parent designs for that kind of move | [strategies/](https://github.com/cameo-db/evoloop/blob/main/evoloop/strategies) |
+| Write | for a local move, the kind is chosen to keep to `schedule.local_mix` (edit, settings, ablation); for a crossover, from `crossover.kinds`. The writer agent is called with the parents' code and the results so far, and returns new block contents with a forecast. A block swap, or hyperparameters from the sampler or the Bayesian optimizer, is made in code with no call | [design.py](https://github.com/cameo-db/evoloop/blob/main/evoloop/design.py) |
+| Check | only blocks that are open may change, the code must parse, forbidden terms are refused, an exact copy of an earlier design is refused | [space.py](https://github.com/cameo-db/evoloop/blob/main/evoloop/space.py) |
+| Run | a working copy of your code is made with the new blocks, and your evaluator runs in it as a local process or a Slurm job | [jobs.py](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py) |
+| Score | the controller reads `result.json`. A result outside a limit, or missing a metric that a limit names, is rejected | [controller.py](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py) |
 
-## 2. Which designs are built on
+## The agents
 
-The parent rule (`strategy.mechanism`) picks the design a local move starts from.
+Each role is one LLM call with its own instructions. Roles do not call each other; each is sent data
+from the run's files. The instructions are in [agents.py](https://github.com/cameo-db/evoloop/blob/main/evoloop/agents.py).
 
-=== "lineage (default)"
+| Role | Called | Sent | Returns |
+|---|---|---|---|
+| writer | once per candidate written by an agent | `task.md`, the parents' blocks, the top of the leaderboard, the last 10 results, the analyst's lessons, your notes, the skill's text | one or more proposals: block contents, a hypothesis, a forecast of the gain |
+| analyst | every 8 finished designs (`harness.analyst_every`), unless `harness.level` is `minimal` | the results since its last call, the leaderboard, earlier lessons | lessons, each citing runs. A lesson is marked supported only if its evidence spans two families |
+| strategist | every 15 scored designs and on a plateau, if `strategist.mode` is `advise` or `act` | counts worked out by code: gains by kind of move, diversity, budget left, its earlier decisions | up to two decisions from a fixed list. Code checks each against limits before applying it |
+| coordinator | once per slot, if `harness.coordinator: agent` | the possible kinds of move with the parents code would use | the index of one option |
+| assessor | at the points in `audit.reviews` | each role's calls with what followed | a written review per role, for you |
+| translator | when you run `evoloop steer` | your words and the current settings | setting changes and notes, shown to you before anything is applied |
 
-    Keeps several families of designs and spreads edits across them. A new family gets two evaluations
-    before it is compared with the others, and no family gets more than 40% of the edits. Use it for
-    50 to 300 evaluations when you want one best model.
+The LLM is called through the Anthropic API or the Claude Code command (`agents.backend`), or replaced
+by a script for dry runs (`stub`). Backends are in [model/](https://github.com/cameo-db/evoloop/blob/main/evoloop/model).
 
-=== "greedy"
+## What a skill does
 
-    Every edit starts from the current best. Use it below about 40 evaluations, where there is no time
-    to maintain families.
+A skill is optional. Without one, the settings come from the run type and the defaults, and the agents are
+sent your `task.md` and notes only. A skill is a YAML file ([skills/](https://github.com/cameo-db/evoloop/blob/main/evoloop/skills), loaded by [skill.py](https://github.com/cameo-db/evoloop/blob/main/evoloop/skill.py)). It affects a search in
+two places in the code.
 
-=== "archive"
+1. **Settings.** When the brief is read, the skill's `settings` are applied over the run type's and
+   the autonomy level's, and under anything you set yourself (`form.resolve` in [form.py](https://github.com/cameo-db/evoloop/blob/main/evoloop/form.py)).
+   This is how `model-efficiency` makes the strategy `pareto`.
+2. **Agent calls.** On every call to a writer, analyst, strategist or coordinator, the skill's
+   `guidance` for that role is added to what the agent is sent, with its `diagnose` rules for the
+   writer and analyst (`Agents._call` in [agents.py](https://github.com/cameo-db/evoloop/blob/main/evoloop/agents.py)).
 
-    Keeps the best design of each kind, by family and size, or by where a model's errors fall. Use it
-    when you want coverage: several sizes, or ensemble members that fail differently.
+Its `needs` are checked too: the plan lists what your evaluator must report, and the report warns if a
+required metric or reference row is missing.
 
-=== "pareto"
+## Where a setting's value comes from
 
-    Keeps the designs that are best on the score and a second metric together, such as parameter
-    count. Use it when size or speed matters as well as accuracy.
+Later entries override earlier ones. `evoloop plan` prints the source of every value.
 
-=== "tournament"
+| Order | Source |
+|---|---|
+| 1 | built-in default |
+| 2 | site file for this machine (compute settings only) |
+| 3 | defaults for the size of the budget |
+| 4 | run type |
+| 5 | autonomy level |
+| 6 | skill |
+| 7 | your brief |
+| 8 | changes you make while the search runs |
 
-    Picks the best of three recent designs and forgets old ones. Use it with several hundred noisy
-    evaluations, so one lucky score cannot lead for long.
+## What code enforces
 
-Most skills set this for you. [Parent selection](parents.md) has a figure that shows the rules at work.
+These hold under every setting, because they are checks in code and not instructions to an agent:
 
-## 3. How much of each evaluation is run
+- the budget in evaluations and the cap on agent spend;
+- `limits` on any metric your evaluator reports;
+- only marked, open blocks change, and the rest of your code is checked by hash at every start;
+- at least 10% of evaluations go to new designs when a strategist is adjusting the schedule;
+- every design, score, agent call and setting change is appended to files in the run's folder.
 
-By default a new design is compared with earlier new designs half way through training, and the weaker
-half stop there. This needs your script to report progress.
+## Files
 
-Leave the default unless your models are slow starters, in which case set `evaluation.screen_keep: 1`
-to switch it off. With several hundred evaluations and reliable early progress, `evaluation.ladder`
-stops designs at several points and makes the same budget cover two to three times as many.
+A run's folder holds `runs.jsonl`, `models.jsonl`, `calls.jsonl`, `ledger.jsonl` and others, one JSON
+object per line. [Files of a run](records.md) lists them. The search state is rebuilt from these files
+on every turn ([store.py](https://github.com/cameo-db/evoloop/blob/main/evoloop/store.py)).
 
-[Early stopping](early-stopping.md)
-
-## 4. Whether a gain is real
-
-Two training runs of the same design give different scores. You tell evoloop how different
-(`evaluation.noise`), and it ignores gains smaller than that. This number matters more than most
-settings. Set too low, the search builds on luck. Set too high, it ignores real progress.
-
-Measure it before a real search by training the baseline five times. The leader is also retrained on
-a new seed every 20 designs, and ranked by the mean.
-
-[Measure your noise](noise.md) · [Comparing scores](comparable.md)
-
-## 5. How much the agents decide
-
-In the default set-up, code picks the kind of move and the parent, a writer agent writes the design,
-and an analyst agent summarizes results every 8 designs. A strategist agent may adjust the split
-between new designs and local moves within limits.
-
-Two things can be changed. `harness.autonomy: harnessed` removes the strategist and cuts agent calls by
-about a fifth. `agentic` lets an agent pick the kind of move for every slot and roughly doubles the
-calls. Whether the extra calls buy better results has not been measured.
-
-[Agents](agents.md) · [Budget and cost](cost.md)
-
-## What is fixed
-
-Whatever the settings, an agent only returns text. evoloop's code runs the jobs, enforces the budget
-and any limits, checks that a design changes only the marked blocks, and writes every design, score and
-decision to disk. A search can be stopped and resumed from those files, and most settings can be
-changed while it runs.
-
-## One evaluation, traced
+## One candidate, traced
 
 ??? note "A local move from the built-in example, step by step"
 
@@ -168,6 +162,8 @@ changed while it runs.
     later.
 
 
-## Related
+## More detail
 
+[Schedule](schedule.md) · [Parent selection](parents.md) · [Moves](moves.md) ·
+[Early stopping](early-stopping.md) · [Comparing scores](comparable.md) · [Agents](agents.md) ·
 [Comparison with FunSearch and AlphaEvolve](compared.md) · [Glossary](glossary.md)

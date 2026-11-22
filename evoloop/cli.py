@@ -329,6 +329,9 @@ def cmd_menu(args: Any) -> int:
 def cmd_skills(args: Any) -> int:
     """The skill library: the list, a search of it, one skill in full, or one written out as a folder to edit."""
     from . import skill as skills
+    if args.table:
+        sys.stdout.write(skills.table_markdown())
+        return 0
     if args.guides:
         out("written: %s" % ", ".join(skills.write_guides(args.guides)))
         return 0
@@ -857,6 +860,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--json", action="store_true", help="the library as records, for a listing or a website")
     p.add_argument("--markdown", action="store_true", help="the library as a page of the documentation")
     p.add_argument("--guides", metavar="DIR", help="write a guide page for every skill into DIR (the documentation's guides)")
+    p.add_argument("--table", action="store_true", help="the table of skills and what each sets, for the documentation")
     p.add_argument("--dir", default=None, help="the search folder, to find a skill of your own by a relative path")
     p = add("guide", cmd_guide, "guidance by size of budget")
     p.add_argument("evaluations", nargs="?", type=int)

@@ -362,7 +362,7 @@ def library_markdown() -> str:
             out += ["### %s" % row["name"], "", "**%s.** %s" % (row["title"], row["summary"]), ""]
             if row["when"]:
                 out += ["*When to choose it.* %s" % " ".join(row["when"].split()), ""]
-            out += ["| | |", "|---|---|", "| Tags | %s |" % (", ".join(row["tags"]) or "none"),
+            out += ["| | |", "|---|---|", "| File | %s |" % file_links(row["name"]), "| Tags | %s |" % (", ".join(row["tags"]) or "none"),
                     "| Sets | %s |" % (", ".join("`%s`" % s for s in row["sets"]) or "nothing: guidance only"),
                     "| Guidance for | %s |" % (", ".join(sorted(one.get("guidance") or {})) or "no role"),
                     "| Diagnoses | %d, in the guide |" % len(one.get("diagnose") or []),
@@ -395,72 +395,79 @@ def _brief(tree: Dict[str, Any], indent: int = 0) -> str:
 
 
 def guide_markdown(name: str) -> str:
-    """One optimization goal as a practical page: where to start, why, what the evaluator must report, when to
-    choose something else, and how to read the result. Written from the skill's own file."""
+    """One skill as a page: how to use it, exactly what it sets, what it tells each agent, what the scoring script
+    must report, and the file itself. Everything on the page is read from the skill's file."""
     from . import form
     one = load(name)[0]
     start = one["start"]
-    brief: Dict[str, Any] = {"run": {"type": start.get("run_type") or "explore_then_exploit", "skill": one["name"]},
+    brief: Dict[str, Any] = {"run": {"skill": one["name"], "type": start.get("run_type") or "explore_then_exploit"},
                              "budget": {"evaluations": start.get("evaluations") or 100}}
     for key, value in (start.get("brief") or {}).items():
         brief.setdefault(key, {}).update(value) if isinstance(value, dict) else brief.__setitem__(key, value)
-    run_type = brief["run"]["type"]
-    preview = '<a href="../../which-search/?goal=%s&run=%s#preview-a-search">Preview this search</a>' % (one["name"], run_type)
+    preview = '<a href="../../which-search/?goal=%s&run=%s#preview-a-search">Preview the resulting search</a>' % (
+        one["name"], brief["run"]["type"])
     out = ["# %s" % one["goal"], "",
-           one["summary"], "",
-           "## What a good result looks like", "", one["reading"], "",
-           "## Start here", "",
-           "```yaml", _brief(brief).rstrip(), "```", "",
-           "These lines go in `brief.yaml`. The budget, and any limits or ranges, are placeholders for your own. "
-           "%s to see what it will do, or [set up this search](../setting-up.md) on your project. "
-           "The goal is the skill `%s`, shown in full in the [skill library](../skill-library.md#%s)." % (preview, one["name"], one["name"]), ""]
-    out += ["## Why this set-up", "", one["why"], ""]
+           "Skill `%s`. %s" % (one["name"], one["summary"]), "",
+           "File: %s. A search copies this file to `mysearch/skills/%s/skill.yaml` and reads that copy, which you "
+           "can edit." % (file_links(one["name"]), one["name"]), "",
+           "## Use it", "", "```yaml", _brief(brief).rstrip(), "```", "",
+           "Put these lines in `brief.yaml`. The budget and any limits or ranges are placeholders. %s." % preview, ""]
+    if one["when"]:
+        out += [one["when"], ""]
     sets = form.flatten(one["settings"])
+    out += ["## What it sets", ""]
     if sets:
-        out += ["The skill sets these for you (anything you set in the brief wins):", "", "| Setting | Value |", "|---|---|"]
+        out += ["A skill's settings override the run type's and the autonomy level's. Settings in your brief override "
+                "the skill's.", "", "| Setting | Value |", "|---|---|"]
         out += ["| [`%s`](../fields.md#%s) | `%s` |" % (path, path.replace(".", "-"), _cell(yaml.safe_dump(value, default_flow_style=True).strip().replace("\n...", "")))
                 for path, value in sorted(sets.items())]
         out.append("")
     else:
-        out += ["The skill sets nothing itself: the run type and the defaults decide the search, and the skill supplies "
-                "the guidance.", ""]
-    out += ["## What your evaluator must report", ""]
-    needs = one["needs"]
-    if needs["adapter"] or needs["figures"] or needs["references"]:
-        out += ["- %s" % n for n in needs["adapter"]]
-        out += ["- Every result must report `%s`. If none does, the report says so." % f for f in needs["figures"]]
-        out += ["- Add a row to the leaderboard for %s, to compare against (`evoloop reference`)." % r for r in needs["references"]]
-    else:
-        out += ["Only the score. Nothing else is required."]
-    out += ["", "[Write the evaluator](../evaluator.md) shows how to report these; [Evaluator interface](../project-contract.md) is the reference.", ""]
-    if one["instead"] or one["conflicts"]:
-        out += ["## Choose something else when", "", "| If | Use |", "|---|---|"]
-        for row in one["instead"]:
-            names_ = [n for n in wanted(row["use"]) if n != one["name"]] or wanted(row["use"])
-            both = len(wanted(row["use"])) > len(names_)
-            link = ("add " if both else "") + " with ".join("[`%s`](%s.md)" % (n, n) for n in names_) + (" to this one" if both else "")
-            out.append("| %s | %s |" % (_cell(row["if"]), link))
-        out.append("")
-    if one["combines"]:
-        out += ["It combines well with %s (`run.skill: [%s, ...]`)." % (
-            ", ".join("[`%s`](%s.md)" % (n, n) for n in one["combines"]), one["name"]), ""]
-    out += ["## Where to look", "",
-            "`evoloop leaderboard` for the ranking, `evoloop show` for one design, and the report for everything "
-            "([Files of a run](../records.md)). To change course while it runs: [Watch and steer a run](../steering.md).", ""]
-    out += ["## What the agents are told", ""]
-    for role in ("all", "writer", "analyst", "strategist"):
+        out += ["Nothing. This skill only supplies instructions; the run type and the defaults set the search.", ""]
+    out += ["## What it tells the agents", "",
+            "This text is added to every call to the role named. It is the skill's file verbatim.", ""]
+    labels = {"all": "Every role", "writer": "Writer", "analyst": "Analyst", "strategist": "Strategist",
+              "coordinator": "Coordinator", "conductor": "Conductor"}
+    for role in ROLES:
         if one["guidance"].get(role):
-            out += ["??? note \"%s\"" % {"all": "Every role", "writer": "The writer", "analyst": "The analyst",
-                                           "strategist": "The strategist"}[role]]
+            out += ['=== "%s"' % labels[role], ""]
             out += ["    " + line if line else "" for line in one["guidance"][role].split("\n")] + [""]
     if one["diagnose"]:
-        out += ["| If the results show | Then |", "|---|---|"]
+        out += ["The writer and the analyst are also given these rules:", "", "| If the results show | Then |", "|---|---|"]
         out += ["| %s | %s |" % (_cell(d["see"]), _cell(d["do"])) for d in one["diagnose"]]
         out.append("")
     if one["stages"]:
-        out += ["Early in the budget: %s" % one["stages"].get("early", ""), "", "Late in the budget: %s" % one["stages"].get("late", ""), ""]
-    out += ["You can change any of this: the search gets its own copy of the skill in `skills/%s/skill.yaml` "
-            "([Skills](../skills.md))." % one["name"], ""]
+        out += ["And the writer is told, in the first half of the budget: \"%s\" In the second half: \"%s\"" % (
+            one["stages"].get("early", ""), one["stages"].get("late", "")), ""]
+    out += ["## What your scoring script must report", ""]
+    needs = one["needs"]
+    if needs["adapter"] or needs["figures"] or needs["references"]:
+        out += ["- %s" % n for n in needs["adapter"]]
+        out += ["- `%s` in every result. The report warns if no result has it." % f for f in needs["figures"]]
+        out += ["- A leaderboard row for %s, added with `evoloop reference`. The report warns if it is missing." % r
+                for r in needs["references"]]
+    else:
+        out += ["The score only."]
+    out += ["", "[Write the evaluator](../evaluator.md) · [Evaluator interface](../project-contract.md)", ""]
+    out += ["## Reading the results", "", one["reading"], ""]
+    if one["why"]:
+        out += ["## Why these settings", "", one["why"], ""]
+    if one["instead"] or one["combines"]:
+        out += ["## Related skills", ""]
+        if one["instead"]:
+            out += ["| If | Use |", "|---|---|"]
+            for row in one["instead"]:
+                names_ = [n for n in wanted(row["use"]) if n != one["name"]] or wanted(row["use"])
+                both = len(wanted(row["use"])) > len(names_)
+                link = ("add " if both else "") + " with ".join("[`%s`](%s.md)" % (n, n) for n in names_) + (" to this one" if both else "")
+                out.append("| %s | %s |" % (_cell(row["if"]), link))
+            out.append("")
+        if one["combines"]:
+            out += ["Can be combined with %s: `run.skill: [%s, %s]`." % (
+                ", ".join("[`%s`](%s.md)" % (n, n) for n in one["combines"]), one["name"], one["combines"][0]), ""]
+    with open(os.path.join(one["path"], "skill.yaml"), "r", encoding="utf-8") as handle:
+        text = handle.read().rstrip()
+    out += ["## The file", "", "%s" % file_links(one["name"]), "", "```yaml", text, "```", ""]
     return "\n".join(out).rstrip() + "\n"
 
 
@@ -472,3 +479,29 @@ def write_guides(folder: str) -> List[str]:
         with open(os.path.join(folder, page), "w", encoding="utf-8") as handle:
             handle.write(text)
     return sorted(pages)
+
+
+REPO = "https://github.com/cameo-db/evoloop/blob/main/evoloop"
+RAW = "https://raw.githubusercontent.com/cameo-db/evoloop/main/evoloop"
+
+
+def file_links(name: str) -> str:
+    """Where a library skill's file is: in the repository, and as a plain file to download."""
+    return "[`evoloop/skills/%s/skill.yaml`](%s/skills/%s/skill.yaml) ([raw](%s/skills/%s/skill.yaml))" % (
+        name, REPO, name, RAW, name)
+
+
+def table_markdown() -> str:
+    """Every library skill with what it sets, read from the files: the table on the documentation's front page."""
+    from . import form
+    out = ["| Skill | Goal | Parent selection | What may change | Other settings it changes | File |", "|---|---|---|---|---|---|"]
+    for name in names():
+        one = load(name)[0]
+        sets = form.flatten(one["settings"])
+        other = sorted(k for k in sets if k not in ("strategy.mechanism", "space.preset"))
+        out.append("| [`%s`](guides/%s.md) | %s | %s | %s | %s | [skill.yaml](%s/skills/%s/skill.yaml) |" % (
+            name, name, _cell(one["goal"]),
+            "`%s`" % sets["strategy.mechanism"] if "strategy.mechanism" in sets else "not set",
+            "`%s`" % sets["space.preset"] if "space.preset" in sets else "not set",
+            ", ".join("`%s`" % k for k in other) or "none", REPO, name))
+    return "\n".join(out) + "\n"

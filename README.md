@@ -9,109 +9,93 @@
 
 **An optimization loop for models, algorithms, and data pipelines.**
 
-Give evoloop working code and a way to score it. You choose which parts may change. AI agents propose
-changes, evoloop evaluates each version, and the results guide what it tries next.
+evoloop runs an evolutionary search over parts of your code. You mark the blocks that may change and write a
+script that scores one version. An LLM agent writes each candidate. evoloop's code decides which candidate to
+build on, runs your script on each one as a job, enforces the budget, and records everything.
 
 Use it to improve a model's accuracy, find a smaller model at a similar score, tune a training recipe,
 or make a pipeline faster while checking that its outputs stay correct.
 
 Documentation: <https://evoloop.readthedocs.io>
 
-## How it works
+It is a general search. Two things configure it: the search strategy and how much of the search agents
+decide. An optional skill sets those choices for a particular goal and tells the agents how to approach
+it.
 
-```mermaid
-flowchart LR
-    P["<b>1. Propose a change</b><br>an agent edits the code,<br>or an optimizer picks values"] --> E["<b>2. Evaluate it</b><br>your script runs it<br>and reports a score"]
-    E --> C["<b>3. Choose what to try next</b><br>build on what scored well,<br>keep different ideas alive"]
-    C --> P
-```
+## One iteration
 
-You mark the parts of your code that may change and write a script that scores one version. Everything
-else is frozen. The loop then repeats until the budget you set is spent, and writes down every design,
-score and decision as it goes.
+| Step | What happens | Decided by | Code |
+|---|---|---|---|
+| 1 | Pick the kind of move: a new design, a crossover of two, or a local move on one (an edit, a hyperparameter change, an ablation) | the schedule, in code; optionally a coordinator agent | [`schedule.py`](evoloop/schedule.py) |
+| 2 | Pick the parent design or designs | the search strategy, in code | [`strategies/`](evoloop/strategies) |
+| 3 | Write the candidate: new contents for the marked blocks | a writer agent (LLM) | [`design.py`](evoloop/design.py), prompts in [`agents.py`](evoloop/agents.py) |
+| 4 | Check it: only marked blocks changed, it parses, it is not a copy | code | [`space.py`](evoloop/space.py) |
+| 5 | Run your evaluator on it as its own job, locally or on Slurm | your script | [`jobs.py`](evoloop/jobs.py) |
+| 6 | Record the design, its parent, its score and the agent's forecast | code | [`store.py`](evoloop/store.py) |
 
-| Stage | What happens | Who does it |
+## Search strategies
+
+The strategy is the rule for step 2. Set it with `strategy.mechanism`.
+
+| Strategy | Parents are chosen from | Method it follows | Code |
+|---|---|---|---|
+| `lineage` (default) | the best design of each of several families; new families get protected evaluations | speciation with protected niches, as in NEAT | [`lineage.py`](evoloop/strategies/lineage.py) |
+| `archive` | the best design in each cell of a grid (family and size, or error pattern) | MAP-Elites; with islands, AlphaEvolve's program database | [`archive.py`](evoloop/strategies/archive.py) |
+| `tournament` | the best of 3 drawn from the 24 most recent designs | regularized evolution (Real et al. 2019) | [`tournament.py`](evoloop/strategies/tournament.py) |
+| `pareto` | designs not beaten on both the score and a second metric | non-dominated sorting, as in NSGA-II | [`pareto.py`](evoloop/strategies/pareto.py) |
+| `greedy` | the single best design | hill climbing | [`greedy.py`](evoloop/strategies/greedy.py) |
+
+Any strategy can run as separate populations that are restarted from the best one
+(`strategy.islands`, `strategy.reset_every`), as in FunSearch.
+
+| Other mechanism | Setting | Method it follows |
 |---|---|---|
-| Propose a change | a new design, an edit to an earlier one, a combination of two, or new hyperparameters | an LLM agent, following the skill you chose |
-| Evaluate it | the design is checked, then run as its own job; your script writes its score | your code, on your machine or one Slurm job per design |
-| Choose what to try next | which earlier designs get built on, and how much of the budget goes to new ideas | evoloop's code, from the scores |
+| Marked regions of a program evolved by an LLM | `EVOLVE-BLOCK` markers | FunSearch, AlphaEvolve |
+| Stop weak candidates part way through training | `evaluation.ladder` | successive halving, ASHA |
+| A cheap model for most candidates, a strong one for some | `agents.writer_mix` | AlphaEvolve |
+| Candidates returned as diffs | `variation.edit_format: diff` | AlphaEvolve |
+| Hyperparameters from a Bayesian optimizer, no agent | `variation.settings_by: tpe` | TPE (Optuna, Hyperopt) |
 
-An agent only ever returns text. evoloop's code decides what is tried next, enforces the budget and any
-limits you set, and refuses a design that touches code outside the marked parts.
+## Harness and autonomy
 
-It is built for evaluations that are expensive and noisy, such as training runs: tens to hundreds of
-them, where two runs of the same design give slightly different scores. You say how large that
-variation is, and smaller differences are not counted as gains.
+`harness.autonomy` sets how much the agents decide. More autonomy costs more LLM calls.
 
-## What you choose
+| | `harnessed` | `guided` | `agentic` |
+|---|---|---|---|
+| Kind of move for each slot | schedule (code) | schedule (code) | a coordinator agent |
+| Parents | strategy (code) | strategy (code) | strategy (code) |
+| Strategist agent that can shift the schedule | off | on, within limits | on, wider limits |
+| Hyperparameter moves | random sampler (code) | writer agent | writer agent |
+| LLM calls for 100 designs, estimated | about 110 | about 140 | about 270 |
 
-Two choices shape a search. Everything else has a default.
+Under every level, code enforces the budget, any limits you set, and the checks in step 4.
 
-**The goal: what you want.** Each goal comes with a guide, settings that suit it, and advice for the
-agents, all in a file you can edit.
+## Skills
 
-| Goal | For |
+Skills are optional. Without one, the settings come from the run type and the agents see only your task
+description. A skill adapts the general search to one goal, so you supply less yourself. It is a YAML file with
+settings for the choices above, text added to every agent call, and the measurements your evaluator
+must report. You name it in the brief (`run.skill: model-efficiency`); evoloop copies the file into your
+search folder, where you can edit it.
+
+| Skill | Goal |
 |---|---|
-| [`model-performance`](https://evoloop.readthedocs.io/en/latest/guides/model-performance/) | the best score, with the architecture open |
-| [`model-training-recipe`](https://evoloop.readthedocs.io/en/latest/guides/model-training-recipe/) | a better score from the same architecture: the loss, optimizer, schedule, augmentation |
-| [`settings-tuning`](https://evoloop.readthedocs.io/en/latest/guides/settings-tuning/) | hyperparameters of a fixed model, chosen trial by trial by an agent |
-| [`settings-tuning-bayesian`](https://evoloop.readthedocs.io/en/latest/guides/settings-tuning-bayesian/) | the same with a built-in Bayesian optimizer and no agent calls |
-| [`model-finetuning`](https://evoloop.readthedocs.io/en/latest/guides/model-finetuning/) | adapting a pretrained model |
-| [`model-efficiency`](https://evoloop.readthedocs.io/en/latest/guides/model-efficiency/) | shrinking the model you have, by distilling it into a cheaper student |
-| [`model-size-frontier`](https://evoloop.readthedocs.io/en/latest/guides/model-size-frontier/) | the best model at each of several sizes |
-| [`model-distillation`](https://evoloop.readthedocs.io/en/latest/guides/model-distillation/) | a small student that matches a large teacher |
-| [`model-ensemble-members`](https://evoloop.readthedocs.io/en/latest/guides/model-ensemble-members/) | several good models that fail differently |
-| [`model-mechanistic`](https://evoloop.readthedocs.io/en/latest/guides/model-mechanistic/) | an interpretable or biophysical model, improved without losing its meaning |
-| [`algorithm-runtime`](https://evoloop.readthedocs.io/en/latest/guides/algorithm-runtime/) | the same output from an algorithm, sooner |
-| [`bioinformatics-algorithm`](https://evoloop.readthedocs.io/en/latest/guides/bioinformatics-algorithm/) | a bioinformatics method that is more accurate against a truth set |
-| [`data-pipeline`](https://evoloop.readthedocs.io/en/latest/guides/data-pipeline/) | a data pipeline that is faster or cheaper, with its output checked |
+| [`model-performance`](evoloop/skills/model-performance/skill.yaml) | improve a model's score, with the architecture open |
+| [`model-training-recipe`](evoloop/skills/model-training-recipe/skill.yaml) | train a fixed architecture better: loss, optimizer, schedule, augmentation |
+| [`settings-tuning`](evoloop/skills/settings-tuning/skill.yaml) | tune hyperparameters, with an agent choosing each trial |
+| [`settings-tuning-bayesian`](evoloop/skills/settings-tuning-bayesian/skill.yaml) | tune hyperparameters with a Bayesian optimizer and no agent |
+| [`model-finetuning`](evoloop/skills/model-finetuning/skill.yaml) | adapt a pretrained model |
+| [`model-efficiency`](evoloop/skills/model-efficiency/skill.yaml) | shrink a model by distilling it into a cheaper student |
+| [`model-distillation`](evoloop/skills/model-distillation/skill.yaml) | distil an ensemble or a larger model into a student |
+| [`model-size-frontier`](evoloop/skills/model-size-frontier/skill.yaml) | find the best model at each of several sizes |
+| [`model-ensemble-members`](evoloop/skills/model-ensemble-members/skill.yaml) | find good models that fail differently |
+| [`model-mechanistic`](evoloop/skills/model-mechanistic/skill.yaml) | improve an interpretable or biophysical model |
+| [`algorithm-runtime`](evoloop/skills/algorithm-runtime/skill.yaml) | make an algorithm faster with the same output |
+| [`bioinformatics-algorithm`](evoloop/skills/bioinformatics-algorithm/skill.yaml) | improve a bioinformatics method against a truth set |
+| [`data-pipeline`](evoloop/skills/data-pipeline/skill.yaml) | make a data pipeline faster or cheaper |
 
-Goals can be combined, and you can write your own.
-
-**The run type: how the budget is spent.**
-
-| Run type | Spends the budget on |
-|---|---|
-| `explore_then_exploit` | new ideas first, then improving the best of them (the default) |
-| `refine` | improving a model that already works |
-| `survey` | many different ideas, each kept in play |
-| `discovery` | unusual designs, when evaluations are cheap |
-| `settings_only` | numerical settings and nothing else |
-
-[Which search should I run?](https://evoloop.readthedocs.io/en/latest/which-search/) puts a goal and a
-run type together and shows the search that results.
-
-Other things you can set, all with defaults and all changeable while a search runs:
-
-| | Options |
-|---|---|
-| Which earlier designs get built on | several families side by side, the best of each kind, a tournament among recent designs, a trade-off front on two metrics, or always the current best |
-| Stopping weak designs early | half of new designs stopped half way (the default), or a ladder of checks on every design |
-| Who writes the designs | one Claude model or a mix; whole blocks or small edits |
-| How much the agents decide | code runs the search and agents only write; or a strategist agent adjusts it within bounds; or an agent runs it and you talk to it |
-| Limits | a cap on evaluations, a cap on agent dollars, hard bounds on model size or speed |
-
-## Where the methods come from
-
-evoloop combines mechanisms that others introduced. Each is an option.
-
-| Mechanism | From | In evoloop |
-|---|---|---|
-| Evolve marked regions of a program with a language model | FunSearch, AlphaEvolve | `EVOLVE-BLOCK` markers; everything else frozen |
-| Separate populations that are reset from the best | FunSearch | `strategy.islands`, `strategy.reset_every` |
-| Keep the best of each kind of design | MAP-Elites, AlphaEvolve | `strategy.mechanism: archive` |
-| A fast model and a strong model writing together | AlphaEvolve | `agents.writer_mix` |
-| Edits returned as diffs | AlphaEvolve | `variation.edit_format: diff` |
-| Tournament selection with aging | Regularized evolution | `strategy.mechanism: tournament` |
-| New families protected while young | NEAT | `strategy.mechanism: lineage` (the default) |
-| A trade-off front on two objectives | multi-objective evolution | `strategy.mechanism: pareto` |
-| Stopping weak runs early by rank | successive halving, ASHA | `evaluation.ladder` |
-| Bayesian choice of hyperparameters | TPE (Optuna, Hyperopt) | `variation.settings_by: tpe` |
-
-What evoloop adds: every setting change during a search is recorded with who made it; scores from before
-and after a change that alters their meaning are kept apart; and the goal is chosen separately from the
-search method. [Compared with FunSearch and AlphaEvolve](docs/compared.md) covers each mechanism and
-where evoloop falls short of them.
+The links open the files. The [documentation](https://evoloop.readthedocs.io/en/latest/which-search/)
+has a page for each, showing what it sets and what it tells the agents.
 
 ## Use it on your project
 

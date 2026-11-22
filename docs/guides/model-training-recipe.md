@@ -1,28 +1,26 @@
 # Train a fixed architecture better
 
-The architecture is fixed; the training recipe is open (the loss, the optimizer, the learning-rate schedule, regularization, augmentation). Between tuning numbers and changing the model.
+Skill `model-training-recipe`. The architecture is fixed; the training recipe is open (the loss, the optimizer, the learning-rate schedule, regularization, augmentation). Between tuning numbers and changing the model.
 
-## What a good result looks like
+File: [`evoloop/skills/model-training-recipe/skill.yaml`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skills/model-training-recipe/skill.yaml) ([raw](https://raw.githubusercontent.com/cameo-db/evoloop/main/evoloop/skills/model-training-recipe/skill.yaml)). A search copies this file to `mysearch/skills/model-training-recipe/skill.yaml` and reads that copy, which you can edit.
 
-Compare the best recipe with the baseline row: the difference is what training alone was worth. Look at whether the training score or the gap to validation moved, and at the best epoch: a best epoch at the end of the run means the comparison favoured fast recipes and a longer run is needed.
-
-## Start here
+## Use it
 
 ```yaml
 run:
-  type: explore_then_exploit
   skill: model-training-recipe
+  type: explore_then_exploit
 budget:
   evaluations: 80
 ```
 
-These lines go in `brief.yaml`. The budget, and any limits or ranges, are placeholders for your own. <a href="../../which-search/?goal=model-training-recipe&run=explore_then_exploit#preview-a-search">Preview this search</a> to see what it will do, or [set up this search](../setting-up.md) on your project. The goal is the skill `model-training-recipe`, shown in full in the [skill library](../skill-library.md#model-training-recipe).
+Put these lines in `brief.yaml`. The budget and any limits or ranges are placeholders. <a href="../../which-search/?goal=model-training-recipe&run=explore_then_exploit#preview-a-search">Preview the resulting search</a>.
 
-## Why this set-up
+The architecture is settled (it is published, deployed, or the point of comparison) and the question is how well it can be trained. If only numbers change, settings-tuning is cheaper; if the model may change too, use model-performance with the recipe opened.
 
-The model is settled and the question is how well it can be trained, so only the blocks that define the loss, the optimizer, the schedule and the augmentation are open. Unlike tuning, the code of those blocks can change, not only their numbers.
+## What it sets
 
-The skill sets these for you (anything you set in the brief wins):
+A skill's settings override the run type's and the autonomy level's. Settings in your brief override the skill's.
 
 | Setting | Value |
 |---|---|
@@ -30,34 +28,17 @@ The skill sets these for you (anything you set in the brief wins):
 | [`space.preset`](../fields.md#space-preset) | `custom` |
 | [`space.roles`](../fields.md#space-roles) | `{augmentation: open, loss: open, optimizer: open, recipe: open, schedule: open, training: open}` |
 
-## What your evaluator must report
+## What it tells the agents
 
-- mark the loss, optimizer, schedule and augmentation as blocks with those roles; the model blocks stay closed
-- report the training score beside the validation score under diagnostics, so that fitting and generalising can be told apart
-- report `best_epoch` and `epochs_run` in result.json
+This text is added to every call to the role named. It is the skill's file verbatim.
 
-[Write the evaluator](../evaluator.md) shows how to report these; [Evaluator interface](../project-contract.md) is the reference.
+=== "Every role"
 
-## Choose something else when
-
-| If | Use |
-|---|---|
-| only the numbers of the recipe should change | [`settings-tuning`](settings-tuning.md) |
-| the model itself may change | [`model-performance`](model-performance.md) |
-
-It combines well with [`model-performance`](model-performance.md), [`model-finetuning`](model-finetuning.md) (`run.skill: [model-training-recipe, ...]`).
-
-## Where to look
-
-`evoloop leaderboard` for the ranking, `evoloop show` for one design, and the report for everything ([Files of a run](../records.md)). To change course while it runs: [Watch and steer a run](../steering.md).
-
-## What the agents are told
-
-??? note "Every role"
     The model's architecture does not change in this search. Only how it is trained does: the loss, the optimizer,
     the learning-rate schedule, regularization, augmentation, and the training loop's own choices.
 
-??? note "The writer"
+=== "Writer"
+
     The parts of a recipe interact, so a change to one usually needs another to be re-set:
     - the loss decides what the model is asked for. Consider what it weighs (classes, ranges of the target,
       noisy examples), whether it matches the metric that is scored, and auxiliary terms.
@@ -68,13 +49,17 @@ It combines well with [`model-performance`](model-performance.md), [`model-finet
     - the loop: gradient clipping, mixed precision, averaging of weights, which checkpoint is kept.
     One change per design, with the settings it interacts with re-set in the same design and named.
 
-??? note "The analyst"
+=== "Analyst"
+
     Group lessons by part of the recipe (loss, optimizer, schedule, regularization, augmentation). Say whether a
     gain came from fitting better (training score rose) or generalising better (the gap closed).
 
-??? note "The strategist"
+=== "Strategist"
+
     When edits to one part of the recipe stop gaining, move the slots to another part before concluding the recipe
     is done.
+
+The writer and the analyst are also given these rules:
 
 | If the results show | Then |
 |---|---|
@@ -84,8 +69,114 @@ It combines well with [`model-performance`](model-performance.md), [`model-finet
 | the best epoch is the last one | the run is too short for this recipe: the comparison favours fast recipes, so say so and ask for a longer run |
 | the best epoch is very early and later epochs are worse | the rate is too high late, or regularization too weak: change the decay or add regularization |
 
-Early in the budget: Try one substantial change in each part of the recipe, to find which part has room.
+And the writer is told, in the first half of the budget: "Try one substantial change in each part of the recipe, to find which part has room." In the second half: "Work on the parts that paid, and re-tune the settings they interact with."
 
-Late in the budget: Work on the parts that paid, and re-tune the settings they interact with.
+## What your scoring script must report
 
-You can change any of this: the search gets its own copy of the skill in `skills/model-training-recipe/skill.yaml` ([Skills](../skills.md)).
+- mark the loss, optimizer, schedule and augmentation as blocks with those roles; the model blocks stay closed
+- report the training score beside the validation score under diagnostics, so that fitting and generalising can be told apart
+- report `best_epoch` and `epochs_run` in result.json
+
+[Write the evaluator](../evaluator.md) · [Evaluator interface](../project-contract.md)
+
+## Reading the results
+
+Compare the best recipe with the baseline row: the difference is what training alone was worth. Look at whether the training score or the gap to validation moved, and at the best epoch: a best epoch at the end of the run means the comparison favoured fast recipes and a longer run is needed.
+
+## Why these settings
+
+The model is settled and the question is how well it can be trained, so only the blocks that define the loss, the optimizer, the schedule and the augmentation are open. Unlike tuning, the code of those blocks can change, not only their numbers.
+
+## Related skills
+
+| If | Use |
+|---|---|
+| only the numbers of the recipe should change | [`settings-tuning`](settings-tuning.md) |
+| the model itself may change | [`model-performance`](model-performance.md) |
+
+Can be combined with [`model-performance`](model-performance.md), [`model-finetuning`](model-finetuning.md): `run.skill: [model-training-recipe, model-performance]`.
+
+## The file
+
+[`evoloop/skills/model-training-recipe/skill.yaml`](https://github.com/cameo-db/evoloop/blob/main/evoloop/skills/model-training-recipe/skill.yaml) ([raw](https://raw.githubusercontent.com/cameo-db/evoloop/main/evoloop/skills/model-training-recipe/skill.yaml))
+
+```yaml
+name: model-training-recipe
+title: Improve how a fixed model is trained
+summary: The architecture is fixed; the training recipe is open (the loss, the optimizer, the learning-rate schedule, regularization, augmentation). Between tuning numbers and changing the model.
+domain: model
+objective: a better score from the same architecture, by training it better
+tags: [recipe, training, loss, optimizer, schedule, regularization, augmentation]
+version: 1
+authors: [evoloop]
+when: >
+  The architecture is settled (it is published, deployed, or the point of comparison) and the question is how
+  well it can be trained. If only numbers change, settings-tuning is cheaper; if the model may change too, use
+  model-performance with the recipe opened.
+settings:
+  space:
+    preset: custom
+    roles: {loss: open, optimizer: open, schedule: open, augmentation: open, training: open, recipe: open}
+  schedule:
+    local_mix: {edit: 0.55, settings: 0.35, ablation: 0.1}
+guidance:
+  all: |
+    The model's architecture does not change in this search. Only how it is trained does: the loss, the optimizer,
+    the learning-rate schedule, regularization, augmentation, and the training loop's own choices.
+  writer: |
+    The parts of a recipe interact, so a change to one usually needs another to be re-set:
+    - the loss decides what the model is asked for. Consider what it weighs (classes, ranges of the target,
+      noisy examples), whether it matches the metric that is scored, and auxiliary terms.
+    - the optimizer and schedule decide whether the model gets there. Warm-up, the peak rate, the decay, the
+      batch size and weight decay move together; changing one alone often looks like a failure of the other.
+    - regularization and augmentation decide what it generalises to. Augmentations should be changes the answer
+      is truly invariant to; ones it is not invariant to teach the wrong thing.
+    - the loop: gradient clipping, mixed precision, averaging of weights, which checkpoint is kept.
+    One change per design, with the settings it interacts with re-set in the same design and named.
+  analyst: |
+    Group lessons by part of the recipe (loss, optimizer, schedule, regularization, augmentation). Say whether a
+    gain came from fitting better (training score rose) or generalising better (the gap closed).
+  strategist: |
+    When edits to one part of the recipe stop gaining, move the slots to another part before concluding the recipe
+    is done.
+diagnose:
+  - see: "training is unstable or diverges after a recipe change"
+    do: "lower the peak learning rate or lengthen warm-up for that design before rejecting the change"
+  - see: "the training score rose and the validation score did not"
+    do: "the change helped fitting, not generalisation: pair it with regularization or augmentation"
+  - see: "a new augmentation lowers both training and validation scores"
+    do: "the answer is not invariant to it: weaken or drop it"
+  - see: "the best epoch is the last one"
+    do: "the run is too short for this recipe: the comparison favours fast recipes, so say so and ask for a longer run"
+  - see: "the best epoch is very early and later epochs are worse"
+    do: "the rate is too high late, or regularization too weak: change the decay or add regularization"
+stages:
+  early: "Try one substantial change in each part of the recipe, to find which part has room."
+  late: "Work on the parts that paid, and re-tune the settings they interact with."
+needs:
+  adapter:
+    - "mark the loss, optimizer, schedule and augmentation as blocks with those roles; the model blocks stay closed"
+    - "report the training score beside the validation score under diagnostics, so that fitting and generalising can be told apart"
+    - "report `best_epoch` and `epochs_run` in result.json"
+  figures: []
+  references: []
+combines: [model-performance, model-finetuning]
+conflicts: [settings-tuning]
+goal: Train a fixed architecture better
+start:
+  run_type: explore_then_exploit
+  evaluations: 80
+why: >
+  The model is settled and the question is how well it can be trained, so only the blocks that define the loss,
+  the optimizer, the schedule and the augmentation are open. Unlike tuning, the code of those blocks can change,
+  not only their numbers.
+reading: >
+  Compare the best recipe with the baseline row: the difference is what training alone was worth. Look at
+  whether the training score or the gap to validation moved, and at the best epoch: a best epoch at the end of
+  the run means the comparison favoured fast recipes and a longer run is needed.
+instead:
+  - if: only the numbers of the recipe should change
+    use: settings-tuning
+  - if: the model itself may change
+    use: model-performance
+```

@@ -355,8 +355,8 @@ def test_every_goal_has_a_guide_that_matches_its_skill(tmp_path):
         assert one["goal"] and one["why"] and one["reading"] and one["start"].get("run_type") in form.RUN_TYPES, name
         assert all(n in skill.names() for row in one["instead"] for n in skill.wanted(row["use"])), name
         page = skill.guide_markdown(name)
-        for part in ("## What a good result looks like", "## Start here", "skill: %s" % name, "## Why this set-up", "## What your evaluator must report",
-                     "set up this search", "Preview this search", "## What the agents are told"):
+        for part in ("## Use it", "skill: %s" % name, "## What it sets", "## What it tells the agents", "## What your scoring script must report",
+                     "## Reading the results", "## The file", "github.com/cameo-db/evoloop/blob/main/evoloop/skills/%s/skill.yaml" % name, "name: %s" % name):
             assert part in page, (name, part)
     with open(os.path.join(os.path.dirname(root), "..", "mkdocs.yml"), encoding="utf-8") as handle:
         nav = handle.read()
@@ -395,3 +395,20 @@ def test_shrinking_a_model_is_set_up_as_distillation():
     assert one["settings"]["space"]["preset"] == "architecture_and_recipe"       # the student and how it is trained are both searched
     assert one["needs"]["references"] == ["teacher", "from scratch"]
     assert "teacher" in one["guidance"]["all"] and "student" in one["guidance"]["writer"]
+
+
+def test_the_front_page_table_of_skills_is_read_from_the_files():
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    table = skill.table_markdown()
+    assert all("`%s`" % name in table for name in skill.names())
+    assert "| `pareto` | `architecture_and_recipe` |" in table and "skills/model-efficiency/skill.yaml" in table
+    with open(os.path.join(root, "docs", "generated", "skills-table.md"), encoding="utf-8") as handle:
+        assert handle.read() == table, "docs/generated/skills-table.md is stale: evoloop skills --table > docs/generated/skills-table.md"
+    with open(os.path.join(root, "docs", "index.md"), encoding="utf-8") as handle:
+        front = handle.read()
+    assert 'generated/skills-table.md' in front
+    for mechanism in form.MECHANISMS:                       # every search strategy is on the front page, linked to its code
+        assert "`%s`" % mechanism in front and "strategies/%s.py" % mechanism in front, mechanism
+        assert os.path.isfile(os.path.join(root, "evoloop", "strategies", "%s.py" % mechanism))
+    for level in form.CHOICES["harness.autonomy"]:
+        assert "`%s`" % level in front

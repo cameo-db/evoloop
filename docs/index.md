@@ -1,111 +1,131 @@
 ---
 hide:
   - navigation
-  - toc
 ---
 
-<div class="evo-lead" markdown>
+# evoloop
 
-# An optimization loop for models, algorithms, and data pipelines
+evoloop runs an evolutionary search over parts of your code. You mark the blocks that may change and
+write a script that scores one version. An LLM agent writes each candidate. evoloop's own code decides
+which candidate to build on, runs your script on each one as a job, enforces the budget, and records
+everything.
 
-evoloop improves code you already have. Mark the parts that may change and supply a script that scores a
-version. An LLM agent proposes changes, evoloop runs your script on each one, and the scores decide what
-is tried next. You set the budget.
+It is a general search. Two things configure it: the **search strategy** and how much of the search
+**agents** decide. An optional **skill** sets those choices for a particular goal and tells the agents
+how to approach it.
 
-People use it to raise a model's accuracy, tune hyperparameters, distil a model into a smaller one, or
-make an algorithm or pipeline faster with its output checked.
-
-[Browse the skills](which-search.md){ .md-button .md-button--primary }
+[Worked example](quickstart.md){ .md-button .md-button--primary }
 [Set up a project](setting-up.md){ .md-button }
+[Source on GitHub](https://github.com/cameo-db/evoloop){ .md-button }
 
-</div>
+## One iteration
 
-<div class="evo-loop evo-widget" id="evo-loop">
-  <div class="evo-loop-goals"></div>
-  <p class="evo-loop-skillline">The skill <a class="evo-loop-skill" data-base="guides/" href="guides/model-performance/">model-performance</a> is read at every stage. It tells the agent what to try, says what your script must report, and sets which designs are kept.</p>
-  <div class="evo-loop-stages">
-    <div class="evo-stage">
-      <span class="evo-step">1</span>
-      <h3>Propose a change</h3>
-      <p data-stage="propose">The agent is told to work out what limits the current best model (capacity, optimization or generalization) and to make one change that addresses it.</p>
-    </div>
-    <div class="evo-arrow" aria-hidden="true">→</div>
-    <div class="evo-stage">
-      <span class="evo-step">2</span>
-      <h3>Evaluate it</h3>
-      <p data-stage="evaluate">Your script trains the design and reports its validation score.</p>
-    </div>
-    <div class="evo-arrow" aria-hidden="true">→</div>
-    <div class="evo-stage">
-      <span class="evo-step">3</span>
-      <h3>Choose what to try next</h3>
-      <p data-stage="choose">Several families of designs are kept. The best ones get more edits, and new families keep being started.</p>
-    </div>
-  </div>
-  <div class="evo-loop-back" aria-hidden="true"></div>
-  <p class="evo-loop-note">The loop repeats until the budget is spent. <a class="evo-loop-link" data-base="which-search/" href="which-search/">Preview a search with this skill</a></p>
-</div>
+Each time a job slot is free, evoloop does this. The last column is the file that implements the step.
 
-## Skills
+| Step | What happens | Decided by | Setting | Code |
+|---|---|---|---|---|
+| 1 | Pick the kind of move: a new design, a crossover of two designs, or a local move on one (an edit, a hyperparameter change, an ablation) | the schedule, in code. Optionally a coordinator agent picks among the options code prepares | `schedule.phases`, `harness.coordinator` | [schedule.py](https://github.com/cameo-db/evoloop/blob/main/evoloop/schedule.py) |
+| 2 | Pick the parent design or designs | the search strategy, in code | `strategy.mechanism` | [strategies/](https://github.com/cameo-db/evoloop/blob/main/evoloop/strategies) |
+| 3 | Write the candidate: new contents for the marked blocks | a writer agent (LLM). Code alone for a block swap or sampled hyperparameters | `agents.default_model`, `variation.settings_by` | [design.py](https://github.com/cameo-db/evoloop/blob/main/evoloop/design.py), prompts in [agents.py](https://github.com/cameo-db/evoloop/blob/main/evoloop/agents.py) |
+| 4 | Check it: only marked blocks changed, it parses, it is not a copy of an earlier design | code | `space.preset`, `space.forbidden_terms` | [space.py](https://github.com/cameo-db/evoloop/blob/main/evoloop/space.py) |
+| 5 | Run your evaluator on it as its own job, locally or on Slurm. Optionally stop it early if it is behind | your script; early stopping by code | `evaluation.allowance`, `evaluation.ladder` | [jobs.py](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py), [controller.py](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py) |
+| 6 | Record the design, its parent, its score and the agent's forecast | code | | [store.py](https://github.com/cameo-db/evoloop/blob/main/evoloop/store.py) |
 
-A skill is a text file for one kind of optimization. It holds instructions for the agents, the settings
-that suit the task, and a list of what your scoring script has to report. evoloop ships with thirteen.
-You can edit any of them, combine two, or write your own.
+Every 8 designs an analyst agent summarizes what the results show, and the writers are given that
+summary. [How it works](how-it-works.md) has the full loop.
 
-<div class="grid cards" markdown>
+## Search strategies
 
--   **Models**
+The strategy is the rule for step 2: which earlier designs are built on. Set it with
+`strategy.mechanism`.
 
-    ---
+| Strategy | Parents are chosen from | Method it follows | Code |
+|---|---|---|---|
+| `lineage` (default) | the best design of each of several families. A new family gets protected evaluations before it competes, and no family gets more than 40% of the local moves | speciation with protected niches, as in NEAT | [strategies/lineage.py](https://github.com/cameo-db/evoloop/blob/main/evoloop/strategies/lineage.py) |
+| `archive` | the best design in each cell of a grid. A cell is a family and a size band, or a group of models whose errors fall alike | MAP-Elites. With islands, the program database of AlphaEvolve | [strategies/archive.py](https://github.com/cameo-db/evoloop/blob/main/evoloop/strategies/archive.py) |
+| `tournament` | the best of 3 drawn from the 24 most recent designs. Older designs drop out | regularized (aging) evolution, Real et al. 2019 | [strategies/tournament.py](https://github.com/cameo-db/evoloop/blob/main/evoloop/strategies/tournament.py) |
+| `pareto` | designs not beaten on both the score and a second metric such as parameter count | non-dominated sorting, as in NSGA-II | [strategies/pareto.py](https://github.com/cameo-db/evoloop/blob/main/evoloop/strategies/pareto.py) |
+| `greedy` | the single best design | hill climbing | [strategies/greedy.py](https://github.com/cameo-db/evoloop/blob/main/evoloop/strategies/greedy.py) |
 
-    [Improve a model's score](guides/model-performance.md) ·
-    [Train a fixed architecture better](guides/model-training-recipe.md) ·
-    [Tune hyperparameters](guides/settings-tuning.md) ·
-    [Adapt a pretrained model](guides/model-finetuning.md)
+Any strategy can run as several separate populations (`strategy.islands`), and the weaker populations
+can be restarted from the best one (`strategy.reset_every`), as in FunSearch
+([strategies/islands.py](https://github.com/cameo-db/evoloop/blob/main/evoloop/strategies/islands.py)).
 
--   **Smaller and faster models**
+Other mechanisms, each an option:
 
-    ---
+| Mechanism | Setting | Method it follows |
+|---|---|---|
+| Marked regions of a program evolved by an LLM | `EVOLVE-BLOCK` markers in your code | FunSearch, AlphaEvolve |
+| Explore first, then exploit: shares of new designs, crossover and local moves by phase of the budget | `schedule.phases` | |
+| Stop weak candidates part way through training | `evaluation.ladder` | successive halving, ASHA |
+| A cheap model for most candidates and a strong one for some | `agents.writer_mix` | AlphaEvolve |
+| Candidates returned as diffs | `variation.edit_format: diff` | AlphaEvolve |
+| Hyperparameters drawn by a Bayesian optimizer, with no agent | `variation.settings_by: tpe` | TPE (Optuna, Hyperopt) |
+| Designs grouped by where their errors fall | `strategy.descriptors: [behaviour]` | FunSearch's signature clusters |
 
-    [Shrink a model by distillation](guides/model-efficiency.md) ·
-    [Distil an ensemble or a larger model](guides/model-distillation.md) ·
-    [Best model at several sizes](guides/model-size-frontier.md)
+To search in the manner of FunSearch: `archive` with `strategy.descriptors: [behaviour]`,
+`strategy.islands: 4`, `strategy.reset_every: 40`. In the manner of AlphaEvolve: `archive` on
+`strategy.islands: 3` with `agents.writer_mix`, `variation.edit_format: diff` and
+`evaluation.ladder`. These are approximations.
+[Comparison with FunSearch and AlphaEvolve](compared.md) lists the differences.
 
--   **Algorithms and pipelines**
+## Harness and autonomy
 
-    ---
+Two settings decide which agents run and how much they control.
 
-    [Faster algorithm](guides/algorithm-runtime.md) ·
-    [Cheaper data pipeline](guides/data-pipeline.md) ·
-    [Bioinformatics method](guides/bioinformatics-algorithm.md)
+`harness.level` sets which agent roles run alongside the writer:
 
--   **Other**
+| `harness.level` | Agents that run |
+|---|---|
+| `minimal` | writer |
+| `standard` | writer, and an analyst that summarizes results every 8 designs |
+| `full` (default) | writer and analyst, and the leading design is retrained on a new seed every 20 designs |
 
-    ---
+`harness.autonomy` is a preset for how much the agents decide. More autonomy means more LLM calls.
 
-    [Ensemble members](guides/model-ensemble-members.md) ·
-    [Interpretable models](guides/model-mechanistic.md) ·
-    [Bayesian tuning without agents](guides/settings-tuning-bayesian.md) ·
-    [Write your own](skills.md)
+| | `harnessed` | `guided` | `agentic` |
+|---|---|---|---|
+| Kind of move for each slot | schedule (code) | schedule (code) | a coordinator agent, from options code prepares |
+| Parents | strategy (code) | strategy (code) | strategy (code) |
+| Strategist agent that can shift the schedule | off | on, within limits | on, more often, wider limits |
+| Hyperparameter moves | random sampler (code) | writer agent | writer agent |
+| Proposals written per slot | 1 | set by budget size | 3 |
+| LLM calls for 100 designs, estimated | about 110 | about 140 | about 270 |
 
-</div>
+With any of these, code enforces the budget, the limits, the checks in step 4 and a minimum share of new
+designs. `harness.conductor: agent` additionally lets you talk to the strategist with `evoloop chat`.
+[Agents](agents.md) has the detail.
 
 ## Run types
 
-The skill says what to optimize. The run type says how to spend the evaluations: explore many ideas,
-refine a model that already works, or explore first and refine later. Any skill can be used with any
-run type. [Choose a skill and a run type](which-search.md) shows the search each combination produces.
+A run type is a preset for the strategy, the harness and the schedule.
 
-## Try it
+| `run.type` | Strategy | Agents | New / crossover / local |
+|---|---|---|---|
+| `explore_then_exploit` (default) | `lineage` | full harness, strategist on | 65 / 10 / 25 for the first 60% of the budget, then 15 / 25 / 60 |
+| `refine` | `lineage`, 3 families | full harness, strategist on | 10 / 20 / 70 |
+| `survey` | `archive` | writer and analyst, strategist on | 75 / 10 / 15 |
+| `discovery` | `archive` | writer only | 60 / 15 / 25, novelty raised |
+| `settings_only` | `greedy` | writer only | hyperparameter moves only |
 
-A small search ships with the package. It runs on a laptop in half a minute and needs no API key.
-[Worked example](quickstart.md).
+## Skills
+
+Skills are optional. evoloop runs without one: the settings then come from the run type and the defaults,
+and the agents see only your `task.md` and any notes you send. A skill saves you supplying that guidance
+yourself. It adapts the general search to one goal, and is
+a YAML file with three parts: settings for the choices in the tables above, text that is added to
+every agent call, and the list of measurements your evaluator must report.
+
+You name a skill in the brief (`run.skill: model-efficiency`). evoloop copies its file into your search
+folder and reads that copy, so you can edit it. This table is generated from the files.
+
+--8<-- "generated/skills-table.md"
+
+Each skill's page shows its settings, the exact text it sends to each agent, and the file.
+[Write or edit a skill](skills.md) · [Skill file format](skill-format.md)
 
 ## Status
 
-Version 0.2 passes its tests on two built-in examples in which a script stands in for the LLM. It has
-not been run with a real LLM on a real training task, and its search settings have not been compared
-with each other. [Status and limits](status.md).
-
-[How a search works](how-it-works.md) · [Comparison with FunSearch and AlphaEvolve](compared.md) ·
-[Reference](reference.md)
+Version 0.2. The tests run two built-in examples in which a script stands in for the LLM. evoloop has
+not been run with a real LLM on a real training task, and the strategies have not been compared with
+each other. [Status and limits](status.md).
