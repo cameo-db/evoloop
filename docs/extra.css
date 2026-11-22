@@ -65,10 +65,10 @@
 .evo-stop { fill: var(--evo-base); stroke: var(--evo-surface); stroke-width: 1.5; }
 
 /* The colours of the evoloop mark: a deep green for the header and buttons, its teal for links and accents. */
-:root { --evo-teal: #00806f; --evo-deep: #0f3f39; --evo-dark: #16282a; }
+:root { --evo-teal: #01796e; --evo-deep: #0f3f39; --evo-dark: #132828; }
 [data-md-color-scheme="default"] {
   --md-primary-fg-color: #0f3f39; --md-primary-fg-color--light: #1f5a52; --md-primary-fg-color--dark: #0a2e2a;
-  --md-accent-fg-color: #00806f; --md-typeset-a-color: #00766a; }
+  --md-accent-fg-color: #01796e; --md-typeset-a-color: #01796e; }
 [data-md-color-scheme="default"] .md-typeset h1, [data-md-color-scheme="default"] .md-typeset h2 { color: var(--evo-dark); }
 [data-md-color-scheme="slate"] {
   --md-hue: 172; --md-primary-fg-color: #0f3f39; --md-primary-fg-color--light: #1f5a52; --md-primary-fg-color--dark: #0a2e2a;
@@ -104,3 +104,11 @@
 .evo-dashed { background: transparent; border: 1.5px dashed var(--evo-soft); border-radius: 50%; }
 .evo-run.ghost { stroke-dasharray: 2 4; opacity: 0.35; stroke-width: 1.2; }
 .evo-run.ghost.best { stroke-width: 2.2; opacity: 0.6; }
+
+/* The wordmark stands in the header in place of the site's name in text. */
+.md-header__button.md-logo { padding: 0.2rem 0.4rem; }
+.md-header__button.md-logo img { height: 1.7rem; width: auto; }
+@media screen and (min-width: 76.25em) { .md-header__title .md-header__topic:first-child .md-ellipsis { visibility: hidden; } .md-header__title { margin-left: 0; } }
+.md-nav__title .md-nav__button.md-logo img { height: 2rem; width: auto; }
+.md-typeset .evo-wordmark { margin: 0.2rem 0 0.6rem; }
+.md-typeset .evo-wordmark img { width: min(22rem, 80%); height: auto; }

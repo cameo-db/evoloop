@@ -4,6 +4,8 @@ site_description: Evolutionary search over the parts of your code you choose, wi
 repo_url: https://github.com/cameo-db/evoloop
 repo_name: cameo-db/evoloop
 theme:
+  logo: assets/evoloop-header.png
+  favicon: assets/favicon.png
   name: material
   features:
     - navigation.tabs

@@ -1,4 +1,9 @@
-# evoloop
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/evoloop-logo-dark.png">
+    <img src="docs/assets/evoloop-logo.png" alt="evoloop" width="420">
+  </picture>
+</p>
 
 [![Documentation](https://readthedocs.org/projects/evoloop/badge/?version=latest)](https://evoloop.readthedocs.io/en/latest/)
 

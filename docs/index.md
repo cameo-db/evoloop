@@ -6,6 +6,10 @@ hide:
 
 <div class="evo-lead" markdown>
 
+![evoloop](assets/evoloop-logo.png#only-light){ .evo-wordmark-img }
+![evoloop](assets/evoloop-logo-dark.png#only-dark){ .evo-wordmark-img }
+{ .evo-wordmark }
+
 # An optimization loop for models, algorithms, and data pipelines
 
 Give evoloop working code and a way to score it. You choose which parts may change. AI agents propose
