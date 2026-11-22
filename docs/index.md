@@ -9,65 +9,76 @@ hide:
 script that measures how good one version is. evoloop then runs an evolutionary search: LLM agents
 propose changes, your script scores each one, and the results decide what is tried next.
 
-<svg viewBox="0 0 1220 690" role="img" aria-label="The evoloop loop: LLM agents propose a change, code runs and scores it, agents analyze the results, and the lessons go into the next proposal. Every version and score is recorded." style="width:100%;max-width:920px;height:auto;display:block;margin:24px auto 8px;font-family:inherit">
+<svg viewBox="0 0 1200 720" role="img" aria-label="The evoloop loop. Code selects which version to build on, a writer agent writes a changed version, your script evaluates it, and code records the result. Every few versions, analyst and strategist agents read the record: their lessons go to the writer and their schedule changes go to selection." style="width:100%;max-width:940px;height:auto;display:block;margin:24px auto 8px;font-family:inherit">
   <defs>
-    <marker id="evo-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#8c95a1"/></marker>
-    <marker id="evo-b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker>
+    <marker id="evo-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#7d8790"/></marker>
+    <marker id="evo-t" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#01796e"/></marker>
   </defs>
-  <g fill="none" stroke="#8c95a1" stroke-width="3.5">
-    <path d="M756 148 Q920 160 978 282" marker-end="url(#evo-a)"/>
-    <path d="M980 406 Q930 530 772 544" marker-end="url(#evo-a)"/>
-    <path d="M468 544 Q300 532 248 410" marker-end="url(#evo-a)"/>
-    <path d="M245 286 Q300 160 464 148" marker-end="url(#evo-a)"/>
+  <g fill="none" stroke="#7d8790" stroke-width="3.5">
+    <path d="M190 284 Q225 105 460 92" marker-end="url(#evo-a)"/>
+    <path d="M740 92 Q975 105 1010 282" marker-end="url(#evo-a)"/>
+    <path d="M1010 404 Q975 570 750 580" marker-end="url(#evo-a)"/>
+    <path d="M460 592 Q225 580 190 404" marker-end="url(#evo-a)"/>
+    <path d="M110 560 V404" marker-end="url(#evo-a)"/>
+    <path d="M740 622 H940" marker-end="url(#evo-a)"/>
   </g>
-  <g fill="none" stroke="currentColor" stroke-width="3.5">
-    <path d="M240 102 H464" marker-end="url(#evo-b)"/>
-    <path d="M756 590 H976" marker-end="url(#evo-b)"/>
+  <g fill="none" stroke="#01796e" stroke-width="3" stroke-dasharray="9 7">
+    <path d="M600 538 V402" marker-end="url(#evo-t)"/>
+    <path d="M600 288 V154" marker-end="url(#evo-t)"/>
+    <path d="M483 342 H336" marker-end="url(#evo-t)"/>
   </g>
   <g stroke-width="3">
-    <rect x="60" y="50" width="174" height="105" rx="16" fill="#f1f3f5" stroke="#9aa3ad"/>
-    <rect x="988" y="538" width="174" height="105" rx="16" fill="#f1f3f5" stroke="#9aa3ad"/>
-    <rect x="475" y="72" width="275" height="106" rx="16" fill="#e6eefb" stroke="#2a5db0"/>
-    <rect x="122" y="293" width="247" height="106" rx="16" fill="#e6eefb" stroke="#2a5db0"/>
-    <rect x="856" y="293" width="248" height="106" rx="16" fill="#e7f2ea" stroke="#3a7d4b"/>
-    <rect x="475" y="514" width="275" height="106" rx="16" fill="#e7f2ea" stroke="#3a7d4b"/>
+    <rect x="60" y="290" width="260" height="106" rx="16" fill="#f1f3f4" stroke="#5f6b73"/>
+    <rect x="470" y="40" width="260" height="106" rx="16" fill="#01796e" stroke="#01796e"/>
+    <rect x="880" y="290" width="260" height="106" rx="16" fill="#f1f3f4" stroke="#5f6b73"/>
+    <rect x="470" y="546" width="260" height="106" rx="16" fill="#f1f3f4" stroke="#5f6b73"/>
+    <rect x="485" y="294" width="230" height="100" rx="16" fill="#dff1ee" stroke="#01796e" stroke-dasharray="9 7"/>
   </g>
-  <g text-anchor="middle" font-weight="700" font-size="23">
-    <text x="147" y="90" fill="#1c1f23" font-size="20">Your code</text>
-    <text x="1075" y="578" fill="#1c1f23" font-size="20">Best</text>
-    <text x="612" y="114" fill="#2a5db0">Propose</text>
-    <text x="245" y="335" fill="#2a5db0">Analyze</text>
-    <text x="980" y="335" fill="#3a7d4b">Run</text>
-    <text x="612" y="556" fill="#3a7d4b">Score</text>
-    <text x="612" y="332" fill="currentColor" font-size="20">Record</text>
+  <g text-anchor="middle" font-weight="700" font-size="24">
+    <text x="190" y="334" fill="#1c2326">Select</text>
+    <text x="600" y="84" fill="#ffffff">Write</text>
+    <text x="1010" y="334" fill="#1c2326">Evaluate</text>
+    <text x="600" y="590" fill="#1c2326">Record</text>
+    <text x="600" y="336" fill="#0f3f39" font-size="22">Reflect</text>
   </g>
-  <g text-anchor="middle" font-size="17" fill="#1c1f23">
-    <text x="147" y="131">+ a scoring script</text>
-    <text x="1075" y="619">versions</text>
-    <text x="612" y="157">a writer agent</text>
-    <text x="245" y="378">analyst · strategist</text>
-    <text x="980" y="378">jobs, in parallel</text>
-    <text x="612" y="598">your script</text>
+  <g text-anchor="middle" font-size="17">
+    <text x="190" y="372" fill="#1c2326">code picks what to build on</text>
+    <text x="600" y="122" fill="#ffffff">an agent edits your marked code</text>
+    <text x="1010" y="372" fill="#1c2326">your script scores it, as a job</text>
+    <text x="600" y="628" fill="#1c2326">every version, parent and score</text>
+    <text x="600" y="370" fill="#0f3f39">agents read the record</text>
   </g>
-  <g text-anchor="middle" font-size="17" fill="currentColor" opacity="0.7">
-    <text x="612" y="374">every version and score</text>
-    <g font-style="italic">
-      <text x="838" y="241">new version</text>
-      <text x="838" y="462">finished runs</text>
-      <text x="388" y="462">results</text>
-      <text x="388" y="241">lessons</text>
-    </g>
+  <g font-size="16.5" font-style="italic" fill="currentColor" opacity="0.75">
+    <text x="372" y="222" text-anchor="middle">a parent and a kind of change</text>
+    <text x="872" y="196" text-anchor="middle">a new version</text>
+    <text x="880" y="500" text-anchor="middle">its score</text>
+    <text x="318" y="500" text-anchor="middle">the population</text>
+    <text x="614" y="228">lessons</text>
+    <text x="614" y="476">every few versions</text>
+    <text x="406" y="328" text-anchor="middle">schedule</text>
   </g>
   <g font-size="17" fill="currentColor">
-    <rect x="42" y="651" width="32" height="23" rx="6" fill="#e6eefb" stroke="#2a5db0" stroke-width="2.5"/>
-    <text x="87" y="668">LLM agents</text>
-    <rect x="235" y="651" width="32" height="23" rx="6" fill="#e7f2ea" stroke="#3a7d4b" stroke-width="2.5"/>
-    <text x="280" y="668">code</text>
+    <text x="110" y="592" text-anchor="middle" font-weight="700">You provide</text>
+    <text x="110" y="616" text-anchor="middle">code, a scoring script,</text>
+    <text x="110" y="638" text-anchor="middle">a budget</text>
+    <text x="952" y="616" font-weight="700">You get</text>
+    <text x="952" y="640">a leaderboard and the</text>
+    <text x="952" y="662">whole search as JSON</text>
+  </g>
+  <g font-size="16" fill="currentColor">
+    <rect x="60" y="690" width="30" height="20" rx="5" fill="#01796e"/>
+    <text x="100" y="706">LLM agent</text>
+    <rect x="215" y="690" width="30" height="20" rx="5" fill="#f1f3f4" stroke="#5f6b73" stroke-width="2.5"/>
+    <text x="255" y="706">code</text>
+    <path d="M330 700 H372" stroke="#01796e" stroke-width="3" stroke-dasharray="9 7"/>
+    <text x="384" y="706">optional agents, every few versions</text>
   </g>
 </svg>
 
-Agents propose changes and learn from the results. Code runs every version, scores it with your script,
-keeps the record, and decides which versions are built on.
+The outer loop is evolutionary search: code selects, an agent writes, your script evaluates, code records.
+Inside it, analyst and strategist agents read the record every few versions. Their lessons go to the
+writer, and their changes to the schedule go to selection. You can steer at any point with a note or a
+changed setting.
 
 Use it to raise a model's validation score, train a smaller student from a teacher, tune
 hyperparameters, or make an algorithm or pipeline faster while its output stays the same.
