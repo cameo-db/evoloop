@@ -42,17 +42,17 @@ propose changes, your script scores each one, and the results decide what is tri
     <rect x="470" y="294" width="260" height="100" rx="16" fill="#dff1ee" stroke="#01796e" stroke-dasharray="9 7"/>
   </g>
   <g text-anchor="middle" font-weight="700" font-size="21">
-    <text x="190" y="334" fill="#1c2326">1. Pick a version to improve</text>
-    <text x="600" y="84" fill="#ffffff">2. Write a change to it</text>
-    <text x="1010" y="334" fill="#1c2326">3. Run it and score it</text>
-    <text x="600" y="590" fill="#1c2326">4. Add it to the leaderboard</text>
+    <text x="190" y="334" fill="#1c2326">1. Select a parent</text>
+    <text x="600" y="84" fill="#ffffff">2. Evolve it</text>
+    <text x="1010" y="334" fill="#1c2326">3. Evaluate</text>
+    <text x="600" y="590" fill="#1c2326">4. Keep or retire</text>
     <text x="600" y="336" fill="#0f3f39">Review the results</text>
   </g>
   <g text-anchor="middle" font-size="17">
-    <text x="190" y="372" fill="#1c2326">code, by a rule you choose</text>
-    <text x="600" y="122" fill="#ffffff">an LLM agent</text>
-    <text x="1010" y="372" fill="#1c2326">code checks it, your script runs it</text>
-    <text x="600" y="628" fill="#1c2326">code</text>
+    <text x="190" y="372" fill="#1c2326">code, from the lineages still alive</text>
+    <text x="600" y="122" fill="#ffffff">an LLM agent mutates or crosses it</text>
+    <text x="1010" y="372" fill="#1c2326">code checks it, your script scores it</text>
+    <text x="600" y="628" fill="#1c2326">code updates the lineages</text>
     <text x="600" y="370" fill="#0f3f39">LLM agents, every few versions</text>
   </g>
   <g font-size="16.5" font-style="italic" fill="currentColor" opacity="0.8">
@@ -83,18 +83,103 @@ propose changes, your script scores each one, and the results decide what is tri
 </svg>
 
 <ol class="evo-loop-list">
-<li><b>Pick a version to improve.</b> Code, by a rule you choose.</li>
-<li><b>Write a change to it.</b> An LLM agent.</li>
-<li><b>Run it and score it.</b> Code checks the change, then your script runs it. Several run at once.</li>
-<li><b>Add it to the leaderboard.</b> Code.</li>
+<li><b>Select a parent.</b> Code, from the lineages still alive.</li>
+<li><b>Evolve it.</b> An LLM agent mutates it or crosses it with another.</li>
+<li><b>Evaluate.</b> Code checks the change, then your script scores it. Several run at once.</li>
+<li><b>Keep or retire.</b> Code updates the lineages.</li>
 <li><b>Review the results</b> (optional). LLM agents, every few versions, advise steps 1 and 2.</li>
 </ol>
 
-Steps 1 to 4 repeat until the budget is spent, several versions at a time. An LLM writes every change.
-Which version it starts from is decided by code, by a rule you choose, such as "the best of each family
-of designs". You can let an agent choose the kind of change as well. Before step 3, code refuses any
-change that touches code you did not mark. Step 3 then runs your own script, which does whatever your
-problem needs (train a model, time an algorithm) and reports a score. Several versions run at once.
+This is evolutionary search with an LLM as the mutation operator. Code selects a parent, an LLM agent
+mutates it or crosses it with another, your script scores the result, and code decides what stays in
+the population. Before step 3, code refuses any change that touches code you did not mark.
+
+## Lineages: how the search explores and exploits
+
+By default the population is a set of **lineages**. A lineage is a family of versions descended from
+one new design.
+
+<svg class="evo-loop-svg" viewBox="0 0 1200 500" role="img" aria-label="Lineages over one search, as an illustration. New designs found lineages early. Each lineage is protected for its first two runs. A lineage that stops improving is retired. Later, most evaluations refine the best lineages, and a crossover of two lineages founds a new one." style="width:100%;max-width:940px;height:auto;display:block;margin:24px auto 8px;font-family:inherit">
+  <rect x="70" y="64" width="622" height="356" fill="#01796e" opacity="0.06"/>
+  <path d="M692 64 V420" stroke="#7d8790" stroke-width="2" stroke-dasharray="5 6"/>
+  <g font-size="18" font-weight="700" fill="currentColor"><text x="80" y="48">Explore: found new lineages</text><text x="704" y="48">Exploit: refine and cross the best</text></g>
+  <path d="M90 110 H560" stroke="#9aa3ab" stroke-width="3" fill="none"/>
+  <circle cx="90" cy="110" r="7" fill="#ffffff" stroke="#9aa3ab" stroke-width="3"/>
+  <circle cx="150" cy="110" r="7" fill="#ffffff" stroke="#9aa3ab" stroke-width="3"/>
+  <circle cx="230" cy="110" r="7" fill="#9aa3ab"/>
+  <circle cx="330" cy="110" r="7" fill="#9aa3ab"/>
+  <circle cx="440" cy="110" r="7" fill="#9aa3ab"/>
+  <circle cx="560" cy="110" r="7" fill="#9aa3ab"/>
+  <path d="M591 101 L609 119 M591 119 L609 101" stroke="#9aa3ab" stroke-width="3.5" fill="none"/>
+  <path d="M160 180 H1070" stroke="#01796e" stroke-width="3" fill="none"/>
+  <circle cx="160" cy="180" r="7" fill="#ffffff" stroke="#01796e" stroke-width="3"/>
+  <circle cx="220" cy="180" r="7" fill="#ffffff" stroke="#01796e" stroke-width="3"/>
+  <circle cx="300" cy="180" r="7" fill="#01796e"/>
+  <circle cx="420" cy="180" r="7" fill="#01796e"/>
+  <circle cx="540" cy="180" r="7" fill="#01796e"/>
+  <circle cx="650" cy="180" r="7" fill="#01796e"/>
+  <circle cx="720" cy="180" r="7" fill="#01796e"/>
+  <circle cx="770" cy="180" r="7" fill="#01796e"/>
+  <circle cx="820" cy="180" r="7" fill="#01796e"/>
+  <circle cx="870" cy="180" r="7" fill="#01796e"/>
+  <circle cx="920" cy="180" r="7" fill="#01796e"/>
+  <circle cx="970" cy="180" r="7" fill="#01796e"/>
+  <circle cx="1020" cy="180" r="7" fill="#01796e"/>
+  <circle cx="1070" cy="180" r="7" fill="#01796e"/>
+  <path d="M250 250 H430" stroke="#9aa3ab" stroke-width="3" fill="none"/>
+  <circle cx="250" cy="250" r="7" fill="#ffffff" stroke="#9aa3ab" stroke-width="3"/>
+  <circle cx="310" cy="250" r="7" fill="#ffffff" stroke="#9aa3ab" stroke-width="3"/>
+  <circle cx="390" cy="250" r="7" fill="#9aa3ab"/>
+  <circle cx="430" cy="250" r="7" fill="#9aa3ab"/>
+  <path d="M461 241 L479 259 M461 259 L479 241" stroke="#9aa3ab" stroke-width="3.5" fill="none"/>
+  <path d="M360 320 H760" stroke="#5f6b73" stroke-width="3" fill="none"/>
+  <circle cx="360" cy="320" r="7" fill="#ffffff" stroke="#5f6b73" stroke-width="3"/>
+  <circle cx="420" cy="320" r="7" fill="#ffffff" stroke="#5f6b73" stroke-width="3"/>
+  <circle cx="500" cy="320" r="7" fill="#5f6b73"/>
+  <circle cx="600" cy="320" r="7" fill="#5f6b73"/>
+  <circle cx="680" cy="320" r="7" fill="#5f6b73"/>
+  <circle cx="760" cy="320" r="7" fill="#5f6b73"/>
+  <path d="M791 311 L809 329 M791 329 L809 311" stroke="#9aa3ab" stroke-width="3.5" fill="none"/>
+  <path d="M720 180 Q760 185 800 245 M680 320 Q750 315 800 255" stroke="#5f6b73" stroke-width="3" fill="none"/>
+  <path d="M806 250 H1100" stroke="#5f6b73" stroke-width="3" fill="none"/>
+  <circle cx="806" cy="250" r="7" fill="#ffffff" stroke="#5f6b73" stroke-width="3"/>
+  <circle cx="850" cy="250" r="7" fill="#ffffff" stroke="#5f6b73" stroke-width="3"/>
+  <circle cx="900" cy="250" r="7" fill="#5f6b73"/>
+  <circle cx="950" cy="250" r="7" fill="#5f6b73"/>
+  <circle cx="1000" cy="250" r="7" fill="#5f6b73"/>
+  <circle cx="1050" cy="250" r="7" fill="#5f6b73"/>
+  <circle cx="1100" cy="250" r="7" fill="#5f6b73"/>
+  <path d="M880 390 H1080" stroke="#5f6b73" stroke-width="3" fill="none"/>
+  <circle cx="880" cy="390" r="7" fill="#ffffff" stroke="#5f6b73" stroke-width="3"/>
+  <circle cx="940" cy="390" r="7" fill="#ffffff" stroke="#5f6b73" stroke-width="3"/>
+  <circle cx="1010" cy="390" r="7" fill="#5f6b73"/>
+  <circle cx="1080" cy="390" r="7" fill="#5f6b73"/>
+  <circle cx="1070" cy="180" r="15" fill="none" stroke="#01796e" stroke-width="3"/>
+  <g font-size="15.5" fill="currentColor" opacity="0.85">
+    <text x="90" y="88">a new design founds a lineage</text>
+    <text x="250" y="284">first 2 runs: protected</text>
+    <text x="470" y="142">retired: no gain in 6 tries</text>
+    <text x="826" y="296" >crossover of two lineages founds a third</text>
+    <text x="1070" y="148" text-anchor="middle" font-weight="700">best version</text>
+    <text x="70" y="448">evaluations spent &#8594;</text>
+    <text x="1130" y="448" text-anchor="end">each dot is one version, run and scored</text>
+  </g>
+</svg>
+
+- **Founded** by a new design, or by a crossover of two lineages.
+- **Protected** for its first 2 runs, so a slow starter is not dropped before it has been tuned.
+- **Retired** after 6 changes in a row with no gain above the noise. A retired lineage can still be a
+  crossover partner.
+- Up to 8 lineages are active at once, and none takes more than 40% of the refinements.
+
+The schedule moves from exploring to exploiting. In the first 60% of the budget, 65% of the versions
+are new designs. After that, 60% are refinements of an existing lineage and 25% are crossovers. All of
+these numbers are settings.
+
+Every version has a parent, so the history is a family tree, but this is not tree search. Nothing is
+expanded systematically and no values are backed up the tree, as in Monte Carlo tree search. It is a
+population that changes over time. Lineages are the default rule for step 1; four other rules are
+below.
 
 Use it to raise a model's validation score, train a smaller student from a teacher, tune
 hyperparameters, or make an algorithm or pipeline faster while its output stays the same.
