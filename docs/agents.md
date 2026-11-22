@@ -5,17 +5,20 @@ called and what it is sent. Roles never call each other.
 
 ## Roles
 
-| Role | Called | Sent | Returns |
-|---|---|---|---|
-| writer | for each design that is not made in code | your `task.md`, the parents' code, the top of the leaderboard, the last 10 results, the analyst's lessons, your notes | one or more proposals: new code for the marked blocks, a hypothesis, a forecast of the gain |
-| analyst | every 8 finished designs | results since its last call, the leaderboard, earlier lessons | lessons, each citing runs. A lesson counts as supported only if its evidence spans two lineages |
-| strategist | every 15 scored designs, and on a plateau | figures worked out by code: gains by kind of move, diversity, budget left, its own earlier decisions | up to two decisions from a fixed list. Code checks each against your bounds before applying it |
-| coordinator | every slot, if switched on | the kinds of move possible now, with the parents code would use for each | one of those options |
-| assessor | at points you choose | each role's calls, with what happened afterwards | a written review of each role, for you |
-| translator | when you run `evoloop steer` | your words and the current settings | setting changes and notes, shown to you before anything is applied |
+| Role | Required | Called | Sent | Returns |
+|---|---|---|---|---|
+| writer | required | for each design that is not made in code | your `task.md`, the parents' code, the top of the leaderboard, the last 10 results, the analyst's lessons, your notes | one or more proposals: new code for the marked blocks, a hypothesis, a forecast of the gain |
+| analyst | optional, on by default | every 8 finished designs | results since its last call, the leaderboard, earlier lessons | lessons, each citing runs. A lesson counts as supported only if its evidence spans two lineages |
+| strategist | optional, on in most run types | every 15 scored designs, and on a plateau | figures worked out by code: gains by kind of move, diversity, budget left, its own earlier decisions | up to two decisions from a fixed list. Code checks each against your bounds before applying it |
+| coordinator | optional, off by default | every slot | the kinds of move possible now, with the parents code would use for each | one of those options |
+| assessor | optional, on by default | at points you choose | each role's calls, with what happened afterwards | a written review of each role, for you |
+| translator | on request | when you run `evoloop steer` | your words and the current settings | setting changes and notes, shown to you before anything is applied |
 
-Only the writer is required. A search can run with the writer alone, and the
-[`settings-tuning-bayesian`](guides/settings-tuning-bayesian.md) skill runs with no agent at all.
+Only the writer is required. The optional roles are switched with settings: the analyst with
+`harness.level` (`minimal` turns it off), the strategist with `strategist.mode`, the coordinator with
+`harness.coordinator: agent`, and the assessor with `audit.reviews` (`none` turns it off). A search
+over hyperparameters alone can run with no agent at all, using the
+[`settings-tuning-bayesian`](guides/settings-tuning-bayesian.md) skill.
 
 The *controller* is not an agent. It is the Python process that runs the search. The *conductor* is
 the strategist when you have chosen to talk to it with `evoloop chat`.

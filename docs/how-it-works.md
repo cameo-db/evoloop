@@ -83,14 +83,14 @@ continues from the files, and picks up jobs that were still running.
 Each role is a separate LLM call with its own instructions. Roles never call each other. The
 controller sends each one what it needs from the run folder.
 
-| Role | Called | Returns |
-|---|---|---|
-| writer | for each design that is not made in code | new code for the marked blocks, a hypothesis, a forecast |
-| analyst | every 8 finished designs | lessons, each citing the runs that support it |
-| strategist | every 15 scored designs, and on a plateau | up to two decisions from a fixed list, which code checks before applying |
-| coordinator | every slot, if switched on | which kind of move to make, from the options code prepared |
-| assessor | at points you choose | a review of each other role, for you |
-| translator | when you run `evoloop steer` | your words as setting changes and notes, shown to you before they apply |
+| Role | Required | Called | Returns |
+|---|---|---|---|
+| writer | required | for each design that is not made in code | new code for the marked blocks, a hypothesis, a forecast |
+| analyst | optional, on by default | every 8 finished designs | lessons, each citing the runs that support it |
+| strategist | optional, on in most run types | every 15 scored designs, and on a plateau | up to two decisions from a fixed list, which code checks before applying |
+| coordinator | optional, off by default | every slot | which kind of move to make, from the options code prepared |
+| assessor | optional, on by default | at points you choose | a review of each other role, for you |
+| translator | on request | when you run `evoloop steer` | your words as setting changes and notes, shown to you before they apply |
 
 Only the writer is required. [Agents](agents.md) covers what each role is sent, how much the agents
 are allowed to decide, and which model they run on.
