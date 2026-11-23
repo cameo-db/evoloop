@@ -56,7 +56,7 @@ environment, because designs are model-written code.
 | `valid`, `score` | yes | whether the run produced a score, and the number the search optimizes (on validation data) |
 | `rejected` | no | with `valid: false`, the reason the evaluator rejected the design (too slow, too large); it is then not a failure |
 | `diagnostics` | no | numbers here are shown to the agents and can be leaderboard columns. Name the ones to track in `evaluation.metrics`, with how each is computed |
-| `diagnostics.hidden` | no | test-set results: stored and written to the study file, never shown to an agent |
+| `diagnostics.hidden` | no | test-set results: stored and written to the study file, never shown to an agent. Name the ones to run in `evaluation.test_metrics` |
 | `parameters` | no | trainable parameter count; used for the archive's size bin, for `limits`, and as the second figure of the `pareto` strategy |
 | `signature` | no | a list of numbers saying where the model's errors fall (per class, per range, per example); used to pair designs for crossover, to group designs by behaviour in the archive, and to choose what a novel slot is shown |
 | `inference_speed` | no | `{"examples_per_s": n}`: for the study file, for a limit on `examples_per_s`, the `speed` column, and the second figure of the `pareto` strategy |

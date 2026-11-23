@@ -40,6 +40,10 @@ And these come from your evaluator, in `result.json` (see [The evaluator contrac
 | `inference_speed`, `parameters` | for every model with a finished run; needed for Gold |
 | `diagnostics.hidden` | held-out results: stored in the file, never shown to the agents |
 
+The file records which metric was optimized (`objective.metric`) and the definition of every tracked
+metric and test evaluation (`evaluation.metrics`, `evaluation.test_metrics`). A test evaluation given a
+`dataset` is recorded as an evaluation on that dataset.
+
 Run `evoloop study` again after any change; it rewrites the file from the run's records.
 
 ## 3. Check with the CAMEO kit

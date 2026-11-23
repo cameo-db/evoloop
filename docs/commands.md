@@ -60,7 +60,8 @@ Reads and writes the brief. With no option it lists the questions still open.
 | Option | Does |
 |---|---|
 | `--answer FIELD=VALUE` | records an answer; repeatable; the value is read as YAML |
-| `--confirm NAME` | records your agreement to the plan; refused while a required answer is missing |
+| `--confirm NAME` | records your agreement to the plan; refused while an answer is missing or a setup question has not been asked |
+| `--accept-defaults` | with `--confirm`: takes the suggestion or default for every question not yet asked, and prints them |
 | `--import FILE` | reads an answers file from the form, or any mapping of fields; skills edited in the form are written to the search folder |
 | `--next` | the next question as JSON, for an agent to ask |
 | `--keep FIELD` | accepts the suggestion or default for one question |

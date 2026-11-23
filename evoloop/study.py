@@ -26,6 +26,21 @@ def or_not(value: Any) -> Any:
     return NOT if value in (None, "", [], {}) else value
 
 
+def tracked(s: Dict[str, Any]) -> Dict[str, Any]:
+    """Every metric the brief tracks, with how it is computed: the validation metrics, and the test evaluations
+    marked as test."""
+    out = dict(s["evaluation"].get("metrics") or {})
+    for name, about in (s["evaluation"].get("test_metrics") or {}).items():
+        out[name] = dict(about if isinstance(about, dict) else {"definition": about}, split="test")
+    return out
+
+
+def other_data(s: Dict[str, Any]) -> Dict[str, str]:
+    """Test evaluations measured on data other than the search's own: {metric: the name of that data}."""
+    return {name: about["dataset"] for name, about in (s["evaluation"].get("test_metrics") or {}).items()
+            if isinstance(about, dict) and about.get("dataset")}
+
+
 def build(controller: Any, view: View) -> Dict[str, Any]:
     s, designer, store = controller.settings, controller.designer, controller.store
     base = os.path.join(controller.folder, "base")
@@ -53,7 +68,7 @@ def build(controller: Any, view: View) -> Dict[str, Any]:
         "evaluation": {"primary_metric": s["objective"]["metric"], "direction": s["objective"]["direction"],
                        "selection_split": "valid", "test_policy": "held out; never shown to an agent or used to choose"
                        if s["evaluation"]["test_set"] == "held_out" else NOT, "noise_floor": or_not(s["evaluation"]["noise"]),
-                       "metrics": dict(s["evaluation"].get("metrics") or {}) or NOT},
+                       "metrics": tracked(s) or NOT},
         "environment": captured.get("environment") or NOT,
         "search": {"method": method, "budget": {"evaluations": s["budget"]["evaluations"], "spent": controller.spent(view),
                                                  "agent_dollars": round(sum(r["dollars"] for r in spend(store).values()), 4)},
@@ -104,7 +119,14 @@ def build(controller: Any, view: View) -> Dict[str, Any]:
             entry["settings"]["allowance"] = run["allowance"]
         p = entry["performance"]
         if status in ("done", "stopped_early"):
-            p.update(score=perf.get("score"), valid=perf.get("valid") or NOT, test=perf.get("test") or NOT,
+            held, elsewhere = dict(perf.get("test") or {}), {}
+            for name, data in other_data(s).items():      # a test evaluation on other data is listed with that data
+                if name in held:
+                    elsewhere.setdefault(data, {})[name] = held.pop(name)
+            if elsewhere:
+                p["evaluations"] = [{"dataset": data, "split": "test", "metrics": metrics}
+                                    for data, metrics in sorted(elsewhere.items())]
+            p.update(score=perf.get("score"), valid=perf.get("valid") or NOT, test=held or NOT,
                      parameters=or_not(perf.get("parameters")), training_minutes=or_not(perf.get("training_minutes")),
                      best_epoch=or_not(perf.get("best_epoch")), epochs_run=or_not(perf.get("epochs_run")))
         elif perf.get("reason"):
@@ -112,6 +134,9 @@ def build(controller: Any, view: View) -> Dict[str, Any]:
         if run.get("period"):
             p["period"] = run["period"]   # this loop's own field: which setting of the run length it was fitted under
         runs.append(entry)
+    further = sorted(set(other_data(s).values()))
+    if further:
+        experiment["datasets"] = {data: {"name": data} for data in further}
     return {"format_version": FORMAT_VERSION, "experiment": experiment, "models": models, "training": training, "runs": runs}
 
 

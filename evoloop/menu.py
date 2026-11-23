@@ -227,7 +227,8 @@ FIELDS: Dict[str, str] = {
     "evaluation.ladder_applies": "With a ladder: `all` designs are subject to it, or only `new` ones (the first run of a new design).",
     "evaluation.recheck_every": "Designs between two fits of the leader on a new seed; 0 leaves it to the harness level.",
     "evaluation.speciality_metrics": "Metrics a run reports, with their direction, by which a specialist parent is chosen.",
-    "evaluation.metrics": "The metrics to track, each with how it is computed: {name: definition}. The names are those your evaluator reports under diagnostics (validation) and diagnostics.hidden (test). Recorded in the study file. The report warns when a metric named here is missing from the results.",
+    "evaluation.metrics": "The validation metrics to track, each with how it is computed: {name: definition}. The names are those your evaluator reports under diagnostics. Shown to the agents, recorded in the study file, and listed on the leaderboard. The report warns when one is missing from the results.",
+    "evaluation.test_metrics": "The held-out evaluations to run on every design, in the same form: {name: definition}, or {name: {definition, dataset}} for an evaluation on other data. The names are those your evaluator reports under diagnostics.hidden. Never shown to an agent or used for selection. Recorded in the study file and listed on the leaderboard.",
     "evaluation.schedule_depends_on_length": "Whether the learning-rate schedule depends on the run's length. If not, "
                                              "a longer run can continue a checkpoint.",
     "evaluation.keep_checkpoints": "Whether the adapter keeps checkpoints that a later run can continue.",

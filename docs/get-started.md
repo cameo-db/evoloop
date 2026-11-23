@@ -32,17 +32,22 @@ The repository carries instructions for the agent, so it knows how to proceed fr
 
 ## Your decisions
 
-The agent works most of the setup out from your project. It asks you for the rest one question at a
-time, with a suggested answer wherever it has evidence for one. Five decisions are yours:
+The agent reads your project and then asks you the setup questions one at a time. Each comes with a
+suggested answer or a default, and the reason for it, so most take one word. Nothing in the setup is
+filled in without being put to you, and a search cannot be confirmed while a question is unasked. These
+are the questions that matter most:
 
 1. What to optimize.
 2. Which parts of the code may change.
-3. How a version is scored: which metric is optimized, and which other metrics are tracked.
-4. How much to spend: the number of training runs, and a dollar cap for the agents.
-5. Any hard limits, such as a largest model size.
+3. Which metric is optimized, which other validation metrics are tracked, and which test evaluations
+   are run on every design. Test results are recorded for you and never shown to the agents.
+4. What the data is, and how it is split into training, validation and test sets.
+5. How much to spend: the number of training runs, and a dollar cap for the agents.
+6. Any hard limits, such as a largest model size.
 
-On a cluster it also asks which account to charge, how your environment is activated, and whether
-there are queues it must not use.
+The remaining questions cover the training run (its length, early stopping, the baseline), where the
+jobs run, and which model the agents use. On a cluster the agent also asks which account to charge, how
+your environment is activated, and whether there are queues it must not use.
 
 ## The agent's part
 

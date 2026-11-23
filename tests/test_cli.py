@@ -40,7 +40,12 @@ def test_init_then_questions_then_confirm(tmp_path, capsys):
     plan = capsys.readouterr().out
     assert "From the brief (what you set):" in plan and "From the run type refine:" in plan
     assert "From the guidance for about 30 evaluations:" in plan and "From the default:" in plan
-    assert main(["brief", folder, "--confirm", "Ada"]) == 0
+    with pytest.raises(SystemExit) as stop:                      # nor while a question has not been put to the person
+        main(["brief", folder, "--confirm", "Ada"])
+    assert "have not been put to the person" in str(stop.value) and "evaluation.test_metrics" in str(stop.value)
+    capsys.readouterr()
+    assert main(["brief", folder, "--confirm", "Ada", "--accept-defaults"]) == 0
+    assert "accepted without asking:" in capsys.readouterr().out
     assert form.confirmed(form.load_brief(folder))
 
 

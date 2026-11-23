@@ -159,7 +159,8 @@ and how jobs run on Slurm.
 ## Metric names
 
 The search optimizes `score`. Give that metric its name in the brief (`objective.metric: pearson_r`),
-and list every metric to track with how it is computed:
+and list what else is measured on every design: the validation metrics to track, and the test
+evaluations to run.
 
 ```yaml
 objective:
@@ -168,9 +169,18 @@ evaluation:
   metrics:
     pearson_r: Pearson correlation between predicted and measured signal, per peak, averaged
     count_r2: R squared of predicted against measured log counts
-    test_pearson_r: {definition: pearson_r on the held-out chromosomes, split: test}
+  test_metrics:
+    test_pearson_r: pearson_r on the held-out chromosomes
+    test_count_r2: count_r2 on the held-out chromosomes
+    other_cell_line_r: {definition: pearson_r on HepG2 peaks, dataset: HepG2 ATAC-seq}
 ```
 
-The names are the ones the evaluator writes under `diagnostics` (validation) and `diagnostics.hidden`
-(test). They go into the study file, where they are what lets someone compare this search with another
-or start a search from it. The report warns when a metric named here is missing from the results.
+The names under `metrics` are the ones the evaluator writes under `diagnostics`. The agents see them.
+The names under `test_metrics` are the ones it writes under `diagnostics.hidden`. They are recorded for
+you and never shown to an agent or used to choose parents. Run as many test evaluations as you want to
+follow, on the held-out split or on other data. Which evaluations count as validation and which as test
+is your decision.
+
+Both lists become columns of the leaderboard and go into the study file, where they are what lets
+someone compare this search with another or start a search from it. The report warns when a metric
+named here is missing from the results.

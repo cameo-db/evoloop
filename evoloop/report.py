@@ -11,18 +11,22 @@ from .store import ENDED, Store, View, write_json
 
 
 def untracked(settings: Dict[str, Any], view: Any) -> List[str]:
-    """Metrics the brief says to track (`evaluation.metrics`) that no result has reported."""
+    """Metrics the brief says to track, and test evaluations it says to run, that no result has reported."""
     scored = view.scored()
     if len(scored) < 3:
         return []
-    seen = set()
+    valid, test = set(), set()
     for cand in scored:
         perf = view.run_of(cand["id"]).get("performance") or {}
-        seen |= set(perf.get("valid") or {}) | set(perf.get("test") or {})
-    named = settings["objective"].get("metric")
-    return ["the brief tracks the metric `%s` (evaluation.metrics) and no result reports it: the evaluator should write "
-            "it under diagnostics, or under diagnostics.hidden for a test-set metric" % name
-            for name in sorted(settings["evaluation"].get("metrics") or {}) if name not in seen and name != named]
+        valid |= set(perf.get("valid") or {})
+        test |= set(perf.get("test") or {})
+    named, ev = settings["objective"].get("metric"), settings["evaluation"]
+    out = ["the brief tracks the metric `%s` (evaluation.metrics) and no result reports it: the evaluator should write "
+           "it under diagnostics, or under diagnostics.hidden for a test-set metric" % name
+           for name in sorted(ev.get("metrics") or {}) if name not in valid | test and name != named]
+    return out + ["the brief asks for the test evaluation `%s` (evaluation.test_metrics) and no result reports it: the "
+                  "evaluator should write it under diagnostics.hidden" % name
+                  for name in sorted(ev.get("test_metrics") or {}) if name not in test]
 
 
 def leaderboard(view: View, limit: int = 15, columns: Optional[List[str]] = None,
@@ -111,16 +115,31 @@ def status(controller: Any, view: View, reason: Optional[str] = None) -> None:
     write_json(os.path.join(controller.run_dir, "status.json"), snapshot(controller, view, reason))
 
 
-def table(rows: List[Dict[str, Any]]) -> List[str]:
+def headings(columns: Optional[List[str]]) -> Dict[str, str]:
+    """How a tracked metric is headed in a table: a validation metric by its name, a test evaluation by its name
+    when the name already says test and as `test.<name>` when it does not."""
+    fixed = ("kind", "model", "lineage", "family", "score", "state", "length", "fits", "parameters", "minutes")
+    out = {}
+    for column in columns or []:
+        part, _, name = column.partition(".")
+        if part == "valid" and name not in fixed:
+            out[column] = name
+        elif part == "test" and name.lower().startswith("test"):
+            out[column] = name
+    return out
+
+
+def table(rows: List[Dict[str, Any]], names: Optional[Dict[str, str]] = None) -> List[str]:
     if not rows:
         return ["(none)"]
     heads = list(rows[0])
+    shown = [(names or {}).get(h, h) for h in heads]
 
     def cell(value: Any) -> str:
         if isinstance(value, float):
             return "%.5g" % value
         return "" if value is None else str(value)
-    out = ["| " + " | ".join(heads) + " |", "|" + "|".join("---" for _ in heads) + "|"]
+    out = ["| " + " | ".join(shown) + " |", "|" + "|".join("---" for _ in heads) + "|"]
     out.extend("| " + " | ".join(cell(row.get(h)) for h in heads) + " |" for row in rows)
     return out
 
@@ -136,9 +155,10 @@ def lines(controller: Any, view: View, reason: Optional[str] = None) -> List[str
         controller.agents.count))
     if snap["best"]:
         out.append("Best: %s (%s), score %.6g." % (snap["best"]["candidate"], snap["best"]["family"], snap["best"]["score"]))
-    out += ["", "## Leaderboard (validation)", ""] + table(leaderboard(view, int(settings["report"]["top"]), settings["report"]["columns"],
+    out += ["", "## Leaderboard (ranked by validation score)", ""] + table(leaderboard(view, int(settings["report"]["top"]), form.tracked_columns(settings),
                                                                          store.read("references"),
-                                                                         allowance=settings["evaluation"]["allowance"]))
+                                                                         allowance=settings["evaluation"]["allowance"]),
+                                                                           headings(form.tracked_columns(settings)))
     out += ["", "`state` says how a score was reached: `full` is a fit of the whole run length; a design stopped part way "
             "is listed last as provisional and is not ranked with full-length fits.", ""]
     out += ["", "## Population (%s)" % settings["strategy"]["mechanism"], ""]

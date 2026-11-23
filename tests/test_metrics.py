@@ -47,3 +47,46 @@ def test_the_study_file_names_the_metric_and_the_report_says_when_a_tracked_one_
     assert set(evaluation["metrics"]) == {"valid_mse", "test_mse", "calibration"}
     notes = report.untracked(controller.settings, controller.view())
     assert len(notes) == 1 and "`calibration`" in notes[0]                               # test_mse is reported; the score is the score
+
+
+def test_set_up_asks_which_test_evaluations_to_run_and_they_reach_the_plan_the_leaderboard_and_the_study(tmp_path, capsys):
+    fields = [q["field"] for q in interview.QUESTIONS]
+    assert fields[fields.index("evaluation.metrics") + 1] == "evaluation.test_metrics"
+    brief = {"objective": {"goal": "better", "direction": "maximize", "metric": "pearson_r"}}
+    assert interview.record(brief, "evaluation.test_metrics", "test_pearson_r: held-out chromosomes; variant_auroc: variant effects") is None
+    assert set(brief["evaluation"]["test_metrics"]) == {"test_pearson_r", "variant_auroc"}
+    assert form.check_value("evaluation.test_metrics", {"variant_auroc": {"definition": "AUROC on variants", "dataset": "variant-set"}}) is None
+    plan = "\n".join(form.at_a_glance(form.resolve(dict(brief, run={"type": "refine"}, budget={"evaluations": 100}))[0]))
+    assert "Test evals:      test_pearson_r, variant_auroc (run on every design, kept from the agents)" in plan
+
+    folder = search(tmp_path, budget__evaluations=7, evaluation__allowance=150, audit__reviews="none", strategist__mode="off",
+                    objective__metric="valid_mse", evaluation__metrics={"n_constants": "constants in the formula"},
+                    evaluation__test_metrics={"test_mse": {"definition": "mean squared error on other points", "dataset": "far-range"},
+                                              "robustness": "an evaluation the evaluator does not run"})
+    controller, _ = run(folder, name="m")
+    settings = controller.settings
+    assert form.tracked_columns(settings) == ["valid.n_constants", "test.test_mse", "test.robustness"]
+    assert form.tracked_columns(dict(settings, report=dict(settings["report"], columns=["speed"]))) == ["speed"]   # asked for: as asked
+    capsys.readouterr()
+    assert main(["leaderboard", folder, "--name", "m"]) == 0
+    board = capsys.readouterr().out
+    assert "| n_constants |" in board and "| test_mse |" in board and "| test.robustness |" in board                     # tracked metrics are columns
+    notes = report.untracked(settings, controller.view())
+    assert len(notes) == 1 and "`robustness`" in notes[0] and "diagnostics.hidden" in notes[0]
+    assert main(["study", folder, "--name", "m"]) == 0
+    with open(os.path.join(folder, "runs", "m", "study.json"), encoding="utf-8") as handle:
+        study = json.load(handle)
+    assert study["experiment"]["evaluation"]["metrics"]["test_mse"] == {
+        "definition": "mean squared error on other points", "dataset": "far-range", "split": "test"}
+    assert study["experiment"]["datasets"] == {"far-range": {"name": "far-range"}}
+    done = [r for r in study["runs"] if r["performance"]["status"] == "done"]
+    assert done and all(r["performance"]["evaluations"][0]["dataset"] == "far-range" and
+                        "test_mse" in r["performance"]["evaluations"][0]["metrics"] for r in done)
+    assert all("test_mse" not in (r["performance"]["test"] if isinstance(r["performance"]["test"], dict) else {}) for r in done)
+    # Nothing of the test evaluations is in what a writer is sent.
+    from evoloop import space
+    table = controller.designer.table
+    ask = {"mode": "new", "parents": [], "source": space.full(table, {}), "allowed": {n: b["kind"] for n, b in table.items()},
+           "purpose": "search", "move": "new_approach"}
+    sent = json.dumps(controller.designer.context(ask, controller.view(), settings, []), default=str)
+    assert "test_mse" not in sent

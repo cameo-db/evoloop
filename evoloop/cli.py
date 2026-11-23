@@ -234,13 +234,36 @@ def cmd_brief(args: Any) -> int:
         q = now["next"]
         out(json.dumps({"done": now["done"], "total": now["total"], "sections": now["sections"],
                         "question": None if q is None else {k: q[k] for k in (
-                            "field", "number", "of", "section", "title", "question", "why", "kind", "choices", "default", "suggested",
+                            "field", "number", "of", "section", "title", "question", "why", "kind", "choices", "default", "empty", "suggested",
                             "default_from", "required") if k in q},
                         "skill_files": skill_files(folder, brief),
-                        "how_to_answer": "evoloop brief DIR --answer FIELD=VALUE, or --keep FIELD to leave the default; then --next again"
+                        "how_to_answer": "put this question to the person, with the suggestion or the default and the reason; then "
+                                         "evoloop brief DIR --answer FIELD=VALUE for their own answer, or --keep FIELD if they "
+                                         "leave the suggestion or the default; then --next again"
                         if q else "all done: evoloop plan DIR, then evoloop brief DIR --confirm NAME"}, indent=1, default=str))
         return 0
     if args.confirm:
+        # Every question is put to the person before a brief is confirmed: an entry nobody was asked about is not agreed.
+        interview.infer(folder, brief)      # so that the list shows the value each question would be left at
+        pending = [q for q in interview.state(brief, folder)["questions"] if not q["done"] and not q["required"]]
+
+        def left_at(q: Dict[str, Any]) -> str:
+            hint = q.get("suggested")
+            value = hint["value"] if hint else q["default"]
+            label = next((c["label"] for c in q.get("choices") or [] if c["value"] == value), None)
+            return "%s: %s" % ("suggested" if hint else "default", label or interview.shown(value, q.get("empty", "none")))
+        shown = ["  %s (%s): %s" % (q["field"], q["title"], left_at(q)) for q in pending]
+        if pending and not args.accept_defaults:
+            raise SystemExit("\n".join(["not confirmed: these set-up questions have not been put to the person yet:"] + shown + [
+                "Ask them (`evoloop brief %s --next`, or `evoloop setup %s`), or confirm with --accept-defaults to take the "
+                "values shown." % (args.dir, args.dir)]))
+        if pending:
+            for q in pending:
+                interview.record(brief, q["field"], interview.KEEP)
+            form.save_brief(folder, brief)
+            out("accepted without asking:")
+            for line in shown:
+                out(line)
         try:
             form.confirm(folder, args.confirm)
         except form.BriefError as exc:
@@ -260,7 +283,11 @@ def cmd_brief(args: Any) -> int:
         if ask["required"] or args.all:
             out("%s %s\n    %s%s" % ("ASK " if ask["required"] else "    ", ask["field"], ask["question"],
                                     "\n    choices: " + ", ".join(map(str, ask["choices"])) if ask["choices"] else ""))
-    if not any(a["required"] for a in asks) and not faults:
+    waiting = [q["field"] for q in interview.state(brief, folder)["questions"] if not q["done"] and not q["required"]]
+    if not any(a["required"] for a in asks) and not faults and waiting:
+        out("still to put to the person, each with a suggested or default answer: %s. Ask with `evoloop brief %s --next`."
+            % (", ".join(waiting), args.dir))
+    elif not any(a["required"] for a in asks) and not faults:
         out("nothing left to ask. Read `evoloop plan %s`, then confirm with `evoloop brief %s --confirm NAME`." % (args.dir, args.dir)
             if not form.confirmed(brief) else "the brief is complete and confirmed by %s." % brief["status"]["confirmed_by"])
     return 0
@@ -810,10 +837,11 @@ def cmd_leaderboard(args: Any) -> int:
     controller.refresh()
     controller.pool.shutdown(wait=False)
     settings = controller.settings
+    columns = args.columns or form.tracked_columns(settings)
     rows = report.leaderboard(controller.view(), args.top or int(settings["report"]["top"]),
-                              args.columns or settings["report"]["columns"], controller.store.read("references"),
+                              columns, controller.store.read("references"),
                               allowance=settings["evaluation"]["allowance"])
-    out("\n".join(report.table(rows)))
+    out("\n".join(report.table(rows, report.headings(columns))))
     return 0
 
 
@@ -959,6 +987,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--questions", action="store_true", help="the open questions as JSON, for an agent to ask the person")
     p.add_argument("--all", action="store_true", help="every field, not only the required ones")
     p.add_argument("--answer", action="append", metavar="FIELD=VALUE")
+    p.add_argument("--accept-defaults", action="store_true", help="with --confirm: take the suggested or default value for every question not yet asked")
     p.add_argument("--confirm", metavar="NAME")
     p.add_argument("--next", action="store_true", help="the next question as JSON, with its choices and where it stands in the list")
     p.add_argument("--keep", action="append", metavar="FIELD", help="leave a question as shown: accept its suggestion, or its default")

@@ -32,18 +32,21 @@ Install from the repository. The `evoloop` package on PyPI is an unrelated proje
 
 ## Result
 
-```
-| kind     | model | lineage | family            | score   | state | length | fits | parameters |
-| design   | C32   | L9      | periodic features | 0.97    | full  | 300    | 1    | 173        |
-| design   | C17   | L9      | periodic features | 0.96833 | full  | 300    | 2    | 173        |
-| design   | C14   | L9      | periodic features | 0.96667 | full  | 300    | 1    | 73         |
-...
-| baseline | C1    | L1      | baseline          | 0.5     | full  | 300    | 1    | 3          |
-```
+The first three rows of the leaderboard and the baseline, with some columns left out:
 
-`lineage` is the line of descent a design belongs to, and `family` is the label the writer gave that kind
-of design. `state` says whether the run went its full `length` (300 training steps here) or was stopped
-early. `fits` is how many times the design was trained.
+| model | lineage | family | score | train_accuracy | test_accuracy | parameters | fits |
+|---|---|---|---|---|---|---|---|
+| C32 | L9 | periodic features | 0.970 | 0.942 | 0.960 | 173 | 1 |
+| C17 | L9 | periodic features | 0.968 | 0.942 | 0.960 | 173 | 2 |
+| C14 | L9 | periodic features | 0.967 | 0.952 | 0.967 | 73 | 1 |
+| C1, the baseline | L1 | baseline | 0.500 | 0.505 | 0.480 | 3 | 1 |
+
+`score` is the validation accuracy, the metric the search optimizes. `train_accuracy` and
+`test_accuracy` are columns because the example's brief tracks them: the first is reported to the
+agents, and the second is a test evaluation that they never see. `lineage` is the line of descent a
+design belongs to, and `family` is the label the writer gave that kind of design. `fits` is how many
+times the design was trained. The full table also says whether each run went its full length, 300
+training steps here, or was stopped early.
 
 Validation accuracy went from 0.50 for the baseline, a linear classifier, to 0.97. The held-out test
 accuracy of the selected design is 0.96. Four labels in a hundred are wrong on purpose, so 0.96 is about

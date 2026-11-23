@@ -129,7 +129,7 @@ def test_designs_from_an_earlier_run_and_reference_rows(tmp_path, capsys):
     assert main(["leaderboard", folder, "--name", "t", "--top", "5", "--columns", "test.test_mse", "valid.n_constants"]) == 0
     board = capsys.readouterr().out
     assert "| reference | published model |" in board and "| reference | one %s |" % best[0] in board and "| baseline |" in board
-    assert "test.test_mse" in board and "0.6" in board
+    assert "| test_mse |" in board and "0.6" in board
     assert main(["status", folder, "--name", "t"]) == 0
     status = capsys.readouterr().out
     assert "Models: 7" in status and "Best: " in status and "Agents: $0.00" in status and "{" not in status.split("\n")[0]

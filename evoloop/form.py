@@ -71,6 +71,8 @@ DEFAULTS: Dict[str, Any] = {
                    "screen_keep": 0.5, "screen_min_pool": 4, "recheck_every": 0, "speciality_metrics": {},
                    # The metrics to track, each with how it is computed: {name: definition}. Recorded in the study file.
                    "metrics": {},
+                   # Held-out evaluations to run on every design, in the same form. Never shown to an agent.
+                   "test_metrics": {},
                    # A promotion ladder (successive halving inside one job): at each share `at` of a run, only the best
                    # `keep` of the designs that got there go on, e.g. [{at: 0.1, keep: 0.5}, {at: 0.3, keep: 0.5}].
                    # Empty: the single screen above, for new designs only.
@@ -142,7 +144,7 @@ CHOICES = {"objective.direction": ("maximize", "minimize"), "strategy.mechanism"
 LIVE = ("schedule.", "limits", "strategist.", "population.", "crossover.", "variation.", "harness.", "strategy.", "space.", "audit.", "budget.",
         "compute.max_running", "compute.time_limit", "compute.qos", "compute.partition", "compute.gpus", "compute.max_waiting",
         "compute.gpu_type", "compute.larger_gpu_type",
-        "evaluation.screen_", "evaluation.ladder", "evaluation.recheck_every", "evaluation.speciality_metrics", "evaluation.metrics", "evaluation.on_length_change",
+        "evaluation.screen_", "evaluation.ladder", "evaluation.recheck_every", "evaluation.speciality_metrics", "evaluation.metrics", "evaluation.test_metrics", "evaluation.on_length_change",
         "evaluation.leaders_refit", "agents.models", "agents.writer_mix", "agents.default_model", "agents.effort", "agents.efforts", "agents.fallbacks", "agents.prices",
         "report.", "run.")
 # These change what a score means. They may change too, and then a new period begins: the leaders are fitted again
@@ -221,7 +223,7 @@ def flatten(tree: Dict[str, Any], prefix: str = "") -> Dict[str, Any]:
 
 
 # Mappings that are one value, not a group of fields.
-ATOMIC = ("space.ranges", "space.roles", "schedule.local_mix", "evaluation.speciality_metrics", "evaluation.metrics", "agents.models", "agents.prices", "agents.efforts", "evaluation.variables", "limits",
+ATOMIC = ("space.ranges", "space.roles", "schedule.local_mix", "evaluation.speciality_metrics", "evaluation.metrics", "evaluation.test_metrics", "agents.models", "agents.prices", "agents.efforts", "evaluation.variables", "limits",
           "data.examples", "data.splits")
 
 
@@ -410,18 +412,18 @@ def check_value(path: str, value: Any) -> Optional[str]:
         return "run.type must be one of: %s" % ", ".join(RUN_TYPES)
     if path == "schedule.phases":
         return check_phases(value)
-    if path == "evaluation.metrics" and value not in EMPTY:
+    if path in ("evaluation.metrics", "evaluation.test_metrics") and value not in EMPTY:
         if not isinstance(value, dict) or not all(isinstance(k, str) and k.strip() for k in value):
-            return "evaluation.metrics must map each metric's name to how it is computed"
+            return "%s must map each metric's name to how it is computed" % path
         for name, about in value.items():
             if isinstance(about, dict):
-                if not isinstance(about.get("definition"), str) or set(about) - {"definition", "direction", "split"}:
-                    return ("evaluation.metrics.%s must be text, or {definition: text, direction: maximize or minimize, "
-                            "split: valid or test}" % name)
+                if not isinstance(about.get("definition"), str) or set(about) - {"definition", "direction", "split", "dataset"}:
+                    return ("%s.%s must be text, or {definition: text, direction: maximize or minimize, split: valid or "
+                            "test, dataset: the name of the data it is measured on}" % (path, name))
                 if about.get("direction") not in (None, "maximize", "minimize"):
-                    return "evaluation.metrics.%s.direction must be maximize or minimize" % name
+                    return "%s.%s.direction must be maximize or minimize" % (path, name)
             elif not isinstance(about, str) or not about.strip():
-                return "evaluation.metrics.%s must say how the metric is computed" % name
+                return "%s.%s must say how the metric is computed" % (path, name)
     # A value of the wrong kind is refused here, not found out when the loop first uses it.
     default = flatten(DEFAULTS).get(path)
     number = isinstance(value, (int, float)) and not isinstance(value, bool)
@@ -470,7 +472,8 @@ def check_value(path: str, value: Any) -> Optional[str]:
             isinstance(m, str) and isinstance(b, dict) and b and set(b) <= {"max", "min"}
             and all(isinstance(x, (int, float)) and not isinstance(x, bool) for x in b.values()) for m, b in value.items())
         if not ok:
-            return "limits must map a metric to {max: x}, {min: x} or both, e.g. {parameters: {max: 20000000}}"
+            return ("limits must map a metric to {max: x}, {min: x} or both, e.g. {parameters: {max: 20000000}}; typed as an "
+                    "answer, `parameters <= 20000000; training_minutes <= 30`, or `none`")
     if path == "agents.efforts" and value not in EMPTY and (not isinstance(value, dict) or not all(
             isinstance(r, str) and v in CHOICES["agents.effort"] for r, v in value.items())):
         return "agents.efforts must map a role to one of: %s" % ", ".join(CHOICES["agents.effort"])
@@ -656,6 +659,20 @@ def confirmed(brief: Dict[str, Any]) -> bool:
     return bool(status.get("confirmed_by")) and status.get("confirmed_digest") == digest(brief)
 
 
+def tracked_columns(settings: Dict[str, Any]) -> List[str]:
+    """The leaderboard's further columns: those asked for (`report.columns`), or else every metric the brief tracks,
+    validation first and then the test evaluations. The leaderboard is for the person; agents are never shown it."""
+    asked = list(settings["report"].get("columns") or [])
+    if asked:
+        return asked
+    ev, named = settings["evaluation"], settings["objective"].get("metric")
+    out = []
+    for name, about in (ev.get("metrics") or {}).items():
+        if name != named:
+            out.append(("test.%s" if isinstance(about, dict) and about.get("split") == "test" else "valid.%s") % name)
+    return out + ["test.%s" % name for name in (ev.get("test_metrics") or {})]
+
+
 def at_a_glance(settings: Dict[str, Any]) -> List[str]:
     """What this search will actually do, in a few lines: what is optimized, who writes the designs, which agent
     roles run, how designs are selected and stopped, and what a later choice changed in an earlier one."""
@@ -666,11 +683,14 @@ def at_a_glance(settings: Dict[str, Any]) -> List[str]:
     out.append("  Optimizing:      %s%s" % (settings["run"]["type"] or "no run type yet",
                                           ", skill %s" % skill["name"] if skill else ", no skill"))
     metric, tracked = settings["objective"].get("metric") or "score", sorted(settings["evaluation"].get("metrics") or {})
+    held = sorted(settings["evaluation"].get("test_metrics") or {})
     way = {"maximize": "higher is better", "minimize": "lower is better"}.get(settings["objective"]["direction"], "direction not set")
     others = [m for m in tracked if m != metric]
     out.append("  Score:           %s, %s%s" % (
         metric if metric != "score" else "not named (set objective.metric; the study file will call it \"score\")", way,
         "; also tracked: %s" % ", ".join(others) if others else ""))
+    if held:
+        out.append("  Test evals:      %s (run on every design, kept from the agents)" % ", ".join(held))
     calls = estimate.calls(settings) if settings["budget"]["evaluations"] else {}
     by = settings["variation"]["settings_by"]
     moves = {"agent": "an agent", "sampler": "a sampler in code (no agent call)",
@@ -694,6 +714,12 @@ def at_a_glance(settings: Dict[str, Any]) -> List[str]:
     if strat["mechanism"] == "pareto":
         select += " (score and %s)" % (strat.get("second_metric") or "no second figure set")
     out.append("  Selection:       %s" % select)
+    data = settings["data"]
+    if data.get("name") or data.get("splits") or float(data.get("fraction") or 1) != 1:
+        share = float(data.get("fraction") or 1)
+        out.append("  Data:            %s%s%s" % (
+            data.get("name") or "not named", "; split: %s" % data["splits"] if data.get("splits") else "",
+            "; each run uses %g%% of the training data" % (100 * share) if share != 1 else ""))
     place = settings.get("_site")
     compute = settings["compute"]
     where = "this machine, %s at once" % (compute["gpus"] or "?") if compute["scheduler"] == "local" else "Slurm, one job per design%s%s, %s at once" % (
@@ -801,7 +827,7 @@ def review_points(settings: Dict[str, Any]) -> List[float]:
 
 
 BLANK = {
-    "objective": {"goal": None, "metric": "score", "direction": None, "constraints": []},
+    "objective": {"goal": None, "metric": None, "direction": None, "constraints": []},
     "run": {"type": None, "description": ""},
     "budget": {"evaluations": None, "model_dollars": None, "wall_clock_hours": None},
     "evaluation": {"allowance": None, "allowance_unit": "steps", "noise": None, "quick_check": None},

@@ -21,6 +21,13 @@ from . import form, menu
 from .model import catalog
 
 KEEP = "__keep__"       # the answer "leave it at the default"
+# Words in a goal that name the metric being optimized.
+METRIC_HINTS = [("spearman_r", r"spearman"), ("pearson_r", r"pearson|correlation"), ("r2", r"\br2\b|r squared|r\^2"),
+                ("auroc", r"auroc|\bauc\b"), ("auprc", r"auprc|precision.recall"), ("f1", r"\bf1\b"),
+                ("accuracy", r"accurac"), ("mse", r"\bmse\b|mean squared error"), ("perplexity", r"perplexity"),
+                ("loss", r"\bloss\b"), ("runtime_s", r"runtime|faster|latency|speed")]
+LOWER_IS_BETTER = ("mse", "perplexity", "loss", "runtime_s")
+
 # Words in a goal that point to a kind of optimization, most specific first.
 SKILL_HINTS = [("model-distillation", r"distil\w*|student|teacher"),
                ("model-ensemble-members", r"ensembl\w*"),
@@ -33,7 +40,7 @@ SKILL_HINTS = [("model-distillation", r"distil\w*|student|teacher"),
                ("bioinformatics-algorithm", r"bioinformatic\w*|aligner|alignment|variant call\w*|peak call\w*|assembl\w*"),
                ("algorithm-runtime", r"\balgorithm\b|run ?time|\bcode\b"),
                ("model-efficiency", r"smaller|faster|efficien\w*|compress\w*|lightweight|fewer parameters|\bspeed\b")]
-SECTIONS = ["Goal", "Budget", "Search", "Training runs", "Compute", "Agents", "Oversight"]
+SECTIONS = ["Goal", "Data", "Budget", "Search", "Training runs", "Compute", "Agents", "Oversight"]
 
 
 def _choices(entries: Dict[str, str], only: Any = None) -> List[Dict[str, str]]:
@@ -54,11 +61,28 @@ QUESTIONS: List[Dict[str, Any]] = [
      "question": "What is the score called?",
      "why": "The name of the metric your evaluator reports as its score, such as pearson_r or val_loss. It is recorded "
             "with the results and in the study file, so that this search can be compared with others."},
-    {"field": "evaluation.metrics", "section": "Goal", "title": "Metrics to track", "kind": "text",
-     "question": "Which metrics should be tracked, and how is each computed?",
+    {"field": "evaluation.metrics", "empty": "nothing tracked beyond the score", "section": "Goal", "title": "Metrics to track", "kind": "text",
+     "question": "Which validation metrics should be tracked, and how is each computed?",
      "why": "Give each as `name: how it is computed`, separated by semicolons: the score, and anything else your "
-            "evaluator reports on validation or test data. They are recorded in the study file, and the report warns if "
-            "one is missing from the results."},
+            "evaluator reports on validation data. The agents see these. They are recorded in the study file, and "
+            "the report warns if one is missing from the results."},
+    {"field": "evaluation.test_metrics", "empty": "no test evaluations", "section": "Goal", "title": "Test evaluations", "kind": "text",
+     "question": "Which test evaluations should be run on every design?",
+     "why": "Held-out evaluations, each as `name: what it measures`, separated by semicolons. Give as many as you "
+            "want to follow. They are never shown to the agents or used for selection. Which evaluations count as "
+            "validation and which as test is your decision."},
+    {"field": "data.name", "empty": "not recorded", "section": "Data", "title": "Dataset", "kind": "text",
+     "question": "What data is the search run on?",
+     "why": "A name for the dataset, with an accession if it has one. It is recorded in the study file, so that "
+            "results are compared only with results on the same data."},
+    {"field": "data.splits", "empty": "not recorded", "section": "Data", "title": "Data split", "kind": "text",
+     "question": "How is the data split into training, validation and test sets?",
+     "why": "In a sentence, for instance `chromosomes 8 and 9 held out for test, 10 for validation`. The split is "
+            "yours to choose. It is recorded in the study file, and it says which data each metric was computed on."},
+    {"field": "data.fraction", "section": "Data", "title": "Share of the training data", "kind": "number",
+     "question": "What share of the training data should each training run use?",
+     "why": "1 uses all of it. A smaller share makes each run cheaper, and the best designs can be trained on all "
+            "of the data afterwards. Passed to your evaluator as EVO_DATA_FRACTION."},
     {"field": "budget.evaluations", "section": "Budget", "title": "Models to train", "kind": "number",
      "question": "How many models may be trained in all?",
      "why": "The schedule and the guidance for a small or large search are worked out from it."},
@@ -66,7 +90,7 @@ QUESTIONS: List[Dict[str, Any]] = [
      "question": "How should the search spend its evaluations?",
      "why": "It sets the strategy, the schedule, the harness and the search space unless you set them yourself.",
      "choices": _choices(menu.RUN_TYPES)},
-    {"field": "run.skill", "section": "Search", "title": "Kind of optimization", "kind": "choice",
+    {"field": "run.skill", "empty": "no skill", "section": "Search", "title": "Kind of optimization", "kind": "choice",
      "question": "Which goal should the agents be given guidance for? (Optional. To combine skills, give their names separated by commas.)",
      "why": "A skill sets what suits one goal and adds guidance to the agent calls. The search runs without one. "
             "You can read and edit the skill file before you confirm.",
@@ -78,23 +102,38 @@ QUESTIONS: List[Dict[str, Any]] = [
     {"field": "space.preset", "section": "Search", "title": "What may change", "kind": "choice",
      "question": "Which parts of the code may the search change?",
      "why": "Code enforces it: a design that changes anything else is not run.", "choices": _choices(menu.SPACES)},
-    {"field": "harness.autonomy", "section": "Search", "title": "Agentic or harnessed", "kind": "choice",
+    {"field": "limits", "empty": "no limits", "section": "Search", "title": "Hard limits", "kind": "text",
+     "question": "Are there hard limits every design must stay within?",
+     "why": "Give each as `metric <= value` or `metric >= value`, separated by semicolons, for instance "
+            "`parameters <= 2000000; training_minutes <= 30`, or answer `none`. The metric is one your evaluator "
+            "reports. Code rejects a design outside a limit: it gets no score and is not charged to the budget."},
+    {"field": "harness.autonomy", "empty": "left to the kind of search you chose", "section": "Search", "title": "Agentic or harnessed", "kind": "choice",
      "question": "How much of the search should the agents decide?",
      "why": "The more they decide, the more calls they make. The plan shows the likely cost of each level.",
      "choices": _choices(menu.AUTONOMY)},
     {"field": "evaluation.allowance", "section": "Training runs", "title": "Length of a run", "kind": "number",
      "question": "How long is one training run, in the project's own unit (epochs, steps, seconds)?",
-     "why": "It is passed to every job."},
+     "why": "Passed to every job as EVO_ALLOWANCE. The usual answer is the length the baseline is trained for now."},
     {"field": "evaluation.noise", "section": "Training runs", "title": "Noise of the score", "kind": "number",
      "question": "How much does the score differ between two fits of the same model?",
      "why": "A difference smaller than this is treated as no difference. Set a small value, or estimate it from a few runs of the baseline."},
+    {"field": "evaluation.screen_keep", "section": "Training runs", "title": "Early stopping", "kind": "choice", "other": True,
+     "question": "Should weak training runs be stopped early?",
+     "why": "Stopping weak runs leaves more of the budget for the rest, at the risk of dropping a design that "
+            "starts slowly. It needs your evaluator to report its score as it trains.",
+     "choices": [{"value": 0.5, "label": "Stop the weaker half",
+                  "description": "New designs are compared halfway through a run and the weaker half stop there. "
+                                 "A stopped run is charged half an evaluation."},
+                 {"value": 1.0, "label": "No early stopping", "description": "Every run trains to its full length."}]},
     {"field": "baseline.mode", "section": "Training runs", "title": "Baseline", "kind": "choice",
      "question": "What should be done about the baseline?", "why": "It is the reference every gain is measured against.",
      "choices": [{"value": "train", "label": "train", "description": "Fit the code as it stands, inside the search, as the first run."},
                  {"value": "import", "label": "import", "description": "Use a fit you already have (give its folder in baseline.import_from)."},
                  {"value": "skip", "label": "skip", "description": "No baseline: the first designs are compared with each other."}]},
     {"field": "compute.gpus", "section": "Compute", "title": "Jobs at once", "kind": "number",
-     "question": "How many models may train at the same time?", "why": "The number of jobs kept running."},
+     "question": "How many models may train at the same time?",
+     "why": "The number of training jobs kept running: on a workstation usually its number of GPUs, on a cluster "
+            "your share of the queue."},
     {"field": "compute.scheduler", "section": "Compute", "title": "Where jobs run", "kind": "choice",
      "question": "Where do the training jobs run?", "why": "On a cluster each run is its own job.",
      "choices": [{"value": "local", "label": "local", "description": "Processes on this machine."},
@@ -204,12 +243,39 @@ def metrics_from_text(text: str) -> Any:
     return out
 
 
+def limits_from_text(text: str) -> Any:
+    """`parameters <= 2000000; training_minutes <= 30` as {metric: {max: x}}; `none` as no limits. Text that does
+    not read as limits is returned as it is, so that the check can say what would be accepted."""
+    import re
+    if text.strip().lower() in ("none", "no", "no limits", "-"):
+        return {}
+    out: Dict[str, Dict[str, Any]] = {}
+    for part in [p.strip() for p in text.replace("\n", ";").split(";") if p.strip()]:
+        said = re.match(r"^([A-Za-z_][\w.]*)\s*(<=|>=|<|>|at most|at least|max|min)\s*([-+0-9.eE_,]+)$", part)
+        try:
+            number = float(said.group(3).replace(",", "").replace("_", "")) if said else None
+        except ValueError:
+            number = None
+        if number is None:
+            return text
+        side = "max" if said.group(2) in ("<=", "<", "at most", "max") else "min"
+        out.setdefault(said.group(1), {})[side] = int(number) if number.is_integer() else number
+    return out
+
+
 def record(brief: Dict[str, Any], field: str, value: Any) -> Optional[str]:
     """Put an answer in the brief (or, with KEEP, note that its default was seen and left). Returns a fault or None."""
     asked = brief.setdefault("status", {}).setdefault("asked", [])
     hint = ((brief.get("status") or {}).get("suggested") or {}).get(field)
-    if field == "evaluation.metrics" and isinstance(value, str) and value != KEEP:
+    if field in ("evaluation.metrics", "evaluation.test_metrics") and isinstance(value, str) and value != KEEP:
         value = metrics_from_text(value)      # typed as `name: how it is computed; name: ...`
+    if field == "limits" and isinstance(value, str) and value != KEEP:
+        value = limits_from_text(value)       # typed as `metric <= value; metric >= value`, or `none`
+    if field in ("evaluation.screen_keep", "data.fraction") and isinstance(value, str) and value != KEEP:
+        try:
+            value = 1.0 if value.strip().lower() in ("none", "no", "off") else float(value)
+        except ValueError:
+            pass
     if value == KEEP and hint is not None and field not in form.given(brief):
         value = hint["value"]          # leaving a suggestion as it is accepts it: the person saw it
     if value == KEEP:
@@ -239,6 +305,17 @@ def merge(brief: Dict[str, Any], answers: Dict[str, Any]) -> Tuple[List[str], Li
     return done, refused
 
 
+def shown(value: Any, empty: str = "none") -> str:
+    """A value as the person would type it: metrics as `name: how`, limits as `metric <= x`, nothing as words."""
+    if value in (None, "", {}, []):
+        return empty
+    if isinstance(value, dict) and all(isinstance(v, str) for v in value.values()):
+        return "; ".join("%s: %s" % (k, v) for k, v in value.items())
+    if isinstance(value, dict) and all(isinstance(v, dict) and set(v) <= {"max", "min"} for v in value.values()):
+        return "; ".join("%s %s %g" % (m, "<=" if side == "max" else ">=", x) for m, b in value.items() for side, x in sorted(b.items()))
+    return str(value)
+
+
 def card(q: Dict[str, Any]) -> List[str]:
     """One question as text, the same way every time: where you are, the question, why, the choices."""
     lines = ["", "Question %d of %d  ·  %s" % (q["number"], q["of"], q["section"]), q["question"], "  (%s)" % q["why"]]
@@ -252,10 +329,10 @@ def card(q: Dict[str, Any]) -> List[str]:
             lines.append("       %s" % choice["description"])
         if q.get("other"):
             lines.append("  or type another value")
-    if current is None and not q["required"]:
-        lines.append("  default: left to the kind of search you chose")
+    if current in (None, "", {}, []) and not q["required"]:
+        lines.append("  default: %s" % q.get("empty", "none"))
     elif q["kind"] != "choice" and current is not None:
-        lines.append("  %s: %s" % (word, current))
+        lines.append("  %s: %s" % (word, shown(current)))
     if hint:
         lines.append("  suggested because %s. Enter accepts it; or give your own answer." % hint["why"])
     return lines
@@ -417,6 +494,10 @@ def infer(folder: str, brief: Dict[str, Any]) -> Dict[str, Any]:
                 count = 0
             if count:
                 found["compute.gpus"] = (count, "nvidia-smi lists %d GPU%s here" % (count, "" if count == 1 else "s"))
+            else:
+                found["compute.gpus"] = (1, "no GPU was found on this machine: one job at a time")
+        if "compute.gpus" not in found:
+            found["compute.gpus"] = (4, "a modest share of a shared cluster; the queue decides how many run at once")
         if shutil.which("claude"):
             found["agents.backend"] = ("claude_code", "the claude command is on this machine's path")
         elif os.environ.get("ANTHROPIC_API_KEY"):
@@ -461,15 +542,63 @@ def infer(folder: str, brief: Dict[str, Any]) -> Dict[str, Any]:
             found["run.type"] = ("refine", "with %s models there is no room for a population: a careful search near the baseline" % label)
         else:
             found["run.type"] = ("explore_then_exploit", "the usual choice at %s models: explore first, then work on what was found" % label)
-        backend = stated.get("agents.backend")
-        if backend in ("anthropic_api", "claude_code"):
-            from . import estimate
-            est = estimate.estimate(form.resolve(brief, folder=folder)[0], folder)
-            if est["dollars"]:
-                cap = max(1, int(est["dollars"][2] + 0.999))
-                found["budget.model_dollars"] = (cap, "the estimate for this search runs to about $%.2f at its upper end" % est["dollars"][2])
+    else:
+        found["run.type"] = ("explore_then_exploit", "the usual choice: explore first, then work on what was found")
+    # What is optimized and what is tracked. The name of the score comes from the words of the goal; with a name,
+    # the least worth tracking is the score on validation data and a held-out copy of it.
+    metric = stated.get("objective.metric")
+    if not metric and goal:
+        for name, words in METRIC_HINTS:
+            said = re.search(words, goal)
+            if said:
+                metric = name
+                found["objective.metric"] = (name, "the goal says \"%s\"" % said.group(0))
+                if "objective.direction" not in found:
+                    found["objective.direction"] = ("minimize" if name in LOWER_IS_BETTER else "maximize",
+                                                    "%s is %s when it is better" % (name, "lower" if name in LOWER_IS_BETTER else "higher"))
+                break
+    if metric and metric != "score":
+        bare = re.sub(r"^(val|valid|validation)[_ ]", "", str(metric))      # val_accuracy is accuracy, on validation data
+        found["evaluation.metrics"] = ({metric: "%s on the validation data: the score" % bare},
+                                       "the score is the least to track; add every other validation metric your evaluator reports")
+        found["evaluation.test_metrics"] = ({"test_%s" % bare: "%s on the held-out test data" % bare},
+                                            "a held-out copy of the score is the usual minimum; add every other test "
+                                            "evaluation you want to follow")
+    found["evaluation.noise"] = (0.001, "a small value, to start with: raise it if lineages stall straight after one high "
+                                        "score, or estimate it from a few runs of the baseline")
+    if not isinstance(budget, (int, float)):
+        found["budget.evaluations"] = (100, "the size the default settings are tuned for")
+    earlier = status.get("suggested") or {}
+
+    def likely(field: str) -> Any:
+        """The answer, or failing that the suggestion: what the search will most likely be set to."""
+        if field in stated:
+            return stated[field]
+        return found[field][0] if field in found else (earlier.get(field) or {}).get("value")
+
+    kind = likely("run.type")
+    if kind == "settings_only":
+        found["harness.autonomy"] = ("harnessed", "a search over settings alone needs no agent to steer it")
+    elif kind:
+        found["harness.autonomy"] = ("guided", "the middle level, and what this kind of search uses unless told otherwise: "
+                                               "code runs the schedule and the strategist may adjust it within bounds")
+    if likely("agents.backend") in ("anthropic_api", "claude_code") and "budget.model_dollars" not in stated:
+        from . import estimate
+        sketch = copy.deepcopy(brief)      # the search as it would be if every suggestion were accepted
+        for field in ("budget.evaluations", "run.type", "agents.backend", "harness.autonomy", "run.skill"):
+            if field not in stated and likely(field) is not None:
+                form.put(sketch, field, likely(field))
+        try:
+            est = estimate.estimate(form.resolve(sketch, folder=folder)[0], folder)
+        except Exception:      # an estimate is a convenience here: a half-filled brief may not resolve
+            est = {"dollars": None}
+        if est["dollars"]:
+            cap = max(1, int(est["dollars"][2] + 0.999))
+            found["budget.model_dollars"] = (cap, "the estimate for this search runs to about $%.2f at its upper end" % est["dollars"][2])
     made = {}
     for field, (value, why) in found.items():
-        if field not in stated and suggest(brief, field, value, why, by="evoloop") is None:
+        if field in stated or (earlier.get(field) or {}).get("by", "evoloop") != "evoloop":
+            continue      # an answer stands, and so does a suggestion an agent or the person made
+        if suggest(brief, field, value, why, by="evoloop") is None:
             made[field] = value
     return made

@@ -80,9 +80,11 @@ Then say what you want, in your own words. For example:
 > Set up an evoloop search for my project in ~/projects/mymodel. I want a higher validation accuracy
 > without making the model larger.
 
-The agent follows [AGENTS.md](AGENTS.md). It asks you what to optimize, what may change, how a version
-is scored, how much to spend and whether there are hard limits. It marks the code, writes the
-evaluator, proves the setup with a dry run, and shows you the plan. After you approve, it starts the
+The agent follows [AGENTS.md](AGENTS.md). It asks you the setup questions one at a time, each with a
+suggested answer: what to optimize, what may change, which metric is optimized, which validation
+metrics and test evaluations are tracked, what the data is, how much to spend and whether there are
+hard limits. Nothing is filled in without being put to you. It marks the code, writes the evaluator,
+proves the setup with a dry run, and shows you the plan. After you approve, it starts the
 search, watches it, and turns your feedback into changes to the running search.
 
 You need an Anthropic API key or a Claude Code login for the agents, and a workstation or a Slurm

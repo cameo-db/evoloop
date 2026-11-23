@@ -66,8 +66,10 @@ def answerer(said, replies):
 def test_the_terminal_walk_through(tmp_path):
     folder = blank(tmp_path)
     said = []
-    replies = {"What is being improved": ["Find a better model."], "higher score better": ["1"], "What is the score called": ["val_accuracy"], "Which metrics should be tracked": [""], "may be trained in all": ["30"],
-               "How should the search spend": [""], "Which parts of the code": ["wrong", ""], "How much of the search": ["b", "3"],
+    replies = {"What is being improved": ["Find a better model."], "higher score better": ["1"], "What is the score called": ["val_accuracy"], "Which validation metrics should be tracked": [""], "Which test evaluations": [""], "may be trained in all": ["30"],
+               "How should the search spend": [""], "What data is the search run on": [""], "How is the data split": [""],
+               "What share of the training data": ["0.5"], "hard limits": ["parameters <= 2000000; training_minutes at most 30"],
+               "stopped early": ["2"], "Which parts of the code": ["wrong", ""], "How much of the search": ["b", "3"],
                "How long is one training run": ["25"], "differ between two fits": ["0.01"], "about the baseline": [""],
                "at the same time": ["4"], "Where do the training jobs run": [""], "How are the agents called": [""],
                "When should the agents be reviewed": ["q"]}
@@ -76,7 +78,8 @@ def test_the_terminal_walk_through(tmp_path):
     assert "Saved." in text and "Question 1 of" in text and "·  Goal" in text and "·  Budget" in text
     assert "Not accepted: answer with a number from 1 to" in text               # a wrong answer is asked again
     assert "<- suggested" in text and "suggested because with about 30 models" in text and "<- default" in text
-    assert "left to the kind of search" in text
+    assert "default: not recorded" in text                                       # an empty default is said in words
+    assert "suggested: test_accuracy: accuracy on the held-out test data" in text   # and a metric as it would be typed
     brief = form.load_brief(folder)
     stated = form.given(brief)
     assert stated["objective.goal"] == "Find a better model." and stated["objective.direction"] == "maximize"
@@ -85,6 +88,8 @@ def test_the_terminal_walk_through(tmp_path):
     assert "space.preset" not in stated and "space.preset" in brief["status"]["asked"]   # Enter kept a default: nothing written
     assert stated["budget.evaluations"] == 30 and stated["evaluation.allowance"] == 25 and stated["evaluation.noise"] == 0.01
     assert stated["baseline.mode"] == "train" and stated["compute.gpus"] == 4
+    assert stated["limits"] == {"parameters": {"max": 2000000}, "training_minutes": {"max": 30}}
+    assert stated["data.fraction"] == 0.5 and stated["evaluation.screen_keep"] == 1.0   # typed limits, a share, no early stopping
     assert stated["compute.scheduler"] == "local" and stated["agents.backend"] == "stub"
     said.clear()
     assert interview.run(folder, lambda prompt: "", said.append)                # goes on from where it stopped
@@ -122,13 +127,24 @@ def test_best_guesses_from_the_machine_the_folder_and_the_answers(tmp_path, monk
     assert made["compute.scheduler"] == "local" and made["baseline.mode"] == "train"
     assert made["run.type"] == "explore_then_exploit" and made["budget.model_dollars"] >= 1
     assert "agents.backend" not in made and "budget.evaluations" not in made    # never over what was answered
-    assert "objective.goal" not in made and "evaluation.noise" not in made      # nothing is guessed without evidence
+    assert "objective.goal" not in made and "evaluation.allowance" not in made  # nothing is guessed without evidence
+    assert made["evaluation.noise"] == 0.001                                    # a small value is suggested, with its reason
+    named = {"objective": {"goal": "Raise the Pearson correlation on held-out peaks."}}
+    bare = str(tmp_path / "bare")                                               # no task.md to say which way is better
+    os.makedirs(bare)
+    made = interview.infer(bare, named)
+    assert made["objective.metric"] == "pearson_r" and made["objective.direction"] == "maximize"
+    assert made["evaluation.metrics"] == {"pearson_r": "pearson_r on the validation data: the score"}
+    assert made["evaluation.test_metrics"] == {"test_pearson_r": "pearson_r on the held-out test data"}
+    assert made["budget.evaluations"] == 100
     why = brief["status"]["suggested"]["budget.model_dollars"]["why"]
     assert why.startswith("the estimate for this search runs to about $")
     monkeypatch.setattr("shutil.which", lambda name: "/usr/bin/" + name if name in ("sbatch", "claude") else None)
     fresh = {}
     made = interview.infer(folder, fresh)
-    assert made["compute.scheduler"] == "slurm" and made["agents.backend"] == "claude_code" and "compute.gpus" not in made
+    assert made["compute.scheduler"] == "slurm" and made["agents.backend"] == "claude_code"
+    assert made["compute.gpus"] == 4 and made["run.type"] == "explore_then_exploit" and made["harness.autonomy"] == "guided"
+    assert made["budget.model_dollars"] >= 1                                     # priced as if every suggestion were accepted
 
 
 def test_an_agent_gets_one_question_at_a_time(tmp_path, capsys):

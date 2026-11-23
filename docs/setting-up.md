@@ -67,24 +67,39 @@ nothing else of your project except the marked blocks.
 evoloop setup mysearch
 ```
 
-asks one question at a time, with choices, a suggested answer where there is evidence for one, and where
-you are in the list. Up to twenty questions; most have a default you can accept with Enter. Ten have no
-default and must be answered:
+asks one question at a time, with choices and where you are in the list. Every question but two comes
+with a suggested answer or a default, and Enter accepts it. The goal and the length of a training run
+have none and must be answered.
 
-| Question | What to know |
+| Question | Suggested answer or default |
 |---|---|
-| What is being improved, and why? | one or two sentences; every agent reads them |
-| Is a higher score better, or a lower one? | |
-| What is the score called? | the name of the metric, such as `pearson_r`; it has a default, `score`, which tells a reader of the study file nothing |
-| Which metrics should be tracked, and how is each computed? | optional; `name: how it is computed` for the score and for anything else the evaluator reports |
-| How should the search spend its evaluations? | the run type: [Choose a skill and a run type](which-search.md) |
-| How many designs may be trained in all? | the budget, in evaluations |
-| How long is one training run? | in your evaluator's own unit: epochs, steps |
-| How much does the score vary between two runs of the same design? | The noise floor. Set a small value, or estimate it from a few runs of your baseline. [Noise floor](noise.md) |
-| Train the baseline, import its score, or skip it? | training it inside the search is the usual choice |
-| How many designs may train at once? | |
-| Which agent backend? | the Anthropic API, Claude Code, or scripted proposals for a dry run |
-| What is the most the agents may cost? | a cap, in dollars |
+| What is being improved, and why? | none: one or two sentences, read by every agent |
+| Is a higher score better, or a lower one? | from the metric your goal names |
+| What is the score called? | from the goal, such as `pearson_r`; otherwise `score` |
+| Which validation metrics should be tracked, and how is each computed? | the score; add the others as `name: how it is computed` |
+| Which test evaluations should be run on every design? | a held-out copy of the score; add as many as you want to follow |
+| What data is the search run on? | not recorded |
+| How is the data split into training, validation and test sets? | not recorded |
+| What share of the training data should each training run use? | all of it |
+| How many models may be trained in all? | 100 |
+| How should the search spend its evaluations? | `explore_then_exploit`: [Choose a skill and a run type](which-search.md) |
+| Which goal should the agents be given guidance for? | the skill your goal describes, or none |
+| Which parts of the code may the search change? | the model blocks, with the training recipe fixed |
+| Are there hard limits every design must stay within? | none; given as `parameters <= 2000000` |
+| How much of the search should the agents decide? | `guided`: [Agents](agents.md#autonomy-levels) |
+| How long is one training run? | none: in your evaluator's own unit, such as epochs |
+| How much does the score differ between two fits of the same model? | 0.001: [Noise floor](noise.md) |
+| Should weak training runs be stopped early? | the weaker half of new designs stop halfway: [Early stopping](early-stopping.md) |
+| What should be done about the baseline? | train it inside the search |
+| How many models may train at the same time? | the GPUs on this machine, or 4 on a cluster |
+| Where do the training jobs run? | Slurm if the machine has it, with the partition and QoS of your site file |
+| How are the agents called? | Claude Code or the API, whichever is set up here |
+| Which model should the agents run on, and how hard should it reason? | [Models and prices](models.md) |
+| What is the most the agents may cost? | the upper end of the cost estimate |
+| When should the agents be reviewed? | halfway and at the end: [Audit the agents](auditing.md) |
+
+The suggestions are starting points for someone who says nothing. Replace them where you know the
+project better.
 
 There are other ways to answer the same questions. `evoloop form mysearch` writes a self-contained web
 page to fill in; save the answers file it gives you and run `evoloop brief mysearch --import
@@ -109,11 +124,13 @@ The plan opens with what the search will actually do. For example:
 ```
 At a glance
   Optimizing:      explore_then_exploit, skill model-performance
-  Score:           pearson_r, higher is better; also tracked: count_r2, test_pearson_r
+  Score:           pearson_r, higher is better; also tracked: count_r2
+  Test evals:      test_pearson_r, test_count_r2, other_cell_line_r (run on every design, kept from the agents)
   Designs:         written by an agent; settings moves by an agent
   Agents:          writer (about 109 calls), analyst (about 13 calls), strategist (about 10 calls)
   Model:           claude-opus-5-5, effort medium
   Selection:       lineage
+  Data:            K562 ATAC-seq; split: chromosomes 8 and 9 held out for test, 10 for validation
   Runs on:         Slurm, one job per design, partition gpu, 8 at once (site file: our-cluster)
   Early stopping:  new designs screened at 50%, the best 50% go on
   Budget:          100 evaluations of 30 epochs; agents capped at $40
@@ -131,6 +148,9 @@ evoloop brief mysearch --confirm "Your Name"
 
 Nothing runs before this. Your name and a digest of what you agreed to are recorded, and a brief that
 is edited afterwards has to be confirmed again.
+
+Confirmation is refused while a setup question has not been asked, and the refusal lists each one with
+the value it would be left at. Answer them, or add `--accept-defaults` to take the listed values.
 
 ## 5. Dry run and launch
 
