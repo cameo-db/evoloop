@@ -69,6 +69,8 @@ DEFAULTS: Dict[str, Any] = {
                    "max_share_shift": 0.15, "force_max": 5, "ask_first": ["strategy"]},
     "evaluation": {"allowance": None, "allowance_unit": "steps", "seed": 0, "noise": None, "screen_fraction": 0.5,
                    "screen_keep": 0.5, "screen_min_pool": 4, "recheck_every": 0, "speciality_metrics": {},
+                   # The metrics to track, each with how it is computed: {name: definition}. Recorded in the study file.
+                   "metrics": {},
                    # A promotion ladder (successive halving inside one job): at each share `at` of a run, only the best
                    # `keep` of the designs that got there go on, e.g. [{at: 0.1, keep: 0.5}, {at: 0.3, keep: 0.5}].
                    # Empty: the single screen above, for new designs only.
@@ -140,7 +142,7 @@ CHOICES = {"objective.direction": ("maximize", "minimize"), "strategy.mechanism"
 LIVE = ("schedule.", "limits", "strategist.", "population.", "crossover.", "variation.", "harness.", "strategy.", "space.", "audit.", "budget.",
         "compute.max_running", "compute.time_limit", "compute.qos", "compute.partition", "compute.gpus", "compute.max_waiting",
         "compute.gpu_type", "compute.larger_gpu_type",
-        "evaluation.screen_", "evaluation.ladder", "evaluation.recheck_every", "evaluation.speciality_metrics", "evaluation.on_length_change",
+        "evaluation.screen_", "evaluation.ladder", "evaluation.recheck_every", "evaluation.speciality_metrics", "evaluation.metrics", "evaluation.on_length_change",
         "evaluation.leaders_refit", "agents.models", "agents.writer_mix", "agents.default_model", "agents.effort", "agents.efforts", "agents.fallbacks", "agents.prices",
         "report.", "run.")
 # These change what a score means. They may change too, and then a new period begins: the leaders are fitted again
@@ -219,7 +221,7 @@ def flatten(tree: Dict[str, Any], prefix: str = "") -> Dict[str, Any]:
 
 
 # Mappings that are one value, not a group of fields.
-ATOMIC = ("space.ranges", "space.roles", "schedule.local_mix", "evaluation.speciality_metrics", "agents.models", "agents.prices", "agents.efforts", "evaluation.variables", "limits",
+ATOMIC = ("space.ranges", "space.roles", "schedule.local_mix", "evaluation.speciality_metrics", "evaluation.metrics", "agents.models", "agents.prices", "agents.efforts", "evaluation.variables", "limits",
           "data.examples", "data.splits")
 
 
@@ -408,6 +410,18 @@ def check_value(path: str, value: Any) -> Optional[str]:
         return "run.type must be one of: %s" % ", ".join(RUN_TYPES)
     if path == "schedule.phases":
         return check_phases(value)
+    if path == "evaluation.metrics" and value not in EMPTY:
+        if not isinstance(value, dict) or not all(isinstance(k, str) and k.strip() for k in value):
+            return "evaluation.metrics must map each metric's name to how it is computed"
+        for name, about in value.items():
+            if isinstance(about, dict):
+                if not isinstance(about.get("definition"), str) or set(about) - {"definition", "direction", "split"}:
+                    return ("evaluation.metrics.%s must be text, or {definition: text, direction: maximize or minimize, "
+                            "split: valid or test}" % name)
+                if about.get("direction") not in (None, "maximize", "minimize"):
+                    return "evaluation.metrics.%s.direction must be maximize or minimize" % name
+            elif not isinstance(about, str) or not about.strip():
+                return "evaluation.metrics.%s must say how the metric is computed" % name
     # A value of the wrong kind is refused here, not found out when the loop first uses it.
     default = flatten(DEFAULTS).get(path)
     number = isinstance(value, (int, float)) and not isinstance(value, bool)
@@ -651,6 +665,12 @@ def at_a_glance(settings: Dict[str, Any]) -> List[str]:
     skill = settings.get("_skill")
     out.append("  Optimizing:      %s%s" % (settings["run"]["type"] or "no run type yet",
                                           ", skill %s" % skill["name"] if skill else ", no skill"))
+    metric, tracked = settings["objective"].get("metric") or "score", sorted(settings["evaluation"].get("metrics") or {})
+    way = {"maximize": "higher is better", "minimize": "lower is better"}.get(settings["objective"]["direction"], "direction not set")
+    others = [m for m in tracked if m != metric]
+    out.append("  Score:           %s, %s%s" % (
+        metric if metric != "score" else "not named (set objective.metric; the study file will call it \"score\")", way,
+        "; also tracked: %s" % ", ".join(others) if others else ""))
     calls = estimate.calls(settings) if settings["budget"]["evaluations"] else {}
     by = settings["variation"]["settings_by"]
     moves = {"agent": "an agent", "sampler": "a sampler in code (no agent call)",

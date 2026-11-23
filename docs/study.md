@@ -24,6 +24,8 @@ These come from the brief, and they decide the star:
 
 | In the brief | Why |
 |---|---|
+| `objective.metric` | the name of the metric that was optimized, such as `pearson_r`. Left unset, the file calls it `score` |
+| `evaluation.metrics` | each tracked metric and how it is computed. Without it a reader cannot tell what a number means, or compare this study with another |
 | `data.accession` | the dataset's DOI, accession or link. Without it the entry gets no star |
 | `data.name`, `data.splits`, `data.preprocessing` | what the data is and how it was divided and prepared; needed for Gold |
 | `depositor.name`, `depositor.orcid`, `depositor.lab`, `depositor.institution` | who is depositing |

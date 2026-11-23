@@ -83,15 +83,15 @@ The commands.
 | [`cmd_force(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L731) |  |
 | [`cmd_import(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L738) |  |
 | [`import_study(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L751) | Designs from a study file: a path, or a link to one (a study.json downloaded from CAMEO, or another search's). |
-| [`cmd_reference(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L779) | A row on the leaderboard for a model that is not part of the search: a published baseline, an earlier run's best. |
-| [`cmd_leaderboard(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L806) |  |
-| [`cmd_controller(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L845) | A Slurm job script that runs the search and requeues itself at its time limit. |
-| [`cmd_lineage(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L861) |  |
-| [`cmd_answer(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L869) |  |
-| [`cmd_review(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L875) |  |
-| [`cmd_steer(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L881) | The person's words, turned into ledger entries by the translator, shown back, applied only with --yes. |
-| [`build_parser()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L935) |  |
-| [`main(argv)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L1064) |  |
+| [`cmd_reference(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L780) | A row on the leaderboard for a model that is not part of the search: a published baseline, an earlier run's best. |
+| [`cmd_leaderboard(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L807) |  |
+| [`cmd_controller(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L846) | A Slurm job script that runs the search and requeues itself at its time limit. |
+| [`cmd_lineage(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L862) |  |
+| [`cmd_answer(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L870) |  |
+| [`cmd_review(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L876) |  |
+| [`cmd_steer(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L882) | The person's words, turned into ledger entries by the translator, shown back, applied only with --yes. |
+| [`build_parser()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L936) |  |
+| [`main(argv)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L1065) |  |
 
 ## `controller.py` { #m-controller-py }
 
@@ -340,34 +340,34 @@ The brief: one form that sets up a search, and the settings derived from it.
 
 | Name | What it does |
 |---|---|
-| [`class BriefError`](https://github.com/cameo-db/evoloop/blob/main/evoloop/form.py#L206) |  |
-| [`flatten(tree, prefix)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/form.py#L210) |  |
-| [`get(tree, path, default)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/form.py#L226) |  |
-| [`put(tree, path, value)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/form.py#L235) |  |
-| [`known(path)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/form.py#L245) |  |
-| [`guidance_for(evaluations)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/form.py#L249) |  |
-| [`load_brief(folder)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/form.py#L258) |  |
-| [`save_brief(folder, brief)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/form.py#L270) |  |
-| [`given(brief)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/form.py#L282) | The values the person gave, by path: everything in the brief that is not empty. |
-| [`unknown_fields(brief)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/form.py#L293) |  |
-| [`resolve(brief, ledger, folder)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/form.py#L297) | The settings in force, and for each the layer it came from. |
-| [`questions(brief, everything)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/form.py#L378) | What there is still to ask the person. |
-| [`check_value(path, value)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/form.py#L402) |  |
-| [`check_phases(value)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/form.py#L505) |  |
-| [`problems(brief)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/form.py#L523) |  |
-| [`warnings(settings)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/form.py#L532) | Combinations that work against each other. |
-| [`digest(brief)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/form.py#L608) |  |
-| [`confirm(folder, name)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/form.py#L613) |  |
-| [`skills_changed(brief, folder)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/form.py#L631) | The skills whose files are not as they were when the brief was confirmed (edited, or no longer usable). |
-| [`confirmed(brief)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/form.py#L640) |  |
-| [`at_a_glance(settings)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/form.py#L645) | What this search will actually do, in a few lines: what is optimized, who writes the designs, which agent roles run, how designs are selected and stopped, and what a later choice changed in an earlier one. |
-| [`plan_lines(brief, star, folder, cost)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/form.py#L714) | The plan: what the search will do at a glance, the warnings, what the agents will cost, and then every setting with the layer its value came from. |
-| [`is_live(key)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/form.py#L759) |  |
-| [`starts_period(key)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/form.py#L763) |  |
-| [`check_change(key, value)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/form.py#L767) | Why a setting cannot be changed during a run, or None when it can. |
-| [`review_points(settings)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/form.py#L778) |  |
-| [`rungs(settings)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/form.py#L798) | The points of a run at which designs are compared and the weaker stopped, and whether every design is subject to them (a ladder) or only the first run of a new design (the single screen). |
-| [`mean_charge(settings)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/form.py#L809) | The share of a full run that a design costs on average under the ladder, when the pool is full: with [{at: 0.1, keep: 0.5}, {at: 0.3, keep: 0.5}] half the designs cost 0.1, a quarter 0.3 and a quarter 1. |
+| [`class BriefError`](https://github.com/cameo-db/evoloop/blob/main/evoloop/form.py#L208) |  |
+| [`flatten(tree, prefix)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/form.py#L212) |  |
+| [`get(tree, path, default)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/form.py#L228) |  |
+| [`put(tree, path, value)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/form.py#L237) |  |
+| [`known(path)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/form.py#L247) |  |
+| [`guidance_for(evaluations)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/form.py#L251) |  |
+| [`load_brief(folder)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/form.py#L260) |  |
+| [`save_brief(folder, brief)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/form.py#L272) |  |
+| [`given(brief)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/form.py#L284) | The values the person gave, by path: everything in the brief that is not empty. |
+| [`unknown_fields(brief)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/form.py#L295) |  |
+| [`resolve(brief, ledger, folder)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/form.py#L299) | The settings in force, and for each the layer it came from. |
+| [`questions(brief, everything)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/form.py#L380) | What there is still to ask the person. |
+| [`check_value(path, value)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/form.py#L404) |  |
+| [`check_phases(value)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/form.py#L519) |  |
+| [`problems(brief)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/form.py#L537) |  |
+| [`warnings(settings)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/form.py#L546) | Combinations that work against each other. |
+| [`digest(brief)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/form.py#L622) |  |
+| [`confirm(folder, name)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/form.py#L627) |  |
+| [`skills_changed(brief, folder)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/form.py#L645) | The skills whose files are not as they were when the brief was confirmed (edited, or no longer usable). |
+| [`confirmed(brief)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/form.py#L654) |  |
+| [`at_a_glance(settings)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/form.py#L659) | What this search will actually do, in a few lines: what is optimized, who writes the designs, which agent roles run, how designs are selected and stopped, and what a later choice changed in an earlier one. |
+| [`plan_lines(brief, star, folder, cost)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/form.py#L734) | The plan: what the search will do at a glance, the warnings, what the agents will cost, and then every setting with the layer its value came from. |
+| [`is_live(key)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/form.py#L779) |  |
+| [`starts_period(key)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/form.py#L783) |  |
+| [`check_change(key, value)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/form.py#L787) | Why a setting cannot be changed during a run, or None when it can. |
+| [`review_points(settings)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/form.py#L798) |  |
+| [`rungs(settings)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/form.py#L818) | The points of a run at which designs are compared and the weaker stopped, and whether every design is subject to them (a ladder) or only the first run of a new design (the single screen). |
+| [`mean_charge(settings)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/form.py#L829) | The share of a full run that a design costs on average under the ladder, when the pool is full: with [{at: 0.1, keep: 0.5}, {at: 0.3, keep: 0.5}] half the designs cost 0.1, a quarter 0.3 and a quarter 1. |
 
 ## `skill.py` { #m-skill-py }
 
@@ -413,18 +413,19 @@ Setting up a search by question and answer: one list of questions, three ways to
 
 | Name | What it does |
 |---|---|
-| [`applies(question, values)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/interview.py#L123) |  |
-| [`state(brief, folder)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/interview.py#L133) | Every question that applies now, with its answer or default, and where the person is in the list. |
-| [`parse(question, text)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/interview.py#L161) | An answer as typed, turned into a value. |
-| [`record(brief, field, value)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/interview.py#L186) | Put an answer in the brief (or, with KEEP, note that its default was seen and left). |
-| [`merge(brief, answers)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/interview.py#L205) | Answers from a file (the HTML form's, or any nested mapping of fields) into the brief: (set, refused). |
-| [`card(q)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/interview.py#L219) | One question as text, the same way every time: where you are, the question, why, the choices. |
-| [`skill_step(folder, brief, ask, say, edit)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/interview.py#L241) | After the skill is chosen: give the search its own copies, show what they set, and let the person edit them, or merge several into one file, before going on. |
-| [`run(folder, ask, say, edit)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/interview.py#L287) | The terminal walk-through. |
-| [`payload(brief, folder)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/interview.py#L334) | What the HTML form needs: every question (the form itself decides which apply as answers change), the current answers, the defaults, and the schedule each kind of search runs. |
-| [`as_json(value)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/interview.py#L356) |  |
-| [`suggest(brief, field, value, why, by)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/interview.py#L360) | Propose an answer for the person to accept or change. |
-| [`infer(folder, brief)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/interview.py#L372) | Best guesses from the machine, the search folder and the answers so far, as suggestions. |
+| [`applies(question, values)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/interview.py#L132) |  |
+| [`state(brief, folder)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/interview.py#L142) | Every question that applies now, with its answer or default, and where the person is in the list. |
+| [`parse(question, text)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/interview.py#L170) | An answer as typed, turned into a value. |
+| [`metrics_from_text(text)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/interview.py#L195) | `name: how it is computed; name: ...` (or one to a line) as a mapping. |
+| [`record(brief, field, value)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/interview.py#L207) | Put an answer in the brief (or, with KEEP, note that its default was seen and left). |
+| [`merge(brief, answers)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/interview.py#L228) | Answers from a file (the HTML form's, or any nested mapping of fields) into the brief: (set, refused). |
+| [`card(q)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/interview.py#L242) | One question as text, the same way every time: where you are, the question, why, the choices. |
+| [`skill_step(folder, brief, ask, say, edit)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/interview.py#L264) | After the skill is chosen: give the search its own copies, show what they set, and let the person edit them, or merge several into one file, before going on. |
+| [`run(folder, ask, say, edit)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/interview.py#L310) | The terminal walk-through. |
+| [`payload(brief, folder)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/interview.py#L357) | What the HTML form needs: every question (the form itself decides which apply as answers change), the current answers, the defaults, and the schedule each kind of search runs. |
+| [`as_json(value)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/interview.py#L379) |  |
+| [`suggest(brief, field, value, why, by)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/interview.py#L383) | Propose an answer for the person to accept or change. |
+| [`infer(folder, brief)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/interview.py#L395) | Best guesses from the machine, the search folder and the answers so far, as suggestions. |
 
 ## `formpage.py` { #m-formpage-py }
 
@@ -538,13 +539,14 @@ What a person reads about a run: `status.json` while it goes, `report.md` when a
 
 | Name | What it does |
 |---|---|
-| [`leaderboard(view, limit, columns, references, allowance)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/report.py#L13) | The best designs by validation score, with the baseline always shown, and the reference rows the person added (other models to compare with: never part of the search, and marked as such). |
-| [`snapshot(controller, view, reason)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/report.py#L65) |  |
-| [`status(controller, view, reason)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/report.py#L95) |  |
-| [`table(rows)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/report.py#L99) |  |
-| [`lines(controller, view, reason)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/report.py#L113) |  |
-| [`write(controller, view, reason)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/report.py#L240) |  |
-| [`writers_by_model(store, view)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/report.py#L247) | With several models writing (`agents.writer_mix`): what the designs of each came to. |
+| [`untracked(settings, view)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/report.py#L13) | Metrics the brief says to track (`evaluation.metrics`) that no result has reported. |
+| [`leaderboard(view, limit, columns, references, allowance)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/report.py#L28) | The best designs by validation score, with the baseline always shown, and the reference rows the person added (other models to compare with: never part of the search, and marked as such). |
+| [`snapshot(controller, view, reason)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/report.py#L80) |  |
+| [`status(controller, view, reason)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/report.py#L110) |  |
+| [`table(rows)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/report.py#L114) |  |
+| [`lines(controller, view, reason)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/report.py#L128) |  |
+| [`write(controller, view, reason)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/report.py#L255) |  |
+| [`writers_by_model(store, view)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/report.py#L262) | With several models writing (`agents.writer_mix`): what the designs of each came to. |
 
 ## `study.py` { #m-study-py }
 
@@ -589,17 +591,17 @@ The menu: every choice a run can make, the presets, and every field of the brief
 
 | Name | What it does |
 |---|---|
-| [`show(value)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/menu.py#L330) |  |
-| [`when(path)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/menu.py#L334) | Whether a setting can change during a run. |
-| [`preset_lines(overlay, indent)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/menu.py#L341) |  |
-| [`text(topic)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/menu.py#L345) |  |
-| [`cell(words)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/menu.py#L372) |  |
-| [`menu_markdown()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/menu.py#L376) |  |
-| [`anchor(path)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/menu.py#L409) | The id of a field on the fields page: `schedule.novelty` is `fields.md#schedule-novelty`. |
-| [`fields_markdown()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/menu.py#L414) |  |
-| [`missing()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/menu.py#L442) | Options and fields with no explanation here: must be empty. |
-| [`plans()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/menu.py#L468) | What a search comes to for every combination of run type, skill, level of autonomy and size of budget: the data behind the documentation's plan explorer. |
-| [`plans_json()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/menu.py#L529) |  |
+| [`show(value)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/menu.py#L331) |  |
+| [`when(path)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/menu.py#L335) | Whether a setting can change during a run. |
+| [`preset_lines(overlay, indent)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/menu.py#L342) |  |
+| [`text(topic)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/menu.py#L346) |  |
+| [`cell(words)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/menu.py#L373) |  |
+| [`menu_markdown()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/menu.py#L377) |  |
+| [`anchor(path)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/menu.py#L410) | The id of a field on the fields page: `schedule.novelty` is `fields.md#schedule-novelty`. |
+| [`fields_markdown()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/menu.py#L415) |  |
+| [`missing()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/menu.py#L443) | Options and fields with no explanation here: must be empty. |
+| [`plans()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/menu.py#L469) | What a search comes to for every combination of run type, skill, level of autonomy and size of budget: the data behind the documentation's plan explorer. |
+| [`plans_json()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/menu.py#L530) |  |
 
 ## `model/anthropic_api.py` { #m-model-anthropic-api-py }
 

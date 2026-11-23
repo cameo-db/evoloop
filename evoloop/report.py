@@ -10,6 +10,21 @@ from . import approaches, audit, form, schedule, skill, strategies, strategist
 from .store import ENDED, Store, View, write_json
 
 
+def untracked(settings: Dict[str, Any], view: Any) -> List[str]:
+    """Metrics the brief says to track (`evaluation.metrics`) that no result has reported."""
+    scored = view.scored()
+    if len(scored) < 3:
+        return []
+    seen = set()
+    for cand in scored:
+        perf = view.run_of(cand["id"]).get("performance") or {}
+        seen |= set(perf.get("valid") or {}) | set(perf.get("test") or {})
+    named = settings["objective"].get("metric")
+    return ["the brief tracks the metric `%s` (evaluation.metrics) and no result reports it: the evaluator should write "
+            "it under diagnostics, or under diagnostics.hidden for a test-set metric" % name
+            for name in sorted(settings["evaluation"].get("metrics") or {}) if name not in seen and name != named]
+
+
 def leaderboard(view: View, limit: int = 15, columns: Optional[List[str]] = None,
                 references: Optional[List[Dict[str, Any]]] = None, allowance: Any = None) -> List[Dict[str, Any]]:
     """The best designs by validation score, with the baseline always shown, and the reference rows the person
@@ -231,7 +246,7 @@ def lines(controller: Any, view: View, reason: Optional[str] = None) -> List[str
         out += ["", "## Runs without a score", ""] + ["- %s (%s): %s" % (r["id"], r["performance"]["status"],
                                                                          str(r["performance"].get("reason"))[:200])
                                                       for r in failed[-20:]]
-    notes = form.warnings(settings) + skill.missing(settings.get("_skill"), view, store.read("references"))
+    notes = form.warnings(settings) + skill.missing(settings.get("_skill"), view, store.read("references")) + untracked(settings, view)
     if notes:
         out += ["", "## Warnings", ""] + ["- " + n for n in notes]
     return out

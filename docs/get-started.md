@@ -37,7 +37,7 @@ time, with a suggested answer wherever it has evidence for one. Five decisions a
 
 1. What to optimize.
 2. Which parts of the code may change.
-3. How a version is scored.
+3. How a version is scored: which metric is optimized, and which other metrics are tracked.
 4. How much to spend: the number of training runs, and a dollar cap for the agents.
 5. Any hard limits, such as a largest model size.
 

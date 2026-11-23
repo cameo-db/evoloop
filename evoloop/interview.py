@@ -50,6 +50,15 @@ QUESTIONS: List[Dict[str, Any]] = [
      "question": "Is a higher score better, or a lower one?", "why": "Selection turns on it.",
      "choices": [{"value": "maximize", "label": "Higher is better", "description": "maximize: accuracy, correlation, R squared."},
                  {"value": "minimize", "label": "Lower is better", "description": "minimize: a loss or an error."}]},
+    {"field": "objective.metric", "section": "Goal", "title": "Name of the score", "kind": "text",
+     "question": "What is the score called?",
+     "why": "The name of the metric your evaluator reports as its score, such as pearson_r or val_loss. It is recorded "
+            "with the results and in the study file, so that this search can be compared with others."},
+    {"field": "evaluation.metrics", "section": "Goal", "title": "Metrics to track", "kind": "text",
+     "question": "Which metrics should be tracked, and how is each computed?",
+     "why": "Give each as `name: how it is computed`, separated by semicolons: the score, and anything else your "
+            "evaluator reports on validation or test data. They are recorded in the study file, and the report warns if "
+            "one is missing from the results."},
     {"field": "budget.evaluations", "section": "Budget", "title": "Models to train", "kind": "number",
      "question": "How many models may be trained in all?",
      "why": "The schedule and the guidance for a small or large search are worked out from it."},
@@ -183,10 +192,24 @@ def parse(question: Dict[str, Any], text: str) -> Any:
     return text
 
 
+def metrics_from_text(text: str) -> Any:
+    """`name: how it is computed; name: ...` (or one to a line) as a mapping. Text with no colon is returned as it
+    is, so that the check can say what is wrong with it."""
+    out: Dict[str, str] = {}
+    for part in [p.strip() for p in text.replace("\n", ";").split(";") if p.strip()]:
+        if ":" not in part:
+            return text
+        name, about = part.split(":", 1)
+        out[name.strip()] = about.strip()
+    return out
+
+
 def record(brief: Dict[str, Any], field: str, value: Any) -> Optional[str]:
     """Put an answer in the brief (or, with KEEP, note that its default was seen and left). Returns a fault or None."""
     asked = brief.setdefault("status", {}).setdefault("asked", [])
     hint = ((brief.get("status") or {}).get("suggested") or {}).get(field)
+    if field == "evaluation.metrics" and isinstance(value, str) and value != KEEP:
+        value = metrics_from_text(value)      # typed as `name: how it is computed; name: ...`
     if value == KEEP and hint is not None and field not in form.given(brief):
         value = hint["value"]          # leaving a suggestion as it is accepts it: the person saw it
     if value == KEEP:

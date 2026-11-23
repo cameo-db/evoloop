@@ -29,8 +29,9 @@ evoloop import mysearch --name r1 --from-study downloads/study.json --top 5 --as
 ```
 
 `--top N` takes the N best models of the study by its own metric. `--as-ideas` trains none of them and
-shows them all to the writers. The command reports which were queued for training and which were kept
-as ideas, and the ledger records both.
+shows them all to the writers. The command prints the study's data and metric, so you can see whether
+its scores mean what yours do, and reports which designs were queued for training and which were kept
+as ideas. The ledger records both.
 
 ## Import from an earlier run
 

@@ -155,3 +155,22 @@ passes one batch through it. A design that fails is dropped in seconds and costs
 
 [Evaluator interface](project-contract.md) is the reference: every variable, every key, the exit codes,
 and how jobs run on Slurm.
+
+## Metric names
+
+The search optimizes `score`. Give that metric its name in the brief (`objective.metric: pearson_r`),
+and list every metric to track with how it is computed:
+
+```yaml
+objective:
+  metric: pearson_r
+evaluation:
+  metrics:
+    pearson_r: Pearson correlation between predicted and measured signal, per peak, averaged
+    count_r2: R squared of predicted against measured log counts
+    test_pearson_r: {definition: pearson_r on the held-out chromosomes, split: test}
+```
+
+The names are the ones the evaluator writes under `diagnostics` (validation) and `diagnostics.hidden`
+(test). They go into the study file, where they are what lets someone compare this search with another
+or start a search from it. The report warns when a metric named here is missing from the results.

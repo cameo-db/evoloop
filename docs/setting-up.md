@@ -75,6 +75,8 @@ default and must be answered:
 |---|---|
 | What is being improved, and why? | one or two sentences; every agent reads them |
 | Is a higher score better, or a lower one? | |
+| What is the score called? | the name of the metric, such as `pearson_r`; it has a default, `score`, which tells a reader of the study file nothing |
+| Which metrics should be tracked, and how is each computed? | optional; `name: how it is computed` for the score and for anything else the evaluator reports |
 | How should the search spend its evaluations? | the run type: [Choose a skill and a run type](which-search.md) |
 | How many designs may be trained in all? | the budget, in evaluations |
 | How long is one training run? | in your evaluator's own unit: epochs, steps |
@@ -107,6 +109,7 @@ The plan opens with what the search will actually do. For example:
 ```
 At a glance
   Optimizing:      explore_then_exploit, skill model-performance
+  Score:           pearson_r, higher is better; also tracked: count_r2, test_pearson_r
   Designs:         written by an agent; settings moves by an agent
   Agents:          writer (about 109 calls), analyst (about 13 calls), strategist (about 10 calls)
   Model:           claude-opus-5-5, effort medium

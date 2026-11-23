@@ -53,7 +53,7 @@ def build(controller: Any, view: View) -> Dict[str, Any]:
         "evaluation": {"primary_metric": s["objective"]["metric"], "direction": s["objective"]["direction"],
                        "selection_split": "valid", "test_policy": "held out; never shown to an agent or used to choose"
                        if s["evaluation"]["test_set"] == "held_out" else NOT, "noise_floor": or_not(s["evaluation"]["noise"]),
-                       "metrics": NOT},
+                       "metrics": dict(s["evaluation"].get("metrics") or {}) or NOT},
         "environment": captured.get("environment") or NOT,
         "search": {"method": method, "budget": {"evaluations": s["budget"]["evaluations"], "spent": controller.spent(view),
                                                  "agent_dollars": round(sum(r["dollars"] for r in spend(store).values()), 4)},

@@ -769,8 +769,9 @@ def import_study(args: Any) -> int:
     if not models:
         raise SystemExit("%s holds no model with a finished run and its code" % source)
     request(args, {"kind": "import", "study": source, "candidates": args.designs or None, "top": args.top, "as_ideas": args.as_ideas})
-    out("requested: %s of the study %s (data: %s; %d models with code)." % (
-        ", ".join(args.designs) if args.designs else "the top %d" % args.top, origin["study"] or source, origin["data"] or "not stated", len(models)))
+    out("requested: %s of the study %s (data: %s; metric: %s; %d models with code)." % (
+        ", ".join(args.designs) if args.designs else "the top %d" % args.top, origin["study"] or source, origin["data"] or "not stated",
+        origin["metric"] or "not stated", len(models)))
     out("A design that carries this project's marked blocks is fitted here. Any other is kept as an idea and shown to the "
         "writers of new designs to adapt.")
     return 0

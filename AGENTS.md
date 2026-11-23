@@ -12,7 +12,10 @@ work through every setting. Spend their attention on five decisions and take car
    searches. `evoloop skills` lists them and `evoloop skills --search WORDS` finds one; `docs/guides/` has a
    starting configuration for each.
 2. **What may change.** Propose which parts of their code to mark as open blocks, and say what stays frozen.
-3. **How a design is scored**, and how much the score varies between two runs of the same design.
+3. **How a design is scored**: the name of the metric that is optimized and how it is computed, which other
+   metrics to track on validation and test data, and how much the score varies between two runs of the same design.
+   Read the evaluator's `result.json` and propose `objective.metric` and `evaluation.metrics` from it. These go into
+   the study file, and a search that others can compare with or start from depends on them.
 4. **How much to spend**: evaluations (their compute) and agent dollars.
 5. **Hard limits**, if any: the largest size or slowest speed they would accept.
 

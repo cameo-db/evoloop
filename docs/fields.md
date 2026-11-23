@@ -13,7 +13,7 @@ Jump to: [objective](#objective) · [run](#run) · [space](#space) · [strategy]
 | Field | Default | Changes in a search | What it is |
 |---|---|---|---|
 | <a id="objective-goal"></a>`objective.goal` **asked** | `null` | no | What is being improved and why. Every agent reads it on every call. |
-| <a id="objective-metric"></a>`objective.metric` | `"score"` | no | The name of the score, for the records. |
+| <a id="objective-metric"></a>`objective.metric` | `"score"` | no | The name of the metric your evaluator reports as its score, such as pearson_r or val_loss. Recorded in the study file as the metric that was optimized. |
 | <a id="objective-direction"></a>`objective.direction` **asked** | `null` | no | maximize or minimize. Accepts: `maximize`, `minimize`. |
 | <a id="objective-constraints"></a>`objective.constraints` | `[]` | no | Limits on a solution, as text. Shown to the writers; not enforced by code. |
 | <a id="objective-success_threshold"></a>`objective.success_threshold` | `null` | no | A score at which the search stops designing and ends. |
@@ -153,6 +153,7 @@ Explained in [comparable](comparable.md).
 | <a id="evaluation-screen_min_pool"></a>`evaluation.screen_min_pool` | `4` | yes | Earlier designs needed at a point before any is stopped there (the screen and every rung of the ladder). |
 | <a id="evaluation-recheck_every"></a>`evaluation.recheck_every` | `0` | yes | Designs between two fits of the leader on a new seed; 0 leaves it to the harness level. |
 | <a id="evaluation-speciality_metrics"></a>`evaluation.speciality_metrics` | `{}` | yes | Metrics a run reports, with their direction, by which a specialist parent is chosen. |
+| <a id="evaluation-metrics"></a>`evaluation.metrics` | `{}` | yes | The metrics to track, each with how it is computed: {name: definition}. The names are those your evaluator reports under diagnostics (validation) and diagnostics.hidden (test). Recorded in the study file. The report warns when a metric named here is missing from the results. |
 | <a id="evaluation-ladder"></a>`evaluation.ladder` | `[]` | yes | A promotion ladder: a list of rungs {at: share of a run, keep: share that goes on}. At each rung the weaker designs stop and are charged that share, so the budget covers more designs. Empty for the single screen. |
 | <a id="evaluation-ladder_applies"></a>`evaluation.ladder_applies` | `"all"` | yes | With a ladder: `all` designs are subject to it, or only `new` ones (the first run of a new design). Accepts: `new`, `all`. |
 | <a id="evaluation-schedule_depends_on_length"></a>`evaluation.schedule_depends_on_length` | `true` | no | Whether the learning-rate schedule depends on the run's length. If not, a longer run can continue a checkpoint. |

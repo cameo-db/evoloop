@@ -152,7 +152,7 @@ REVIEWS = {
 
 FIELDS: Dict[str, str] = {
     "objective.goal": "What is being improved and why. Every agent reads it on every call.",
-    "objective.metric": "The name of the score, for the records.",
+    "objective.metric": "The name of the metric your evaluator reports as its score, such as pearson_r or val_loss. Recorded in the study file as the metric that was optimized.",
     "objective.direction": "maximize or minimize.",
     "objective.constraints": "Limits on a solution, as text. Shown to the writers; not enforced by code.",
     "objective.success_threshold": "A score at which the search stops designing and ends.",
@@ -227,6 +227,7 @@ FIELDS: Dict[str, str] = {
     "evaluation.ladder_applies": "With a ladder: `all` designs are subject to it, or only `new` ones (the first run of a new design).",
     "evaluation.recheck_every": "Designs between two fits of the leader on a new seed; 0 leaves it to the harness level.",
     "evaluation.speciality_metrics": "Metrics a run reports, with their direction, by which a specialist parent is chosen.",
+    "evaluation.metrics": "The metrics to track, each with how it is computed: {name: definition}. The names are those your evaluator reports under diagnostics (validation) and diagnostics.hidden (test). Recorded in the study file. The report warns when a metric named here is missing from the results.",
     "evaluation.schedule_depends_on_length": "Whether the learning-rate schedule depends on the run's length. If not, "
                                              "a longer run can continue a checkpoint.",
     "evaluation.keep_checkpoints": "Whether the adapter keeps checkpoints that a later run can continue.",
