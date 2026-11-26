@@ -132,6 +132,10 @@ its job id.
   goes to the first with room.
 - No new design is written while `compute.max_waiting` jobs (1 by default) are waiting for their first
   start, so on a busy cluster designs are not written long before they can run.
+- A job takes its design at the moment it starts. While it waits, an edit whose parent has since been
+  beaten in its own lineage, by more than the noise floor, is replaced by a newly written design
+  (`compute.refresh_waiting`). The job keeps its place in the queue, the replaced design is recorded
+  and not charged, and one job's design is replaced at most twice.
 - Each start of a job is recorded in `starts.jsonl` with its node and GPU.
 
 The controller itself is light and can run as a small CPU job.

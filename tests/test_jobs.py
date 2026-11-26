@@ -83,7 +83,8 @@ def test_a_slurm_job_is_told_when_it_ends(tmp_path, monkeypatch):
     monkeypatch.setattr(backend, "sh", lambda args: "123")
     run_ = {"id": "R1", "seed": 0}
     backend.submit(run_, str(tmp_path), jobs.environment(run_, str(tmp_path), str(tmp_path), settings), settings)
-    assert "export EVO_DEADLINE=$(( $(date +%s) + 7200 ))" in (tmp_path / "job.sbatch").read_text()
+    assert "EVO_JOB_STARTED=$(date +%s)" in (tmp_path / "job0" / "job.sbatch").read_text()
+    assert "export EVO_DEADLINE=$(( EVO_JOB_STARTED + 7200 ))" in (tmp_path / "job0" / "next").read_text()
 
 
 def test_a_pause_and_a_time_limit_are_the_machine_not_the_model(monkeypatch):
@@ -194,3 +195,136 @@ def test_one_job_per_design_keeps_a_light_controller(tmp_path):
         script = handle.read()
     assert "--gres" not in script and "#SBATCH --partition=cpu" in script and "#SBATCH --cpus-per-task=2" in script
     assert "EVO_DEADLINE" not in script
+
+
+# --- a job takes its design when it starts ---------------------------------------------------------
+
+SLURM_SETTINGS = {"compute": {"gpu_type": None, "larger_gpu_type": None, "gpus_per_job": 0, "cpus_per_job": 1, "mem_gb": 1,
+                              "time_limit": "10", "partition": None, "qos": None, "setup": [], "extra_sbatch": []},
+                  "evaluation": {"allowance": 1, "variables": {}, "quick_check": None}, "data": {"fraction": 1.0},
+                  "run_command": "echo trained $EVO_RUN_ID"}
+
+
+def test_a_waiting_job_trains_the_design_it_holds_when_it_starts(tmp_path, monkeypatch):
+    import subprocess
+    backend = jobs.Slurm()
+    monkeypatch.setattr(backend, "sh", lambda args: "123")
+    outs = {}
+    for name in ("R1", "R2"):
+        outs[name] = tmp_path / name
+        outs[name].mkdir()
+    first, second = {"id": "R1", "seed": 0}, {"id": "R2", "seed": 0}
+    job = backend.submit(first, str(tmp_path), jobs.environment(first, str(outs["R1"]), str(outs["R1"]), SLURM_SETTINGS), SLURM_SETTINGS)
+    assert job["job_id"] == "123" and os.path.isfile(os.path.join(job["seat"], "next"))
+    # While the job waits, its design is taken back and another is given to it: the job itself is not touched.
+    assert backend.withdraw(job) and not backend.withdraw(job)
+    backend.assign(job, second, str(tmp_path), jobs.environment(second, str(outs["R2"]), str(outs["R2"]), SLURM_SETTINGS), SLURM_SETTINGS)
+    script = os.path.join(job["seat"], "job.sbatch")
+    assert subprocess.run(["bash", script]).returncode == 0          # the job starts
+    assert (outs["R2"] / "job.log").read_text().strip() == "trained R2" and not (outs["R1"] / "job.log").exists()
+    assert not backend.withdraw(job)                                  # it holds its design now
+    assert subprocess.run(["bash", script]).returncode == 0          # started again by the scheduler: the same design
+    assert (outs["R2"] / "job.log").read_text().split() == ["trained", "R2", "trained", "R2"]
+    assert not jobs.Slurm.withdraw({"job_id": "9"})                   # a job from before this: left as it is
+
+
+def test_a_started_job_waits_for_a_design_that_is_still_being_written(tmp_path, monkeypatch):
+    import subprocess
+    backend = jobs.Slurm()
+    monkeypatch.setattr(backend, "sh", lambda args: "123")
+    monkeypatch.setattr(jobs, "SEAT_WAIT", 5)
+    out = tmp_path / "R1"
+    out.mkdir()
+    run_ = {"id": "R1", "seed": 0}
+    job = backend.submit(run_, str(tmp_path), jobs.environment(run_, str(out), str(out), SLURM_SETTINGS), SLURM_SETTINGS)
+    assert backend.withdraw(job)
+    waiting = subprocess.Popen(["bash", os.path.join(job["seat"], "job.sbatch")])
+    time.sleep(1.0)
+    assert waiting.poll() is None                                     # nothing to train yet: it waits
+    backend.assign(job, run_, str(tmp_path), jobs.environment(run_, str(out), str(out), SLURM_SETTINGS), SLURM_SETTINGS)
+    assert waiting.wait(timeout=30) == 0 and (out / "job.log").read_text().strip() == "trained R1"
+    # And when none comes, the job gives its GPU back.
+    job = backend.submit(run_, str(tmp_path), jobs.environment(run_, str(out), str(out), SLURM_SETTINGS), SLURM_SETTINGS)
+    assert backend.withdraw(job)
+    assert subprocess.run(["bash", os.path.join(job["seat"], "job.sbatch")], capture_output=True).returncode == jobs.UNASSIGNED_EXIT
+
+
+class Queue(jobs.Local):
+    """Local processes behind a queue, as on a cluster: a job starts when there is room for it, and until then
+    the design it holds can be replaced."""
+    name = "slurm"
+
+    def __init__(self, room):
+        super().__init__(gpus=[])
+        self.room, self.seats, self.made = room, {}, 0
+
+    def submit(self, run, workdir, env, settings):
+        self.made += 1
+        job = {"backend": "queue", "seat": "seat%d" % self.made, "gpu_type": None}
+        self.seats[job["seat"]] = (run, workdir, env, settings)
+        return job
+
+    def assign(self, job, run, workdir, env, settings):
+        self.seats[job["seat"]] = (run, workdir, env, settings)
+
+    def withdraw(self, job):
+        if self.seats.get(job["seat"]) is None:
+            return False
+        self.seats[job["seat"]] = None
+        return True
+
+    def state(self, run):
+        seat = run["job"]["seat"]
+        if seat in self.seats:
+            held = self.seats[seat]
+            if held is None or len(self.procs) >= self.room:
+                return {"state": "waiting"}
+            del self.seats[seat]
+            jobs.Local.submit(self, *held)
+        return jobs.Local.state(self, run)
+
+    def cancel(self, run):
+        self.seats.pop(run["job"]["seat"], None)
+        jobs.Local.cancel(self, run)
+
+
+def test_a_design_overtaken_while_it_waits_is_replaced_in_its_job(tmp_path):
+    folder = search(tmp_path, budget__evaluations=5, evaluation__allowance=150, compute__gpus=2, audit__reviews="none")
+    controller = Controller(folder, "t", poll=0.2, backend=Queue(room=1))
+    seen = {}
+
+    def once(run, view):      # the first design found waiting is said to be overtaken
+        if seen:
+            return None
+        seen.update(run=run["id"], seat=run["job"]["seat"])
+        return "C0 was beaten"
+    controller.superseded = once
+    reason = controller.run(max_seconds=240)
+    assert reason == "the budget of 5 evaluations is spent"
+    runs = controller.store.merged("runs")
+    gone = runs[seen["run"]]
+    assert gone["performance"]["status"] == "not_run" and gone["charge"] == 0.0 and gone["job"] is None
+    assert gone["performance"]["reason"] == "replaced while it waited in the queue: C0 was beaten"
+    took = [r for r in runs.values() if (r.get("job") or {}).get("seat") == seen["seat"]]
+    assert len(took) == 1 and took[0]["id"] != seen["run"] and took[0]["job"]["replaced"] == 1    # the same job, another design
+    assert took[0]["performance"]["status"] in SCORED
+    assert controller.state["seats"] == []
+    assert controller.spent(controller.view()) == 5                  # the replaced design cost nothing
+
+
+def test_only_an_edit_whose_parent_was_beaten_since_is_overtaken(tmp_path):
+    folder = search(tmp_path, budget__evaluations=6, evaluation__allowance=150, compute__gpus=2, audit__reviews="none")
+    controller, _ = run(folder)
+    view = controller.view()
+    better, worse = view.scored()[0], view.scored()[-1]
+    assert better["value"] > worse["value"]
+    view.noise = 0.0
+    view.cands[better["id"]]["lineage"] = worse["lineage"] = "L1"      # the same lineage, for the test
+    parent = view.run_of(worse["id"])["id"]
+    waiting = {"purpose": "search", "designed": 0.0, "history": {"mode": "local", "parent": parent}}
+    assert controller.superseded(waiting, view) == "%s, which it builds on, was beaten by %s of the same lineage after it was written" % (
+        worse["id"], better["id"])
+    assert controller.superseded(dict(waiting, designed=time.time() + 60), view) is None      # written knowing that result
+    assert controller.superseded(dict(waiting, history={"mode": "new", "parent": None}), view) is None
+    assert controller.superseded(dict(waiting, history={"mode": "local", "parent": view.run_of(better["id"])["id"]}), view) is None
+    assert controller.superseded(dict(waiting, purpose="recheck"), view) is None

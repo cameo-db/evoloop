@@ -59,7 +59,8 @@ Your part before the questions:
   reaches the limit or is preempted continues in another job. Do not reserve a block of GPUs, hold an allocation or
   build a job array on your own initiative: put the choice to the person (`compute.allocation`), and use `block`
   only when they pick it. Propose a time limit of a few hours once the evaluator resumes; if it cannot resume, the
-  limit has to cover a whole training run, and say so.
+  limit has to cover a whole training run, and say so. Do not write designs ahead or queue a batch of them: the
+  controller writes each design when a job is about to be free and replaces one that results overtake while it waits.
 - **A dry run.** Before any paid agent or GPU: `agents.backend: stub` and a budget of a few evaluations, to prove
   the evaluator and the jobs work on this machine.
 

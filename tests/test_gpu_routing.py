@@ -30,7 +30,7 @@ def test_the_job_script_asks_for_the_larger_type(tmp_path, monkeypatch):
         out.mkdir()
         env = jobs.environment(run_, str(out), str(out), settings)
         backend.submit(run_, str(tmp_path), env, settings)
-        texts.append((out / "job.sbatch").read_text())
+        texts.append((out / "job0" / "job.sbatch").read_text() + (out / "job0" / "next").read_text())
     assert "--gres=gpu:1\n" in texts[0] and "EVO_LARGER_GPU=h100" in texts[0]
     assert "--gres=gpu:h100:1" in texts[1] and "EVO_LARGER_GPU" not in texts[1]
 

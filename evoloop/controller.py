@@ -22,6 +22,7 @@ from .agents import AgentError, Agents, AgentsUnavailable
 from .design import Designer
 from .store import ENDED, SCORED, Store, View, read_json, write_json
 
+REPLACEMENTS = 2      # how often the design of one waiting job may be replaced
 STALL = 8   # designs refused in a row, with nothing running, before the run stops as stalled
 
 
@@ -64,6 +65,7 @@ class Controller:
         self.state.setdefault("reviewed", [])
         self.state.setdefault("rechecked", 0)
         self.state.setdefault("period", 0)
+        self.state.setdefault("seats", [])      # jobs waiting in the queue whose design was withdrawn: the next design takes them
         self.state.setdefault("screen", {})
         self.state.setdefault("forced", [])
         self.state.setdefault("met_at", 0)
@@ -278,8 +280,14 @@ class Controller:
         if parent and run.get("purpose", "search") in ("search", "trial") and os.path.isdir(self.checkpoint_dir(parent)):
             # The child may start from what its parent learned; the adapter decides what fits and loads it.
             env["EVO_PARENT_CHECKPOINT_DIR"] = self.checkpoint_dir(parent)
+        seat = next((s for s in self.state["seats"] if s.get("gpu_type") == jobs.gpu_type_for(run, self.settings["compute"])), None)
         try:
-            job = self.backend.submit(run, work, env, self.settings)
+            if seat is not None:      # a job already in the queue is waiting for a design: this one takes its place there
+                self.backend.assign(seat, run, work, env, self.settings)
+                self.state["seats"].remove(seat)
+                job = seat
+            else:
+                job = self.backend.submit(run, work, env, self.settings)
         except Exception as exc:
             # Tried again after a pause; after three failures in a row the run stops as paused, with the reason.
             self.update(run["id"], performance={"status": "designed"}, submit_error=str(exc)[:300])
@@ -305,7 +313,51 @@ class Controller:
             self.update(run_id, stopped_by={"who": who, "why": why, "t": time.time()})
         self.ledger({"kind": "stop", "run": run_id, "by": who, "reason": why, "status": "applied"})
 
+    def superseded(self, run: Dict[str, Any], view: View) -> Optional[str]:
+        """Why a design that has not started is no longer the one the search would write, or None. Only an edit
+        or a cross can be overtaken: its parent was chosen as the one to build on, and since the design was
+        written another design of the parent's lineage has beaten that parent by more than the noise floor."""
+        hist = run.get("history") or {}
+        parent = view.runs.get(hist.get("parent") or "")
+        if run.get("purpose", "search") != "search" or hist.get("mode") not in ("local", "cross") or not parent:
+            return None
+        old = view.cands.get(parent.get("candidate"))
+        if not old or old["value"] is None or not old.get("lineage"):
+            return None
+        for cand in view.scored():
+            if cand["lineage"] != old["lineage"] or cand["id"] == old["id"] or cand["value"] - old["value"] <= view.noise:
+                continue
+            landed = max(float(view.runs[r].get("t") or 0) for r in cand["runs"])
+            if landed > float(run.get("designed") or 0):
+                return "%s, which it builds on, was beaten by %s of the same lineage after it was written" % (old["id"], cand["id"])
+        return None
+
+    def rejudge(self, run: Dict[str, Any], view: View) -> None:
+        """A design waiting for its first start is replaced when newer results have overtaken it. The job keeps its
+        place in the queue and the next design written takes it; the replaced design is recorded, uncharged."""
+        job = run.get("job") or {}
+        done = int(job.get("replaced") or 0)
+        if not self.settings["compute"].get("refresh_waiting") or run.get("restarts") or run.get("running_since") \
+                or done >= REPLACEMENTS or self.draining or self.agents.available() \
+                or strategist.reserve_reached(self.agents, self.settings):
+            return
+        why, withdraw = self.superseded(run, view), getattr(self.backend, "withdraw", None)
+        if why and withdraw and withdraw(job):
+            self.update(run["id"], job=None, charge=0.0, replaced_in_queue={"why": why, "t": time.time()},
+                        performance={"status": "not_run", "reason": "replaced while it waited in the queue: %s" % why})
+            self.state["seats"].append(dict(job, replaced=done + 1))
+
+    def tidy_seats(self, close: bool = False) -> None:
+        """Jobs without a design: one that has ended is forgotten, and all are cancelled when no design will come."""
+        for seat in list(self.state["seats"]):
+            if close:
+                self.backend.cancel({"job": seat})
+            elif self.backend.state({"job": seat})["state"] in ("waiting", "running"):
+                continue
+            self.state["seats"].remove(seat)
+
     def follow(self, view: View) -> None:
+        self.tidy_seats(close=self.draining)
         for run in view.in_flight():
             if not run.get("job"):
                 if run["performance"].get("status") == "designed" and run["id"] not in [p["id"] for p in self.pending]:
@@ -319,6 +371,8 @@ class Controller:
                     self.backend.cancel(run)
                     self.update(run["id"], charge=0.0, performance={
                         "status": "not_run", "reason": "stopped by %s while waiting in the queue" % stopped.get("who")})
+                else:
+                    self.rejudge(run, view)
                 continue
             if told["state"] == "running":
                 if status != "running":
@@ -1091,6 +1145,8 @@ class Controller:
         return reason
 
     def end(self, reason: str) -> None:
+        if not reason.startswith("interrupted"):      # an interrupted controller comes back to its jobs
+            self.tidy_seats(close=True)
         view = self.view()
         ended = not reason.startswith(("interrupted", "paused"))
         if ended and 1.0 in form.review_points(self.settings) and "end" not in self.state["reviewed"] and not self.agents.available() \

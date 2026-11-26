@@ -79,9 +79,12 @@ Two choices decide how much GPU time a search gets out of a shared cluster. Setu
 
 **One job per design, or one block.** With `compute.allocation: per_design`, the default, each design
 is a job of its own, submitted when a GPU comes free. A one-GPU job starts sooner than a job that needs
-eight at once, and the search uses whatever is free, up to `compute.gpus` jobs. No new design is
-written while one job is still waiting for its first start, so a design is never much older than the
-results it was written from.
+eight at once, and the search uses whatever is free, up to `compute.gpus` jobs.
+
+Designs are written just in time. No new design is written while one job is still waiting for its first
+start. A waiting job takes its design at the moment it starts, so if results arrive in the meantime that
+overtake the design, another is written and takes the same job, which keeps its place in the queue. A
+design is overtaken when it edits a parent that another design of the same lineage has since beaten.
 
 With `compute.allocation: block`, one job holds every GPU for the whole search and the designs train
 inside it, each on a GPU of its own. Nothing waits in the queue between designs. The job is harder to

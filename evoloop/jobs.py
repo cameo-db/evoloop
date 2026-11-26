@@ -31,6 +31,8 @@ MACHINE_EXIT = 75            # EX_TEMPFAIL: the adapter says the machine failed
 CHECK_EXIT = 97              # the quick check failed and the design was not trained
 LARGER_EXIT = 76             # the adapter says the design needs a larger GPU than the one it was given
 PAUSE_EXIT = 77              # the adapter saved its state and asks for the run to be continued in another job
+UNASSIGNED_EXIT = 78         # a job started with no design assigned to it and none came
+SEAT_WAIT = 1800             # seconds a started job waits for a design that is still being written
 CREDENTIALS = ("KEY", "TOKEN", "SECRET", "PASSWORD", "CREDENTIAL")
 INFRASTRUCTURE = ("NODE_FAIL", "BOOT_FAIL", "PREEMPTED", "DEADLINE", "TIMEOUT")
 ACTIVE = ("PENDING", "RUNNING", "CONFIGURING", "COMPLETING", "SUSPENDED", "REQUEUED", "REQUEUE_HOLD", "RESIZING",
@@ -178,9 +180,14 @@ class Local:
             return {"state": "larger"}
         return {"state": "ended", "exit": code}
 
+    @staticmethod
+    def withdraw(job: Dict[str, Any]) -> bool:
+        """A local job starts at once: there is never a waiting design to take back."""
+        return False
+
     def cancel(self, run: Dict[str, Any]) -> None:
-        proc = self.procs.pop(run["id"], None)
-        self.held.pop(run["id"], None)
+        proc = self.procs.pop(run.get("id"), None)
+        self.held.pop(run.get("id"), None)
         if proc is not None:
             if proc.poll() is None:
                 self.end(proc)
@@ -224,11 +231,49 @@ class Slurm:
                 return entry["name"]
         return entries[-1]["name"] if entries else None
 
+    def assign(self, job: Dict[str, Any], run: Dict[str, Any], workdir: str, env: Dict[str, str], settings: Dict[str, Any]) -> None:
+        """Give a job the design it will train: what it does once it starts, written where the job looks for it."""
+        compute, out = settings["compute"], env["EVO_OUT_DIR"]
+        lines = ["exec >> %s 2>&1" % shlex.quote(os.path.join(out, "job.log"))]
+        lines.extend("export %s=%s" % (k, shlex.quote(v)) for k, v in sorted(env.items()))
+        # Slurm counts its own requeues of this job; the controller adds the times it started the run again itself.
+        lines.append("export EVO_RESTART_COUNT=$(( ${SLURM_RESTART_COUNT:-0} + %d ))" % int(run.get("restarts") or 0))
+        lines.append("export PATH=%s" % shlex.quote(os.environ.get("PATH", "/usr/bin:/bin")))
+        limit = seconds(compute.get("time_limit"))
+        if limit:      # when this start of the job ends: the adapter can save and leave before it is killed
+            lines.append("export EVO_DEADLINE=$(( EVO_JOB_STARTED + %d ))" % limit)
+        lines.append('echo "{\\"t\\": $(date +%%s), \\"node\\": \\"$(hostname)\\", \\"restart\\": $EVO_RESTART_COUNT, '
+                     '\\"gpu\\": \\"$(command -v nvidia-smi >/dev/null 2>&1 && nvidia-smi --query-gpu=name,memory.total '
+                     '--format=csv,noheader 2>/dev/null | grep -iv failed | head -1)\\"}" >> %s' % shlex.quote(os.path.join(out, "starts.jsonl")))
+        lines.extend(compute.get("setup") or [])
+        lines.append("cd %s" % shlex.quote(workdir))
+        lines.append(command(settings))
+        with open(os.path.join(job["seat"], "next.tmp"), "w", encoding="utf-8") as handle:
+            handle.write("\n".join(lines) + "\n")
+        os.replace(os.path.join(job["seat"], "next.tmp"), os.path.join(job["seat"], "next"))
+
+    @staticmethod
+    def withdraw(job: Dict[str, Any]) -> bool:
+        """Take back the design of a job that has not started, so that another can be given to it. The job keeps
+        its place in the queue. False when the job has already taken its design: it then trains it."""
+        if not job.get("seat"):
+            return False      # a job from before designs were assigned at the start
+        try:
+            os.rename(os.path.join(job["seat"], "next"), os.path.join(job["seat"], "withdrawn"))
+        except OSError:
+            return False
+        return True
+
     def submit(self, run: Dict[str, Any], workdir: str, env: Dict[str, str], settings: Dict[str, Any]) -> Dict[str, Any]:
         compute = settings["compute"]
         out = env["EVO_OUT_DIR"]
         qos = self.pick_qos(compute)
-        lines = ["#!/bin/bash", "#SBATCH --job-name=evo_%s" % run["id"], "#SBATCH --output=%s" % os.path.join(out, "job.log"),
+        gpu_type = gpu_type_for(run, compute)
+        seat = os.path.join(out, "job%d" % len([n for n in os.listdir(out) if n.startswith("job") and n[3:].isdigit()]))
+        os.makedirs(seat)
+        job = {"backend": "slurm", "seat": seat, "qos": qos, "gpu_type": gpu_type}
+        self.assign(job, run, workdir, env, settings)
+        lines = ["#!/bin/bash", "#SBATCH --job-name=evo_%s" % run["id"], "#SBATCH --output=%s" % os.path.join(seat, "slurm.log"),
                  "#SBATCH --open-mode=append", "#SBATCH --requeue", "#SBATCH --export=NONE",
                  "#SBATCH --cpus-per-task=%d" % int(compute["cpus_per_job"]), "#SBATCH --mem=%dG" % int(compute["mem_gb"]),
                  "#SBATCH --time=%s" % compute["time_limit"]]
@@ -237,30 +282,23 @@ class Slurm:
         if qos:
             lines.append("#SBATCH --qos=%s" % qos)
         if int(compute.get("gpus_per_job") or 0) > 0:
-            gpu_type = gpu_type_for(run, compute)
             gres = "gpu:%s:%d" % (gpu_type, int(compute["gpus_per_job"])) if gpu_type else "gpu:%d" % int(compute["gpus_per_job"])
             lines.append("#SBATCH --gres=%s" % gres)
         lines.extend("#SBATCH %s" % extra for extra in compute.get("extra_sbatch") or [])
-        lines.append("set -u")
-        lines.extend("export %s=%s" % (k, shlex.quote(v)) for k, v in sorted(env.items()))
-        # Slurm counts its own requeues of this job; the controller adds the times it started the run again itself.
-        lines.append("export EVO_RESTART_COUNT=$(( ${SLURM_RESTART_COUNT:-0} + %d ))" % int(run.get("restarts") or 0))
-        lines.append("export PATH=%s" % shlex.quote(os.environ.get("PATH", "/usr/bin:/bin")))
-        limit = seconds(compute.get("time_limit"))
-        if limit:      # when this start of the job ends: the adapter can save and leave before it is killed
-            lines.append("export EVO_DEADLINE=$(( $(date +%%s) + %d ))" % limit)
-        lines.append('echo "{\\"t\\": $(date +%%s), \\"node\\": \\"$(hostname)\\", \\"restart\\": $EVO_RESTART_COUNT, '
-                     '\\"gpu\\": \\"$(command -v nvidia-smi >/dev/null 2>&1 && nvidia-smi --query-gpu=name,memory.total '
-                     '--format=csv,noheader 2>/dev/null | grep -iv failed | head -1)\\"}" >> %s' % shlex.quote(os.path.join(out, "starts.jsonl")))
-        lines.extend(compute.get("setup") or [])
-        lines.append("cd %s" % shlex.quote(workdir))
-        lines.append(command(settings))
-        script = os.path.join(out, "job.sbatch")
+        # The job trains the design assigned to it at the moment it starts. While it waits in the queue the search may
+        # replace a design that newer results have overtaken, and the job keeps its place. A job that was started
+        # again by Slurm goes on with the design it took. If a replacement is still being written, it waits for it.
+        lines += ["set -u", "EVO_JOB_STARTED=$(date +%s)", "seat=%s" % shlex.quote(seat),
+                  'if [ ! -f "$seat/taken" ]; then', "  waited=0",
+                  '  until mv "$seat/next" "$seat/taken" 2>/dev/null; do',
+                  '    [ "$waited" -ge %d ] && { echo "no design was assigned to this job"; exit %d; }' % (SEAT_WAIT, UNASSIGNED_EXIT),
+                  "    sleep 5; waited=$((waited + 5))", "  done", "fi", 'source "$seat/taken"']
+        script = os.path.join(seat, "job.sbatch")
         with open(script, "w", encoding="utf-8") as handle:
             handle.write("\n".join(lines) + "\n")
         job_id = self.sh(["sbatch", "--parsable", script]).strip().split(";")[0]
         self.asked = 0.0
-        return {"backend": "slurm", "job_id": job_id, "qos": qos, "submitted": time.time()}
+        return dict(job, job_id=job_id, submitted=time.time())
 
     def refresh(self) -> None:
         if time.time() - self.asked < self.squeue_seconds:

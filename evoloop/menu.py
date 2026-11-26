@@ -263,6 +263,7 @@ FIELDS: Dict[str, str] = {
     "compute.extra_sbatch": "Further sbatch options.",
     "compute.infrastructure_retries": "How often in a row a run ended by the machine (time limit, preemption, failed node) is started again without having got further. A start that got further than the last is always followed by another.",
     "compute.max_running": "A cap on jobs at once, below `compute.gpus`, that can be moved during a run.",
+    "compute.refresh_waiting": "On Slurm: a design still waiting for its first start is replaced when a design of its lineage has since beaten its parent by more than the noise floor. The job keeps its place in the queue; the replaced design is not charged. At most twice per job.",
     "compute.max_waiting": "On Slurm: no new design is written while this many jobs await their first start on the usual GPU type.",
     "run_command": "The command that trains one design, started in its working copy.",
     "audit.reviews": "When the assessor reviews the agents. See the review schedules, or give a list of shares.",

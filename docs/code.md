@@ -102,27 +102,30 @@ The loop.
 
 | Name | What it does |
 |---|---|
-| [`class Controller`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L31) |  |
-| &nbsp;&nbsp;[`.begin()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L73) | Start a new run: freeze the brief and the base, record the person's own words, queue the baseline. |
-| &nbsp;&nbsp;[`.frozen_fault()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L116) | Why nothing new may start: the frozen code (everything outside the marked blocks, and the adapter) is not what this run started with. |
-| &nbsp;&nbsp;[`.rehash()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L127) | The person's word that a change to the frozen code is meant: recorded with what changed, and the run goes on. |
-| &nbsp;&nbsp;[`.queue()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L153) | A run the loop makes itself (the baseline, a re-check, a reference for a new period): recorded at once under the next free id, so that no design written meanwhile can take the same id, then started when a slot is free. |
-| &nbsp;&nbsp;[`.read_inbox()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L161) | The person's requests, written by `evoloop set`, `note`, `stop`, `review`. |
-| &nbsp;&nbsp;[`.note_skill()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L248) | A skill's file is the person's to edit, during a run too. |
-| &nbsp;&nbsp;[`.screen()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L426) | A run is compared, part way, with the runs before it at the same point, and one clearly in the lower part is stopped there and charged for what it ran. |
-| &nbsp;&nbsp;[`.spent()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L467) | Evaluations charged: every scored run; runs that failed or failed the quick check beyond the allowance of uncounted ones; and designs rejected for a limit beyond theirs. |
-| &nbsp;&nbsp;[`.unscored_streak()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L479) | How many of the most recent designs in a row ended without a score because they broke. |
-| &nbsp;&nbsp;[`.measures()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L493) | The figures of a result that a limit can name: its visible diagnostics, `parameters`, and `examples_per_s` from its inference speed. |
-| &nbsp;&nbsp;[`.watch_limits()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L518) | A run whose progress lines already show it outside a limit is stopped there, not trained to the end. |
-| &nbsp;&nbsp;[`.order()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L529) | The person's order for the next slots: a mode, optionally a kind of crossover or local move, and optionally an instruction the writers of those slots must follow. |
-| &nbsp;&nbsp;[`.import_designs()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L542) | Designs from an earlier run, fitted here as designs of this run. |
-| &nbsp;&nbsp;[`.import_study()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L577) | Designs from a study file (the CAMEO format this loop also writes). |
-| &nbsp;&nbsp;[`.write()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L702) | In a worker: the coordinator's choice when there is one, then the design. |
-| &nbsp;&nbsp;[`.take_decisions()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L886) | The decisions of one meeting, each refused, applied, or held for the person. |
-| &nbsp;&nbsp;[`.anchor()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L902) | The settings without what the strategist changed by itself: where the person last left them. |
-| &nbsp;&nbsp;[`.answer()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L954) | The person's yes or no to a decision that was held for them. |
-| &nbsp;&nbsp;[`.set_lineage()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L985) | The person retires a lineage or brings one back: the same entry the strategist writes, in their name. |
-| &nbsp;&nbsp;[`.review()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L993) | A review of the agents. |
+| [`class Controller`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L32) |  |
+| &nbsp;&nbsp;[`.begin()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L75) | Start a new run: freeze the brief and the base, record the person's own words, queue the baseline. |
+| &nbsp;&nbsp;[`.frozen_fault()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L118) | Why nothing new may start: the frozen code (everything outside the marked blocks, and the adapter) is not what this run started with. |
+| &nbsp;&nbsp;[`.rehash()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L129) | The person's word that a change to the frozen code is meant: recorded with what changed, and the run goes on. |
+| &nbsp;&nbsp;[`.queue()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L155) | A run the loop makes itself (the baseline, a re-check, a reference for a new period): recorded at once under the next free id, so that no design written meanwhile can take the same id, then started when a slot is free. |
+| &nbsp;&nbsp;[`.read_inbox()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L163) | The person's requests, written by `evoloop set`, `note`, `stop`, `review`. |
+| &nbsp;&nbsp;[`.note_skill()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L250) | A skill's file is the person's to edit, during a run too. |
+| &nbsp;&nbsp;[`.superseded()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L316) | Why a design that has not started is no longer the one the search would write, or None. |
+| &nbsp;&nbsp;[`.rejudge()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L335) | A design waiting for its first start is replaced when newer results have overtaken it. |
+| &nbsp;&nbsp;[`.tidy_seats()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L350) | Jobs without a design: one that has ended is forgotten, and all are cancelled when no design will come. |
+| &nbsp;&nbsp;[`.screen()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L480) | A run is compared, part way, with the runs before it at the same point, and one clearly in the lower part is stopped there and charged for what it ran. |
+| &nbsp;&nbsp;[`.spent()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L521) | Evaluations charged: every scored run; runs that failed or failed the quick check beyond the allowance of uncounted ones; and designs rejected for a limit beyond theirs. |
+| &nbsp;&nbsp;[`.unscored_streak()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L533) | How many of the most recent designs in a row ended without a score because they broke. |
+| &nbsp;&nbsp;[`.measures()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L547) | The figures of a result that a limit can name: its visible diagnostics, `parameters`, and `examples_per_s` from its inference speed. |
+| &nbsp;&nbsp;[`.watch_limits()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L572) | A run whose progress lines already show it outside a limit is stopped there, not trained to the end. |
+| &nbsp;&nbsp;[`.order()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L583) | The person's order for the next slots: a mode, optionally a kind of crossover or local move, and optionally an instruction the writers of those slots must follow. |
+| &nbsp;&nbsp;[`.import_designs()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L596) | Designs from an earlier run, fitted here as designs of this run. |
+| &nbsp;&nbsp;[`.import_study()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L631) | Designs from a study file (the CAMEO format this loop also writes). |
+| &nbsp;&nbsp;[`.write()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L756) | In a worker: the coordinator's choice when there is one, then the design. |
+| &nbsp;&nbsp;[`.take_decisions()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L940) | The decisions of one meeting, each refused, applied, or held for the person. |
+| &nbsp;&nbsp;[`.anchor()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L956) | The settings without what the strategist changed by itself: where the person last left them. |
+| &nbsp;&nbsp;[`.answer()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L1008) | The person's yes or no to a decision that was held for them. |
+| &nbsp;&nbsp;[`.set_lineage()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L1039) | The person retires a lineage or brings one back: the same entry the strategist writes, in their name. |
+| &nbsp;&nbsp;[`.review()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L1047) | A review of the agents. |
 
 ## `schedule.py` { #m-schedule-py }
 
@@ -296,26 +299,29 @@ Running a design: one job per training run, on this machine or through Slurm.
 
 | Name | What it does |
 |---|---|
-| [`environment(run, out_dir, checkpoint_dir, settings)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L40) |  |
-| [`gpu_type_for(run, compute)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L54) | The GPU type this run asks for: the larger type once it was moved there, else the search's own (empty: any). |
-| [`larger_available(run, compute)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L59) | Whether a design too large for its GPU can still be moved to a larger one. |
-| [`seconds(limit)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L65) | A Slurm time limit in seconds: minutes, minutes:seconds, hours:minutes:seconds, days-hours, days-hours:minutes or days-hours:minutes:seconds. |
-| [`ended_by_machine(code)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L86) |  |
-| [`local_gpus()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L94) | The GPUs local jobs may use: those this process was given (CUDA_VISIBLE_DEVICES, as inside a Slurm job that holds several), else every GPU nvidia-smi lists. |
-| [`command(settings)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L108) | The quick check, when there is one, then the run command. |
-| [`clean_env(extra)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L115) | Designs are model-written code: credentials do not go into their environment. |
-| [`class Local`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L122) | Jobs as processes on this machine. |
-| &nbsp;&nbsp;[`.take_gpus()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L133) | The GPUs a job is given: the least used ones, so that jobs share a GPU only when there are more jobs at once than GPUs. |
-| &nbsp;&nbsp;[`.end()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L143) | Stop the job and everything it started: the job is the leader of its own process group. |
-| [`class Slurm`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L195) | Each run its own Slurm job, followed by its job id. |
-| &nbsp;&nbsp;[`.pick_qos()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L211) | The first QoS with room: `qos` may be one name or a list in order of preference, [{name: a, max_jobs: 8}, {name: b}]; the last takes the rest. |
-| &nbsp;&nbsp;[`.shutdown()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L310) | Nothing: the jobs go on, and the controller reattaches to them when it starts again. |
-| [`in_block(compute)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L314) | Whether the designs run inside one Slurm job that holds every GPU, as processes of that job. |
-| [`make(settings)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L319) |  |
-| [`reached(out_dir)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L326) | The furthest step a run has reported, over every start of it. |
-| [`read_progress(out_dir, every)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L332) | The progress lines of a run. |
-| [`tell(out_dir, action, allowance)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L349) |  |
-| [`tail(out_dir, lines)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L357) |  |
+| [`environment(run, out_dir, checkpoint_dir, settings)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L42) |  |
+| [`gpu_type_for(run, compute)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L56) | The GPU type this run asks for: the larger type once it was moved there, else the search's own (empty: any). |
+| [`larger_available(run, compute)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L61) | Whether a design too large for its GPU can still be moved to a larger one. |
+| [`seconds(limit)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L67) | A Slurm time limit in seconds: minutes, minutes:seconds, hours:minutes:seconds, days-hours, days-hours:minutes or days-hours:minutes:seconds. |
+| [`ended_by_machine(code)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L88) |  |
+| [`local_gpus()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L96) | The GPUs local jobs may use: those this process was given (CUDA_VISIBLE_DEVICES, as inside a Slurm job that holds several), else every GPU nvidia-smi lists. |
+| [`command(settings)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L110) | The quick check, when there is one, then the run command. |
+| [`clean_env(extra)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L117) | Designs are model-written code: credentials do not go into their environment. |
+| [`class Local`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L124) | Jobs as processes on this machine. |
+| &nbsp;&nbsp;[`.take_gpus()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L135) | The GPUs a job is given: the least used ones, so that jobs share a GPU only when there are more jobs at once than GPUs. |
+| &nbsp;&nbsp;[`.end()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L145) | Stop the job and everything it started: the job is the leader of its own process group. |
+| &nbsp;&nbsp;[`.withdraw()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L184) | A local job starts at once: there is never a waiting design to take back. |
+| [`class Slurm`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L202) | Each run its own Slurm job, followed by its job id. |
+| &nbsp;&nbsp;[`.pick_qos()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L218) | The first QoS with room: `qos` may be one name or a list in order of preference, [{name: a, max_jobs: 8}, {name: b}]; the last takes the rest. |
+| &nbsp;&nbsp;[`.assign()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L234) | Give a job the design it will train: what it does once it starts, written where the job looks for it. |
+| &nbsp;&nbsp;[`.withdraw()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L256) | Take back the design of a job that has not started, so that another can be given to it. |
+| &nbsp;&nbsp;[`.shutdown()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L348) | Nothing: the jobs go on, and the controller reattaches to them when it starts again. |
+| [`in_block(compute)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L352) | Whether the designs run inside one Slurm job that holds every GPU, as processes of that job. |
+| [`make(settings)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L357) |  |
+| [`reached(out_dir)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L364) | The furthest step a run has reported, over every start of it. |
+| [`read_progress(out_dir, every)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L370) | The progress lines of a run. |
+| [`tell(out_dir, action, allowance)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L387) |  |
+| [`tail(out_dir, lines)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L395) |  |
 
 ## `store.py` { #m-store-py }
 
@@ -604,17 +610,17 @@ The menu: every choice a run can make, the presets, and every field of the brief
 
 | Name | What it does |
 |---|---|
-| [`show(value)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/menu.py#L333) |  |
-| [`when(path)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/menu.py#L337) | Whether a setting can change during a run. |
-| [`preset_lines(overlay, indent)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/menu.py#L344) |  |
-| [`text(topic)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/menu.py#L348) |  |
-| [`cell(words)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/menu.py#L375) |  |
-| [`menu_markdown()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/menu.py#L379) |  |
-| [`anchor(path)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/menu.py#L412) | The id of a field on the fields page: `schedule.novelty` is `fields.md#schedule-novelty`. |
-| [`fields_markdown()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/menu.py#L417) |  |
-| [`missing()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/menu.py#L445) | Options and fields with no explanation here: must be empty. |
-| [`plans()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/menu.py#L471) | What a search comes to for every combination of run type, skill, level of autonomy and size of budget: the data behind the documentation's plan explorer. |
-| [`plans_json()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/menu.py#L532) |  |
+| [`show(value)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/menu.py#L334) |  |
+| [`when(path)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/menu.py#L338) | Whether a setting can change during a run. |
+| [`preset_lines(overlay, indent)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/menu.py#L345) |  |
+| [`text(topic)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/menu.py#L349) |  |
+| [`cell(words)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/menu.py#L376) |  |
+| [`menu_markdown()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/menu.py#L380) |  |
+| [`anchor(path)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/menu.py#L413) | The id of a field on the fields page: `schedule.novelty` is `fields.md#schedule-novelty`. |
+| [`fields_markdown()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/menu.py#L418) |  |
+| [`missing()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/menu.py#L446) | Options and fields with no explanation here: must be empty. |
+| [`plans()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/menu.py#L472) | What a search comes to for every combination of run type, skill, level of autonomy and size of budget: the data behind the documentation's plan explorer. |
+| [`plans_json()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/menu.py#L533) |  |
 
 ## `model/anthropic_api.py` { #m-model-anthropic-api-py }
 

@@ -210,6 +210,7 @@ Explained in [servers](servers.md).
 | <a id="compute-infrastructure_retries"></a>`compute.infrastructure_retries` | `3` | no | How often in a row a run ended by the machine (time limit, preemption, failed node) is started again without having got further. A start that got further than the last is always followed by another. |
 | <a id="compute-max_running"></a>`compute.max_running` | `null` | yes | A cap on jobs at once, below `compute.gpus`, that can be moved during a run. |
 | <a id="compute-max_waiting"></a>`compute.max_waiting` | `1` | yes | On Slurm: no new design is written while this many jobs await their first start on the usual GPU type. |
+| <a id="compute-refresh_waiting"></a>`compute.refresh_waiting` | `true` | yes | On Slurm: a design still waiting for its first start is replaced when a design of its lineage has since beaten its parent by more than the noise floor. The job keeps its place in the queue; the replaced design is not charged. At most twice per job. |
 
 ## run_command
 
