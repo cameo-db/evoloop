@@ -513,7 +513,7 @@ def check_value(path: str, value: Any) -> Optional[str]:
         if set(value if isinstance(value, dict) else ["?"]) - set(LOCAL_MOVES) or not all(
                 isinstance(v, (int, float)) and not isinstance(v, bool) and v >= 0 for v in shares) or sum(shares) <= 0:
             return "schedule.local_mix must give non-negative shares, not all zero, for: %s" % ", ".join(LOCAL_MOVES)
-    if path == "audit.reviews" and not (value in REVIEW_PRESETS or (isinstance(value, list) and all(
+    if path == "audit.reviews" and not ((isinstance(value, str) and value in REVIEW_PRESETS) or (isinstance(value, list) and all(
             isinstance(v, (int, float)) and 0 < v <= 1 for v in value))):
         return "audit.reviews must be one of %s, or a list of shares of the budget" % ", ".join(REVIEW_PRESETS)
     return None

@@ -54,45 +54,47 @@ The commands.
 | [`run_dir(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L91) |  |
 | [`request(args, body)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L98) |  |
 | [`parse_pairs(pairs)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L106) |  |
-| [`cmd_init(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L120) |  |
-| [`cmd_example(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L152) |  |
-| [`skill_files(folder, brief)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L164) | The skill files a search in `folder` reads, for each skill its brief names. |
-| [`skill_copies(folder, brief, tell)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L170) | Give the search its own copy of each skill its brief names, as soon as one is named, so that the copy can be edited before the plan is read and confirmed. |
-| [`open_editor(path)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L188) | Open a file in the person's editor ($VISUAL, then $EDITOR). |
-| [`cmd_brief(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L200) |  |
-| [`cmd_setup(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L319) | The questions one at a time in the terminal. |
-| [`cmd_form(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L333) | The questions as a self-contained HTML form. |
-| [`cmd_plan(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L350) |  |
-| [`cmd_estimate(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L362) | What the agents will cost: before a run from the brief; during one, from its own calls so far. |
-| [`cmd_guide(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L393) |  |
-| [`menu_topics()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L404) |  |
-| [`cmd_menu(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L409) |  |
-| [`cmd_skills(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L421) | The skill library: the list, a search of it, one skill in full, or one written out as a folder to edit. |
-| [`cmd_site(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L517) | The site file: what is particular to this machine. |
-| [`cmd_run(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L551) |  |
-| [`offline(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L563) | A controller object for reading a run, with nothing started. |
-| [`cmd_status(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L570) |  |
-| [`cmd_show(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L607) | One run: where it came from, what its design changed against its parent, how it ended. |
-| [`cmd_report(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L646) |  |
-| [`cmd_study(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L657) |  |
-| [`cmd_set(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L669) |  |
-| [`cmd_note(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L685) |  |
-| [`cmd_withdraw(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L691) |  |
-| [`cmd_stop(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L697) |  |
-| [`cmd_chat(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L703) | Talk with the agent that runs the search. |
-| [`cmd_rehash(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L774) |  |
-| [`cmd_force(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L781) |  |
-| [`cmd_import(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L788) |  |
-| [`import_study(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L801) | Designs from a study file: a path, or a link to one (a study.json downloaded from CAMEO, or another search's). |
-| [`cmd_reference(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L830) | A row on the leaderboard for a model that is not part of the search: a published baseline, an earlier run's best. |
-| [`cmd_leaderboard(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L857) |  |
-| [`cmd_controller(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L897) | A Slurm job script that runs the search and requeues itself at its time limit. |
-| [`cmd_lineage(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L938) |  |
-| [`cmd_answer(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L946) |  |
-| [`cmd_review(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L952) |  |
-| [`cmd_steer(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L958) | The person's words, turned into ledger entries by the translator, shown back, applied only with --yes. |
-| [`build_parser()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L1012) |  |
-| [`main(argv)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L1142) |  |
+| [`cmd_init(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L126) |  |
+| [`cmd_example(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L158) |  |
+| [`skill_files(folder, brief)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L170) | The skill files a search in `folder` reads, for each skill its brief names. |
+| [`skill_copies(folder, brief, tell)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L176) | Give the search its own copy of each skill its brief names, as soon as one is named, so that the copy can be edited before the plan is read and confirmed. |
+| [`open_editor(path)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L194) | Open a file in the person's editor ($VISUAL, then $EDITOR). |
+| [`cmd_brief(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L206) |  |
+| [`cmd_setup(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L325) | The questions one at a time in the terminal. |
+| [`cmd_form(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L339) | The questions as a self-contained HTML form. |
+| [`cmd_plan(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L356) |  |
+| [`cmd_estimate(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L368) | What the agents will cost: before a run from the brief; during one, from its own calls so far. |
+| [`cmd_guide(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L399) |  |
+| [`menu_topics()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L410) |  |
+| [`cmd_menu(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L415) |  |
+| [`cmd_skills(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L427) | The skill library: the list, a search of it, one skill in full, or one written out as a folder to edit. |
+| [`cmd_site(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L523) | The site file: what is particular to this machine. |
+| [`cmd_run(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L557) |  |
+| [`offline(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L569) | A controller object for reading a run, with nothing started. |
+| [`cmd_status(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L576) |  |
+| [`cmd_show(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L614) | One run: where it came from, what its design changed against its parent, how it ended. |
+| [`cmd_report(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L653) |  |
+| [`cmd_study(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L664) |  |
+| [`cmd_set(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L676) |  |
+| [`cmd_note(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L692) |  |
+| [`cmd_withdraw(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L698) |  |
+| [`cmd_stop(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L704) |  |
+| [`cmd_chat(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L710) | Talk with the agent that runs the search. |
+| [`cmd_rerun(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L781) |  |
+| [`cmd_reply(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L788) |  |
+| [`cmd_rehash(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L794) |  |
+| [`cmd_force(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L801) |  |
+| [`cmd_import(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L808) |  |
+| [`import_study(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L821) | Designs from a study file: a path, or a link to one (a study.json downloaded from CAMEO, or another search's). |
+| [`cmd_reference(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L850) | A row on the leaderboard for a model that is not part of the search: a published baseline, an earlier run's best. |
+| [`cmd_leaderboard(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L877) |  |
+| [`cmd_controller(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L917) | A Slurm job script that runs the search and requeues itself at its time limit. |
+| [`cmd_lineage(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L958) |  |
+| [`cmd_answer(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L966) |  |
+| [`cmd_review(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L972) |  |
+| [`cmd_steer(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L978) | The person's words, turned into ledger entries by the translator, shown back, applied only with --yes. |
+| [`build_parser()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L1032) |  |
+| [`main(argv)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L1169) |  |
 
 ## `controller.py` { #m-controller-py }
 
@@ -102,30 +104,33 @@ The loop.
 
 | Name | What it does |
 |---|---|
-| [`class Controller`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L32) |  |
-| &nbsp;&nbsp;[`.begin()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L75) | Start a new run: freeze the brief and the base, record the person's own words, queue the baseline. |
-| &nbsp;&nbsp;[`.frozen_fault()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L118) | Why nothing new may start: the frozen code (everything outside the marked blocks, and the adapter) is not what this run started with. |
-| &nbsp;&nbsp;[`.rehash()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L129) | The person's word that a change to the frozen code is meant: recorded with what changed, and the run goes on. |
-| &nbsp;&nbsp;[`.queue()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L155) | A run the loop makes itself (the baseline, a re-check, a reference for a new period): recorded at once under the next free id, so that no design written meanwhile can take the same id, then started when a slot is free. |
-| &nbsp;&nbsp;[`.read_inbox()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L163) | The person's requests, written by `evoloop set`, `note`, `stop`, `review`. |
-| &nbsp;&nbsp;[`.note_skill()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L250) | A skill's file is the person's to edit, during a run too. |
-| &nbsp;&nbsp;[`.superseded()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L316) | Why a design that has not started is no longer the one the search would write, or None. |
-| &nbsp;&nbsp;[`.rejudge()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L335) | A design waiting for its first start is replaced when newer results have overtaken it. |
-| &nbsp;&nbsp;[`.tidy_seats()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L350) | Jobs without a design: one that has ended is forgotten, and all are cancelled when no design will come. |
-| &nbsp;&nbsp;[`.screen()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L480) | A run is compared, part way, with the runs before it at the same point, and one clearly in the lower part is stopped there and charged for what it ran. |
-| &nbsp;&nbsp;[`.spent()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L521) | Evaluations charged: every scored run; runs that failed or failed the quick check beyond the allowance of uncounted ones; and designs rejected for a limit beyond theirs. |
-| &nbsp;&nbsp;[`.unscored_streak()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L533) | How many of the most recent designs in a row ended without a score because they broke. |
-| &nbsp;&nbsp;[`.measures()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L547) | The figures of a result that a limit can name: its visible diagnostics, `parameters`, and `examples_per_s` from its inference speed. |
-| &nbsp;&nbsp;[`.watch_limits()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L572) | A run whose progress lines already show it outside a limit is stopped there, not trained to the end. |
-| &nbsp;&nbsp;[`.order()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L583) | The person's order for the next slots: a mode, optionally a kind of crossover or local move, and optionally an instruction the writers of those slots must follow. |
-| &nbsp;&nbsp;[`.import_designs()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L596) | Designs from an earlier run, fitted here as designs of this run. |
-| &nbsp;&nbsp;[`.import_study()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L631) | Designs from a study file (the CAMEO format this loop also writes). |
-| &nbsp;&nbsp;[`.write()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L756) | In a worker: the coordinator's choice when there is one, then the design. |
-| &nbsp;&nbsp;[`.take_decisions()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L940) | The decisions of one meeting, each refused, applied, or held for the person. |
-| &nbsp;&nbsp;[`.anchor()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L956) | The settings without what the strategist changed by itself: where the person last left them. |
-| &nbsp;&nbsp;[`.answer()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L1008) | The person's yes or no to a decision that was held for them. |
-| &nbsp;&nbsp;[`.set_lineage()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L1039) | The person retires a lineage or brings one back: the same entry the strategist writes, in their name. |
-| &nbsp;&nbsp;[`.review()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L1047) | A review of the agents. |
+| [`class Controller`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L34) |  |
+| &nbsp;&nbsp;[`.begin()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L77) | Start a new run: freeze the brief and the base, record the person's own words, queue the baseline. |
+| &nbsp;&nbsp;[`.frozen_fault()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L120) | Why nothing new may start: the frozen code (everything outside the marked blocks, and the adapter) is not what this run started with. |
+| &nbsp;&nbsp;[`.rehash()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L131) | The person's word that a change to the frozen code is meant: recorded with what changed, and the run goes on. |
+| &nbsp;&nbsp;[`.queue()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L157) | A run the loop makes itself (the baseline, a re-check, a reference for a new period): recorded at once under the next free id, so that no design written meanwhile can take the same id, then started when a slot is free. |
+| &nbsp;&nbsp;[`.read_inbox()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L165) | The person's requests, written by `evoloop set`, `note`, `stop`, `review`. |
+| &nbsp;&nbsp;[`.note_skill()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L256) | A skill's file is the person's to edit, during a run too. |
+| &nbsp;&nbsp;[`.rerun()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L322) | Train again a design whose run ended without a score, for instance after the evaluator was repaired. |
+| &nbsp;&nbsp;[`.reply()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L347) | The person's answer to a question an agent asked. |
+| &nbsp;&nbsp;[`.superseded()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L364) | Why a design that has not started is no longer the one the search would write, or None. |
+| &nbsp;&nbsp;[`.rejudge()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L383) | A design waiting for its first start is replaced when newer results have overtaken it. |
+| &nbsp;&nbsp;[`.tidy_seats()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L398) | Jobs without a design: one that has ended is forgotten, and all are cancelled when no design will come. |
+| &nbsp;&nbsp;[`.stop_grace()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L407) | Seconds a run told to stop is given before its job is cancelled. |
+| &nbsp;&nbsp;[`.screen()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L545) | A run is compared, part way, with the runs before it at the same point, and one clearly in the lower part is stopped there and charged for what it ran. |
+| &nbsp;&nbsp;[`.spent()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L586) | Evaluations charged: every scored run; runs that failed or failed the quick check beyond the allowance of uncounted ones; and designs rejected for a limit beyond theirs. |
+| &nbsp;&nbsp;[`.unscored_streak()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L598) | How many of the most recent designs in a row ended without a score because they broke. |
+| &nbsp;&nbsp;[`.measures()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L612) | The figures of a result that a limit can name: its visible diagnostics, `parameters`, and `examples_per_s` from its inference speed. |
+| &nbsp;&nbsp;[`.watch_limits()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L637) | A run whose progress lines already show it outside a limit is stopped there, not trained to the end. |
+| &nbsp;&nbsp;[`.order()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L648) | The person's order for the next slots: a mode, optionally a kind of crossover or local move, and optionally an instruction the writers of those slots must follow. |
+| &nbsp;&nbsp;[`.import_designs()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L661) | Designs from an earlier run, fitted here as designs of this run. |
+| &nbsp;&nbsp;[`.import_study()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L700) | Designs from a study file (the CAMEO format this loop also writes). |
+| &nbsp;&nbsp;[`.write()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L825) | In a worker: the coordinator's choice when there is one, then the design. |
+| &nbsp;&nbsp;[`.take_decisions()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L1016) | The decisions of one meeting, each refused, applied, or held for the person. |
+| &nbsp;&nbsp;[`.anchor()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L1032) | The settings without what the strategist changed by itself: where the person last left them. |
+| &nbsp;&nbsp;[`.answer()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L1084) | The person's yes or no to a decision that was held for them. |
+| &nbsp;&nbsp;[`.set_lineage()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L1115) | The person retires a lineage or brings one back: the same entry the strategist writes, in their name. |
+| &nbsp;&nbsp;[`.review()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L1123) | A review of the agents. |
 
 ## `schedule.py` { #m-schedule-py }
 
@@ -584,6 +589,7 @@ The run as a study file, in the CAMEO entry format (version 0.4).
 | [`ranked(study)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/study.py#L197) | The models of a study that have a finished run, best first by the study's own metric and direction. |
 | [`about(study)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/study.py#L224) | Where a study's designs come from: its id, data, metric and what it concluded. |
 | [`blocks_in(texts, table)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/study.py#L234) | The marked blocks of this project found by name in a study's code. |
+| [`score_there(score, metric, data)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/study.py#L251) | An imported design's earlier score, with what it measured. |
 
 ## `site.py` { #m-site-py }
 

@@ -246,3 +246,11 @@ def blocks_in(texts: List[Optional[str]], table: Dict[str, Dict[str, Any]]) -> D
             if "name" in seg and seg["name"] in table and seg["kind"] == table[seg["name"]]["kind"]:
                 found.setdefault(seg["name"], seg["content"])
     return found
+
+
+def score_there(score: Any, metric: Any, data: Any) -> str:
+    """An imported design's earlier score, with what it measured. A score from another search was computed by
+    that search's evaluator, on its data: the agents are told so, since a bare number reads as a score here."""
+    what = "%s %s" % (score, metric) if metric else "%s, in a metric that search did not name" % score
+    return "Its score there was %s%s, as that search's evaluator computed it: it is not a score of this search." % (
+        what, " on %s" % data if data else "")

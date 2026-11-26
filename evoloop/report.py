@@ -106,7 +106,7 @@ def snapshot(controller: Any, view: View, reason: Optional[str] = None) -> Dict[
         "decisions_waiting": [e["id"] for e in controller.store.merged_list("ledger")
                               if e.get("kind") == "decision" and e.get("status") == "proposed"],
         "forced_slots": controller.state.get("forced") or [],
-        "open_questions": [q for q in controller.store.read("questions") if q.get("status") == "open"][-5:],
+        "open_questions": [q for q in controller.store.merged_list("questions") if q.get("status") == "open"][-5:],
         "notes_in_force": [{"id": n["id"], "text": n["text"]} for n in settings.get("notes") or []],
     }
 
@@ -257,10 +257,10 @@ def lines(controller: Any, view: View, reason: Optional[str] = None) -> List[str
             out += ["### %s, %s (%s)" % (r["role"], r["why"], r["id"]), "", str(r.get("assessment") or ""), ""]
             out += ["- suggestion: %s (figure: %s)" % (s.get("change"), s.get("figure")) for s in r.get("suggestions") or []
                     if isinstance(s, dict)]
-    questions = [q for q in store.read("questions") if q.get("status") == "open"]
+    questions = [q for q in store.merged_list("questions") if q.get("status") == "open"]
     if questions:
-        out += ["", "## Questions for you", ""] + ["- %s: %s (default: %s)" % (q["id"], q["question"], q.get("default"))
-                                                   for q in questions]
+        out += ["", "## Questions for you", "", "Answer one with `evoloop reply ... --id Q1 \"your answer\"`; with no text it is closed "
+                "unanswered.", ""] + ["- %s: %s (default: %s)" % (q["id"], q["question"], q.get("default")) for q in questions]
     failed = [r for r in view.runs.values() if r["performance"].get("status") in ("failed", "invalid", "not_run")]
     if failed:
         out += ["", "## Runs without a score", ""] + ["- %s (%s): %s" % (r["id"], r["performance"]["status"],

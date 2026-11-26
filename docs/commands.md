@@ -264,6 +264,14 @@ Starts nothing more; the search ends when its jobs do. With `--run`, stops one e
 
 ## Strategist and agents
 
+### reply
+
+`evoloop reply DIR --name N --id Q3 "TEXT" --by NAME`
+
+Answers a question the analyst asked you. The question is closed and your answer becomes a note every
+agent reads. Without `TEXT` the question is closed unanswered. Open questions are listed, with their
+ids, in `evoloop status` and in the report.
+
 ### approve, decline
 
 `evoloop approve DIR --name N --id S14 --by NAME` · `evoloop decline DIR --name N --id S14 --by NAME [--reason WHY]`
@@ -305,6 +313,15 @@ teacher. `--from-run PATH [--top N]` takes the best of an earlier search.
 ```
 evoloop reference mysearch --name r1 --label "teacher ensemble" --score 0.912 --by "Your Name"
 ```
+
+### rerun
+
+`evoloop rerun DIR --name N RUN --by NAME [--from-checkpoint]`
+
+Trains again a design whose run ended without a score, for instance after you repaired the evaluator and
+recorded the change with `rehash`. `RUN` is a run id (`R12`) or a design id (`C9`). It is the same
+design with the same seed, starts from scratch unless `--from-checkpoint` is given, and is charged like
+any evaluation once it has a score. It is refused for a design that has a score or is still running.
 
 ### rehash
 

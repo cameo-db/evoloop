@@ -13,6 +13,7 @@ import concurrent.futures
 import json
 import os
 import random
+import shutil
 import signal
 import time
 from typing import Any, Dict, List, Optional, Tuple
@@ -23,6 +24,7 @@ from .design import Designer
 from .store import ENDED, SCORED, Store, View, read_json, write_json
 
 REPLACEMENTS = 2      # how often the design of one waiting job may be replaced
+STOP_GRACE = 300.0    # seconds a run told to stop is given at the least
 STALL = 8   # designs refused in a row, with nothing running, before the run stops as stalled
 
 
@@ -227,6 +229,10 @@ class Controller:
             self.take_decisions([d for d in request.get("decisions") or [] if isinstance(d, dict)])
         elif kind == "rehash":
             self.rehash(who, why, bool(request.get("moves_scores")))
+        elif kind == "rerun":
+            self.rerun(str(request.get("run")), bool(request.get("keep_checkpoint")), who, why)
+        elif kind == "reply":
+            self.reply(str(request.get("id")), request.get("text"), who, why)
         elif kind == "force":
             self.order(request, who, why)
         elif kind == "import":
@@ -313,6 +319,48 @@ class Controller:
             self.update(run_id, stopped_by={"who": who, "why": why, "t": time.time()})
         self.ledger({"kind": "stop", "run": run_id, "by": who, "reason": why, "status": "applied"})
 
+    def rerun(self, which: str, keep_checkpoint: bool, who: Any, why: Any) -> None:
+        """Train again a design whose run ended without a score, for instance after the evaluator was repaired. It
+        is the same design, with the same seed, and it is charged like any evaluation once it has a score."""
+        view = self.view()
+        cand = which if which in view.cands else (view.runs.get(which) or {}).get("candidate")
+        runs_of = [view.runs[r] for r in (view.cands.get(cand) or {}).get("runs") or []] if cand else []
+        fault = None
+        if not runs_of or not runs_of[-1].get("candidate"):
+            fault = "no such run or design"
+        elif any(r["performance"].get("status") not in ENDED for r in runs_of):
+            fault = "a run of this design is still going"
+        elif runs_of[-1]["performance"].get("status") not in ("failed", "invalid", "not_run"):
+            fault = "its last run has a score: a run is repeated only when it ended without one"
+        if fault:
+            self.ledger({"kind": "rerun", "run": which, "by": who, "reason": why, "status": "refused", "why": fault})
+            return
+        old = runs_of[-1]
+        if not keep_checkpoint:      # a fresh start: whatever the broken run left behind is not continued
+            shutil.rmtree(self.checkpoint_dir(dict(old, period=view.period)), ignore_errors=True)
+        run = self.designer.again(view, old["candidate"], "rerun", int(old.get("seed") or 0), self.settings)
+        run["history"]["rerun_of"] = old["id"]
+        self.queue(run)
+        self.ledger({"kind": "rerun", "run": old["id"], "as": run["id"], "design": old["candidate"], "by": who, "reason": why,
+                     "status": "applied", "from_checkpoint": keep_checkpoint})
+
+    def reply(self, which: str, text: Any, who: Any, why: Any) -> None:
+        """The person's answer to a question an agent asked. The question is closed, and the answer becomes a
+        note every agent reads. With no text the question is closed unanswered."""
+        asked = self.store.merged("questions").get(which)
+        if not asked or asked.get("status") != "open":
+            self.ledger({"kind": "reply", "id": which, "by": who, "reason": why, "status": "refused",
+                         "why": "no open question with that id"})
+            return
+        said = str(text or "").strip()
+        self.store.append("questions", {"id": which, "status": "answered" if said else "dismissed", "answer": said or None, "by": who})
+        if said:
+            self.ledger({"kind": "note", "text": "A question the analyst asked (\"%s\") was answered by %s: %s" % (
+                             asked["question"], who or "the person", said),
+                         "roles": [], "by": who, "reason": why, "status": "active", "answers": which})
+        else:
+            self.ledger({"kind": "reply", "id": which, "by": who, "reason": why, "status": "applied", "dismissed": True})
+
     def superseded(self, run: Dict[str, Any], view: View) -> Optional[str]:
         """Why a design that has not started is no longer the one the search would write, or None. Only an edit
         or a cross can be overtaken: its parent was chosen as the one to build on, and since the design was
@@ -356,6 +404,22 @@ class Controller:
                 continue
             self.state["seats"].remove(seat)
 
+    def stop_grace(self, run: Dict[str, Any]) -> float:
+        """Seconds a run told to stop is given before its job is cancelled. The evaluator reads the request when it
+        next reports, so it gets twice its usual time between reports, and five minutes at the least. A run cut
+        off sooner would lose the score of its best step."""
+        out = self.out_dir(run)
+        try:
+            last = os.path.getmtime(os.path.join(out, "progress.jsonl"))
+            starts = [json.loads(line)["t"] for line in open(os.path.join(out, "starts.jsonl"), encoding="utf-8") if line.strip()]
+        except (OSError, ValueError, KeyError):
+            starts = []
+        began = float(starts[-1]) if starts else float(run.get("running_since") or 0)
+        reports = len(jobs.read_progress(out, every=True))
+        if not reports or not began or last <= began:
+            return STOP_GRACE
+        return max(STOP_GRACE, 2.0 * (last - began) / max(1, reports - int(run.get("reports_at_start") or 0)))
+
     def follow(self, view: View) -> None:
         self.tidy_seats(close=self.draining)
         for run in view.in_flight():
@@ -376,10 +440,11 @@ class Controller:
                 continue
             if told["state"] == "running":
                 if status != "running":
-                    self.update(run["id"], performance={"status": "running"}, running_since=time.time())
+                    self.update(run["id"], performance={"status": "running"}, running_since=time.time(),
+                                reports_at_start=len(jobs.read_progress(self.out_dir(run), every=True)))
                 self.screen(run, view)
                 self.watch_limits(run)
-                if stopped and time.time() - stopped["t"] > 300:
+                if stopped and time.time() - stopped["t"] > self.stop_grace(run):
                     self.backend.cancel(run)
                 continue
             if told["state"] == "larger":
@@ -604,6 +669,8 @@ class Controller:
         old = View(runs, theirs.merged("models"), theirs.merged("recipes"), self.settings["objective"]["direction"],
                    self.settings["evaluation"]["noise"] or 0.0, period=max(int(r.get("period", 0)) for r in runs.values()))
         wanted = request.get("candidates") or [c["id"] for c in old.scored()[:int(request.get("top") or 3)]]
+        there = form.given((read_json(os.path.join(source, "run.json")) or {}).get("brief") or {})
+        metric, data = there.get("objective.metric"), there.get("data.name")
         done, refused = [], []
         for cand in wanted:
             blocks = read_json(os.path.join(source, "candidates", str(cand), "blocks.json"))
@@ -617,12 +684,14 @@ class Controller:
                    "allowed": {n: b["kind"] for n, b in self.designer.table.items()},
                    "source": space.full(self.designer.table, {}),
                    "proposals": [{"name": origin, "family": old.cands[cand]["family"], "hypothesis": "It did well in an earlier run.",
-                                  "change_summary": "imported from %s (its score there: %s)" % (origin, score), "blocks": blocks}]}
+                                  "change_summary": "imported from %s. %s" % (origin, study.score_there(score, metric, data)),
+                                  "blocks": blocks}]}
             run, fault = self.designer.commit(ask, view, self.settings)
             if run is None:
                 refused.append("%s: %s" % (cand, fault))
                 continue
-            run["history"].update(mode=None, imported_from={"run": source, "candidate": cand, "score_there": score})
+            run["history"].update(mode=None, imported_from={"run": source, "candidate": cand, "score_there": score,
+                                                              "metric_there": metric, "data_there": data})
             self.queue(run)
             done.append("%s as %s" % (cand, run["candidate"]))
         self.ledger({"kind": "import", "source": source, "imported": done, "refused": refused, "by": who, "reason": why,
@@ -652,7 +721,7 @@ class Controller:
                        "source": space.full(self.designer.table, {}),
                        "proposals": [{"name": "%s of %s" % (model["name"], label), "family": model["family"] or "imported",
                                       "hypothesis": "It did well in the study %s." % label,
-                                      "change_summary": "imported from the study %s (its score there: %s)" % (label, model["score"]),
+                                      "change_summary": "imported from the study %s. %s" % (label, study.score_there(model["score"], origin["metric"], origin["data"])),
                                       "blocks": space.full(self.designer.table, blocks)}]}
                 run, fault = self.designer.commit(ask, self.view(), self.settings)
             if run is not None:
@@ -869,11 +938,18 @@ class Controller:
             self.state["analysed"] = len(seen)
             self.side.append(("analyst", self.pool.submit(audit.analyse, self.store, self.agents, self.designer, view,
                                                           self.settings, since), since))
-        done = schedule.fraction_used(view, self.settings)
-        for point in form.review_points(self.settings):
-            if point < 1.0 and done >= point and point not in self.state["reviewed"]:
-                self.state["reviewed"].append(point)
-                self.review(view, "at %d%% of the budget" % round(100 * point))
+        # A review falls due when the evaluations spent pass its share of the budget. What is remembered is the
+        # number spent at the last one, not the share: when the budget is raised, the shares that now lie ahead
+        # are reviewed again.
+        spent, total = view.charged(), float(self.settings["budget"]["evaluations"] or 0)
+        if "review_at" not in self.state:      # a run from before this was kept: nothing behind it is reviewed twice
+            self.state["review_at"] = spent if self.state["reviewed"] else 0.0
+        due = [p for p in form.review_points(self.settings)
+               if p < 1.0 and total > 0 and float(self.state["review_at"]) < p * total <= spent]
+        if due:
+            self.state["review_at"] = spent
+            self.state["reviewed"].append(max(due))
+            self.review(view, "at %d%% of the budget" % round(100 * max(due)))
         asked = self.state.pop("review_now", None)
         if asked:
             self.review(view, "asked for by the person", asked if isinstance(asked, list) else None, asked=True)

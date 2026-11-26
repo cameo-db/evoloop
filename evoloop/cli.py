@@ -109,7 +109,13 @@ def parse_pairs(pairs: List[str]) -> Dict[str, Any]:
         if "=" not in pair:
             raise SystemExit("expected KEY=VALUE, got %r" % pair)
         key, value = pair.split("=", 1)
-        loaded = yaml.safe_load(value)
+        try:
+            loaded = yaml.safe_load(value)
+        except yaml.YAMLError:
+            loaded = value.strip()      # not YAML at all: the words as they were typed
+        if isinstance(loaded, dict) and not value.lstrip().startswith("{") \
+                and not isinstance(form.get(form.DEFAULTS, key.strip()), dict):
+            loaded = value.strip()      # a sentence with a colon in it ("Improve X: keep Y"), not a mapping
         if isinstance(loaded, bool) and value.strip().lower() not in ("true", "false") \
                 and not isinstance(form.flatten(form.DEFAULTS).get(key.strip()), bool):
             loaded = value.strip()   # YAML reads off, on, yes and no as booleans; here they are words
@@ -598,7 +604,8 @@ def cmd_status(args: Any) -> int:
     if snap.get("decisions_waiting"):
         out("  Waiting for your yes or no: %s (see `evoloop report`)." % ", ".join(snap["decisions_waiting"]))
     for q in snap.get("open_questions") or []:
-        out("  Question for you: %s (default: %s)" % (q.get("question"), q.get("default")))
+        out("  Question for you (%s; answer with `evoloop reply --id %s \"...\"`): %s (default: %s)" % (
+            q.get("id"), q.get("id"), q.get("question"), q.get("default")))
     for note in snap.get("notes_in_force") or []:
         out("  Note in force (%s): %s" % (note["id"], note["text"]))
     return 0
@@ -768,6 +775,19 @@ def cmd_chat(args: Any) -> int:
         if not text:
             break
         say(text)
+    return 0
+
+
+def cmd_rerun(args: Any) -> int:
+    request(args, {"kind": "rerun", "run": args.run, "keep_checkpoint": bool(args.from_checkpoint)})
+    out("requested: train %s again%s. It is refused if the design has a score or is still running; `evoloop status` "
+        "shows what was done." % (args.run, ", from its checkpoint" if args.from_checkpoint else ", from the start"))
+    return 0
+
+
+def cmd_reply(args: Any) -> int:
+    request(args, {"kind": "reply", "id": args.id, "text": args.text})
+    out("requested: %s %s" % ("answer" if args.text else "close", args.id))
     return 0
 
 
@@ -1107,6 +1127,13 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--run")
     p = add("chat", cmd_chat, "talk with the agent that runs the search (harness.conductor: agent)", named=True, by=True)
     p.add_argument("message", nargs="?", help="one message; leave it out to talk back and forth")
+    p = add("rerun", cmd_rerun, "train again a design whose run ended without a score, e.g. after repairing the evaluator",
+            named=True, by=True)
+    p.add_argument("run", metavar="RUN", help="a run id (R12) or a design id (C9)")
+    p.add_argument("--from-checkpoint", action="store_true", help="continue what the earlier run saved, not a fresh start")
+    p = add("reply", cmd_reply, "answer a question an agent asked you, or close it", named=True, by=True)
+    p.add_argument("--id", required=True, metavar="Q3")
+    p.add_argument("text", nargs="?", help="your answer; leave it out to close the question unanswered")
     p = add("rehash", cmd_rehash, "record that a change to base/ or adapter/ during a run is meant", named=True, by=True)
     p.add_argument("--moves-scores", action="store_true", help="scores before and after are not comparable: begin a new period")
     p = add("force", cmd_force, "order the next slots yourself: a mode, a kind, an instruction", named=True, by=True)
