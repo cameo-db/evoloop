@@ -798,6 +798,8 @@ class Controller:
             if forced:
                 mode = forced[0]["mode"]
                 settings = dict(settings, _forced=True)   # an ordered slot is not turned into a trial run
+            if mode in ("new", "novel") and any(m in ("new", "novel") for m in planned) and self.one_new_at_a_time(view):
+                break      # the one being written is recorded first, so that this one is shown it and differs from it
             options = None
             if settings["harness"]["coordinator"] == "agent" and not forced \
                     and not strategist.reserve_reached(self.agents, settings):
@@ -822,8 +824,22 @@ class Controller:
             free -= 1
             committed += 1
 
+    def one_new_at_a_time(self, view: View) -> bool:
+        """Whether designs from new families are written one after another. Writers at work at the same moment
+        cannot see each other's designs, and tend to arrive at the same one. Writing them in turn costs the
+        time of a writer call per design, which is nothing next to a training run of hours and too much next to
+        an evaluation of seconds: so it holds until the search has seen that a training run takes less than ten
+        writer calls."""
+        took = sorted(float(r["ended"]) - float(r["running_since"]) for r in view.runs.values()
+                      if r["performance"].get("status") in SCORED and r.get("ended") and r.get("running_since"))
+        wrote = sorted(self.state.get("write_seconds") or [])
+        if not took or not wrote:
+            return True
+        return took[len(took) // 2] >= 10.0 * wrote[len(wrote) // 2]
+
     def write(self, request: Dict[str, Any], options: Any, view: View, settings: Dict[str, Any]) -> Dict[str, Any]:
         """In a worker: the coordinator's choice when there is one, then the design."""
+        request["_began"] = time.time()
         if options and len(options) > 1:
             shadow = options.index(request)
             try:
@@ -851,6 +867,8 @@ class Controller:
                 request = future.result()
             except Exception as exc:   # a fault in the loop's own code: recorded, never silent
                 request = {"mode": mode, "move": None, "refuse": "the designer raised %s: %s" % (type(exc).__name__, exc)}
+            if request.get("_began"):      # how long a design takes to write, for `one_new_at_a_time`
+                self.state["write_seconds"] = (self.state.get("write_seconds") or [])[-19:] + [round(time.time() - request["_began"], 2)]
             try:
                 run, why = self.designer.commit(request, view, self.settings)
             except Exception as exc:   # a reply of an unexpected shape must not end the run

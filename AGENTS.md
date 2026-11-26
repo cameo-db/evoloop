@@ -51,6 +51,9 @@ Your part before the questions:
   `# EVOLVE-BLOCK-START name=... kind=structure|params role=...` and `# EVOLVE-BLOCK-END`, write `DIR/task.md`
   (what the agents are told) and `DIR/adapter/run.py` (runs one design, writes `result.json`): see
   `docs/project-contract.md`. Show the person what you marked and what the evaluator reports.
+  In `task.md`, describe the problem, the data and what the score means, and say what is known to work or fail.
+  Do not present one published model as the starting point or list only changes to it: the writers take that
+  literally and every design becomes a variant of it. Where you name ideas, name different kinds of model.
   Write the evaluator so that it resumes: the template saves its state after every step with `adapter/evojob.py`
   and continues from it when the job is started again. Keep that, and save the best weights apart from the latest
   ones, so that a step that diverges cannot cost the run its score.

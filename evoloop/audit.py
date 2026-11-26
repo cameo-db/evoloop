@@ -105,6 +105,36 @@ def scorecard(store: Store, view: View) -> Dict[str, Any]:
     return card
 
 
+def family_counts(view: View) -> List[Dict[str, Any]]:
+    counts: Dict[str, int] = {}
+    for model in view.models.values():
+        if model.get("family"):
+            counts[str(model["family"])] = counts.get(str(model["family"]), 0) + 1
+    return [{"family": f, "designs": n} for f, n in sorted(counts.items(), key=lambda item: -item[1])][:80]
+
+
+def merge_families(store: Store, view: View, labels: List[str], keep: Any, by: Any, call: Any = None) -> Optional[str]:
+    """Count several family labels as one. Every design under one of `labels` is moved to `keep`, and a design
+    written later under a merged label goes there too. Returns why nothing was done, or None. Only labels in use
+    are merged, so a mistaken name does nothing; the baseline's family is never merged away."""
+    from .design import spelled
+    used = {str(m["family"]) for m in view.models.values() if m.get("family")}
+    mine = [l for l in dict.fromkeys(labels) if l in used and l != "baseline"]
+    keep = keep if isinstance(keep, str) and keep.strip() else (mine[0] if mine else None)
+    keep = keep if keep in used else spelled(keep)
+    if len(set(mine) | {keep}) < 2 or not mine:
+        return "name at least two family labels in use"
+    for label in mine:
+        if label == keep:
+            continue
+        store.append("families", {"id": label, "as": keep, "by": by, "call": call})
+        for model in view.models.values():
+            if model.get("family") == label:
+                model["family"] = keep
+                store.append("models", {"id": model["id"], "family": keep, "family_was": label})
+    return None
+
+
 def analyse(store: Store, agents: Agents, designer: Any, view: View, settings: Dict[str, Any], since: int) -> bool:
     """The analyst's turn: lessons from the results since its last call, and questions for the person."""
     seen = [r for r in view.ended() if r["performance"].get("status") != "not_run"]
@@ -118,6 +148,7 @@ def analyse(store: Store, agents: Agents, designer: Any, view: View, settings: D
                      "valid": r["performance"].get("valid"), "reason": r["performance"].get("reason"),
                      "parent": r["history"].get("parent")} for r in runs],
         "leaderboard": [designer.summary(view, c["id"]) for c in view.scored()[:10]],
+        "families": family_counts(view),
         "lessons_so_far": [{"id": l["id"], "statement": l["statement"], "status": l["status"]}
                            for l in store.read("knowledge")][-30:]}
     if settings["variation"].get("approaches") == "evolve":
@@ -139,6 +170,9 @@ def analyse(store: Store, agents: Agents, designer: Any, view: View, settings: D
     if output.get("new_approach"):
         from . import approaches
         approaches.add(store, view, settings, [output["new_approach"]], output.get("_call"))
+    for merge in (output.get("same_family") or [])[:5] if isinstance(output.get("same_family"), list) else []:
+        if isinstance(merge, dict) and isinstance(merge.get("labels"), list):
+            merge_families(store, view, [str(l) for l in merge["labels"]], merge.get("keep"), "analyst", output.get("_call"))
     for question in output.get("questions") or []:
         if isinstance(question, dict) and question.get("question"):
             store.append("questions", {"id": "Q%d" % (len(store.read("questions")) + 1), "question": str(question["question"])[:600],

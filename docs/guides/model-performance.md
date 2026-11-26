@@ -47,7 +47,8 @@ This text is added to every call to the role named. It is taken from the skill's
     - generalisation: it fits training data and not validation data. Regularisation, augmentation, less capacity,
       weight sharing, an inductive bias that matches the data.
 
-    Make one change with one stated cause. A change that helped in one lineage is worth trying in another; a change
+    In an edit, make one change with one stated cause. A new design is not an edit: it is a different kind of
+    model, as large a departure as the slot asks for. A change that helped in one lineage is worth trying in another; a change
     that failed in two different lineages is not worth a third try without a new reason.
     Do not spend a slot on a change smaller than the noise floor can show.
 
@@ -129,7 +130,8 @@ guidance:
       the learning-rate schedule, the batch size.
     - generalisation: it fits training data and not validation data. Regularisation, augmentation, less capacity,
       weight sharing, an inductive bias that matches the data.
-    Make one change with one stated cause. A change that helped in one lineage is worth trying in another; a change
+    In an edit, make one change with one stated cause. A new design is not an edit: it is a different kind of
+    model, as large a departure as the slot asks for. A change that helped in one lineage is worth trying in another; a change
     that failed in two different lineages is not worth a third try without a new reason.
     Do not spend a slot on a change smaller than the noise floor can show.
   analyst: |

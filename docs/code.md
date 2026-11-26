@@ -125,12 +125,13 @@ The loop.
 | &nbsp;&nbsp;[`.order()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L648) | The person's order for the next slots: a mode, optionally a kind of crossover or local move, and optionally an instruction the writers of those slots must follow. |
 | &nbsp;&nbsp;[`.import_designs()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L661) | Designs from an earlier run, fitted here as designs of this run. |
 | &nbsp;&nbsp;[`.import_study()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L700) | Designs from a study file (the CAMEO format this loop also writes). |
-| &nbsp;&nbsp;[`.write()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L825) | In a worker: the coordinator's choice when there is one, then the design. |
-| &nbsp;&nbsp;[`.take_decisions()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L1016) | The decisions of one meeting, each refused, applied, or held for the person. |
-| &nbsp;&nbsp;[`.anchor()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L1032) | The settings without what the strategist changed by itself: where the person last left them. |
-| &nbsp;&nbsp;[`.answer()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L1084) | The person's yes or no to a decision that was held for them. |
-| &nbsp;&nbsp;[`.set_lineage()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L1115) | The person retires a lineage or brings one back: the same entry the strategist writes, in their name. |
-| &nbsp;&nbsp;[`.review()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L1123) | A review of the agents. |
+| &nbsp;&nbsp;[`.one_new_at_a_time()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L827) | Whether designs from new families are written one after another. |
+| &nbsp;&nbsp;[`.write()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L840) | In a worker: the coordinator's choice when there is one, then the design. |
+| &nbsp;&nbsp;[`.take_decisions()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L1034) | The decisions of one meeting, each refused, applied, or held for the person. |
+| &nbsp;&nbsp;[`.anchor()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L1050) | The settings without what the strategist changed by itself: where the person last left them. |
+| &nbsp;&nbsp;[`.answer()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L1102) | The person's yes or no to a decision that was held for them. |
+| &nbsp;&nbsp;[`.set_lineage()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L1133) | The person retires a lineage or brings one back: the same entry the strategist writes, in their name. |
+| &nbsp;&nbsp;[`.review()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L1141) | A review of the agents. |
 
 ## `schedule.py` { #m-schedule-py }
 
@@ -242,15 +243,18 @@ From a request to a design that can be run.
 
 | Name | What it does |
 |---|---|
-| [`class Designer`](https://github.com/cameo-db/evoloop/blob/main/evoloop/design.py#L38) |  |
-| &nbsp;&nbsp;[`.distance()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/design.py#L78) | How far a design's model is from the nearest model already tried: 0 the same code, 1 nothing shared. |
-| &nbsp;&nbsp;[`.gene()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/design.py#L164) | The change that gained most in the donor's lineage: a recorded, measured difference. |
-| &nbsp;&nbsp;[`.propose()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/design.py#L259) | Runs in a worker. |
-| &nbsp;&nbsp;[`.estimated()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/design.py#L315) | A settings move drawn by the estimator (`variation.settings_by: tpe`): every open setting at once. |
-| &nbsp;&nbsp;[`.changed()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/design.py#L339) | The blocks a proposal changes: those it gives in full, and those it edits by find-and-replace. |
-| &nbsp;&nbsp;[`.commit()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/design.py#L358) | The run record of the chosen proposal, or (None, why nothing can be run). |
-| &nbsp;&nbsp;[`.baseline()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/design.py#L442) | The base code as it stands, as the first design. |
-| &nbsp;&nbsp;[`.again()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/design.py#L455) | A further run of an existing design: another seed for a re-check, or the same design under a new setting of the run length (a reference for the new period). |
+| [`spelled(label)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/design.py#L39) | A family label as it is kept: lower case, words joined by hyphens. |
+| [`family_key(label)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/design.py#L44) | What makes two labels the same family whatever their spelling: -ise read as -ize, plurals as singulars, words in any order. |
+| [`same_family(label, known, merged)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/design.py#L51) | The label a design's family is recorded under: an existing label when the writer's is that label in another spelling, the label the analyst or the person merged it into, else the writer's own. |
+| [`class Designer`](https://github.com/cameo-db/evoloop/blob/main/evoloop/design.py#L61) |  |
+| &nbsp;&nbsp;[`.distance()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/design.py#L101) | How far a design's model is from the nearest model already tried: 0 the same code, 1 nothing shared. |
+| &nbsp;&nbsp;[`.gene()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/design.py#L187) | The change that gained most in the donor's lineage: a recorded, measured difference. |
+| &nbsp;&nbsp;[`.propose()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/design.py#L302) | Runs in a worker. |
+| &nbsp;&nbsp;[`.estimated()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/design.py#L358) | A settings move drawn by the estimator (`variation.settings_by: tpe`): every open setting at once. |
+| &nbsp;&nbsp;[`.changed()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/design.py#L382) | The blocks a proposal changes: those it gives in full, and those it edits by find-and-replace. |
+| &nbsp;&nbsp;[`.commit()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/design.py#L401) | The run record of the chosen proposal, or (None, why nothing can be run). |
+| &nbsp;&nbsp;[`.baseline()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/design.py#L488) | The base code as it stands, as the first design. |
+| &nbsp;&nbsp;[`.again()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/design.py#L501) | A further run of an existing design: another seed for a re-check, or the same design under a new setting of the run length (a reference for the new period). |
 
 ## `agents.py` { #m-agents-py }
 
@@ -260,12 +264,12 @@ The agent roles, and the one way they are called.
 
 | Name | What it does |
 |---|---|
-| [`class AgentError`](https://github.com/cameo-db/evoloop/blob/main/evoloop/agents.py#L199) |  |
-| [`class AgentsUnavailable`](https://github.com/cameo-db/evoloop/blob/main/evoloop/agents.py#L203) | No call can be made now: the spend cap is reached, or the account's limit refused a call. |
-| [`class Agents`](https://github.com/cameo-db/evoloop/blob/main/evoloop/agents.py#L234) |  |
-| &nbsp;&nbsp;[`.available()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/agents.py#L271) | Why no call can be made now, or None. |
-| &nbsp;&nbsp;[`.draw_writer()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/agents.py#L286) | The model for one writer call when several write (`agents.writer_mix`): by counting, so the realised shares follow the shares set, whatever the order the calls come in. |
-| [`spend(store)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/agents.py#L379) | Agent cost by role: calls, dollars, seconds, failures. |
+| [`class AgentError`](https://github.com/cameo-db/evoloop/blob/main/evoloop/agents.py#L210) |  |
+| [`class AgentsUnavailable`](https://github.com/cameo-db/evoloop/blob/main/evoloop/agents.py#L214) | No call can be made now: the spend cap is reached, or the account's limit refused a call. |
+| [`class Agents`](https://github.com/cameo-db/evoloop/blob/main/evoloop/agents.py#L245) |  |
+| &nbsp;&nbsp;[`.available()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/agents.py#L282) | Why no call can be made now, or None. |
+| &nbsp;&nbsp;[`.draw_writer()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/agents.py#L297) | The model for one writer call when several write (`agents.writer_mix`): by counting, so the realised shares follow the shares set, whatever the order the calls come in. |
+| [`spend(store)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/agents.py#L390) | Agent cost by role: calls, dollars, seconds, failures. |
 
 ## `space.py` { #m-space-py }
 
@@ -549,8 +553,10 @@ Auditing the agents, like reviewing a consulting group.
 | [`spearman(pairs)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/audit.py#L24) |  |
 | [`forecasts(view)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/audit.py#L41) | Each writer forecast beside what came about, in noise floors against the same reference. |
 | [`scorecard(store, view)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/audit.py#L63) |  |
-| [`analyse(store, agents, designer, view, settings, since)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/audit.py#L108) | The analyst's turn: lessons from the results since its last call, and questions for the person. |
-| [`review(store, agents, view, settings, why, only)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/audit.py#L149) | The assessor's review of each role, written for the person. |
+| [`family_counts(view)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/audit.py#L108) |  |
+| [`merge_families(store, view, labels, keep, by, call)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/audit.py#L116) | Count several family labels as one. |
+| [`analyse(store, agents, designer, view, settings, since)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/audit.py#L138) | The analyst's turn: lessons from the results since its last call, and questions for the person. |
+| [`review(store, agents, view, settings, why, only)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/audit.py#L183) | The assessor's review of each role, written for the person. |
 
 ## `report.py` { #m-report-py }
 

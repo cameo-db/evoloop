@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import random
 import time
 from typing import Any, Dict, List, Optional, Tuple
@@ -21,7 +22,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from . import approaches, space, tpe
 from .agents import AgentError, Agents
 from .schedule import phase_at, fraction_used
-from .store import Store, View, read_json, write_json
+from .store import ENDED, Store, View, read_json, write_json
 
 LOCAL_NAMES = {"edit": "structural_change", "settings": "settings_move", "ablation": "ablation"}
 INSTRUCTIONS = {
@@ -33,6 +34,28 @@ INSTRUCTIONS = {
     "graft": "Apply the one change shown in `gene` to the first parent, adapted to fit, and change nothing else.",
     "hybrid": "Write one design from the two parents; say in `parts_from` which parts came from each.",
 }
+
+
+def spelled(label: Any) -> str:
+    """A family label as it is kept: lower case, words joined by hyphens."""
+    return re.sub(r"[^a-z0-9]+", "-", str(label or "").lower()).strip("-") or "unlabelled"
+
+
+def family_key(label: Any) -> str:
+    """What makes two labels the same family whatever their spelling: -ise read as -ize, plurals as singulars,
+    words in any order. `factorised output heads` and `output-head-factorized` have one key."""
+    words = [re.sub(r"is(e|ed|es|er|ing|ation)$", r"iz\1", w) for w in spelled(label).split("-")]
+    return "-".join(sorted(w[:-1] if len(w) > 3 and w.endswith("s") and not w.endswith("ss") else w for w in words))
+
+
+def same_family(label: Any, known: List[str], merged: Dict[str, str]) -> str:
+    """The label a design's family is recorded under: an existing label when the writer's is that label in another
+    spelling, the label the analyst or the person merged it into, else the writer's own."""
+    label = spelled(label)
+    keys = {family_key(old): new for old, new in merged.items()}
+    for name in known:
+        keys.setdefault(family_key(name), name)
+    return keys.get(family_key(label), label)
 
 
 class Designer:
@@ -195,11 +218,30 @@ class Designer:
         if "%s" in instruction:
             instruction = instruction % request.get("step", "normal")
         ranked = view.scored()
+        # Every family tried, whatever became of its designs: one that only failed, or is still in training, has
+        # been tried too, and a writer who cannot see it will propose it again.
         families: Dict[str, Dict[str, Any]] = {}
-        for cand in ranked:
-            row = families.setdefault(str(cand["family"]), {"family": cand["family"], "designs": 0,
-                                                            "best": view.display(cand["value"])})
+        in_training = []
+        for cand in sorted(view.cands.values(), key=lambda c: c["order"]):
+            first = cand["first"]
+            if not first.get("candidate") or first.get("purpose") == "baseline":
+                continue
+            row = families.setdefault(str(cand["family"]), {"family": cand["family"], "designs": 0, "scored": 0, "failed": 0,
+                                                            "in_training": 0, "best": None})
             row["designs"] += 1
+            going = any((view.runs[r].get("performance") or {}).get("status") not in ENDED for r in cand["runs"])
+            if cand["value"] is not None:
+                row["scored"] += 1
+                if row["best"] is None or cand["value"] > view.sign * row["best"]:
+                    row["best"] = view.display(cand["value"])
+            elif going:
+                row["in_training"] += 1
+                in_training.append({"candidate": cand["id"], "family": cand["family"], "mode": first["history"].get("mode"),
+                                    "name": (view.models.get(cand["model"]) or {}).get("name"),
+                                    "change": first["history"].get("change_summary"),
+                                    "hypothesis": first["history"].get("hypothesis")})
+            elif cand["provisional"] is None:
+                row["failed"] += 1
         recent = []
         for run in sorted(view.ended(), key=lambda r: r["t"] if "t" in r else 0)[-(4 if level == "minimal" else 10):]:
             perf = run["performance"]
@@ -227,7 +269,8 @@ class Designer:
             "parents": [dict(self.summary(view, p), blocks=shown(self.blocks(p))) for p in parents],
             "starting_blocks": shown(request["source"]) if not parents else None,
             "leaderboard": [self.summary(view, c["id"]) for c in ranked[:(5 if level == "minimal" else 12)]],
-            "families": sorted(families.values(), key=lambda f: -f["designs"])[:40],
+            "families": sorted(families.values(), key=lambda f: -f["designs"])[:60],
+            "in_training": in_training[-30:],
             "recent": recent,
         }
         if request.get("inspirations"):
@@ -396,6 +439,9 @@ class Designer:
         parent_model = view.cands[parents[0]]["model"] if parents else None
         family = proposal.get("family") if isinstance(proposal.get("family"), str) and proposal.get("family") else (
             view.cands[parents[0]]["family"] if parents else "unlabelled")
+        # One family, one label: a label that differs from an existing one only in spelling is that family.
+        family = same_family(family, sorted({str(m["family"]) for m in view.models.values() if m.get("family")}),
+                             {old: row["as"] for old, row in self.store.merged("families").items() if row.get("as")})
         for field in ("name", "hypothesis", "predicted_effect", "change_summary"):   # free text, whatever the writer sent
             if proposal.get(field) is not None and not isinstance(proposal[field], str):
                 proposal[field] = str(proposal[field])[:400]

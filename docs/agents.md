@@ -7,8 +7,8 @@ called and what it is sent. Roles never call each other.
 
 | Role | Required | Called | Sent | Returns |
 |---|---|---|---|---|
-| writer | required | for each design that is not made in code | your `task.md`, the parents' code, the top of the leaderboard, the last 10 results, the analyst's lessons, your notes | one or more proposals: new code for the marked blocks, a hypothesis, a forecast of the gain |
-| analyst | optional, on by default | every 8 finished designs | results since its last call, the leaderboard, earlier lessons | lessons, each citing runs. A lesson counts as supported only if its evidence spans two lineages |
+| writer | required | for each design that is not made in code | your `task.md`, the parents' code, the top of the leaderboard, the last 10 results, every family tried, the designs in training, the analyst's lessons, your notes | one or more proposals: new code for the marked blocks, a hypothesis, a forecast of the gain |
+| analyst | optional, on by default | every 8 finished designs | results since its last call, the leaderboard, the family labels in use, earlier lessons | lessons, each citing runs. A lesson counts as supported only if its evidence spans two lineages. It may also merge family labels that name one kind of design |
 | strategist | optional, on in most run types | every 15 scored designs, and on a plateau | figures worked out by code: gains by kind of move, diversity, budget left, its own earlier decisions | up to two decisions from a fixed list. Code checks each against your bounds before applying it |
 | coordinator | optional, off by default | every slot | the kinds of move possible now, with the parents code would use for each | one of those options |
 | assessor | optional, on by default | at points you choose | each role's calls, with what happened afterwards | a written review of each role, for you |
@@ -22,6 +22,26 @@ over hyperparameters alone can run with no agent at all, using the
 
 The *controller* is not an agent. It is the Python process that runs the search. The *conductor* is
 the strategist when you have chosen to talk to it with `evoloop chat`.
+
+## What a writer sees of other designs
+
+A writer that cannot see a design will propose it again, so the writer is shown more than the designs
+that scored.
+
+- Every family tried is listed with how many of its designs scored, failed or are still in training. A
+  family whose designs all failed is a family tried.
+- The designs in training are listed with their names and what each changed. They have no score yet,
+  and they are the ones a new proposal is most likely to repeat.
+- Writers at work at the same moment cannot see each other's designs. Designs from new families are
+  therefore written one after another, each shown the one before it. This costs one writer call of
+  waiting per design, which is nothing next to a training run of hours. Once the search has seen that
+  a training run takes less than ten writer calls, as with a fast evaluator, they are written in
+  parallel again. Edits and crossovers are always written in parallel, since each has its own parent.
+
+A design's family is the label its writer gave it. Labels are kept in one spelling (`Factorised
+Output_Head` and `output-head-factorized` are one family), the writer is asked to reuse the labels in
+the list, and the analyst can merge two labels that name the same kind of design. The family is what
+the archive strategy uses as a cell and what "a family the search has not covered" refers to.
 
 ## Autonomy levels
 

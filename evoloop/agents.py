@@ -45,8 +45,12 @@ WRITER = """## Your role: writer
 
 You write designs. The request names the kind of slot:
 
-- mode `new`: a fresh design from a family the search has not covered. Use `families` and `thin_cells` to see what \
-is missing, and aim there.
+- mode `new`: a fresh design from a family the search has not covered. `families` lists every family tried, with \
+how many of its designs scored, failed or are still in training, and `in_training` lists the designs being trained \
+now, which have no score yet. A family is covered once it is in `families`, whatever became of its designs. Use \
+these and `thin_cells` to see what is missing, and aim there. A new design is a different kind of model or method, \
+not the leader or the starting code with one part changed: `starting_blocks` show what the blocks must provide, and \
+are not a design to stay close to.
 - mode `novel`: a design unlike anything tried. You are shown `inspirations`: designs that were rarely built on. \
 Build from them or against them; do not return a variant of the leader.
 - in mode `new` or `novel` you may also be shown `designs_from_other_studies`: designs that did well in another \
@@ -71,8 +75,10 @@ Rules, and why:
 - Return the FULL new contents of each block you change and omit the others; an omitted block is taken from the \
 first parent (or, with no parent, from the current leader, so that a new design runs with settings already found).
 - A `params` block is exactly one assignment of a dict literal of numbers, booleans or strings.
-- Do not repeat a design in `leaderboard` or `recent`; an exact copy is refused unrun.
-- Give `family`: a short label for the kind of approach, reused only when the approach really is of that kind.
+- Do not repeat a design in `leaderboard`, `recent` or `in_training`; an exact copy is refused unrun. A design in \
+training will have its score soon: do not spend a slot on the same idea in other words.
+- Give `family`: the label of the kind of approach. When your design is of a kind already in `families`, use that \
+label exactly as it is written there. Give a new label, two or three plain words, only for a kind that is not there.
 - Give `expected_gain`: `gain` is how many noise floors above (positive) or below the reference you expect this to \
 score, your honest middle estimate; `probability_better` is your chance, 0 to 1, that it beats the reference. The \
 reference is the parent, or the leader when there is no parent. These are scored against the result.
@@ -103,9 +109,14 @@ written under it did (`none` is no approach). If the results suggest a way of wo
 add ONE under `new_approach`: a short instruction on how to go about designing (what to look at, what to change \
 first, what to avoid), not a particular design. Leave it null when nothing suggests one.
 
+`families` lists the family labels in use, with how many designs each has. The writers choose the labels, and \
+sometimes name one kind of approach in two ways. Where two or more labels name the same kind of approach, list them \
+under `same_family` with the one label to keep; they are then counted as one family. Merge only labels that mean \
+the same thing: families that differ in kind stay apart. Leave the list empty when there is nothing to merge.
+
 Output: {"reasoning": "...", "note": "...", "followed_notes": [], "lessons": [{"statement": "...", \
 "status": "supported | tentative", "evidence": ["R3", "R9"]}], "questions": [{"question": "...", "default": "..."}], \
-"new_approach": null}"""
+"new_approach": null, "same_family": [{"labels": ["label one", "label two"], "keep": "label one"}]}"""
 
 COORDINATOR = """## Your role: coordinator
 
