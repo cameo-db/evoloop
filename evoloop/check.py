@@ -83,7 +83,8 @@ def run(folder: str, wait: float = 1800.0, say: Callable[[str], None] = print, p
         say("Its files are in %s." % root)
         return found
 
-    say("Evaluator check for %s: one training run of the code as it stands, interrupted on purpose. Nothing is charged." % folder)
+    say("Evaluator check for %s" % folder)
+    say("One training run of the code as it stands, interrupted on purpose. Nothing is charged.")
     began = time.time()
     start()
     # A report with a step above zero: something has been trained, so there is something to lose and to resume.

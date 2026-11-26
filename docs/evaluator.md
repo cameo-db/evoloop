@@ -143,7 +143,8 @@ purpose. After the first progress report the job is killed, as a preemption woul
 again. Then it is asked to stop.
 
 ```
-Evaluator check for mysearch: one training run of the code as it stands, interrupted on purpose. Nothing is charged.
+Evaluator check for mysearch
+One training run of the code as it stands, interrupted on purpose. Nothing is charged.
   started               reported step 1 after 212 s
   killed and restarted  went on at step 2 (it had reached step 1): it resumes
   asked to stop         ended 190 s later with a score of 0.412
