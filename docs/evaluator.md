@@ -54,67 +54,89 @@ level and your `adapter/` folder beside them, which is why `import train` works.
 ## Full example
 
 Reporting progress lets the search stop a weak design part way. Reporting the parameter count and a
-held-out score puts them on the leaderboard and lets limits use them.
+held-out score puts them on the leaderboard and lets limits use them. Saving its state after every
+epoch lets the run continue when its job is ended early.
+
+`evojob.py` is a small file with no dependencies that `evoloop init` puts beside the evaluator. It
+reads the variables, writes the progress lines and the result, and keeps the state.
 
 ```python
-"""adapter/run.py: train one design, report progress, and write its score."""
-import json
+"""adapter/run.py: train one design, report progress, resume after an interruption, write its score."""
 import os
 import sys
 
 sys.path.insert(0, os.getcwd())
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import torch
+import evojob
 import model
 import train
 
-out, checkpoints = os.environ["EVO_OUT_DIR"], os.environ["EVO_CHECKPOINT_DIR"]
-os.makedirs(out, exist_ok=True)
-os.makedirs(checkpoints, exist_ok=True)
-epochs = int(float(os.environ["EVO_ALLOWANCE"]))
-torch.manual_seed(int(os.environ["EVO_SEED"]))
+job = evojob.Job()
+torch.manual_seed(job.seed)
 
 net = model.build()
+optimizer = train.optimizer(net)
 data = train.loaders()
 parameters = sum(p.numel() for p in net.parameters())
-best_path = os.path.join(checkpoints, "best.pt")
 
+state = job.load_state() or {"epoch": 0, "best": None, "best_epoch": 0}
+if state["epoch"] > 0:  # started again: go on from the last finished epoch
+    saved = torch.load(job.path("last.pt"))
+    net.load_state_dict(saved["net"])
+    optimizer.load_state_dict(saved["optimizer"])
 
-def stop_requested():
-    try:
-        with open(os.path.join(out, "control.json")) as handle:
-            return json.load(handle).get("action") == "stop"
-    except (OSError, ValueError):
-        return False
+for epoch in range(state["epoch"] + 1, int(job.allowance) + 1):
+    train.one_epoch(net, optimizer, data["train"])
+    val = train.evaluate(net, data["val"])  # the number the search optimizes
+    job.report(epoch, val, parameters=parameters)
+    finite = val == val and abs(val) != float("inf")
+    if finite and (state["best"] is None or val > state["best"]):
+        state.update(best=val, best_epoch=epoch)
+        torch.save(net.state_dict(), job.path("best.pt"))
+    torch.save({"net": net.state_dict(), "optimizer": optimizer.state_dict()}, job.path("last.pt"))
+    state["epoch"] = epoch
+    job.save_state(state)  # after the weights, so it never points past them
+    if not finite or job.should_stop():  # diverged, or the search asked this run to end
+        break
+    if job.out_of_time():  # the time limit is near, or the job was told to end
+        job.pause()  # submitted again; continues from here
 
-
-best, best_epoch, epoch = None, 0, 0
-with open(os.path.join(out, "progress.jsonl"), "a") as progress:
-    for epoch in range(1, epochs + 1):
-        train.one_epoch(net, data["train"])
-        val = train.evaluate(net, data["val"])           # the number the search optimizes
-        if best is None or val > best:
-            best, best_epoch = val, epoch
-            torch.save(net.state_dict(), best_path)
-        progress.write(json.dumps({"step": epoch, "metric": val, "parameters": parameters}) + "\n")
-        progress.flush()
-        if stop_requested():
-            break
-
-net.load_state_dict(torch.load(best_path))
-result = {
-    "valid": True,
-    "score": best,                                       # on validation data
-    "parameters": parameters,
-    "best_epoch": best_epoch,
-    "epochs_run": epoch,
-    "diagnostics": {"hidden": {"test": train.evaluate(net, data["test"])}},   # never shown to an agent
-}
-with open(os.path.join(out, "result.json"), "w") as handle:
-    json.dump(result, handle)
+net.load_state_dict(torch.load(job.path("best.pt")))
+job.finish(
+    score=state["best"],  # on validation data
+    parameters=parameters,
+    best_epoch=state["best_epoch"],
+    epochs_run=state["epoch"],
+    diagnostics={"hidden": {"test": train.evaluate(net, data["test"])}},  # never shown to an agent
+)
 ```
 
-The demo's evaluator does the same in NumPy and is known to run:
+The best weights are saved apart from the latest ones, so an epoch that diverges does not cost the run
+the score it had reached.
+
+## Interruptions
+
+A job can end before its training run is done: it reaches its time limit, the cluster preempts it, or
+a node fails. evoloop then starts the run again, uncharged, in the same checkpoint folder. The example
+above continues from its last finished epoch, so an interruption costs one epoch at most.
+
+That is also what lets a search ask for short jobs. A job with a four-hour limit starts sooner on a
+busy cluster than one with a two-day limit, and a run that needs twenty hours becomes five jobs in a
+row. `job.out_of_time()` is true when the limit is closer than one more epoch would take, and
+`job.pause()` leaves cleanly before the scheduler has to kill the job.
+
+A run is started again for as long as each start gets further than the last. A run that is ended
+several times in a row at the same step is recorded as failed, which is what happens to an evaluator
+that starts over when the time limit is shorter than its training run.
+[Getting GPUs](servers.md#getting-gpus) · [Evaluator interface](project-contract.md#exit-codes)
+
+To test it by hand, run the evaluator as in [Testing by hand](#testing-by-hand), interrupt it after an
+epoch, and run the same command again with `EVO_RESTART_COUNT=1`: it should go on from the epoch it
+had reached.
+
+The demo's evaluator writes the files itself, without `evojob.py`, and is known to run:
 `evoloop/examples/tiny_classifier/adapter/run.py`.
 
 ## Working directory

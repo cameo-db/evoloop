@@ -32,33 +32,55 @@ else of your code.
 
 ADAPTER = '''"""How one design is run. Started in a working copy of base/ with the design's blocks spliced in.
 
-Reads EVO_OUT_DIR, EVO_SEED, EVO_ALLOWANCE, EVO_CHECKPOINT_DIR (and EVO_CONTINUE_FROM, when the run is to
-continue an earlier checkpoint); writes result.json; may append to progress.jsonl and read control.json."""
-import json
+It trains one design and writes its score. It also saves its state after every step and picks it up when it
+is started again, so a job that reaches its time limit or is preempted costs one step, not the run, and the
+search can ask for short jobs. `evojob.py`, beside this file, does the bookkeeping; replace each TODO."""
 import os
+import sys
 
-out = os.environ["EVO_OUT_DIR"]
-seed = int(os.environ.get("EVO_SEED", "0"))
-allowance = float(os.environ["EVO_ALLOWANCE"])
+sys.path.insert(0, os.getcwd())          # the job's working copy of your code
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-# TODO: call the project's own training here, for `allowance` of its unit, with `seed`.
-# During training, report progress so that weak new designs can be stopped part way:
-#   {"step": n, "metric": validation_score}  appended to progress.jsonl, then read control.json and stop
-#   promptly, still writing the result, if it says {"action": "stop"}.
+import evojob
 
-result = {
-    "valid": False,                      # True when the run produced a score
-    "score": None,                       # the number the search optimizes (validation)
-    "diagnostics": {                     # numbers here are shown to the agents...
+job = evojob.Job()                       # job.seed, job.allowance, job.out, job.checkpoints, job.restarts
+state = job.load_state() or {"step": 0, "best": None, "best_step": 0}
+
+# TODO: build the model and the data here, seeded with job.seed.
+# TODO: if state["step"] > 0, load the weights, the optimizer and the schedule from job.path("last.pt").
+
+for step in range(state["step"] + 1, int(job.allowance) + 1):
+    # TODO: train for one step of your unit (an epoch, or a block of updates) and compute the validation score.
+    val = None
+
+    job.report(step, val)                # progress: weak designs are stopped part way, and the status shows it
+    better = val is not None and val == val and (state["best"] is None or val > state["best"])   # for lower is better: <
+    if better:
+        state.update(best=val, best_step=step)
+        # TODO: save the weights to job.path("best.pt"). A later step that diverges must not overwrite them.
+    # TODO: save the weights, the optimizer and the schedule to job.path("last.pt").
+    state["step"] = step
+    job.save_state(state)                # after the weights, so the state never points past them
+
+    if val is None or val != val:        # the loss is no longer a number: stop, and keep the best step
+        break
+    if job.should_stop():                # the search asked this run to end: score the best step so far
+        break
+    if job.out_of_time():                # the time limit is near, or the job was told to end
+        job.pause()                      # leaves; the run is submitted again and continues from here
+
+# TODO: load job.path("best.pt") and compute the test evaluations with it.
+job.finish(
+    score=state["best"],                 # the number the search optimizes (validation)
+    diagnostics={                        # numbers here are shown to the agents...
         "hidden": {},                    # ...except this part: put test-set results here
     },
-    "parameters": None,                  # trainable parameter count
-    "signature": None,                   # optional: a list of numbers saying where this model's errors fall
-    "inference_speed": None,             # optional: {"examples_per_s": n}
-    "captured": {},                      # optional: {"environment": {...}, "training": {"loss": ..., ...}} read
-}                                        # from the objects the script built, for the study file
-with open(os.path.join(out, "result.json"), "w") as handle:
-    json.dump(result, handle)
+    parameters=None,                     # trainable parameter count
+    best_epoch=state["best_step"], epochs_run=state["step"],
+    signature=None,                      # optional: a list of numbers saying where this model's errors fall
+    inference_speed=None,                # optional: {"examples_per_s": n}
+    captured={},                         # optional: {"environment": {...}, "training": {"loss": ..., ...}} read
+)                                        # from the objects the script built, for the study file
 '''
 
 
@@ -114,7 +136,8 @@ def cmd_init(args: Any) -> int:
         os.makedirs(os.path.join(folder, "adapter"))
         with open(os.path.join(folder, "adapter", "run.py"), "w", encoding="utf-8") as handle:
             handle.write(ADAPTER)
-        made.append("adapter/run.py")
+        shutil.copy(os.path.join(os.path.dirname(os.path.abspath(__file__)), "evojob.py"), os.path.join(folder, "adapter", "evojob.py"))
+        made.append("adapter/run.py, adapter/evojob.py")
     out("made: %s" % (", ".join(made) or "nothing (all present)"))
     out("next: mark the blocks in base/ (EVOLVE-BLOCK-START name=... kind=structure|params role=...), write task.md and "
         "adapter/run.py, then `evoloop brief %s`" % args.dir)
@@ -850,16 +873,16 @@ CONTROLLER = '''#!/bin/bash
 #SBATCH --output={log}
 #SBATCH --open-mode=append
 #SBATCH --requeue
-#SBATCH --cpus-per-task=2
-#SBATCH --mem=4G
+#SBATCH --cpus-per-task={cpus}
+#SBATCH --mem={mem}G
 #SBATCH --time={time}
 #SBATCH --signal=B:USR1@180
 {extra}
-# The controller of the search {name}. It is light: it follows the training jobs, which are jobs of their own and
-# go on whatever happens to this one. Shortly before its time limit Slurm signals it; it then stops cleanly and
-# puts itself back in the queue, and when it starts again it finds its jobs by their ids. It requeues itself
-# only then, never after ending by itself (budget spent, paused, stalled) and never after a crash.
+# The controller of the search {name}. {what}
+# Shortly before its time limit Slurm signals it; it then stops cleanly and puts itself back in the queue. It
+# requeues itself only then, never after ending by itself (budget spent, paused, stalled) and never after a crash.
 {setup}
+{deadline}
 requeue() {{
   kill -TERM "$child" 2>/dev/null; wait "$child"
   echo "[controller] time limit near: requeueing"; scontrol requeue "$SLURM_JOB_ID"
@@ -873,13 +896,38 @@ wait "$child"
 
 def cmd_controller(args: Any) -> int:
     """A Slurm job script that runs the search and requeues itself at its time limit."""
+    from . import jobs, site as sites
     folder = os.path.abspath(args.dir)
     path = args.out or os.path.join(folder, "run_controller_%s.sbatch" % args.name)
-    extra = ["#SBATCH --partition=%s" % args.partition] if args.partition else []
-    extra += ["#SBATCH --qos=%s" % args.qos] if args.qos else []
-    text = CONTROLLER.format(name=args.name, log=os.path.join(folder, "controller_%s.log" % args.name), time=args.time,
-                             extra="\n".join(extra), setup="\n".join(args.setup or []), python=args.python or sys.executable,
-                             dir=shlex.quote(folder))
+    compute = form.resolve(form.load_brief(folder), folder=folder)[0]["compute"] if os.path.exists(os.path.join(folder, "brief.yaml")) else {}
+    block = jobs.in_block(compute)
+    partition, qos = args.partition, args.qos
+    cpus, mem, setup = 2, 4, list(args.setup or [])
+    limit = args.time or (compute["time_limit"] if block else "1-00:00:00")
+    extra = []
+    what = ("It is light: it follows the training jobs, which are jobs of their own and go on whatever happens to this "
+            "one.\n# When it starts again it finds them by their ids.")
+    if block:
+        # One job holds every GPU and the designs run inside it, each on a GPU of its own.
+        many = int(compute["gpus"] or 1)
+        each = int(compute.get("gpus_per_job") or 0)
+        partition = partition or compute.get("partition")
+        qos = qos or (sites.names_of(compute["qos"]) or [None])[0]
+        cpus, mem = 2 + many * int(compute["cpus_per_job"]), 4 + many * int(compute["mem_gb"])
+        if each:
+            extra.append("#SBATCH --gres=gpu:%s%d" % ("%s:" % compute["gpu_type"] if compute.get("gpu_type") else "", many * each))
+        extra += ["#SBATCH %s" % line for line in compute.get("extra_sbatch") or []]
+        setup = list(compute.get("setup") or []) + setup
+        what = ("This job holds the %d GPU%s of the search, and the designs train inside it.\n# When it is put back in the "
+                "queue the designs in training stop with it, and continue from their checkpoints when it starts again."
+                % (many * each, "" if many * each == 1 else "s"))
+    extra = (["#SBATCH --partition=%s" % partition] if partition else []) + (["#SBATCH --qos=%s" % qos] if qos else []) + extra
+    seconds = jobs.seconds(limit)
+    # Designs that train inside this job are told when it ends, with time left to save and for the requeue.
+    deadline = "export EVO_DEADLINE=$(( $(date +%%s) + %d ))" % max(60, seconds - 240) if block and seconds else ""
+    text = CONTROLLER.format(name=args.name, log=os.path.join(folder, "controller_%s.log" % args.name), time=limit,
+                             extra="\n".join(extra), setup="\n".join(setup), python=args.python or sys.executable,
+                             dir=shlex.quote(folder), cpus=cpus, mem=mem, what=what, deadline=deadline)
     with open(path, "w", encoding="utf-8") as handle:
         handle.write(text)
     out("wrote %s" % path)
@@ -1038,7 +1086,7 @@ def build_parser() -> argparse.ArgumentParser:
     p = add("controller", cmd_controller, "write a Slurm job script that runs the search and requeues itself", named=True)
     p.add_argument("--partition")
     p.add_argument("--qos")
-    p.add_argument("--time", default="1-00:00:00")
+    p.add_argument("--time", help="the job's time limit (default 1-00:00:00; for a block of GPUs, compute.time_limit)")
     p.add_argument("--python")
     p.add_argument("--setup", action="append", metavar="LINE", help="a shell line to run first, e.g. activating an environment")
     p.add_argument("--out", metavar="FILE")

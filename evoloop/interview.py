@@ -135,9 +135,28 @@ QUESTIONS: List[Dict[str, Any]] = [
      "why": "The number of training jobs kept running: on a workstation usually its number of GPUs, on a cluster "
             "your share of the queue."},
     {"field": "compute.scheduler", "section": "Compute", "title": "Where jobs run", "kind": "choice",
-     "question": "Where do the training jobs run?", "why": "On a cluster each run is its own job.",
-     "choices": [{"value": "local", "label": "local", "description": "Processes on this machine."},
-                 {"value": "slurm", "label": "slurm", "description": "Each run its own Slurm job, requeued if preempted."}]},
+     "question": "Where do the training jobs run?", "why": "On a cluster the jobs go through its scheduler.",
+     "choices": [{"value": "local", "label": "local", "description": "Processes on this machine, each given its own GPU."},
+                 {"value": "slurm", "label": "slurm", "description": "Jobs submitted to Slurm."}]},
+    {"field": "compute.allocation", "section": "Compute", "title": "How GPUs are obtained", "kind": "choice",
+     "question": "Should each design be its own job, or should one job hold all the GPUs?",
+     "why": "A small job starts sooner than a large one, so one job per design usually gets more GPU time out of a "
+            "shared cluster. A block suits a reservation or a machine you have to yourself.",
+     "choices": [{"value": "per_design", "label": "one job per design",
+                  "description": "Each design is submitted as a GPU comes free. The search uses whatever the cluster has "
+                                 "free, up to the number of jobs at once."},
+                 {"value": "block", "label": "one block of GPUs",
+                  "description": "One job holds every GPU for the whole search and the designs run inside it. Nothing "
+                                 "waits in the queue between designs, but the job is harder to schedule, and its GPUs "
+                                 "are held while designs are being written."}],
+     "when": {"compute.scheduler": ["slurm"]}},
+    {"field": "compute.time_limit", "section": "Compute", "title": "Time limit of a job", "kind": "text",
+     "question": "What time limit should each job ask for?",
+     "why": "Passed to sbatch, as in 4:00:00 or 1-00:00:00. A job with a short limit starts sooner. A training run "
+            "that reaches the limit, or is preempted, is submitted again and continues from its checkpoint, so the "
+            "limit need not cover a whole run. That holds only if the evaluator saves its state and resumes, as the "
+            "template does; without that, give a limit longer than one training run.",
+     "when": {"compute.scheduler": ["slurm"]}},
     {"field": "compute.partition", "section": "Compute", "title": "Slurm partition", "kind": "text",
      "question": "Which Slurm partition?", "why": "Passed to sbatch.", "when": {"compute.scheduler": ["slurm"]}},
     {"field": "compute.qos", "section": "Compute", "title": "Slurm QoS", "kind": "text",

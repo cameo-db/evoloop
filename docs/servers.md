@@ -70,21 +70,52 @@ Where it is looked for, in order:
 3. `~/.config/evoloop/site.yaml`.
 
 `evoloop site` shows the one in use and what it sets. `evoloop plan` says where designs will run
-("Runs on: Slurm, one job per design, partition gpu, qos normal, low, 8 at once (site file:
-our-cluster)") and lists the site's rules.
+("Runs on: Slurm, one job per design, submitted as GPUs come free, partition gpu, qos normal, low, 8 at
+once, 4:00:00 per job (site file: our-cluster)") and lists the site's rules.
+
+## Getting GPUs
+
+Two choices decide how much GPU time a search gets out of a shared cluster. Setup asks both.
+
+**One job per design, or one block.** With `compute.allocation: per_design`, the default, each design
+is a job of its own, submitted when a GPU comes free. A one-GPU job starts sooner than a job that needs
+eight at once, and the search uses whatever is free, up to `compute.gpus` jobs. No new design is
+written while one job is still waiting for its first start, so a design is never much older than the
+results it was written from.
+
+With `compute.allocation: block`, one job holds every GPU for the whole search and the designs train
+inside it, each on a GPU of its own. Nothing waits in the queue between designs. The job is harder to
+schedule, and its GPUs are held while a design is being written. It suits a reservation or a machine
+you have to yourself. A block is started as a job:
+
+```
+evoloop controller mysearch --name r1
+sbatch mysearch/run_controller_r1.sbatch
+```
+
+**A short time limit.** A job that asks for four hours starts sooner than one that asks for two days.
+A training run does not have to fit in one job: when a job reaches `compute.time_limit`, or is
+preempted, the run is submitted again and continues from its checkpoint, for as long as each start
+gets further than the last. This needs an evaluator that saves its state and resumes, which the
+template from `evoloop init` does: [Interruptions](evaluator.md#interruptions). With an evaluator that
+starts over, set a limit longer than one training run.
+
+On a workstation (`compute.scheduler: local`) each job is given its own GPU through
+`CUDA_VISIBLE_DEVICES`, from the GPUs the machine has or the ones already named in that variable.
 
 ## Machine-specific settings
 
 | What differs | Where it goes |
 |---|---|
 | the scheduler | `compute.scheduler`: `slurm` or `local` |
+| how GPUs are obtained | `compute.allocation`: `per_design` or `block` |
 | the queue | `compute.partition`, `compute.qos` (one name, or a list in order of preference with a cap on each) |
 | the hardware | `compute.gpu_type`, `compute.gpus_per_job`, `compute.cpus_per_job`, `compute.mem_gb` |
-| time limits | `compute.time_limit`; a job that hits it is started again from its checkpoint, a limited number of times |
+| time limits | `compute.time_limit`, per start of a job; a run that reaches it continues in another job |
 | the environment | `compute.setup`: module loads, activating an environment, exporting paths |
 | accounts, reservations, constraints, anything else | `compute.extra_sbatch`: any option `sbatch` accepts, one per line |
 | how many jobs you may hold | `compute.gpus` (how many train at once), `compute.max_waiting` (how many may queue unstarted) |
 | what must not be done | `rules` (for people and agents) and `forbid` (for code) |
 | login-node rules | run the controller itself as a job: `evoloop controller` writes the script, and it requeues itself at its time limit |
-| preemption | each design is its own job, submitted with `--requeue`; a preempted job keeps its id and resumes from its checkpoint |
+| preemption | a preempted job is started again and continues from its checkpoint, like one that reached its time limit |
 

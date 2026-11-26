@@ -8,7 +8,12 @@ with EVO_CONTINUE_FROM when it is to continue an earlier run's checkpoint. It wr
 
 A backend answers `state(run)` with one of: waiting, running, ended, machine (the machine, not the
 model, ended it: run it again, uncharged). On Slurm each run is its own job, submitted with --requeue and
-followed by its job id, so the controller can stop and start again without touching the jobs."""
+followed by its job id, so the controller can stop and start again without touching the jobs.
+
+A job need not last a whole training run. One that reaches its time limit or is preempted is submitted
+again and continues from its checkpoint (the controller allows this for as long as each start gets
+further than the last), so a search can ask for short jobs, which a busy cluster starts sooner. The job
+is told when its time ends (EVO_DEADLINE) and may leave by itself with exit 77 once it has saved."""
 from __future__ import annotations
 
 import json
@@ -25,6 +30,7 @@ from .store import read_json, write_json
 MACHINE_EXIT = 75            # EX_TEMPFAIL: the adapter says the machine failed
 CHECK_EXIT = 97              # the quick check failed and the design was not trained
 LARGER_EXIT = 76             # the adapter says the design needs a larger GPU than the one it was given
+PAUSE_EXIT = 77              # the adapter saved its state and asks for the run to be continued in another job
 CREDENTIALS = ("KEY", "TOKEN", "SECRET", "PASSWORD", "CREDENTIAL")
 INFRASTRUCTURE = ("NODE_FAIL", "BOOT_FAIL", "PREEMPTED", "DEADLINE", "TIMEOUT")
 ACTIVE = ("PENDING", "RUNNING", "CONFIGURING", "COMPLETING", "SUSPENDED", "REQUEUED", "REQUEUE_HOLD", "RESIZING",
@@ -56,6 +62,49 @@ def larger_available(run: Dict[str, Any], compute: Dict[str, Any]) -> bool:
     return bool(larger) and gpu_type_for(run, compute) != larger
 
 
+def seconds(limit: Any) -> Optional[int]:
+    """A Slurm time limit in seconds: minutes, minutes:seconds, hours:minutes:seconds, days-hours,
+    days-hours:minutes or days-hours:minutes:seconds. None when it cannot be read."""
+    text = str(limit or "").strip()
+    try:
+        days, _, rest = text.rpartition("-")
+        parts = [int(p) for p in rest.split(":")]
+        if days:
+            hours, minutes, secs = (parts + [0, 0])[:3]
+            return int(days) * 86400 + hours * 3600 + minutes * 60 + secs
+        if len(parts) == 1:
+            return parts[0] * 60
+        if len(parts) == 2:
+            return parts[0] * 60 + parts[1]
+        if len(parts) == 3:
+            return parts[0] * 3600 + parts[1] * 60 + parts[2]
+    except ValueError:
+        pass
+    return None
+
+
+def ended_by_machine(code: int) -> Optional[str]:
+    if code == MACHINE_EXIT:
+        return "the run exited %d (the machine failed)" % MACHINE_EXIT
+    if code == PAUSE_EXIT:
+        return "the run saved its state and asked to be continued (exit %d)" % PAUSE_EXIT
+    return None
+
+
+def local_gpus() -> List[str]:
+    """The GPUs local jobs may use: those this process was given (CUDA_VISIBLE_DEVICES, as inside a
+    Slurm job that holds several), else every GPU nvidia-smi lists. Empty when there is none to hand out."""
+    given = os.environ.get("CUDA_VISIBLE_DEVICES")
+    if given is not None:
+        return [g.strip() for g in given.split(",") if g.strip() and g.strip() != "-1"]
+    try:
+        done = subprocess.run(["nvidia-smi", "--query-gpu=index", "--format=csv,noheader"], capture_output=True,
+                              text=True, timeout=20)
+    except (OSError, subprocess.SubprocessError):
+        return []
+    return [g.strip() for g in done.stdout.splitlines() if g.strip().isdigit()] if done.returncode == 0 else []
+
+
 def command(settings: Dict[str, Any]) -> str:
     """The quick check, when there is one, then the run command. A failed check exits 97 and trains nothing."""
     run = settings["run_command"]
@@ -74,9 +123,21 @@ class Local:
     """Jobs as processes on this machine."""
     name = "local"
 
-    def __init__(self) -> None:
+    def __init__(self, gpus: Optional[List[str]] = None, own_python: bool = True) -> None:
+        self.own_python = own_python
         self.procs: Dict[str, subprocess.Popen] = {}
         self.cancelled: Dict[str, int] = {}
+        self.gpus = local_gpus() if gpus is None else list(gpus)
+        self.held: Dict[str, List[str]] = {}
+
+    def take_gpus(self, run_id: str, wanted: int) -> List[str]:
+        """The GPUs a job is given: the least used ones, so that jobs share a GPU only when there are more jobs
+        at once than GPUs. Nothing is assigned when the job asks for none or the machine has none to hand out."""
+        if wanted <= 0 or not self.gpus:
+            return []
+        load = {g: sum(g in held for held in self.held.values()) for g in self.gpus}
+        self.held[run_id] = sorted(self.gpus, key=lambda g: (load[g], self.gpus.index(g)))[:wanted]
+        return self.held[run_id]
 
     @staticmethod
     def end(proc: subprocess.Popen) -> None:
@@ -89,11 +150,15 @@ class Local:
     def submit(self, run: Dict[str, Any], workdir: str, env: Dict[str, str], settings: Dict[str, Any]) -> Dict[str, Any]:
         log = open(os.path.join(env["EVO_OUT_DIR"], "job.log"), "ab")
         # The controller's own Python comes first on the path, so `python` in the run command is the one in use.
-        path = os.path.dirname(sys.executable) + os.pathsep + os.environ.get("PATH", "")
-        self.procs[run["id"]] = subprocess.Popen(["bash", "-c", command(settings)], cwd=workdir, env=clean_env(
-            dict(env, EVO_RESTART_COUNT=str(run.get("restarts") or 0), PATH=path)), stdout=log, stderr=subprocess.STDOUT,
-            start_new_session=True)
-        return {"backend": "local", "pid": self.procs[run["id"]].pid, "started": time.time()}
+        # Inside a block on a cluster the job script has activated the training environment: that one stands.
+        path = (os.path.dirname(sys.executable) + os.pathsep if self.own_python else "") + os.environ.get("PATH", "")
+        env = dict(env, EVO_RESTART_COUNT=str(run.get("restarts") or 0), PATH=path)
+        gpus = self.take_gpus(run["id"], int(settings["compute"].get("gpus_per_job") or 0))
+        if gpus:      # each job sees its own GPU: without this every job on the machine would train on the first one
+            env["CUDA_VISIBLE_DEVICES"] = ",".join(gpus)
+        self.procs[run["id"]] = subprocess.Popen(["bash", "-c", command(settings)], cwd=workdir, env=clean_env(env),
+                                                 stdout=log, stderr=subprocess.STDOUT, start_new_session=True)
+        return {"backend": "local", "pid": self.procs[run["id"]].pid, "started": time.time(), "gpus": gpus or None}
 
     def state(self, run: Dict[str, Any]) -> Dict[str, Any]:
         proc = self.procs.get(run["id"])
@@ -106,14 +171,16 @@ class Local:
         if code is None:
             return {"state": "running"}
         self.procs.pop(run["id"], None)
-        if code == MACHINE_EXIT:
-            return {"state": "machine", "why": "the run exited %d (the machine failed)" % MACHINE_EXIT}
+        self.held.pop(run["id"], None)
+        if ended_by_machine(code):
+            return {"state": "machine", "why": ended_by_machine(code)}
         if code == LARGER_EXIT:
             return {"state": "larger"}
         return {"state": "ended", "exit": code}
 
     def cancel(self, run: Dict[str, Any]) -> None:
         proc = self.procs.pop(run["id"], None)
+        self.held.pop(run["id"], None)
         if proc is not None:
             if proc.poll() is None:
                 self.end(proc)
@@ -179,6 +246,9 @@ class Slurm:
         # Slurm counts its own requeues of this job; the controller adds the times it started the run again itself.
         lines.append("export EVO_RESTART_COUNT=$(( ${SLURM_RESTART_COUNT:-0} + %d ))" % int(run.get("restarts") or 0))
         lines.append("export PATH=%s" % shlex.quote(os.environ.get("PATH", "/usr/bin:/bin")))
+        limit = seconds(compute.get("time_limit"))
+        if limit:      # when this start of the job ends: the adapter can save and leave before it is killed
+            lines.append("export EVO_DEADLINE=$(( $(date +%%s) + %d ))" % limit)
         lines.append('echo "{\\"t\\": $(date +%%s), \\"node\\": \\"$(hostname)\\", \\"restart\\": $EVO_RESTART_COUNT, '
                      '\\"gpu\\": \\"$(command -v nvidia-smi >/dev/null 2>&1 && nvidia-smi --query-gpu=name,memory.total '
                      '--format=csv,noheader 2>/dev/null | grep -iv failed | head -1)\\"}" >> %s' % shlex.quote(os.path.join(out, "starts.jsonl")))
@@ -221,8 +291,10 @@ class Slurm:
         code = int(exit_code.split(":")[0] or 0) if exit_code.split(":")[0].isdigit() else 0
         if state in ACTIVE:
             return {"state": "running"}
-        if state in INFRASTRUCTURE or code == MACHINE_EXIT:
+        if state in INFRASTRUCTURE:
             return {"state": "machine", "why": "Slurm ended the job as %s (exit %d)" % (state, code)}
+        if ended_by_machine(code):
+            return {"state": "machine", "why": ended_by_machine(code)}
         if code == LARGER_EXIT:
             return {"state": "larger"}
         return {"state": "ended", "exit": code, "slurm_state": state}
@@ -239,8 +311,22 @@ class Slurm:
         """Nothing: the jobs go on, and the controller reattaches to them when it starts again."""
 
 
+def in_block(compute: Dict[str, Any]) -> bool:
+    """Whether the designs run inside one Slurm job that holds every GPU, as processes of that job."""
+    return compute.get("scheduler") == "slurm" and compute.get("allocation") == "block"
+
+
 def make(settings: Dict[str, Any]) -> Any:
-    return Slurm() if settings["compute"]["scheduler"] == "slurm" else Local()
+    compute = settings["compute"]
+    if in_block(compute):
+        return Local(own_python=False)
+    return Slurm() if compute["scheduler"] == "slurm" else Local()
+
+
+def reached(out_dir: str) -> float:
+    """The furthest step a run has reported, over every start of it."""
+    return max([float(r["step"]) for r in read_progress(out_dir, every=True) if isinstance(r.get("step"), (int, float))],
+               default=0.0)
 
 
 def read_progress(out_dir: str, every: bool = False) -> List[Dict[str, Any]]:

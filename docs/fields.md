@@ -195,7 +195,8 @@ Explained in [servers](servers.md).
 | Field | Default | Changes in a search | What it is |
 |---|---|---|---|
 | <a id="compute-gpus"></a>`compute.gpus` **asked** | `null` | yes | How many training jobs run at once. |
-| <a id="compute-scheduler"></a>`compute.scheduler` | `"local"` | no | local (processes on this machine) or slurm (each run its own job). Accepts: `local`, `slurm`. |
+| <a id="compute-scheduler"></a>`compute.scheduler` | `"local"` | no | local (processes on this machine, each given its own GPU) or slurm. Accepts: `local`, `slurm`. |
+| <a id="compute-allocation"></a>`compute.allocation` | `"per_design"` | no | On Slurm: per_design (each design its own job, submitted as GPUs come free) or block (one job holds every GPU and the designs run inside it; started with `evoloop controller`). Accepts: `per_design`, `block`. |
 | <a id="compute-partition"></a>`compute.partition` | `null` | yes | Slurm partition. |
 | <a id="compute-qos"></a>`compute.qos` | `null` | yes | Slurm QoS: one name, or a list in order of preference, [{name: a, max_jobs: 8}, {name: b}]. |
 | <a id="compute-gpu_type"></a>`compute.gpu_type` | `null` | yes | Slurm gres type, e.g. a100; empty for any free GPU. |
@@ -203,12 +204,12 @@ Explained in [servers](servers.md).
 | <a id="compute-gpus_per_job"></a>`compute.gpus_per_job` | `1` | yes | GPUs each job asks for; 0 for a CPU job. |
 | <a id="compute-cpus_per_job"></a>`compute.cpus_per_job` | `4` | no | Processors each job asks for. |
 | <a id="compute-mem_gb"></a>`compute.mem_gb` | `32` | no | Memory each job asks for. |
-| <a id="compute-time_limit"></a>`compute.time_limit` | `"2-00:00:00"` | yes | Slurm time limit, per start of a job. |
+| <a id="compute-time_limit"></a>`compute.time_limit` | `"2-00:00:00"` | yes | Slurm time limit, per start of a job. A run that reaches it is submitted again and continues from its checkpoint, so a short limit, which starts sooner, is enough when the evaluator resumes. |
 | <a id="compute-setup"></a>`compute.setup` | `[]` | no | Shell lines run first in each job, e.g. activating an environment. |
 | <a id="compute-extra_sbatch"></a>`compute.extra_sbatch` | `[]` | no | Further sbatch options. |
-| <a id="compute-infrastructure_retries"></a>`compute.infrastructure_retries` | `3` | no | How often a run ended by the machine is started again, uncharged. |
+| <a id="compute-infrastructure_retries"></a>`compute.infrastructure_retries` | `3` | no | How often in a row a run ended by the machine (time limit, preemption, failed node) is started again without having got further. A start that got further than the last is always followed by another. |
 | <a id="compute-max_running"></a>`compute.max_running` | `null` | yes | A cap on jobs at once, below `compute.gpus`, that can be moved during a run. |
-| <a id="compute-max_waiting"></a>`compute.max_waiting` | `1` | yes | On Slurm: no new design is written while this many jobs await their first start. |
+| <a id="compute-max_waiting"></a>`compute.max_waiting` | `1` | yes | On Slurm: no new design is written while this many jobs await their first start on the usual GPU type. |
 
 ## run_command
 

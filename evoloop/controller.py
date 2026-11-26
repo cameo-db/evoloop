@@ -343,15 +343,22 @@ class Controller:
                                 % jobs.LARGER_EXIT)
                 continue
             if told["state"] == "machine" and not stopped:
-                restarts = int(run.get("restarts") or 0)
-                if restarts < int(self.settings["compute"]["infrastructure_retries"]):
-                    # The machine, not the model: run it again, uncharged. Bounded, so it cannot loop.
-                    self.update(run["id"], restarts=restarts + 1, job=None, performance={"status": "designed"},
-                                machine_endings=(run.get("machine_endings") or []) + [told.get("why")])
-                    self.pending.append(dict(run, job=None, restarts=restarts + 1))
+                # The machine, not the model: a time limit, a preemption, a failed node, or the run pausing by
+                # itself. It is run again, uncharged, and continues from its checkpoint. A start that got further
+                # than every start before it is free, so a long run can be a chain of short jobs; starts that got
+                # no further are bounded, so nothing loops.
+                restarts, got_to = int(run.get("restarts") or 0), jobs.reached(self.out_dir(run))
+                stalled = 0 if got_to > float(run.get("reached") or 0.0) else int(run.get("stalled") or 0) + 1
+                if stalled <= int(self.settings["compute"]["infrastructure_retries"]):
+                    kept = {"restarts": restarts + 1, "stalled": stalled, "reached": got_to}
+                    self.update(run["id"], job=None, performance={"status": "designed"},
+                                machine_endings=((run.get("machine_endings") or []) + [told.get("why")])[-20:], **kept)
+                    self.pending.append(dict(run, job=None, **kept))
                 else:
-                    self.finish(run, {"state": "ended", "exit": None}, reason="the machine ended this run %d times: %s" % (
-                        restarts + 1, told.get("why")))
+                    self.finish(run, {"state": "ended", "exit": None}, reason=(
+                        "the machine ended this run %d times in a row without it getting past step %g: %s. If a job's time "
+                        "limit is shorter than a training run, the evaluator has to continue from its checkpoint"
+                        % (stalled, got_to, told.get("why"))))
                 continue
             self.finish(run, told)
 
@@ -639,7 +646,11 @@ class Controller:
         budget = float(self.settings["budget"]["evaluations"] or 0)
         committed = self.spent(view) + len(in_flight) + len(self.designing)
         # On a busy cluster nothing more is written while `compute.max_waiting` jobs await their first start.
-        waiting = sum(1 for r in in_flight if r["performance"].get("status") == "queued") if self.backend.name == "slurm" else 0
+        # Only jobs waiting for the kind of GPU a new design would ask for count: one that waits for the larger type
+        # says nothing about whether the usual type is free.
+        usual = jobs.gpu_type_for({}, self.settings["compute"])
+        waiting = sum(1 for r in in_flight if r["performance"].get("status") == "queued"
+                      and jobs.gpu_type_for(r, self.settings["compute"]) == usual) if self.backend.name == "slurm" else 0
         new_period = any(r.get("purpose") == "reference" for r in in_flight) and not view.scored()
         strategy = strategies.make(self.settings)
         while free > 0 and committed < budget and waiting < int(self.settings["compute"]["max_waiting"]) and not new_period \
@@ -1038,6 +1049,10 @@ class Controller:
         return self.finished(view)
 
     def run(self, max_seconds: Optional[float] = None) -> str:
+        if jobs.in_block(self.settings["compute"]) and not os.environ.get("SLURM_JOB_ID"):
+            raise RuntimeError(
+                "this search holds one block of GPUs (compute.allocation: block), so it runs inside a Slurm job: write the "
+                "job script with `evoloop controller %s --name %s` and submit it with sbatch" % (self.folder, self.name))
         self.begin()
         self.blocked, self.agent_block, self.submit_failures, self.refused = None, None, 0, 0
         self.unmeasured = []

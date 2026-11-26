@@ -39,6 +39,7 @@ evoloop is used through its [commands](commands.md); it has no separate programm
 | [`model/quota.py`](#m-model-quota-py) | Recognising a refusal by the account's spend or usage limit, and reading when the limit resets. |
 | [`__init__.py`](#m-init---py) | evoloop. |
 | [`__main__.py`](#m-main---py) |  |
+| [`evojob.py`](#m-evojob-py) | Helpers for an evaluator (adapter/run.py). |
 | [`stub.py`](#m-stub-py) | The built-in stub: stands in for every agent role so that a search can be dry-run with no model call. |
 
 ## `cli.py` { #m-cli-py }
@@ -49,49 +50,49 @@ The commands.
 
 | Name | What it does |
 |---|---|
-| [`out(text)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L65) |  |
-| [`run_dir(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L69) |  |
-| [`request(args, body)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L76) |  |
-| [`parse_pairs(pairs)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L84) |  |
-| [`cmd_init(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L98) |  |
-| [`cmd_example(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L129) |  |
-| [`skill_files(folder, brief)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L141) | The skill files a search in `folder` reads, for each skill its brief names. |
-| [`skill_copies(folder, brief, tell)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L147) | Give the search its own copy of each skill its brief names, as soon as one is named, so that the copy can be edited before the plan is read and confirmed. |
-| [`open_editor(path)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L165) | Open a file in the person's editor ($VISUAL, then $EDITOR). |
-| [`cmd_brief(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L177) |  |
-| [`cmd_setup(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L296) | The questions one at a time in the terminal. |
-| [`cmd_form(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L310) | The questions as a self-contained HTML form. |
-| [`cmd_plan(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L327) |  |
-| [`cmd_estimate(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L339) | What the agents will cost: before a run from the brief; during one, from its own calls so far. |
-| [`cmd_guide(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L370) |  |
-| [`menu_topics()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L381) |  |
-| [`cmd_menu(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L386) |  |
-| [`cmd_skills(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L398) | The skill library: the list, a search of it, one skill in full, or one written out as a folder to edit. |
-| [`cmd_site(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L494) | The site file: what is particular to this machine. |
-| [`cmd_run(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L528) |  |
-| [`offline(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L540) | A controller object for reading a run, with nothing started. |
-| [`cmd_status(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L547) |  |
-| [`cmd_show(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L584) | One run: where it came from, what its design changed against its parent, how it ended. |
-| [`cmd_report(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L623) |  |
-| [`cmd_study(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L634) |  |
-| [`cmd_set(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L646) |  |
-| [`cmd_note(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L662) |  |
-| [`cmd_withdraw(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L668) |  |
-| [`cmd_stop(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L674) |  |
-| [`cmd_chat(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L680) | Talk with the agent that runs the search. |
-| [`cmd_rehash(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L751) |  |
-| [`cmd_force(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L758) |  |
-| [`cmd_import(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L765) |  |
-| [`import_study(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L778) | Designs from a study file: a path, or a link to one (a study.json downloaded from CAMEO, or another search's). |
-| [`cmd_reference(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L807) | A row on the leaderboard for a model that is not part of the search: a published baseline, an earlier run's best. |
-| [`cmd_leaderboard(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L834) |  |
-| [`cmd_controller(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L874) | A Slurm job script that runs the search and requeues itself at its time limit. |
-| [`cmd_lineage(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L890) |  |
-| [`cmd_answer(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L898) |  |
-| [`cmd_review(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L904) |  |
-| [`cmd_steer(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L910) | The person's words, turned into ledger entries by the translator, shown back, applied only with --yes. |
-| [`build_parser()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L964) |  |
-| [`main(argv)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L1094) |  |
+| [`out(text)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L87) |  |
+| [`run_dir(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L91) |  |
+| [`request(args, body)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L98) |  |
+| [`parse_pairs(pairs)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L106) |  |
+| [`cmd_init(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L120) |  |
+| [`cmd_example(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L152) |  |
+| [`skill_files(folder, brief)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L164) | The skill files a search in `folder` reads, for each skill its brief names. |
+| [`skill_copies(folder, brief, tell)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L170) | Give the search its own copy of each skill its brief names, as soon as one is named, so that the copy can be edited before the plan is read and confirmed. |
+| [`open_editor(path)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L188) | Open a file in the person's editor ($VISUAL, then $EDITOR). |
+| [`cmd_brief(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L200) |  |
+| [`cmd_setup(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L319) | The questions one at a time in the terminal. |
+| [`cmd_form(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L333) | The questions as a self-contained HTML form. |
+| [`cmd_plan(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L350) |  |
+| [`cmd_estimate(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L362) | What the agents will cost: before a run from the brief; during one, from its own calls so far. |
+| [`cmd_guide(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L393) |  |
+| [`menu_topics()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L404) |  |
+| [`cmd_menu(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L409) |  |
+| [`cmd_skills(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L421) | The skill library: the list, a search of it, one skill in full, or one written out as a folder to edit. |
+| [`cmd_site(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L517) | The site file: what is particular to this machine. |
+| [`cmd_run(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L551) |  |
+| [`offline(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L563) | A controller object for reading a run, with nothing started. |
+| [`cmd_status(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L570) |  |
+| [`cmd_show(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L607) | One run: where it came from, what its design changed against its parent, how it ended. |
+| [`cmd_report(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L646) |  |
+| [`cmd_study(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L657) |  |
+| [`cmd_set(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L669) |  |
+| [`cmd_note(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L685) |  |
+| [`cmd_withdraw(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L691) |  |
+| [`cmd_stop(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L697) |  |
+| [`cmd_chat(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L703) | Talk with the agent that runs the search. |
+| [`cmd_rehash(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L774) |  |
+| [`cmd_force(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L781) |  |
+| [`cmd_import(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L788) |  |
+| [`import_study(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L801) | Designs from a study file: a path, or a link to one (a study.json downloaded from CAMEO, or another search's). |
+| [`cmd_reference(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L830) | A row on the leaderboard for a model that is not part of the search: a published baseline, an earlier run's best. |
+| [`cmd_leaderboard(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L857) |  |
+| [`cmd_controller(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L897) | A Slurm job script that runs the search and requeues itself at its time limit. |
+| [`cmd_lineage(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L938) |  |
+| [`cmd_answer(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L946) |  |
+| [`cmd_review(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L952) |  |
+| [`cmd_steer(args)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L958) | The person's words, turned into ledger entries by the translator, shown back, applied only with --yes. |
+| [`build_parser()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L1012) |  |
+| [`main(argv)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/cli.py#L1142) |  |
 
 ## `controller.py` { #m-controller-py }
 
@@ -108,20 +109,20 @@ The loop.
 | &nbsp;&nbsp;[`.queue()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L153) | A run the loop makes itself (the baseline, a re-check, a reference for a new period): recorded at once under the next free id, so that no design written meanwhile can take the same id, then started when a slot is free. |
 | &nbsp;&nbsp;[`.read_inbox()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L161) | The person's requests, written by `evoloop set`, `note`, `stop`, `review`. |
 | &nbsp;&nbsp;[`.note_skill()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L248) | A skill's file is the person's to edit, during a run too. |
-| &nbsp;&nbsp;[`.screen()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L419) | A run is compared, part way, with the runs before it at the same point, and one clearly in the lower part is stopped there and charged for what it ran. |
-| &nbsp;&nbsp;[`.spent()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L460) | Evaluations charged: every scored run; runs that failed or failed the quick check beyond the allowance of uncounted ones; and designs rejected for a limit beyond theirs. |
-| &nbsp;&nbsp;[`.unscored_streak()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L472) | How many of the most recent designs in a row ended without a score because they broke. |
-| &nbsp;&nbsp;[`.measures()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L486) | The figures of a result that a limit can name: its visible diagnostics, `parameters`, and `examples_per_s` from its inference speed. |
-| &nbsp;&nbsp;[`.watch_limits()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L511) | A run whose progress lines already show it outside a limit is stopped there, not trained to the end. |
-| &nbsp;&nbsp;[`.order()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L522) | The person's order for the next slots: a mode, optionally a kind of crossover or local move, and optionally an instruction the writers of those slots must follow. |
-| &nbsp;&nbsp;[`.import_designs()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L535) | Designs from an earlier run, fitted here as designs of this run. |
-| &nbsp;&nbsp;[`.import_study()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L570) | Designs from a study file (the CAMEO format this loop also writes). |
-| &nbsp;&nbsp;[`.write()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L691) | In a worker: the coordinator's choice when there is one, then the design. |
-| &nbsp;&nbsp;[`.take_decisions()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L875) | The decisions of one meeting, each refused, applied, or held for the person. |
-| &nbsp;&nbsp;[`.anchor()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L891) | The settings without what the strategist changed by itself: where the person last left them. |
-| &nbsp;&nbsp;[`.answer()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L943) | The person's yes or no to a decision that was held for them. |
-| &nbsp;&nbsp;[`.set_lineage()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L974) | The person retires a lineage or brings one back: the same entry the strategist writes, in their name. |
-| &nbsp;&nbsp;[`.review()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L982) | A review of the agents. |
+| &nbsp;&nbsp;[`.screen()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L426) | A run is compared, part way, with the runs before it at the same point, and one clearly in the lower part is stopped there and charged for what it ran. |
+| &nbsp;&nbsp;[`.spent()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L467) | Evaluations charged: every scored run; runs that failed or failed the quick check beyond the allowance of uncounted ones; and designs rejected for a limit beyond theirs. |
+| &nbsp;&nbsp;[`.unscored_streak()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L479) | How many of the most recent designs in a row ended without a score because they broke. |
+| &nbsp;&nbsp;[`.measures()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L493) | The figures of a result that a limit can name: its visible diagnostics, `parameters`, and `examples_per_s` from its inference speed. |
+| &nbsp;&nbsp;[`.watch_limits()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L518) | A run whose progress lines already show it outside a limit is stopped there, not trained to the end. |
+| &nbsp;&nbsp;[`.order()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L529) | The person's order for the next slots: a mode, optionally a kind of crossover or local move, and optionally an instruction the writers of those slots must follow. |
+| &nbsp;&nbsp;[`.import_designs()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L542) | Designs from an earlier run, fitted here as designs of this run. |
+| &nbsp;&nbsp;[`.import_study()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L577) | Designs from a study file (the CAMEO format this loop also writes). |
+| &nbsp;&nbsp;[`.write()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L702) | In a worker: the coordinator's choice when there is one, then the design. |
+| &nbsp;&nbsp;[`.take_decisions()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L886) | The decisions of one meeting, each refused, applied, or held for the person. |
+| &nbsp;&nbsp;[`.anchor()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L902) | The settings without what the strategist changed by itself: where the person last left them. |
+| &nbsp;&nbsp;[`.answer()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L954) | The person's yes or no to a decision that was held for them. |
+| &nbsp;&nbsp;[`.set_lineage()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L985) | The person retires a lineage or brings one back: the same entry the strategist writes, in their name. |
+| &nbsp;&nbsp;[`.review()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/controller.py#L993) | A review of the agents. |
 
 ## `schedule.py` { #m-schedule-py }
 
@@ -295,20 +296,26 @@ Running a design: one job per training run, on this machine or through Slurm.
 
 | Name | What it does |
 |---|---|
-| [`environment(run, out_dir, checkpoint_dir, settings)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L34) |  |
-| [`gpu_type_for(run, compute)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L48) | The GPU type this run asks for: the larger type once it was moved there, else the search's own (empty: any). |
-| [`larger_available(run, compute)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L53) | Whether a design too large for its GPU can still be moved to a larger one. |
-| [`command(settings)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L59) | The quick check, when there is one, then the run command. |
-| [`clean_env(extra)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L66) | Designs are model-written code: credentials do not go into their environment. |
-| [`class Local`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L73) | Jobs as processes on this machine. |
-| &nbsp;&nbsp;[`.end()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L82) | Stop the job and everything it started: the job is the leader of its own process group. |
-| [`class Slurm`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L128) | Each run its own Slurm job, followed by its job id. |
-| &nbsp;&nbsp;[`.pick_qos()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L144) | The first QoS with room: `qos` may be one name or a list in order of preference, [{name: a, max_jobs: 8}, {name: b}]; the last takes the rest. |
-| &nbsp;&nbsp;[`.shutdown()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L238) | Nothing: the jobs go on, and the controller reattaches to them when it starts again. |
-| [`make(settings)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L242) |  |
-| [`read_progress(out_dir, every)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L246) | The progress lines of a run. |
-| [`tell(out_dir, action, allowance)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L263) |  |
-| [`tail(out_dir, lines)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L271) |  |
+| [`environment(run, out_dir, checkpoint_dir, settings)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L40) |  |
+| [`gpu_type_for(run, compute)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L54) | The GPU type this run asks for: the larger type once it was moved there, else the search's own (empty: any). |
+| [`larger_available(run, compute)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L59) | Whether a design too large for its GPU can still be moved to a larger one. |
+| [`seconds(limit)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L65) | A Slurm time limit in seconds: minutes, minutes:seconds, hours:minutes:seconds, days-hours, days-hours:minutes or days-hours:minutes:seconds. |
+| [`ended_by_machine(code)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L86) |  |
+| [`local_gpus()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L94) | The GPUs local jobs may use: those this process was given (CUDA_VISIBLE_DEVICES, as inside a Slurm job that holds several), else every GPU nvidia-smi lists. |
+| [`command(settings)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L108) | The quick check, when there is one, then the run command. |
+| [`clean_env(extra)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L115) | Designs are model-written code: credentials do not go into their environment. |
+| [`class Local`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L122) | Jobs as processes on this machine. |
+| &nbsp;&nbsp;[`.take_gpus()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L133) | The GPUs a job is given: the least used ones, so that jobs share a GPU only when there are more jobs at once than GPUs. |
+| &nbsp;&nbsp;[`.end()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L143) | Stop the job and everything it started: the job is the leader of its own process group. |
+| [`class Slurm`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L195) | Each run its own Slurm job, followed by its job id. |
+| &nbsp;&nbsp;[`.pick_qos()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L211) | The first QoS with room: `qos` may be one name or a list in order of preference, [{name: a, max_jobs: 8}, {name: b}]; the last takes the rest. |
+| &nbsp;&nbsp;[`.shutdown()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L310) | Nothing: the jobs go on, and the controller reattaches to them when it starts again. |
+| [`in_block(compute)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L314) | Whether the designs run inside one Slurm job that holds every GPU, as processes of that job. |
+| [`make(settings)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L319) |  |
+| [`reached(out_dir)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L326) | The furthest step a run has reported, over every start of it. |
+| [`read_progress(out_dir, every)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L332) | The progress lines of a run. |
+| [`tell(out_dir, action, allowance)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L349) |  |
+| [`tail(out_dir, lines)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/jobs.py#L357) |  |
 
 ## `store.py` { #m-store-py }
 
@@ -362,13 +369,13 @@ The brief: one form that sets up a search, and the settings derived from it.
 | [`confirmed(brief)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/form.py#L657) |  |
 | [`tracked_columns(settings)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/form.py#L662) | The leaderboard's further columns: those asked for (`report.columns`), or else every metric the brief tracks, validation first and then the test evaluations. |
 | [`at_a_glance(settings)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/form.py#L676) | What this search will actually do, in a few lines: what is optimized, who writes the designs, which agent roles run, how designs are selected and stopped, and what a later choice changed in an earlier one. |
-| [`plan_lines(brief, star, folder, cost)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/form.py#L760) | The plan: what the search will do at a glance, the warnings, what the agents will cost, and then every setting with the layer its value came from. |
-| [`is_live(key)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/form.py#L805) |  |
-| [`starts_period(key)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/form.py#L809) |  |
-| [`check_change(key, value)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/form.py#L813) | Why a setting cannot be changed during a run, or None when it can. |
-| [`review_points(settings)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/form.py#L824) |  |
-| [`rungs(settings)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/form.py#L844) | The points of a run at which designs are compared and the weaker stopped, and whether every design is subject to them (a ladder) or only the first run of a new design (the single screen). |
-| [`mean_charge(settings)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/form.py#L855) | The share of a full run that a design costs on average under the ladder, when the pool is full: with [{at: 0.1, keep: 0.5}, {at: 0.3, keep: 0.5}] half the designs cost 0.1, a quarter 0.3 and a quarter 1. |
+| [`plan_lines(brief, star, folder, cost)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/form.py#L764) | The plan: what the search will do at a glance, the warnings, what the agents will cost, and then every setting with the layer its value came from. |
+| [`is_live(key)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/form.py#L809) |  |
+| [`starts_period(key)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/form.py#L813) |  |
+| [`check_change(key, value)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/form.py#L817) | Why a setting cannot be changed during a run, or None when it can. |
+| [`review_points(settings)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/form.py#L828) |  |
+| [`rungs(settings)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/form.py#L848) | The points of a run at which designs are compared and the weaker stopped, and whether every design is subject to them (a ladder) or only the first run of a new design (the single screen). |
+| [`mean_charge(settings)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/form.py#L859) | The share of a full run that a design costs on average under the ladder, when the pool is full: with [{at: 0.1, keep: 0.5}, {at: 0.3, keep: 0.5}] half the designs cost 0.1, a quarter 0.3 and a quarter 1. |
 
 ## `skill.py` { #m-skill-py }
 
@@ -414,21 +421,21 @@ Setting up a search by question and answer: one list of questions, three ways to
 
 | Name | What it does |
 |---|---|
-| [`applies(question, values)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/interview.py#L171) |  |
-| [`state(brief, folder)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/interview.py#L181) | Every question that applies now, with its answer or default, and where the person is in the list. |
-| [`parse(question, text)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/interview.py#L209) | An answer as typed, turned into a value. |
-| [`metrics_from_text(text)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/interview.py#L234) | `name: how it is computed; name: ...` (or one to a line) as a mapping. |
-| [`limits_from_text(text)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/interview.py#L246) | `parameters <= 2000000; training_minutes <= 30` as {metric: {max: x}}; `none` as no limits. |
-| [`record(brief, field, value)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/interview.py#L266) | Put an answer in the brief (or, with KEEP, note that its default was seen and left). |
-| [`merge(brief, answers)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/interview.py#L294) | Answers from a file (the HTML form's, or any nested mapping of fields) into the brief: (set, refused). |
-| [`shown(value, empty)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/interview.py#L308) | A value as the person would type it: metrics as `name: how`, limits as `metric <= x`, nothing as words. |
-| [`card(q)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/interview.py#L319) | One question as text, the same way every time: where you are, the question, why, the choices. |
-| [`skill_step(folder, brief, ask, say, edit)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/interview.py#L341) | After the skill is chosen: give the search its own copies, show what they set, and let the person edit them, or merge several into one file, before going on. |
-| [`run(folder, ask, say, edit)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/interview.py#L387) | The terminal walk-through. |
-| [`payload(brief, folder)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/interview.py#L434) | What the HTML form needs: every question (the form itself decides which apply as answers change), the current answers, the defaults, and the schedule each kind of search runs. |
-| [`as_json(value)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/interview.py#L456) |  |
-| [`suggest(brief, field, value, why, by)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/interview.py#L460) | Propose an answer for the person to accept or change. |
-| [`infer(folder, brief)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/interview.py#L472) | Best guesses from the machine, the search folder and the answers so far, as suggestions. |
+| [`applies(question, values)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/interview.py#L190) |  |
+| [`state(brief, folder)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/interview.py#L200) | Every question that applies now, with its answer or default, and where the person is in the list. |
+| [`parse(question, text)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/interview.py#L228) | An answer as typed, turned into a value. |
+| [`metrics_from_text(text)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/interview.py#L253) | `name: how it is computed; name: ...` (or one to a line) as a mapping. |
+| [`limits_from_text(text)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/interview.py#L265) | `parameters <= 2000000; training_minutes <= 30` as {metric: {max: x}}; `none` as no limits. |
+| [`record(brief, field, value)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/interview.py#L285) | Put an answer in the brief (or, with KEEP, note that its default was seen and left). |
+| [`merge(brief, answers)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/interview.py#L313) | Answers from a file (the HTML form's, or any nested mapping of fields) into the brief: (set, refused). |
+| [`shown(value, empty)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/interview.py#L327) | A value as the person would type it: metrics as `name: how`, limits as `metric <= x`, nothing as words. |
+| [`card(q)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/interview.py#L338) | One question as text, the same way every time: where you are, the question, why, the choices. |
+| [`skill_step(folder, brief, ask, say, edit)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/interview.py#L360) | After the skill is chosen: give the search its own copies, show what they set, and let the person edit them, or merge several into one file, before going on. |
+| [`run(folder, ask, say, edit)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/interview.py#L406) | The terminal walk-through. |
+| [`payload(brief, folder)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/interview.py#L453) | What the HTML form needs: every question (the form itself decides which apply as answers change), the current answers, the defaults, and the schedule each kind of search runs. |
+| [`as_json(value)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/interview.py#L475) |  |
+| [`suggest(brief, field, value, why, by)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/interview.py#L479) | Propose an answer for the person to accept or change. |
+| [`infer(folder, brief)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/interview.py#L491) | Best guesses from the machine, the search folder and the answers so far, as suggestions. |
 
 ## `formpage.py` { #m-formpage-py }
 
@@ -597,17 +604,17 @@ The menu: every choice a run can make, the presets, and every field of the brief
 
 | Name | What it does |
 |---|---|
-| [`show(value)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/menu.py#L332) |  |
-| [`when(path)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/menu.py#L336) | Whether a setting can change during a run. |
-| [`preset_lines(overlay, indent)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/menu.py#L343) |  |
-| [`text(topic)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/menu.py#L347) |  |
-| [`cell(words)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/menu.py#L374) |  |
-| [`menu_markdown()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/menu.py#L378) |  |
-| [`anchor(path)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/menu.py#L411) | The id of a field on the fields page: `schedule.novelty` is `fields.md#schedule-novelty`. |
-| [`fields_markdown()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/menu.py#L416) |  |
-| [`missing()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/menu.py#L444) | Options and fields with no explanation here: must be empty. |
-| [`plans()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/menu.py#L470) | What a search comes to for every combination of run type, skill, level of autonomy and size of budget: the data behind the documentation's plan explorer. |
-| [`plans_json()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/menu.py#L531) |  |
+| [`show(value)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/menu.py#L333) |  |
+| [`when(path)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/menu.py#L337) | Whether a setting can change during a run. |
+| [`preset_lines(overlay, indent)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/menu.py#L344) |  |
+| [`text(topic)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/menu.py#L348) |  |
+| [`cell(words)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/menu.py#L375) |  |
+| [`menu_markdown()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/menu.py#L379) |  |
+| [`anchor(path)`](https://github.com/cameo-db/evoloop/blob/main/evoloop/menu.py#L412) | The id of a field on the fields page: `schedule.novelty` is `fields.md#schedule-novelty`. |
+| [`fields_markdown()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/menu.py#L417) |  |
+| [`missing()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/menu.py#L445) | Options and fields with no explanation here: must be empty. |
+| [`plans()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/menu.py#L471) | What a search comes to for every combination of run type, skill, level of autonomy and size of budget: the data behind the documentation's plan explorer. |
+| [`plans_json()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/menu.py#L532) |  |
 
 ## `model/anthropic_api.py` { #m-model-anthropic-api-py }
 
@@ -689,6 +696,24 @@ evoloop.
 
 [Source](https://github.com/cameo-db/evoloop/blob/main/evoloop/__main__.py)
 
+
+## `evojob.py` { #m-evojob-py }
+
+[Source](https://github.com/cameo-db/evoloop/blob/main/evoloop/evojob.py)
+
+Helpers for an evaluator (adapter/run.py).
+
+| Name | What it does |
+|---|---|
+| [`class Job`](https://github.com/cameo-db/evoloop/blob/main/evoloop/evojob.py#L39) |  |
+| &nbsp;&nbsp;[`.path()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/evojob.py#L74) | A file in the folder kept for this run across starts: put weights and optimizer state there. |
+| &nbsp;&nbsp;[`.load_state()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/evojob.py#L78) | What `save_state` last wrote, or None when this run has not saved anything yet. |
+| &nbsp;&nbsp;[`.save_state()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/evojob.py#L87) | Small facts to continue from (the epoch reached, the best score so far), written in one step so that a job killed while saving leaves the earlier state whole. |
+| &nbsp;&nbsp;[`.report()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/evojob.py#L96) | One line of progress. |
+| &nbsp;&nbsp;[`.should_stop()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/evojob.py#L106) | True when the search asked this run to end early. |
+| &nbsp;&nbsp;[`.out_of_time()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/evojob.py#L117) | True when the job was told to end, or when its time limit would pass before another step like the longest so far could finish. |
+| &nbsp;&nbsp;[`.pause()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/evojob.py#L127) | Leave now. |
+| &nbsp;&nbsp;[`.finish()`](https://github.com/cameo-db/evoloop/blob/main/evoloop/evojob.py#L132) | Write the result. |
 
 ## `stub.py` { #m-stub-py }
 

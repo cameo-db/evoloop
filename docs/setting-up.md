@@ -55,7 +55,7 @@ changed.
 ## 2. Write the evaluator
 
 `adapter/run.py` trains one design and writes `result.json` with its score. `evoloop init` writes a
-template; [Write the evaluator](evaluator.md) has a complete example and how to test it by hand.
+template that saves its state as it trains and resumes when its job is started again; [Write the evaluator](evaluator.md) has a complete example and how to test it by hand.
 
 Then write `task.md`: a page telling the agents what the problem is, what the data looks like, what the
 score means, and anything you already know works or does not. They read it on every call and see
@@ -93,6 +93,8 @@ have none and must be answered.
 | What should be done about the baseline? | train it inside the search |
 | How many models may train at the same time? | the GPUs on this machine, or 4 on a cluster |
 | Where do the training jobs run? | Slurm if the machine has it, with the partition and QoS of your site file |
+| Should each design be its own job, or should one job hold all the GPUs? | one job per design, submitted as GPUs come free: [Getting GPUs](servers.md#getting-gpus) |
+| What time limit should each job ask for? | the limit of your site file, else two days; a short limit starts sooner once the evaluator resumes |
 | How are the agents called? | Claude Code or the API, whichever is set up here |
 | Which model should the agents run on, and how hard should it reason? | [Models and prices](models.md) |
 | What is the most the agents may cost? | the upper end of the cost estimate |
@@ -131,7 +133,7 @@ At a glance
   Model:           claude-opus-5-5, effort medium
   Selection:       lineage
   Data:            K562 ATAC-seq; split: chromosomes 8 and 9 held out for test, 10 for validation
-  Runs on:         Slurm, one job per design, partition gpu, 8 at once (site file: our-cluster)
+  Runs on:         Slurm, one job per design, submitted as GPUs come free, partition gpu, 8 at once, 4:00:00 per job (site file: our-cluster)
   Early stopping:  new designs screened at 50%, the best 50% go on
   Budget:          100 evaluations of 30 epochs; agents capped at $40
 ```

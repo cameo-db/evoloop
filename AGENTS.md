@@ -51,6 +51,15 @@ Your part before the questions:
   `# EVOLVE-BLOCK-START name=... kind=structure|params role=...` and `# EVOLVE-BLOCK-END`, write `DIR/task.md`
   (what the agents are told) and `DIR/adapter/run.py` (runs one design, writes `result.json`): see
   `docs/project-contract.md`. Show the person what you marked and what the evaluator reports.
+  Write the evaluator so that it resumes: the template saves its state after every step with `adapter/evojob.py`
+  and continues from it when the job is started again. Keep that, and save the best weights apart from the latest
+  ones, so that a step that diverges cannot cost the run its score.
+- **The jobs.** On a cluster the default is one job per design, submitted as GPUs come free
+  (`compute.allocation: per_design`), with a short time limit. Small, short jobs start sooner, and a run that
+  reaches the limit or is preempted continues in another job. Do not reserve a block of GPUs, hold an allocation or
+  build a job array on your own initiative: put the choice to the person (`compute.allocation`), and use `block`
+  only when they pick it. Propose a time limit of a few hours once the evaluator resumes; if it cannot resume, the
+  limit has to cover a whole training run, and say so.
 - **A dry run.** Before any paid agent or GPU: `agents.backend: stub` and a budget of a few evaluations, to prove
   the evaluator and the jobs work on this machine.
 

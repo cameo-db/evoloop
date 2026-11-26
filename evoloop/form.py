@@ -87,7 +87,7 @@ DEFAULTS: Dict[str, Any] = {
     "budget": {"evaluations": None, "model_dollars": None, "model_calls": None, "wall_clock_hours": None,
                "max_uncounted_failures": 10, "max_uncounted_rejections": 50, "spend_policy": "pace", "reserve_share": 0.15},
     "baseline": {"mode": None, "import_from": None},
-    "compute": {"gpus": None, "scheduler": "local", "partition": None, "qos": None, "gpu_type": None, "larger_gpu_type": None,
+    "compute": {"gpus": None, "scheduler": "local", "allocation": "per_design", "partition": None, "qos": None, "gpu_type": None, "larger_gpu_type": None,
                 "gpus_per_job": 1, "cpus_per_job": 4, "mem_gb": 32, "time_limit": "2-00:00:00", "setup": [],
                 "extra_sbatch": [], "infrastructure_retries": 3, "max_running": None, "max_waiting": 1},
     "run_command": "python adapter/run.py",
@@ -131,7 +131,7 @@ REQUIRED: Dict[str, Tuple[str, str]] = {
 
 CHOICES = {"objective.direction": ("maximize", "minimize"), "strategy.mechanism": MECHANISMS, "harness.level": HARNESS,
            "harness.coordinator": ("code", "agent"), "space.preset": SPACES, "baseline.mode": ("train", "import", "skip"),
-           "compute.scheduler": ("local", "slurm"), "agents.backend": ("stub", "anthropic_api", "claude_code"),
+           "compute.scheduler": ("local", "slurm"), "compute.allocation": ("per_design", "block"), "agents.backend": ("stub", "anthropic_api", "claude_code"),
            "evaluation.on_length_change": ("auto", "continue", "rerun", "compare_anyway"),
            "variation.settings_by": ("agent", "sampler", "tpe"), "strategist.mode": ("off", "advise", "act"),
            "variation.edit_format": ("full", "diff"), "variation.approaches": ("off", "fixed", "evolve"),
@@ -722,9 +722,13 @@ def at_a_glance(settings: Dict[str, Any]) -> List[str]:
             "; each run uses %g%% of the training data" % (100 * share) if share != 1 else ""))
     place = settings.get("_site")
     compute = settings["compute"]
-    where = "this machine, %s at once" % (compute["gpus"] or "?") if compute["scheduler"] == "local" else "Slurm, one job per design%s%s, %s at once" % (
+    block = compute["scheduler"] == "slurm" and compute.get("allocation") == "block"
+    where = "this machine, %s at once" % (compute["gpus"] or "?") if compute["scheduler"] == "local" else "Slurm, %s%s%s, %s at once" % (
+        "one job that holds every GPU" if block else "one job per design, submitted as GPUs come free",
         ", partition %s" % compute["partition"] if compute.get("partition") else "",
         ", qos %s" % ", ".join(sites.names_of(compute["qos"])) if compute.get("qos") else "", compute["gpus"] or "?")
+    if compute["scheduler"] == "slurm":
+        where += ", %s per job" % compute["time_limit"]
     out.append("  Runs on:         %s%s" % (where, " (site file: %s)" % place["name"] if place else ""))
     for rule in (place or {}).get("rules") or []:
         out.append("  Site rule:       %s" % rule)

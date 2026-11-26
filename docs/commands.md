@@ -162,7 +162,9 @@ evoloop run mysearch --name r1
 `evoloop controller DIR --name N [--partition P] [--qos Q] [--time T] [--setup LINE] [--python PATH] [--out FILE]`
 
 Writes a Slurm job script that runs the search itself as a job and puts itself back in the queue at its
-time limit. For clusters where nothing may run on the login node.
+time limit. For clusters where nothing may run on the login node. With `compute.allocation: block` the
+script also asks for every GPU of the search, with the partition, time limit and environment of the
+brief, and the designs train inside that job.
 
 ```
 evoloop controller mysearch --name r1 --partition cpu --time 1-00:00:00

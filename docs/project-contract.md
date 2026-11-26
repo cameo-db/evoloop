@@ -26,6 +26,7 @@ absolute path from the evaluator.
 | `EVO_DATA_FRACTION` | the share of the training data to use (`data.fraction`) |
 | `EVO_CHECKPOINT_DIR` | a folder kept for this design, seed and period: the same run started again finds its checkpoint there |
 | `EVO_RESTART_COUNT` | 0 on the first start; above 0 when the run was started again after the machine ended it |
+| `EVO_DEADLINE` | on a cluster: the time (seconds since 1970) at which this start of the job reaches its time limit |
 | `EVO_CONTINUE_FROM` | set when the run is to continue an earlier run's checkpoint (after the run length was raised) |
 | `EVO_PARENT_CHECKPOINT_DIR` | with `evaluation.inherit_weights`: the checkpoint folder of the design's parent, to start from |
 | `EVO_LARGER_GPU` | set when `compute.larger_gpu_type` names a larger GPU the design could be moved to (see exit 76 below) |
@@ -76,9 +77,23 @@ allowance and `metric` the score or a faithful running estimate of it. At each r
 
 ## Exit codes
 
-Exit 75 says the machine failed, not the model: the run is started again, uncharged, at
-most `compute.infrastructure_retries` times. A run that ends with no `result.json` is recorded as
-failed, with the end of its log.
+Exit 75 says the machine failed, not the model, and exit 77 says the run saved its state and wants to
+be continued in another job. Either way the run is started again, uncharged, with the same
+`EVO_CHECKPOINT_DIR`. The same happens when the scheduler ends the job: a time limit, a preemption, a
+failed node.
+
+A start that got further than every start before it, by the steps in `progress.jsonl`, is always
+followed by another, so a training run can be a chain of short jobs. Starts that got no further are
+limited to `compute.infrastructure_retries` in a row; after that the run is recorded as failed, with
+the reason. An evaluator that does not resume therefore fails after a few starts when the time limit
+is shorter than a training run.
+
+A run that ends with no `result.json` is recorded as failed, with the end of its log.
+
+`evoloop init` puts `evojob.py` beside the evaluator. It reads these variables, keeps a small state
+file in the checkpoint folder, writes the progress lines and the result, and says when the time limit
+is near. [Write the evaluator](evaluator.md#interruptions) shows it in use. It is a convenience: an
+evaluator that follows this page without it works the same.
 
 Exit 76 says the design is too large for the GPU it was given. If `compute.larger_gpu_type` is set (the job is
 then told so through `EVO_LARGER_GPU`), the run is submitted again on that type, uncharged, once. Otherwise it
