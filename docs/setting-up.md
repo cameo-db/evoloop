@@ -156,7 +156,11 @@ the value it would be left at. Answer them, or add `--accept-defaults` to take t
 
 ## 5. Dry run and launch
 
-First prove the plumbing with scripted proposals and a tiny budget, which costs nothing:
+First check the evaluator on its own. `evoloop check mysearch` trains your unchanged code once, kills
+and restarts it, and asks it to stop, and reports whether it resumed and whether it stopped with a
+score: [Evaluator check](evaluator.md#evaluator-check).
+
+Then prove the plumbing with scripted proposals and a tiny budget, which costs nothing:
 
 ```
 evoloop brief mysearch --answer agents.backend=stub --answer budget.evaluations=4 --confirm "Your Name"

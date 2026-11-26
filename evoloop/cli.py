@@ -778,6 +778,17 @@ def cmd_chat(args: Any) -> int:
     return 0
 
 
+def cmd_check(args: Any) -> int:
+    """One training run of the code as it stands, killed, started again and asked to stop: does the evaluator
+    report, resume and stop as a search needs?"""
+    from . import check
+    try:
+        found = check.run(args.dir, wait=args.wait, say=out)
+    except (form.BriefError, RuntimeError) as exc:
+        raise SystemExit(str(exc))
+    return 0 if found["ok"] else 1
+
+
 def cmd_rerun(args: Any) -> int:
     request(args, {"kind": "rerun", "run": args.run, "keep_checkpoint": bool(args.from_checkpoint)})
     out("requested: train %s again%s. It is refused if the design has a score or is still running; `evoloop status` "
@@ -1127,6 +1138,9 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--run")
     p = add("chat", cmd_chat, "talk with the agent that runs the search (harness.conductor: agent)", named=True, by=True)
     p.add_argument("message", nargs="?", help="one message; leave it out to talk back and forth")
+    p = add("check", cmd_check, "try the evaluator on the code as it stands: does it report progress, resume and stop?")
+    p.add_argument("--wait", type=float, default=1800.0, metavar="SECONDS",
+                   help="how long to wait for a progress report, and for the run to stop (default 1800)")
     p = add("rerun", cmd_rerun, "train again a design whose run ended without a score, e.g. after repairing the evaluator",
             named=True, by=True)
     p.add_argument("run", metavar="RUN", help="a run id (R12) or a design id (C9)")

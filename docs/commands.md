@@ -74,6 +74,20 @@ evoloop brief mysearch --answer budget.evaluations=100 --answer evaluation.noise
 evoloop brief mysearch --confirm "Your Name"
 ```
 
+### check
+
+`evoloop check DIR [--wait SECONDS]`
+
+Tries the evaluator before any search. It trains the code as it stands once, where the search's jobs
+will run, and interrupts it on purpose: after the first progress report the job is killed and started
+again, and then it is asked to stop. It says whether the evaluator reports progress, whether it went on
+from its checkpoint or began again, and whether it stopped with a score. No agent is called and nothing
+is charged. `--wait` is how long it waits for a report and for the stop, 30 minutes by default.
+
+```
+evoloop check mysearch
+```
+
 ### plan
 
 `evoloop plan DIR`

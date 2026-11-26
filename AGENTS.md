@@ -64,8 +64,12 @@ Your part before the questions:
   only when they pick it. Propose a time limit of a few hours once the evaluator resumes; if it cannot resume, the
   limit has to cover a whole training run, and say so. Do not write designs ahead or queue a batch of them: the
   controller writes each design when a job is about to be free and replaces one that results overtake while it waits.
-- **A dry run.** Before any paid agent or GPU: `agents.backend: stub` and a budget of a few evaluations, to prove
-  the evaluator and the jobs work on this machine.
+- **The evaluator check.** `evoloop check DIR` trains the unchanged code once where the jobs will run, kills and
+  restarts it, and asks it to stop. Fix what it reports before going on, and tell the person what it found: an
+  evaluator that begins again after a restart needs a time limit longer than a whole run, and one that ignores a
+  stop loses the score of every design stopped early.
+- **A dry run.** Before any paid agent: `agents.backend: stub` and a budget of a few evaluations, to prove the
+  jobs and the search loop work on this machine.
 
 ## Setting up a search: propose, then ask one question at a time
 

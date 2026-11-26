@@ -132,9 +132,28 @@ several times in a row at the same step is recorded as failed, which is what hap
 that starts over when the time limit is shorter than its training run.
 [Getting GPUs](servers.md#getting-gpus) · [Evaluator interface](project-contract.md#exit-codes)
 
-To test it by hand, run the evaluator as in [Testing by hand](#testing-by-hand), interrupt it after an
-epoch, and run the same command again with `EVO_RESTART_COUNT=1`: it should go on from the epoch it
-had reached.
+## Evaluator check
+
+```
+evoloop check mysearch
+```
+
+runs the evaluator once on your unchanged code, where the search's jobs will run, and interrupts it on
+purpose. After the first progress report the job is killed, as a preemption would kill it, and started
+again. Then it is asked to stop.
+
+```
+Evaluator check for mysearch: one training run of the code as it stands, interrupted on purpose. Nothing is charged.
+  started               reported step 1 after 212 s
+  killed and restarted  went on at step 2 (it had reached step 1): it resumes
+  asked to stop         ended 190 s later with a score of 0.412
+The evaluator does what a search needs.
+```
+
+When the evaluator begins again after the restart, ignores the stop, or stops without a score, the
+check says so and says what to change. Each of these costs GPU days when it is found during a search:
+a run that begins again loses its work at every preemption, and a run that ignores a stop is killed and
+loses the score it had reached.
 
 The demo's evaluator writes the files itself, without `evojob.py`, and is known to run:
 `evoloop/examples/tiny_classifier/adapter/run.py`.

@@ -155,6 +155,7 @@ class Local:
         # Inside a block on a cluster the job script has activated the training environment: that one stands.
         path = (os.path.dirname(sys.executable) + os.pathsep if self.own_python else "") + os.environ.get("PATH", "")
         env = dict(env, EVO_RESTART_COUNT=str(run.get("restarts") or 0), PATH=path)
+        self.cancelled.pop(run["id"], None)      # started again: how an earlier start of it ended no longer says how this one will
         gpus = self.take_gpus(run["id"], int(settings["compute"].get("gpus_per_job") or 0))
         if gpus:      # each job sees its own GPU: without this every job on the machine would train on the first one
             env["CUDA_VISIBLE_DEVICES"] = ",".join(gpus)
